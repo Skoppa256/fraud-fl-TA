@@ -1,0 +1,90 @@
+# =============================================================================
+# fraud-fl-TA — Federated Learning for Financial Fraud Detection
+# =============================================================================
+#
+# !! READ BEFORE INSTALLING !!
+#
+# 1. Python version: **Python 3.10.x is REQUIRED.**
+#    The fedxgbllr baseline pins `python = ">=3.10.0, <3.11.0"`
+#    (see models/fedxgbllr/pyproject.toml). Newer interpreters
+#    (3.11+, and in particular 3.12 / 3.13 / 3.14) WILL FAIL because:
+#      - flwr[simulation]==1.5.0 pulls in ray==2.6.3, which has no
+#        wheels for Python > 3.11 and still imports the legacy
+#        `pkg_resources` module (removed in setuptools>=81 — pinned
+#        below to keep Ray's worker startup intact).
+#      - hydra-core==1.3.2, wandb==0.15.12, and scikit-learn==1.5.0
+#        also predate Python 3.14 and may not have matching wheels.
+#    Use conda / pyenv to install 3.10 explicitly:
+#        conda create -n fraud-fl python=3.10 -y
+#        conda activate fraud-fl
+#
+# 2. PyTorch: **install torch separately, NOT from this file**, using
+#    the CUDA 12.8 wheel index — required for any Blackwell-class GPU
+#    (e.g. RTX 5060 Ti / RTX 50-series, compute capability sm_120).
+#    The plain `pip install torch==2.8.0` often resolves to a CPU-only
+#    wheel or a wheel that lacks sm_120 kernels, leaving CUDA unused.
+#
+#    After running `pip install -r requirements.txt`, uninstall torch
+#    and reinstall it from the cu128 index:
+#        pip uninstall -y torch
+#        pip install torch==2.8.0 torchmetrics==1.8.2 \
+#            --index-url https://download.pytorch.org/whl/cu128
+#
+#    Verify CUDA visibility:
+#        python -c "import torch; print(torch.cuda.is_available(), \
+#                                       torch.cuda.get_device_name(0), \
+#                                       torch.version.cuda)"
+#
+# 3. fedxgbllr install: after the above, install the baseline package
+#    in editable mode so `python -m hfedxgboost.main ...` resolves:
+#        pip install -e models/fedxgbllr/
+#
+# =============================================================================
+# Python required: >=3.10.0, <3.11.0 (constraint from fedxgbllr)
+# =============================================================================
+
+# --- Federated learning framework ---
+flwr[simulation]==1.5.0
+
+# --- Configuration / experiment orchestration ---
+hydra-core==1.3.2
+
+# --- Deep learning (used by fedxgbllr CNN aggregator) ---
+torch==2.8.0
+torchmetrics==1.8.2
+
+# --- Classical ML ---
+scikit-learn==1.5.0
+xgboost==2.0.0
+
+# --- Utilities (fedxgbllr) ---
+tqdm==4.66.3
+wandb==0.15.12
+
+# --- Data handling (PaySim CSV, preprocessing) ---
+pandas>=2.0.0
+numpy>=1.24.0
+
+# --- Class imbalance (local SMOTE) ---
+imbalanced-learn>=0.11.0
+
+# --- Explainability ---
+shap>=0.44.0
+
+# --- Plotting / visualization ---
+matplotlib>=3.7.0
+seaborn>=0.12.0
+
+# --- Scientific computing / stats ---
+scipy>=1.11.0
+
+# --- Parallel processing ---
+joblib>=1.3.0
+
+# --- YAML config parsing ---
+pyaml>=23.0.0
+
+# --- Compat pin: ray 2.6.3 (pulled in by flwr[simulation]==1.5.0) still imports
+# the legacy pkg_resources module, which was removed in setuptools>=81.
+# Pinning <81 keeps Ray's worker startup functional.
+setuptools<81

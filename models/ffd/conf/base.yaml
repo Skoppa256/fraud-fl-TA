@@ -1,0 +1,14 @@
+model: ffd
+num_clients: 5
+num_rounds: 50
+local_epochs: 5
+batch_size: 80
+lr: 0.01
+random_seed: 42
+oversampling: "smote"      # one of: smote, adasyn, none
+use_wandb: false
+wandb_project: "hfedxgboost-paysim"
+early_stop_patience: 10
+partition:
+  scheme: iid
+  alpha: null

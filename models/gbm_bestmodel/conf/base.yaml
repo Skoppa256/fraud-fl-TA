@@ -1,0 +1,17 @@
+model: gbm_bestmodel
+num_clients: 5
+num_rounds: 50
+random_seed: 42
+oversampling: smote     # one of: smote, adasyn, none
+smote_k_neighbors: 5
+smote_sampling_strategy: "auto"
+use_wandb: false
+wandb_project: "hfedxgboost-paysim"
+early_stop_patience: 10
+partition:
+  scheme: iid
+  alpha: null
+gbm_params:
+  max_iter: 100
+  learning_rate: 0.1
+  max_depth: 6

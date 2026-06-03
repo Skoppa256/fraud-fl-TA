@@ -1,0 +1,18 @@
+model: fedavg_lr
+num_clients: 5
+num_rounds: 50
+local_epochs: 1
+random_seed: 42
+oversampling: smote     # one of: smote, adasyn, none
+smote_k_neighbors: 5
+smote_sampling_strategy: "auto"
+use_wandb: false
+wandb_project: "hfedxgboost-paysim"
+early_stop_patience: 10
+partition:
+  scheme: iid
+  alpha: null
+lr_params:
+  C: 1.0
+  max_iter: 1000
+  warm_start: true
