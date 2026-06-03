@@ -10,7 +10,7 @@ usage of wandb for fine-tuning purposes.
 
 import timeit
 from logging import DEBUG, INFO
-from typing import Dict, List, Optional, Tuple, Union
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 import flwr as fl
 import numpy as np
@@ -487,7 +487,25 @@ def serverside_eval(
             }
             payload.update(val_metrics)
             wandb.log(payload)
-        return loss, {metric_name: result}
+
+        # Surface every metric into Flower history.metrics_centralized so the
+        # downstream CSV writer can pick them up without depending on W&B.
+        # Values must be tensors (or expose .item()) because the existing
+        # ResultsWriter.extract_best_res calls .item() on every entry.
+        history_metrics: Dict[str, Any] = {metric_name: result}
+        for name, raw in (
+            ("test_auprc", auprc),
+            ("test_f1", f1),
+            ("test_precision", precision),
+            ("test_recall", recall),
+        ):
+            history_metrics[name] = torch.tensor(float(raw))
+        for k, v in val_metrics.items():
+            try:
+                history_metrics[k] = torch.tensor(float(v))
+            except (TypeError, ValueError):
+                continue
+        return loss, history_metrics
 
     loss, result, _ = test(cfg, model, testloader, device=device, log_progress=False)
     print(

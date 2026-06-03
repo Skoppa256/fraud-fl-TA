@@ -34,6 +34,10 @@ from sklearn.metrics import (
 )
 from sklearn.svm import LinearSVC
 
+from evaluation.results_writer import (
+    build_centralized_run_name,
+    write_centralized_results,
+)
 from preprocessing.paysim import load_paysim
 
 
@@ -145,11 +149,11 @@ def main() -> None:
     else:
         print(f"Oversampling: {oversampling} | x_train: {x_train.shape} | {note}")
 
+    run_name = build_centralized_run_name(MODEL_NAME, oversampling, seed)
     wandb_run = None
     if bool(args.use_wandb):
         import wandb
 
-        run_name = f"centralized_{MODEL_NAME}_seed{seed}"
         wandb_run = wandb.init(
             project=args.wandb_project,
             name=run_name,
@@ -192,6 +196,25 @@ def main() -> None:
         f"precision={t['precision']:.4f} | recall={t['recall']:.4f}"
     )
     print(f"Training time: {train_time:.2f}s")
+
+    write_centralized_results(
+        model=MODEL_NAME,
+        oversampling=oversampling,
+        seed=seed,
+        val_metrics={
+            "val_auprc": v["auprc"],
+            "val_f1": v["f1"],
+            "val_precision": v["precision"],
+            "val_recall": v["recall"],
+        },
+        test_metrics={
+            "test_auprc": t["auprc"],
+            "test_f1": t["f1"],
+            "test_precision": t["precision"],
+            "test_recall": t["recall"],
+        },
+        duration_seconds=train_time,
+    )
 
     if wandb_run is not None:
         wandb_run.log(

@@ -20,11 +20,13 @@ from __future__ import annotations
 
 import argparse
 import os
+import time
 from typing import Any, Dict
 
 import flwr as fl
 import yaml
 
+from evaluation.results_writer import build_run_name, write_fl_results
 from partitioning.dirichlet import get_partition
 from preprocessing.paysim import load_paysim
 
@@ -90,6 +92,7 @@ def _apply_cli_overrides(cfg: dict, args: argparse.Namespace) -> dict:
 
 def run(cfg: dict):
     """Run the FFD pipeline end-to-end. Returns ``(history, state)``."""
+    t_start = time.time()
     seed = int(cfg["random_seed"])
     scheme = cfg["partition"]["scheme"]
     alpha = cfg["partition"]["alpha"]
@@ -120,13 +123,11 @@ def run(cfg: dict):
     # NB: oversampling is NOT pre-applied here. FFD applies it per-round
     # inside FFDClient.fit() per Yang et al. (2019) procedure step 3.
 
+    run_name = build_run_name(MODEL_NAME, scheme, alpha, oversampling, seed)
     wandb_run = None
     if bool(cfg.get("use_wandb", False)):
         import wandb
 
-        run_name = (
-            f"{MODEL_NAME}_{scheme}_alpha{alpha}_{oversampling}_seed{seed}"
-        )
         wandb_run = wandb.init(
             project=cfg.get("wandb_project", "hfedxgboost-paysim"),
             name=run_name,
@@ -173,9 +174,26 @@ def run(cfg: dict):
             f"recall={ft['test_recall']:.4f}"
         )
 
+    duration_seconds = time.time() - t_start
+    write_fl_results(
+        model=MODEL_NAME,
+        scheme=scheme,
+        alpha=alpha,
+        oversampling=oversampling,
+        seed=seed,
+        num_rounds=num_rounds,
+        num_clients=num_clients,
+        best_round=eval_state.get("best_round", -1),
+        best_val_auprc=eval_state.get("best_val_auprc", -1.0),
+        history=eval_state.get("history") or [],
+        final_test=eval_state.get("final_test"),
+        duration_seconds=duration_seconds,
+    )
+
     if wandb_run is not None:
         wandb_run.summary["best_val_auprc"] = eval_state["best_val_auprc"]
         wandb_run.summary["best_round"] = eval_state["best_round"]
+        wandb_run.summary["duration_seconds"] = duration_seconds
         if eval_state.get("final_test"):
             wandb_run.summary.update(eval_state["final_test"])
         wandb_run.finish()

@@ -1,0 +1,55 @@
+# Experiment registry — the full planned RQ1 sweep.
+#
+# Used by:
+#   * experiments/status.py        — to check which runs have completed
+#   * experiments/collect_results.py — to know which combos to expect
+#   * experiments/run_*.sh         — to iterate the same combos
+#
+# Run-name convention (must stay aligned with evaluation/results_writer.py):
+#   FL          : <model>_<scheme>_alpha<alpha|->_<oversampling>_seed<seed>
+#   Centralized : centralized_<model>_<oversampling>_seed<seed>
+
+models:
+  - ffd
+  - fedxgbllr
+  - lr
+  - svm
+  - gbm
+
+centralized_models:
+  - lr
+  - svm
+  - gbm
+  - xgb
+  - ffd
+
+schemes:
+  - iid
+  - dirichlet
+
+alphas:          # only used when scheme == dirichlet
+  - 0.5
+  - 1.0
+  - 5.0
+
+oversamplings:
+  - smote
+  - adasyn
+  - none
+
+# Default seed for the initial RQ1 scan. Add 123 and 2024 for the
+# three-seed sweep after the initial scan is reviewed.
+seeds:
+  - 42
+  # - 123
+  # - 2024
+
+# Per-model num_rounds (mirrors what each run.py reads from its own
+# base.yaml — duplicated here so the status check / collector don't
+# have to import each model package).
+num_rounds:
+  ffd: 50
+  fedxgbllr: 50
+  lr: 20
+  svm: 20
+  gbm: 10

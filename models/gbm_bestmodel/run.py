@@ -19,11 +19,13 @@ from __future__ import annotations
 
 import argparse
 import os
+import time
 from typing import Any, Dict
 
 import flwr as fl
 import yaml
 
+from evaluation.results_writer import build_run_name, write_fl_results
 from preprocessing.paysim import load_paysim
 from preprocessing.oversampling import apply_oversampling_to_all_clients, VALID_METHODS
 from partitioning.dirichlet import get_partition
@@ -32,7 +34,7 @@ from .client import build_client_fn
 from .strategy import BestModelSelection
 
 
-MODEL_NAME: str = "gbm_bestmodel"
+MODEL_NAME: str = "gbm"
 
 
 def _str2bool(v) -> bool:
@@ -91,15 +93,18 @@ def _apply_cli_overrides(cfg: dict, args: argparse.Namespace) -> dict:
 
 def run(cfg: dict):
     """Run the GBM best-model FL pipeline. Returns ``(history, state)``."""
+    t_start = time.time()
     seed = int(cfg["random_seed"])
     scheme = cfg["partition"]["scheme"]
     alpha = cfg["partition"]["alpha"]
+    oversampling = str(cfg.get("oversampling", "smote")).lower()
     num_clients = int(cfg["num_clients"])
     num_rounds = int(cfg["num_rounds"])
 
     print(
         f"[run] === {MODEL_NAME} | scheme={scheme} alpha={alpha} "
-        f"K={num_clients} R={num_rounds} seed={seed} ==="
+        f"K={num_clients} R={num_rounds} oversampling={oversampling} "
+        f"seed={seed} ==="
     )
 
     data = load_paysim(random_state=seed)
@@ -118,17 +123,17 @@ def run(cfg: dict):
 
     clients = apply_oversampling_to_all_clients(
         clients,
-        method=str(cfg.get("oversampling", "smote")),
+        method=oversampling,
         k_neighbors=int(cfg.get("smote_k_neighbors", 5)),
         sampling_strategy=cfg.get("smote_sampling_strategy", "auto"),
         base_seed=seed,
     )
 
+    run_name = build_run_name(MODEL_NAME, scheme, alpha, oversampling, seed)
     wandb_run = None
     if bool(cfg.get("use_wandb", False)):
         import wandb
 
-        run_name = f"{MODEL_NAME}_{scheme}_alpha{alpha}_seed{seed}"
         wandb_run = wandb.init(
             project=cfg.get("wandb_project", "hfedxgboost-paysim"),
             name=run_name,
@@ -175,10 +180,27 @@ def run(cfg: dict):
         )
         print(f"[run] selection trace: {trace}")
 
+    duration_seconds = time.time() - t_start
+    write_fl_results(
+        model=MODEL_NAME,
+        scheme=scheme,
+        alpha=alpha,
+        oversampling=oversampling,
+        seed=seed,
+        num_rounds=num_rounds,
+        num_clients=num_clients,
+        best_round=state.get("best_round", -1),
+        best_val_auprc=state.get("best_val_auprc", -1.0),
+        history=state.get("history") or [],
+        final_test=state.get("final_test"),
+        duration_seconds=duration_seconds,
+    )
+
     if wandb_run is not None:
         wandb_run.summary["best_val_auprc"] = state["best_val_auprc"]
         wandb_run.summary["best_round"] = state["best_round"]
         wandb_run.summary["best_client_id"] = state["best_client_id"]
+        wandb_run.summary["duration_seconds"] = duration_seconds
         if state.get("final_test"):
             wandb_run.summary.update(state["final_test"])
         wandb_run.finish()

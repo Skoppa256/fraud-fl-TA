@@ -12,6 +12,7 @@ batch_size: "whole"
 n_estimators_client: ${clients.n_estimators_client}
 task_type: ${dataset.task.task_type}
 client_num: ${clients.client_num}
+random_seed: 42
 
 XGBoost:
   _target_:  ${dataset.task.xgb._target_}

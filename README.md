@@ -159,12 +159,86 @@ the fraud-rate imbalance before training.
 
 ## Running experiments
 
-(To be filled in once experiment scripts are in place.)
+Every run — federated or centralized — emits the same structured output:
 
-The plan is to invoke a shared driver from `experiments/run_all.sh`, with
-per-model Hydra configs under `experiments/configs/`. Each run produces a
-row in `results/` capturing AUPRC, F1, Precision, Recall, and SHAP summary
-artefacts.
+| Artifact | Path | Schema |
+|----------|------|--------|
+| Stdout/stderr log | `results/logs/<model>/<run_name>.log` | Tee'd from the python process by the shell script |
+| Summary CSV | `results/logs/<model>/<run_name>.csv` | `model, scheme, alpha, oversampling, random_seed, num_rounds, num_clients, best_round, best_val_*, test_*, timestamp, duration_seconds, run_name` |
+| Per-round CSV | `results/logs/<model>/<run_name>_rounds.csv` | `round, val_auprc, val_f1, val_precision, val_recall, train_loss` (FL only) |
+| W&B run | `https://wandb.ai/<entity>/hfedxgboost-paysim/runs/<id>` | Per-round loss/AUPRC curves + run summary |
+
+The summary schema is defined once in [evaluation/results_writer.py](evaluation/results_writer.py) and every model calls into it. The canonical `<run_name>` is:
+
+| Kind | Format |
+|------|--------|
+| FL | `<model>_<scheme>_alpha<alpha\|->_<oversampling>_seed<seed>` |
+| Centralized | `centralized_<model>_<oversampling>_seed<seed>` |
+
+`<model>` is the short canonical name: `ffd`, `lr`, `svm`, `gbm`, `fedxgbllr` (for FL); `lr`, `svm`, `gbm`, `xgb`, `ffd` (for centralized).
+
+### Single experiment
+
+Federated (argparse-style — FFD, LR, SVM, GBM):
+```bash
+python -m models.ffd.run \
+  --scheme dirichlet --alpha 0.5 --oversampling smote \
+  --random_seed 42 --use_wandb true
+```
+
+Federated (Hydra-style — FedXGBllr):
+```bash
+python -m hfedxgboost.main \
+  dataset=paysim clients=paysim_5_clients \
+  run_experiment.num_rounds=50 \
+  dataset.non_iid.enabled=true dataset.non_iid.alpha=0.5 \
+  dataset.oversampling.method=smote \
+  random_seed=42 use_wandb=true
+```
+
+Centralized upper bound:
+```bash
+python -m experiments.centralized_baseline.run_ffd \
+  --oversampling smote --random_seed 42 --use_wandb true
+```
+
+### Full sweep
+
+Per-model:
+```bash
+bash experiments/run_ffd.sh           # 12 runs (1 seed)
+bash experiments/run_fedxgbllr.sh
+bash experiments/run_lr.sh
+bash experiments/run_svm.sh
+bash experiments/run_gbm.sh
+bash experiments/run_centralized.sh   # 15 runs (5 models × 3 oversamplers)
+
+# Multi-seed:
+SEEDS="42 123 2024" bash experiments/run_ffd.sh
+```
+
+End-to-end orchestration (preflight check + every script in order):
+```bash
+bash experiments/run_all.sh                              # seed 42 only
+SEEDS="42 123 2024" bash experiments/run_all.sh         # full 3-seed sweep
+SKIP_CENTRALIZED=1 bash experiments/run_all.sh          # skip upper-bound passes
+```
+
+`run_all.sh` checks before kickoff: conda env active, `data/paysim/paysim.csv` exists, W&B logged in, and that core Python deps import. It aborts if any precondition fails.
+
+### Collecting and reviewing results
+
+```bash
+python -m experiments.status                      # done vs pending
+python -m experiments.status --pending-only       # what's left
+python -m experiments.status --print-commands     # rerun commands for the pending set
+
+python -m experiments.collect_results             # writes results/summary_table.csv
+                                                  # AND prints a Markdown table to stdout
+python -m experiments.collect_results --markdown-only  # skip CSV, just print MD
+```
+
+The Markdown table is paste-ready for the [Results table](#results-table) section below. The expected planned sweep lives in [experiments/registry.yaml](experiments/registry.yaml); `status.py` cross-references it against existing CSVs.
 
 ---
 
@@ -405,50 +479,87 @@ python -m experiments.centralized_baseline.run_ffd --oversampling smote \
 
 ---
 
-### Results Table (fill after runs complete)
+### Results Table
 
-| Model | Scheme | Oversampling | test_auprc | test_f1 | test_precision | test_recall |
-|-------|--------|--------------|------------|---------|----------------|-------------|
-| FedXGBllr | IID | smote | | | | |
-| FedXGBllr | IID | adasyn | | | | |
-| FedXGBllr | IID | none | | | | |
-| FedXGBllr | Dirichlet α=0.5 | smote | | | | |
-| FedXGBllr | Dirichlet α=0.5 | adasyn | | | | |
-| FedXGBllr | Dirichlet α=1.0 | smote | | | | |
-| FedXGBllr | Dirichlet α=1.0 | adasyn | | | | |
-| FedXGBllr | Dirichlet α=5.0 | smote | | | | |
-| FedXGBllr | Dirichlet α=5.0 | adasyn | | | | |
-| GBM | IID | smote | | | | |
-| GBM | IID | adasyn | | | | |
-| GBM | IID | none | | | | |
-| GBM | Dirichlet α=0.5 | smote | | | | |
-| GBM | Dirichlet α=0.5 | adasyn | | | | |
-| GBM | Dirichlet α=1.0 | smote | | | | |
-| GBM | Dirichlet α=1.0 | adasyn | | | | |
-| GBM | Dirichlet α=5.0 | smote | | | | |
-| GBM | Dirichlet α=5.0 | adasyn | | | | |
-| FedAvg-LR | IID | smote | | | | |
-| FedAvg-LR | IID | adasyn | | | | |
-| FedAvg-LR | IID | none | | | | |
-| FedAvg-LR | Dirichlet α=0.5 | smote | | | | |
-| FedAvg-LR | Dirichlet α=0.5 | adasyn | | | | |
-| FedAvg-LR | Dirichlet α=1.0 | smote | | | | |
-| FedAvg-LR | Dirichlet α=1.0 | adasyn | | | | |
-| FedAvg-LR | Dirichlet α=5.0 | smote | | | | |
-| FedAvg-LR | Dirichlet α=5.0 | adasyn | | | | |
-| FedAvg-SVM | IID | smote | | | | |
-| FedAvg-SVM | IID | adasyn | | | | |
-| FedAvg-SVM | IID | none | | | | |
-| FedAvg-SVM | Dirichlet α=0.5 | smote | | | | |
-| FedAvg-SVM | Dirichlet α=0.5 | adasyn | | | | |
-| FedAvg-SVM | Dirichlet α=1.0 | smote | | | | |
-| FedAvg-SVM | Dirichlet α=1.0 | adasyn | | | | |
-| FedAvg-SVM | Dirichlet α=5.0 | smote | | | | |
-| FedAvg-SVM | Dirichlet α=5.0 | adasyn | | | | |
-| Centralized-LR  | — | smote / adasyn / none | | | | |
-| Centralized-SVM | — | smote / adasyn / none | | | | |
-| Centralized-GBM | — | smote / adasyn / none | | | | |
-| Centralized-XGB | — | smote / adasyn / none | | | | |
+Auto-populated by `python -m experiments.collect_results` — paste the output of that command in place of the rows below. The pre-filled template is for `seed=42` only; for multi-seed runs the collector emits one row per seed.
+
+| Model | Scheme | Oversampling | Seed | test_auprc | test_f1 | test_precision | test_recall | best_round | duration (s) |
+|-------|--------|--------------|------|------------|---------|----------------|-------------|------------|--------------|
+| ffd | IID | smote | 42 | - | - | - | - | - | - |
+| ffd | IID | adasyn | 42 | - | - | - | - | - | - |
+| ffd | IID | none | 42 | - | - | - | - | - | - |
+| ffd | Dirichlet α=0.5 | smote | 42 | - | - | - | - | - | - |
+| ffd | Dirichlet α=0.5 | adasyn | 42 | - | - | - | - | - | - |
+| ffd | Dirichlet α=0.5 | none | 42 | - | - | - | - | - | - |
+| ffd | Dirichlet α=1.0 | smote | 42 | - | - | - | - | - | - |
+| ffd | Dirichlet α=1.0 | adasyn | 42 | - | - | - | - | - | - |
+| ffd | Dirichlet α=1.0 | none | 42 | - | - | - | - | - | - |
+| ffd | Dirichlet α=5.0 | smote | 42 | - | - | - | - | - | - |
+| ffd | Dirichlet α=5.0 | adasyn | 42 | - | - | - | - | - | - |
+| ffd | Dirichlet α=5.0 | none | 42 | - | - | - | - | - | - |
+| fedxgbllr | IID | smote | 42 | - | - | - | - | - | - |
+| fedxgbllr | IID | adasyn | 42 | - | - | - | - | - | - |
+| fedxgbllr | IID | none | 42 | - | - | - | - | - | - |
+| fedxgbllr | Dirichlet α=0.5 | smote | 42 | - | - | - | - | - | - |
+| fedxgbllr | Dirichlet α=0.5 | adasyn | 42 | - | - | - | - | - | - |
+| fedxgbllr | Dirichlet α=0.5 | none | 42 | - | - | - | - | - | - |
+| fedxgbllr | Dirichlet α=1.0 | smote | 42 | - | - | - | - | - | - |
+| fedxgbllr | Dirichlet α=1.0 | adasyn | 42 | - | - | - | - | - | - |
+| fedxgbllr | Dirichlet α=1.0 | none | 42 | - | - | - | - | - | - |
+| fedxgbllr | Dirichlet α=5.0 | smote | 42 | - | - | - | - | - | - |
+| fedxgbllr | Dirichlet α=5.0 | adasyn | 42 | - | - | - | - | - | - |
+| fedxgbllr | Dirichlet α=5.0 | none | 42 | - | - | - | - | - | - |
+| lr | IID | smote | 42 | - | - | - | - | - | - |
+| lr | IID | adasyn | 42 | - | - | - | - | - | - |
+| lr | IID | none | 42 | - | - | - | - | - | - |
+| lr | Dirichlet α=0.5 | smote | 42 | - | - | - | - | - | - |
+| lr | Dirichlet α=0.5 | adasyn | 42 | - | - | - | - | - | - |
+| lr | Dirichlet α=0.5 | none | 42 | - | - | - | - | - | - |
+| lr | Dirichlet α=1.0 | smote | 42 | - | - | - | - | - | - |
+| lr | Dirichlet α=1.0 | adasyn | 42 | - | - | - | - | - | - |
+| lr | Dirichlet α=1.0 | none | 42 | - | - | - | - | - | - |
+| lr | Dirichlet α=5.0 | smote | 42 | - | - | - | - | - | - |
+| lr | Dirichlet α=5.0 | adasyn | 42 | - | - | - | - | - | - |
+| lr | Dirichlet α=5.0 | none | 42 | - | - | - | - | - | - |
+| svm | IID | smote | 42 | - | - | - | - | - | - |
+| svm | IID | adasyn | 42 | - | - | - | - | - | - |
+| svm | IID | none | 42 | - | - | - | - | - | - |
+| svm | Dirichlet α=0.5 | smote | 42 | - | - | - | - | - | - |
+| svm | Dirichlet α=0.5 | adasyn | 42 | - | - | - | - | - | - |
+| svm | Dirichlet α=0.5 | none | 42 | - | - | - | - | - | - |
+| svm | Dirichlet α=1.0 | smote | 42 | - | - | - | - | - | - |
+| svm | Dirichlet α=1.0 | adasyn | 42 | - | - | - | - | - | - |
+| svm | Dirichlet α=1.0 | none | 42 | - | - | - | - | - | - |
+| svm | Dirichlet α=5.0 | smote | 42 | - | - | - | - | - | - |
+| svm | Dirichlet α=5.0 | adasyn | 42 | - | - | - | - | - | - |
+| svm | Dirichlet α=5.0 | none | 42 | - | - | - | - | - | - |
+| gbm | IID | smote | 42 | - | - | - | - | - | - |
+| gbm | IID | adasyn | 42 | - | - | - | - | - | - |
+| gbm | IID | none | 42 | - | - | - | - | - | - |
+| gbm | Dirichlet α=0.5 | smote | 42 | - | - | - | - | - | - |
+| gbm | Dirichlet α=0.5 | adasyn | 42 | - | - | - | - | - | - |
+| gbm | Dirichlet α=0.5 | none | 42 | - | - | - | - | - | - |
+| gbm | Dirichlet α=1.0 | smote | 42 | - | - | - | - | - | - |
+| gbm | Dirichlet α=1.0 | adasyn | 42 | - | - | - | - | - | - |
+| gbm | Dirichlet α=1.0 | none | 42 | - | - | - | - | - | - |
+| gbm | Dirichlet α=5.0 | smote | 42 | - | - | - | - | - | - |
+| gbm | Dirichlet α=5.0 | adasyn | 42 | - | - | - | - | - | - |
+| gbm | Dirichlet α=5.0 | none | 42 | - | - | - | - | - | - |
+| lr  | centralized | smote  | 42 | - | - | - | - | — | - |
+| lr  | centralized | adasyn | 42 | - | - | - | - | — | - |
+| lr  | centralized | none   | 42 | - | - | - | - | — | - |
+| svm | centralized | smote  | 42 | - | - | - | - | — | - |
+| svm | centralized | adasyn | 42 | - | - | - | - | — | - |
+| svm | centralized | none   | 42 | - | - | - | - | — | - |
+| gbm | centralized | smote  | 42 | - | - | - | - | — | - |
+| gbm | centralized | adasyn | 42 | - | - | - | - | — | - |
+| gbm | centralized | none   | 42 | - | - | - | - | — | - |
+| xgb | centralized | smote  | 42 | - | - | - | - | — | - |
+| xgb | centralized | adasyn | 42 | - | - | - | - | — | - |
+| xgb | centralized | none   | 42 | - | - | - | - | — | - |
+| ffd | centralized | smote  | 42 | - | - | - | - | — | - |
+| ffd | centralized | adasyn | 42 | - | - | - | - | — | - |
+| ffd | centralized | none   | 42 | - | - | - | - | — | - |
 
 ---
 

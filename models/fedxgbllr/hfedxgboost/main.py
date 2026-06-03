@@ -5,7 +5,8 @@ model is going to be evaluated, etc. At the end, this script saves the results.
 """
 
 import functools
-from typing import Dict, Union
+import time
+from typing import Any, Dict, List, Optional, Union
 
 import flwr as fl
 import hydra
@@ -18,6 +19,7 @@ from hydra.utils import instantiate
 from omegaconf import DictConfig, OmegaConf
 from torch.utils.data import TensorDataset
 
+from evaluation.results_writer import build_run_name, write_fl_results
 from hfedxgboost.client import FlClient
 from hfedxgboost.dataset import divide_dataset_between_clients, load_single_dataset
 from hfedxgboost.server import FlServer, serverside_eval
@@ -29,6 +31,81 @@ from hfedxgboost.utils import (
     local_clients_performance,
     run_centralized,
 )
+
+
+CANONICAL_MODEL: str = "fedxgbllr"
+
+
+def _build_history_state(
+    history,
+    num_rounds: int,
+) -> Dict[str, Any]:
+    """Convert Flower ``History`` into the schema the shared CSV writer wants.
+
+    Pulls per-round val_* metrics out of ``history.metrics_centralized``,
+    finds the best round by ``val_auprc``, and pulls the final round's
+    ``test_*`` metrics for the summary row.
+    """
+    metrics_cen = getattr(history, "metrics_centralized", {}) or {}
+    rounds_set = set()
+    for series in metrics_cen.values():
+        for r, _ in series:
+            rounds_set.add(int(r))
+    rounds_sorted = sorted(rounds_set)
+
+    def _series_to_map(key: str) -> Dict[int, float]:
+        return {int(r): float(v) for r, v in metrics_cen.get(key, [])}
+
+    val_auprc_map = _series_to_map("val_auprc")
+    val_f1_map = _series_to_map("val_f1")
+    val_precision_map = _series_to_map("val_precision")
+    val_recall_map = _series_to_map("val_recall")
+    test_auprc_map = _series_to_map("test_auprc")
+    test_f1_map = _series_to_map("test_f1")
+    test_precision_map = _series_to_map("test_precision")
+    test_recall_map = _series_to_map("test_recall")
+
+    hist_rows: List[Dict[str, Any]] = []
+    for r in rounds_sorted:
+        hist_rows.append(
+            {
+                "round": r,
+                "val_auprc": val_auprc_map.get(r, ""),
+                "val_f1": val_f1_map.get(r, ""),
+                "val_precision": val_precision_map.get(r, ""),
+                "val_recall": val_recall_map.get(r, ""),
+            }
+        )
+
+    best_round = -1
+    best_val_auprc = -1.0
+    for r, v in val_auprc_map.items():
+        if v > best_val_auprc:
+            best_val_auprc = v
+            best_round = r
+    if best_round == -1 and rounds_sorted:
+        # No val_auprc series (e.g. dataset != paysim). Fall back to test_auprc.
+        for r, v in test_auprc_map.items():
+            if v > best_val_auprc:
+                best_val_auprc = v
+                best_round = r
+
+    final_round = max(rounds_sorted) if rounds_sorted else num_rounds
+    final_test: Optional[Dict[str, float]] = None
+    if final_round in test_auprc_map:
+        final_test = {
+            "test_auprc": test_auprc_map[final_round],
+            "test_f1": test_f1_map.get(final_round, 0.0),
+            "test_precision": test_precision_map.get(final_round, 0.0),
+            "test_recall": test_recall_map.get(final_round, 0.0),
+        }
+
+    return {
+        "best_round": best_round,
+        "best_val_auprc": best_val_auprc,
+        "history": hist_rows,
+        "final_test": final_test,
+    }
 
 
 @hydra.main(config_path="conf", config_name="base", version_base=None)
@@ -55,6 +132,7 @@ def main(cfg: DictConfig) -> None:
                 run_centralized(cfg, dataset_name=cfg.dataset.dataset_name)[1],
             )
     else:
+        t_start = time.time()
         non_iid_cfg = cfg.dataset.get("non_iid", {})
         non_iid_alpha = (
             non_iid_cfg.get("alpha", None)
@@ -64,13 +142,18 @@ def main(cfg: DictConfig) -> None:
         oversampling_method = OmegaConf.select(
             cfg, "dataset.oversampling.method", default="none"
         )
+        scheme = "dirichlet" if non_iid_cfg.get("enabled", False) else "iid"
+        random_seed = int(OmegaConf.select(cfg, "random_seed", default=42))
+
+        run_name = build_run_name(
+            CANONICAL_MODEL,
+            scheme,
+            non_iid_alpha,
+            oversampling_method,
+            random_seed,
+        )
 
         if cfg.use_wandb:
-            run_name = (
-                f"{cfg.dataset.dataset_name}"
-                f"_c{cfg.client_num}"
-                f"_r{cfg.run_experiment.num_rounds}"
-            )
             wandb.init(
                 **cfg.wandb.setup,
                 group=f"{cfg.dataset.dataset_name}",
@@ -84,6 +167,7 @@ def main(cfg: DictConfig) -> None:
                     "dataset": cfg.dataset.dataset_name,
                     "non_iid_alpha": non_iid_alpha if non_iid_alpha else "IID",
                     "oversampling": oversampling_method,
+                    "random_seed": random_seed,
                     "xgb_max_depth": cfg.XGBoost.max_depth,
                     "cnn_lr": cfg.clients.CNN.lr,
                 },
@@ -105,7 +189,7 @@ def main(cfg: DictConfig) -> None:
             pool_size=cfg.clients.client_num,
             val_ratio=cfg.val_ratio,
             non_iid_alpha=non_iid_alpha,
-            random_state=42,
+            random_state=random_seed,
         )
         print(
             f"Data partitioned across {cfg.clients.client_num} clients"
@@ -172,6 +256,34 @@ def main(cfg: DictConfig) -> None:
         )
         create_res_csv("results.csv", writer.fields)
         writer.write_res("results.csv")
+
+        # Shared structured CSV — same schema as the other models.
+        duration_seconds = time.time() - t_start
+        state = _build_history_state(
+            history, num_rounds=int(cfg.run_experiment.num_rounds)
+        )
+        write_fl_results(
+            model=CANONICAL_MODEL,
+            scheme=scheme,
+            alpha=non_iid_alpha,
+            oversampling=str(oversampling_method),
+            seed=random_seed,
+            num_rounds=int(cfg.run_experiment.num_rounds),
+            num_clients=int(cfg.clients.client_num),
+            best_round=state["best_round"],
+            best_val_auprc=state["best_val_auprc"],
+            history=state["history"],
+            final_test=state["final_test"],
+            duration_seconds=duration_seconds,
+        )
+
+        if cfg.use_wandb:
+            wandb.summary["best_val_auprc"] = state["best_val_auprc"]
+            wandb.summary["best_round"] = state["best_round"]
+            wandb.summary["duration_seconds"] = duration_seconds
+            if state["final_test"]:
+                wandb.summary.update(state["final_test"])
+            wandb.finish()
 
 
 if __name__ == "__main__":
