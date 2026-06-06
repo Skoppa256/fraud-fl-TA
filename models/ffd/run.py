@@ -53,6 +53,13 @@ def _str2bool(v) -> bool:
     raise argparse.ArgumentTypeError(f"boolean expected, got {v!r}")
 
 
+def _parse_sampling_strategy(s):
+    try:
+        return float(s)
+    except (TypeError, ValueError):
+        return s
+
+
 def _load_base_cfg() -> Dict[str, Any]:
     path = os.path.join(os.path.dirname(__file__), "conf", "base.yaml")
     with open(path) as f:
@@ -73,6 +80,16 @@ def _parse_args() -> argparse.Namespace:
         choices=list(VALID_OVERSAMPLING),
         default=None,
         help="Local oversampling method applied per-client (none | smote | adasyn).",
+    )
+    p.add_argument(
+        "--sampling_strategy",
+        type=_parse_sampling_strategy,
+        default=None,
+        help=(
+            "Per-client imblearn sampling_strategy. 'auto' = 1:1 fraud:non-fraud. "
+            "A float sets the post-resample minority/majority ratio "
+            "(e.g. 0.01 for 1:100 fraud:non-fraud)."
+        ),
     )
     p.add_argument("--random_seed", type=int, default=None)
     p.add_argument("--use_wandb", type=_str2bool, default=None)

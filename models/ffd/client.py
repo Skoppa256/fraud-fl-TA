@@ -119,14 +119,26 @@ class FFDClient(fl.client.NumPyClient):
             "fraud_ratio": float((y == 1).mean()) if len(y) > 0 else 0.0,
         }
 
+        sampling_strategy = self.cfg.get("sampling_strategy", "auto")
+
         if method == "smote":
             from preprocessing.smote import apply_smote
 
-            result = apply_smote(client_dict, enabled=True, base_seed=self.seed)
+            result = apply_smote(
+                client_dict,
+                enabled=True,
+                sampling_strategy=sampling_strategy,
+                base_seed=self.seed,
+            )
         elif method == "adasyn":
             from preprocessing.adasyn import apply_adasyn
 
-            result = apply_adasyn(client_dict, enabled=True, base_seed=self.seed)
+            result = apply_adasyn(
+                client_dict,
+                enabled=True,
+                sampling_strategy=sampling_strategy,
+                base_seed=self.seed,
+            )
         else:
             return x.astype(np.float32, copy=False), y.astype(np.int64, copy=False)
 

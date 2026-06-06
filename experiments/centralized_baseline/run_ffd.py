@@ -56,6 +56,16 @@ def _parse_args() -> argparse.Namespace:
         default="smote",
         help="Global oversampler applied to x_train (smote | adasyn | none).",
     )
+    p.add_argument(
+        "--sampling_strategy",
+        type=str,
+        default="auto",
+        help=(
+            "Passed to imblearn's sampling_strategy. 'auto' = 1:1 fraud:non-fraud. "
+            "A float sets the post-resample minority/majority ratio "
+            "(e.g. 0.01 for 1:100 fraud:non-fraud)."
+        ),
+    )
     p.add_argument("--random_seed", type=int, default=42)
     p.add_argument("--num_epochs", type=int, default=20)
     p.add_argument("--batch_size", type=int, default=80)
@@ -67,16 +77,29 @@ def _parse_args() -> argparse.Namespace:
     return p.parse_args()
 
 
+def _parse_sampling_strategy(s: str):
+    try:
+        return float(s)
+    except (TypeError, ValueError):
+        return s
+
+
 def _apply_global_oversampling(
-    x_train: np.ndarray, y_train: np.ndarray, seed: int, method: str
+    x_train: np.ndarray,
+    y_train: np.ndarray,
+    seed: int,
+    method: str,
+    sampling_strategy="auto",
 ) -> tuple[np.ndarray, np.ndarray, bool, str]:
     if method == "none":
         return x_train, y_train, False, "oversampling disabled"
     if method == "smote":
-        sampler = SMOTE(sampling_strategy="auto", k_neighbors=5, random_state=seed)
+        sampler = SMOTE(
+            sampling_strategy=sampling_strategy, k_neighbors=5, random_state=seed
+        )
     elif method == "adasyn":
         sampler = ADASYN(
-            sampling_strategy="auto", n_neighbors=5, random_state=seed
+            sampling_strategy=sampling_strategy, n_neighbors=5, random_state=seed
         )
     else:
         raise ValueError(f"unknown oversampling method: {method!r}")
@@ -134,13 +157,15 @@ def main() -> None:
     )
 
     oversampling = str(args.oversampling).lower()
+    sampling_strategy = _parse_sampling_strategy(args.sampling_strategy)
     x_train, y_train, applied, note = _apply_global_oversampling(
-        x_train, y_train, seed, oversampling
+        x_train, y_train, seed, oversampling, sampling_strategy=sampling_strategy
     )
     if applied:
         ratio_after = _fraud_ratio(y_train)
         print(
             f"Oversampling: {oversampling.upper()} | "
+            f"sampling_strategy={sampling_strategy!r} | "
             f"x_train after: {x_train.shape} | "
             f"fraud ratio: {ratio_after * 100:.2f}%"
         )

@@ -220,6 +220,7 @@ usage: python -m models.<model>.run [-h]
        [--scheme {iid,dirichlet}] [--alpha ALPHA]
        [--num_rounds N] [--num_clients K] [--local_epochs E]
        [--oversampling {smote,adasyn,none}]
+       [--sampling_strategy {auto,FLOAT}]
        [--random_seed SEED] [--use_wandb {true,false}]
        [--wandb_project NAME]
        [--batch_size B] [--lr LR]                       # ffd only
@@ -236,6 +237,7 @@ usage: python -m models.<model>.run [-h]
 | `--num_clients` | int | ≥ 1 | `5` | Total clients (K). |
 | `--local_epochs` | int | ≥ 1 | `1` (LR/SVM/GBM), `5` (FFD) | Local passes per round. |
 | `--oversampling` | str | `smote`, `adasyn`, `none` | `smote` | Per-client resampler. |
+| `--sampling_strategy` | str / float | `auto` or float ∈ (0, 1] | `auto` | Passed to imblearn's `sampling_strategy`. `auto` = 1:1 fraud:non-fraud. Float = post-resample minority/majority ratio (e.g. `0.01` → 1:100). |
 | `--random_seed` | int | — | `42` | Used by partitioning, samplers, model init. |
 | `--use_wandb` | bool | `true` / `false` | `false` | Stream metrics to W&B. |
 | `--wandb_project` | str | — | `fraud-fl-TA` | W&B project name. |
@@ -277,6 +279,7 @@ Hydra overrides are `key=value` pairs chained on the command line.
 | `dataset.non_iid.enabled` | `true` / `false` | `false` | Switch to Dirichlet partitioning. |
 | `dataset.non_iid.alpha` | float > 0 | `1.0` | Dirichlet α. |
 | `dataset.oversampling.method` | `smote` / `adasyn` / `none` | `smote` | Per-client resampler. |
+| `dataset.oversampling.sampling_strategy` | `auto` or float | `auto` | imblearn `sampling_strategy`. `auto` = 1:1; float = post-resample minority/majority ratio (e.g. `0.01` → 1:100). |
 | `random_seed` | int | `42` | Affects partition + sampler + model init. |
 | `use_wandb` | `true` / `false` | `false` | Stream metrics to W&B. |
 
@@ -304,6 +307,7 @@ python -m hfedxgboost.main \
 ```
 usage: python -m experiments.centralized_baseline.run_<model> [-h]
        [--oversampling {smote,adasyn,none}]
+       [--sampling_strategy {auto,FLOAT}]
        [--random_seed SEED] [--use_wandb {true,false}]
        [--wandb_project NAME]
        [--num_epochs N] [--batch_size B] [--lr LR]      # run_ffd only
@@ -314,6 +318,7 @@ usage: python -m experiments.centralized_baseline.run_<model> [-h]
 | Flag | Type | Choices / range | Default | Notes |
 |------|------|-----------------|---------|-------|
 | `--oversampling` | str | `smote`, `adasyn`, `none` | `smote` | Global resampler. |
+| `--sampling_strategy` | str / float | `auto` or float ∈ (0, 1] | `auto` | Passed to imblearn's `sampling_strategy`. `auto` = 1:1 fraud:non-fraud. Float = post-resample minority/majority ratio (e.g. `0.01` → 1:100). |
 | `--random_seed` | int | — | `42` | |
 | `--use_wandb` | bool | `true` / `false` | `false` | |
 | `--wandb_project` | str | — | `fraud-fl-TA` | |
@@ -330,6 +335,39 @@ python -m experiments.centralized_baseline.run_gbm --oversampling none   --rando
 python -m experiments.centralized_baseline.run_xgb --oversampling smote  --random_seed 42 --use_wandb true
 python -m experiments.centralized_baseline.run_ffd --oversampling smote  --num_epochs 30 --random_seed 42 --use_wandb true
 ```
+
+#### Picking a non-1:1 oversampling ratio
+
+`--sampling_strategy` (argparse) / `dataset.oversampling.sampling_strategy` (Hydra) is passed straight through to `imblearn.over_sampling.SMOTE(sampling_strategy=...)`. Default `auto` resamples the minority class to match the majority count (1:1). Pass a float in `(0, 1]` to set the post-resample minority/majority ratio:
+
+| Value | Meaning | Resulting fraud share |
+|-------|---------|-----------------------|
+| `auto` *(default)* | 1:1 fraud:non-fraud | 50.00% |
+| `0.5` | 1:2 | 33.33% |
+| `0.1` | 1:10 | 9.09% |
+| `0.05` | 1:20 | 4.76% |
+| `0.01` | 1:100 | 0.99% |
+
+Examples — centralized FFD with SMOTE 1:100, FL FFD with SMOTE 1:100, FedXGBllr with SMOTE 1:20:
+
+```bash
+python -m experiments.centralized_baseline.run_ffd \
+    --oversampling smote --sampling_strategy 0.01 \
+    --random_seed 42 --use_wandb true
+
+python -m models.ffd.run --scheme iid \
+    --oversampling smote --sampling_strategy 0.01 \
+    --random_seed 42 --use_wandb true
+
+python -m hfedxgboost.main \
+    dataset=paysim clients=paysim_5_clients \
+    run_experiment.num_rounds=50 \
+    dataset.oversampling.method=smote \
+    dataset.oversampling.sampling_strategy=0.05 \
+    random_seed=42 use_wandb=true
+```
+
+The startup log echoes the resolved value and the post-resample fraud ratio so you can sanity-check.
 
 ---
 
