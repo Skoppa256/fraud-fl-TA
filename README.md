@@ -51,7 +51,7 @@ fraud-fl-TA/
 │   └── oversampling.py            # Dispatch between SMOTE / ADASYN / none
 │
 ├── partitioning/
-│   └── dirichlet.py               # Dirichlet non-IID client partition (TBD)
+│   └── dirichlet.py               # Dirichlet non-IID client partition
 │
 ├── models/
 │   ├── fedxgbllr/                 # FedXGBllr (Flower hfedxgboost — Hydra CLI)
@@ -61,17 +61,23 @@ fraud-fl-TA/
 │   └── ffd/                       # FFD — Conv1D fraud detector (Yang et al., 2019)
 │
 ├── evaluation/
+│   ├── results_writer.py          # Unified summary/per-round CSV schema
 │   ├── metrics.py                 # AUPRC/F1/Precision/Recall helpers (TBD)
 │   └── shap_analysis.py           # SHAP explainability driver (TBD)
 │
 ├── experiments/
 │   ├── centralized_baseline/      # Upper-bound non-FL runs (LR/SVM/GBM/XGB/FFD)
-│   ├── configs/                   # Hydra configs per experiment (TBD)
-│   └── run_all.sh                 # Orchestrates the runs (TBD)
+│   ├── _run_helpers.sh            # Shared run_one helper sourced by run_*.sh
+│   ├── run_<model>.sh             # Per-model sweep drivers (ffd/fedxgbllr/lr/svm/gbm/centralized)
+│   ├── run_all.sh                 # End-to-end orchestration + preflight checks
+│   ├── registry.yaml              # Planned sweep declaration (model × scheme × oversampling × seed)
+│   ├── status.py                  # Cross-checks registry vs results/logs/
+│   └── collect_results.py         # Aggregates per-run CSVs → master CSV + Markdown table
 │
 ├── results/                       # Auto-generated CSVs, plots, model artifacts
+│   ├── logs/<model>/              # Per-run .log, .csv, _rounds.csv (written by every run)
 │   └── visualizations/            # PCA plots per partition × oversampler
-├── notebooks/                     # Exploratory and analysis (kaggle_setup.ipynb, pca_visualization.py)
+├── notebooks/                     # kaggle_setup.ipynb, pca_visualization.py, tsne_visualization.py
 │
 ├── requirements.txt               # Shared dependency lockset for all models
 ├── README.md                      # This file
@@ -159,14 +165,23 @@ the fraud-rate imbalance before training.
 
 ## Running experiments
 
+### Prerequisites
+
+- conda env active: `conda activate fraud-fl`
+- working directory: repo root (`fraud-fl-TA/`)
+- W&B logged in: `wandb login`
+- PaySim CSV at: `data/paysim/paysim.csv`
+
+### Output artefacts
+
 Every run — federated or centralized — emits the same structured output:
 
 | Artifact | Path | Schema |
 |----------|------|--------|
-| Stdout/stderr log | `results/logs/<model>/<run_name>.log` | Tee'd from the python process by the shell script |
+| Stdout/stderr log | `results/logs/<model>/<run_name>.log` | Tee'd by the shell driver |
 | Summary CSV | `results/logs/<model>/<run_name>.csv` | `model, scheme, alpha, oversampling, random_seed, num_rounds, num_clients, best_round, best_val_*, test_*, timestamp, duration_seconds, run_name` |
 | Per-round CSV | `results/logs/<model>/<run_name>_rounds.csv` | `round, val_auprc, val_f1, val_precision, val_recall, train_loss` (FL only) |
-| W&B run | `https://wandb.ai/<entity>/hfedxgboost-paysim/runs/<id>` | Per-round loss/AUPRC curves + run summary |
+| W&B run | `https://wandb.ai/<entity>/fraud-fl-TA/runs/<id>` | Per-round loss/AUPRC curves + run summary |
 
 The summary schema is defined once in [evaluation/results_writer.py](evaluation/results_writer.py) and every model calls into it. The canonical `<run_name>` is:
 
@@ -177,305 +192,216 @@ The summary schema is defined once in [evaluation/results_writer.py](evaluation/
 
 `<model>` is the short canonical name: `ffd`, `lr`, `svm`, `gbm`, `fedxgbllr` (for FL); `lr`, `svm`, `gbm`, `xgb`, `ffd` (for centralized).
 
-### Single experiment
-
-Federated (argparse-style — FFD, LR, SVM, GBM):
-```bash
-python -m models.ffd.run \
-  --scheme dirichlet --alpha 0.5 --oversampling smote \
-  --random_seed 42 --use_wandb true
-```
-
-Federated (Hydra-style — FedXGBllr):
-```bash
-python -m hfedxgboost.main \
-  dataset=paysim clients=paysim_5_clients \
-  run_experiment.num_rounds=50 \
-  dataset.non_iid.enabled=true dataset.non_iid.alpha=0.5 \
-  dataset.oversampling.method=smote \
-  random_seed=42 use_wandb=true
-```
-
-Centralized upper bound:
-```bash
-python -m experiments.centralized_baseline.run_ffd \
-  --oversampling smote --random_seed 42 --use_wandb true
-```
-
-### Full sweep
-
-Per-model:
-```bash
-bash experiments/run_ffd.sh           # 12 runs (1 seed)
-bash experiments/run_fedxgbllr.sh
-bash experiments/run_lr.sh
-bash experiments/run_svm.sh
-bash experiments/run_gbm.sh
-bash experiments/run_centralized.sh   # 15 runs (5 models × 3 oversamplers)
-
-# Multi-seed:
-SEEDS="42 123 2024" bash experiments/run_ffd.sh
-```
-
-End-to-end orchestration (preflight check + every script in order):
-```bash
-bash experiments/run_all.sh                              # seed 42 only
-SEEDS="42 123 2024" bash experiments/run_all.sh         # full 3-seed sweep
-SKIP_CENTRALIZED=1 bash experiments/run_all.sh          # skip upper-bound passes
-```
-
-`run_all.sh` checks before kickoff: conda env active, `data/paysim/paysim.csv` exists, W&B logged in, and that core Python deps import. It aborts if any precondition fails.
-
-### Collecting and reviewing results
-
-```bash
-python -m experiments.status                      # done vs pending
-python -m experiments.status --pending-only       # what's left
-python -m experiments.status --print-commands     # rerun commands for the pending set
-
-python -m experiments.collect_results             # writes results/summary_table.csv
-                                                  # AND prints a Markdown table to stdout
-python -m experiments.collect_results --markdown-only  # skip CSV, just print MD
-```
-
-The Markdown table is paste-ready for the [Results table](#results-table) section below. The expected planned sweep lives in [experiments/registry.yaml](experiments/registry.yaml); `status.py` cross-references it against existing CSVs.
-
----
-
-## RQ1 Initial Scan — Running the Three Models
-
-### Prerequisites
-- conda env activated: `conda activate fraud-fl`
-- working directory: `fraud-fl-TA/`
-- W&B logged in: `wandb login`
-- PaySim CSV at: `data/paysim/paysim.csv`
-
----
-
-### Run Configuration
+### Run configuration (RQ1 initial scan)
 
 | Parameter | Value |
 |-----------|-------|
 | Clients (K) | 5 |
 | Seeds | 42, 123, 2024 |
-| Oversampling | `smote` / `adasyn` / `none` (set per run via `--oversampling`) |
-| LR/SVM rounds | 20 |
+| Schemes | IID, Dirichlet α ∈ {0.5, 1.0, 5.0} |
+| Oversampling | `smote` / `adasyn` / `none` |
+| FFD rounds | 50 |
+| FedXGBllr rounds | 50 |
+| LR / SVM rounds | 20 |
 | GBM rounds | 10 |
-| Schemes | IID, Dirichlet α=0.5, α=1.0, α=5.0 |
 
-The `--oversampling` flag selects the per-client (federated) or global
-(centralized baseline) resampler. Both `smote` and `adasyn` target a 1:1
-fraud:non-fraud ratio with `k_neighbors=5` / `n_neighbors=5`. Clients with
-fewer than 6 fraud samples skip oversampling and train on their raw data.
+`--oversampling` selects the per-client (federated) or global (centralized) resampler. `smote` and `adasyn` both target a 1:1 fraud:non-fraud ratio with `k_neighbors=5` / `n_neighbors=5`. Clients with fewer than 6 fraud samples skip oversampling and train on their raw data.
 
 ---
 
-### FedAvg-LR
+### CLI reference
+
+CLI flags override the corresponding key in the model's `conf/base.yaml` (Hydra equivalent: `conf/dataset/paysim.yaml`); omit a flag to keep the YAML default.
+
+#### Federated — argparse (FFD / LR / SVM / GBM)
+
+```
+usage: python -m models.<model>.run [-h]
+       [--scheme {iid,dirichlet}] [--alpha ALPHA]
+       [--num_rounds N] [--num_clients K] [--local_epochs E]
+       [--oversampling {smote,adasyn,none}]
+       [--random_seed SEED] [--use_wandb {true,false}]
+       [--wandb_project NAME]
+       [--batch_size B] [--lr LR]                       # ffd only
+       [--max_iter N] [--max_depth D] [--learning_rate LR]   # gbm_bestmodel only
+```
+
+`<model>` ∈ {`ffd`, `fedavg_lr`, `fedavg_svm`, `gbm_bestmodel`}.
+
+| Flag | Type | Choices / range | YAML default | Notes |
+|------|------|-----------------|--------------|-------|
+| `--scheme` | str | `iid`, `dirichlet` | `iid` | Partition strategy. |
+| `--alpha` | float | > 0 | `null` | Dirichlet concentration; required when `--scheme dirichlet`. |
+| `--num_rounds` | int | ≥ 1 | `50` | FL communication rounds. Sweep scripts pass `20` (LR/SVM) and `10` (GBM). |
+| `--num_clients` | int | ≥ 1 | `5` | Total clients (K). |
+| `--local_epochs` | int | ≥ 1 | `1` (LR/SVM/GBM), `5` (FFD) | Local passes per round. |
+| `--oversampling` | str | `smote`, `adasyn`, `none` | `smote` | Per-client resampler. |
+| `--random_seed` | int | — | `42` | Used by partitioning, samplers, model init. |
+| `--use_wandb` | bool | `true` / `false` | `false` | Stream metrics to W&B. |
+| `--wandb_project` | str | — | `fraud-fl-TA` | W&B project name. |
+| `--batch_size` *(FFD)* | int | ≥ 1 | `80` | Mini-batch size for Conv1D. |
+| `--lr` *(FFD)* | float | > 0 | `0.01` | Adam learning rate. |
+| `--max_iter` *(GBM)* | int | ≥ 1 | `100` | HistGBM boosting iters. |
+| `--max_depth` *(GBM)* | int | ≥ 1 | `6` | HistGBM tree depth. |
+| `--learning_rate` *(GBM)* | float | > 0 | `0.1` | HistGBM shrinkage. |
+
+Examples (substitute `ffd` → `fedavg_lr` / `fedavg_svm` / `gbm_bestmodel`):
 
 ```bash
-# With SMOTE (IID)
-python -m models.fedavg_lr.run \
-  --scheme iid --num_rounds 20 --num_clients 5 \
-  --local_epochs 1 --oversampling smote \
-  --random_seed 42 --use_wandb true
+# IID + SMOTE
+python -m models.ffd.run --scheme iid --oversampling smote \
+    --random_seed 42 --use_wandb true
 
-# With ADASYN (IID)
-python -m models.fedavg_lr.run \
-  --scheme iid --num_rounds 20 --num_clients 5 \
-  --local_epochs 1 --oversampling adasyn \
-  --random_seed 42 --use_wandb true
+# Dirichlet α=0.5 + ADASYN
+python -m models.ffd.run --scheme dirichlet --alpha 0.5 --oversampling adasyn \
+    --random_seed 42 --use_wandb true
 
-# Without oversampling (IID)
-python -m models.fedavg_lr.run \
-  --scheme iid --num_rounds 20 --num_clients 5 \
-  --local_epochs 1 --oversampling none \
-  --random_seed 42 --use_wandb true
+# No oversampling, multi-seed (one invocation per seed)
+python -m models.ffd.run --scheme iid --oversampling none \
+    --random_seed 2024 --use_wandb true
+```
 
-# Dirichlet sweeps — swap --scheme/--alpha and --oversampling as needed
-python -m models.fedavg_lr.run \
-  --scheme dirichlet --alpha 0.5 --num_rounds 20 --num_clients 5 \
-  --local_epochs 1 --oversampling smote \
-  --random_seed 42 --use_wandb true
+#### Federated — Hydra (FedXGBllr)
 
-python -m models.fedavg_lr.run \
-  --scheme dirichlet --alpha 1.0 --num_rounds 20 --num_clients 5 \
-  --local_epochs 1 --oversampling smote \
-  --random_seed 42 --use_wandb true
+```
+usage: python -m hfedxgboost.main [HYDRA_OVERRIDE [HYDRA_OVERRIDE ...]]
+```
 
-python -m models.fedavg_lr.run \
-  --scheme dirichlet --alpha 5.0 --num_rounds 20 --num_clients 5 \
-  --local_epochs 1 --oversampling smote \
-  --random_seed 42 --use_wandb true
+Hydra overrides are `key=value` pairs chained on the command line.
+
+| Override | Choices / range | Default | Notes |
+|----------|-----------------|---------|-------|
+| `dataset` | `paysim` | — | Selects `conf/dataset/paysim.yaml`. |
+| `clients` | `paysim_5_clients` | — | Client count config. |
+| `run_experiment.num_rounds` | int ≥ 1 | `50` | FL rounds. |
+| `dataset.non_iid.enabled` | `true` / `false` | `false` | Switch to Dirichlet partitioning. |
+| `dataset.non_iid.alpha` | float > 0 | `1.0` | Dirichlet α. |
+| `dataset.oversampling.method` | `smote` / `adasyn` / `none` | `smote` | Per-client resampler. |
+| `random_seed` | int | `42` | Affects partition + sampler + model init. |
+| `use_wandb` | `true` / `false` | `false` | Stream metrics to W&B. |
+
+Examples:
+
+```bash
+# IID + SMOTE
+python -m hfedxgboost.main \
+    dataset=paysim clients=paysim_5_clients \
+    run_experiment.num_rounds=50 \
+    dataset.oversampling.method=smote \
+    random_seed=42 use_wandb=true
+
+# Dirichlet α=0.5 + ADASYN
+python -m hfedxgboost.main \
+    dataset=paysim clients=paysim_5_clients \
+    run_experiment.num_rounds=50 \
+    dataset.non_iid.enabled=true dataset.non_iid.alpha=0.5 \
+    dataset.oversampling.method=adasyn \
+    random_seed=42 use_wandb=true
+```
+
+#### Centralized upper bounds (LR / SVM / GBM / XGB / FFD)
+
+```
+usage: python -m experiments.centralized_baseline.run_<model> [-h]
+       [--oversampling {smote,adasyn,none}]
+       [--random_seed SEED] [--use_wandb {true,false}]
+       [--wandb_project NAME]
+       [--num_epochs N] [--batch_size B] [--lr LR]      # run_ffd only
+```
+
+`<model>` ∈ {`lr`, `svm`, `gbm`, `xgb`, `ffd`}. Oversampling is applied **globally** to the full `x_train` (one resampling pass) rather than per-client.
+
+| Flag | Type | Choices / range | Default | Notes |
+|------|------|-----------------|---------|-------|
+| `--oversampling` | str | `smote`, `adasyn`, `none` | `smote` | Global resampler. |
+| `--random_seed` | int | — | `42` | |
+| `--use_wandb` | bool | `true` / `false` | `false` | |
+| `--wandb_project` | str | — | `fraud-fl-TA` | |
+| `--num_epochs` *(FFD)* | int | ≥ 1 | `20` | Centralized training epochs. |
+| `--batch_size` *(FFD)* | int | ≥ 1 | `80` | |
+| `--lr` *(FFD)* | float | > 0 | `0.01` | |
+
+Examples:
+
+```bash
+python -m experiments.centralized_baseline.run_lr  --oversampling smote  --random_seed 42 --use_wandb true
+python -m experiments.centralized_baseline.run_svm --oversampling adasyn --random_seed 42 --use_wandb true
+python -m experiments.centralized_baseline.run_gbm --oversampling none   --random_seed 42 --use_wandb true
+python -m experiments.centralized_baseline.run_xgb --oversampling smote  --random_seed 42 --use_wandb true
+python -m experiments.centralized_baseline.run_ffd --oversampling smote  --num_epochs 30 --random_seed 42 --use_wandb true
 ```
 
 ---
 
-### FedAvg-SVM
+### Sweep drivers (shell scripts)
+
+```
+usage: [SEEDS="<seed> [seed ...]"] bash experiments/run_<model>.sh
+usage: [SEEDS="..."] [SKIP_CENTRALIZED={0,1}] bash experiments/run_all.sh
+```
+
+Env-var overrides:
+
+| Variable | Default | Applies to | Notes |
+|----------|---------|------------|-------|
+| `SEEDS` | `42` | all `run_*.sh` | Space-separated list, e.g. `"42 123 2024"`. |
+| `SKIP_CENTRALIZED` | `0` | `run_all.sh` only | `1` skips the centralized upper-bound passes. |
+
+Per-model sweeps — each covers IID + Dirichlet ∈ {0.5, 1.0, 5.0} × {SMOTE, ADASYN, none}:
 
 ```bash
-# With SMOTE (IID)
-python -m models.fedavg_svm.run \
-  --scheme iid --num_rounds 20 --num_clients 5 \
-  --local_epochs 1 --oversampling smote \
-  --random_seed 42 --use_wandb true
+bash experiments/run_ffd.sh           # 12 runs / seed
+bash experiments/run_fedxgbllr.sh     # 12 runs / seed
+bash experiments/run_lr.sh            # 12 runs / seed
+bash experiments/run_svm.sh           # 12 runs / seed
+bash experiments/run_gbm.sh           # 12 runs / seed
+bash experiments/run_centralized.sh   # 15 runs / seed (5 models × 3 oversamplers)
 
-# With ADASYN (IID)
-python -m models.fedavg_svm.run \
-  --scheme iid --num_rounds 20 --num_clients 5 \
-  --local_epochs 1 --oversampling adasyn \
-  --random_seed 42 --use_wandb true
-
-# Without oversampling (IID)
-python -m models.fedavg_svm.run \
-  --scheme iid --num_rounds 20 --num_clients 5 \
-  --local_epochs 1 --oversampling none \
-  --random_seed 42 --use_wandb true
-
-# Dirichlet sweeps — swap --scheme/--alpha and --oversampling as needed
-python -m models.fedavg_svm.run \
-  --scheme dirichlet --alpha 0.5 --num_rounds 20 --num_clients 5 \
-  --local_epochs 1 --oversampling smote \
-  --random_seed 42 --use_wandb true
-
-python -m models.fedavg_svm.run \
-  --scheme dirichlet --alpha 1.0 --num_rounds 20 --num_clients 5 \
-  --local_epochs 1 --oversampling smote \
-  --random_seed 42 --use_wandb true
-
-python -m models.fedavg_svm.run \
-  --scheme dirichlet --alpha 5.0 --num_rounds 20 --num_clients 5 \
-  --local_epochs 1 --oversampling smote \
-  --random_seed 42 --use_wandb true
+# Multi-seed
+SEEDS="42 123 2024" bash experiments/run_ffd.sh
 ```
+
+End-to-end orchestration (preflight check + every script in order):
+
+```bash
+bash experiments/run_all.sh                          # seed 42, all stages
+SEEDS="42 123 2024" bash experiments/run_all.sh      # full 3-seed sweep
+SKIP_CENTRALIZED=1 bash experiments/run_all.sh       # skip upper-bound passes
+```
+
+`run_all.sh` aborts on first preflight failure: conda env active, `data/paysim/paysim.csv` exists, W&B logged in, and core Python deps import.
 
 ---
 
-### GBM Best-Model Selection
+### Collecting and reviewing results
 
-```bash
-# With SMOTE (IID)
-python -m models.gbm_bestmodel.run \
-  --scheme iid --num_rounds 10 --num_clients 5 \
-  --oversampling smote \
-  --random_seed 42 --use_wandb true
-
-# With ADASYN (IID)
-python -m models.gbm_bestmodel.run \
-  --scheme iid --num_rounds 10 --num_clients 5 \
-  --oversampling adasyn \
-  --random_seed 42 --use_wandb true
-
-# Without oversampling (IID)
-python -m models.gbm_bestmodel.run \
-  --scheme iid --num_rounds 10 --num_clients 5 \
-  --oversampling none \
-  --random_seed 42 --use_wandb true
-
-# Dirichlet sweeps — swap --scheme/--alpha and --oversampling as needed
-python -m models.gbm_bestmodel.run \
-  --scheme dirichlet --alpha 0.5 --num_rounds 10 --num_clients 5 \
-  --oversampling smote \
-  --random_seed 42 --use_wandb true
-
-python -m models.gbm_bestmodel.run \
-  --scheme dirichlet --alpha 1.0 --num_rounds 10 --num_clients 5 \
-  --oversampling smote \
-  --random_seed 42 --use_wandb true
-
-python -m models.gbm_bestmodel.run \
-  --scheme dirichlet --alpha 5.0 --num_rounds 10 --num_clients 5 \
-  --oversampling smote \
-  --random_seed 42 --use_wandb true
+```
+usage: python -m experiments.status            [--registry PATH] [--logs-root PATH]
+                                               [--pending-only] [--print-commands]
+usage: python -m experiments.collect_results   [--logs-root PATH] [--out PATH]
+                                               [--markdown-only]
 ```
 
----
-
-### FedXGBllr (Flower/Hydra CLI — different from the other three models)
-
-FedXGBllr selects the oversampler via the Hydra override
-`dataset.oversampling.method=<smote|adasyn|none>` (default: `smote` in
-`conf/dataset/paysim.yaml`).
-
-```bash
-# With SMOTE (IID)
-python -m hfedxgboost.main \
-  dataset=paysim clients=paysim_5_clients \
-  run_experiment.num_rounds=20 \
-  dataset.oversampling.method=smote \
-  use_wandb=true
-
-# With ADASYN (IID)
-python -m hfedxgboost.main \
-  dataset=paysim clients=paysim_5_clients \
-  run_experiment.num_rounds=20 \
-  dataset.oversampling.method=adasyn \
-  use_wandb=true
-
-# Without oversampling (IID)
-python -m hfedxgboost.main \
-  dataset=paysim clients=paysim_5_clients \
-  run_experiment.num_rounds=20 \
-  dataset.oversampling.method=none \
-  use_wandb=true
-
-# Dirichlet sweeps — swap dataset.non_iid.alpha and dataset.oversampling.method
-python -m hfedxgboost.main \
-  dataset=paysim clients=paysim_5_clients \
-  run_experiment.num_rounds=20 \
-  dataset.non_iid.enabled=true dataset.non_iid.alpha=0.5 \
-  dataset.oversampling.method=smote \
-  use_wandb=true
-
-python -m hfedxgboost.main \
-  dataset=paysim clients=paysim_5_clients \
-  run_experiment.num_rounds=20 \
-  dataset.non_iid.enabled=true dataset.non_iid.alpha=1.0 \
-  dataset.oversampling.method=smote \
-  use_wandb=true
-
-python -m hfedxgboost.main \
-  dataset=paysim clients=paysim_5_clients \
-  run_experiment.num_rounds=20 \
-  dataset.non_iid.enabled=true dataset.non_iid.alpha=5.0 \
-  dataset.oversampling.method=smote \
-  use_wandb=true
-```
-
----
-
-### Centralized Baselines
-
-The centralized baselines train a single global model on the full
-training set — no client splitting, no aggregation — and act as the
-theoretical upper bound for each FL model class. They use the same
-`--oversampling` flag, but applied **globally** (one resampling pass on
-the full `x_train`) instead of per-client.
+| Flag | Belongs to | Default | Notes |
+|------|------------|---------|-------|
+| `--registry` | `status` | `experiments/registry.yaml` | Planned sweep definition. |
+| `--logs-root` | both | `results/logs` | Directory walked for per-run CSVs. |
+| `--pending-only` | `status` | off | Only print runs still missing. |
+| `--print-commands` | `status` | off | Emit re-run commands for the pending set. |
+| `--out` | `collect_results` | `results/summary_table.csv` | Master CSV destination. |
+| `--markdown-only` | `collect_results` | off | Skip CSV write; only print Markdown. |
 
 ```bash
-# Logistic Regression (centralized LR upper bound)
-python -m experiments.centralized_baseline.run_lr --oversampling smote \
-  --random_seed 42 --use_wandb true
-python -m experiments.centralized_baseline.run_lr --oversampling adasyn \
-  --random_seed 42 --use_wandb true
-python -m experiments.centralized_baseline.run_lr --oversampling none \
-  --random_seed 42 --use_wandb true
+python -m experiments.status                       # done vs pending
+python -m experiments.status --pending-only        # just the gaps
+python -m experiments.status --print-commands      # re-run commands for pending
 
-# Linear SVM (centralized SVM upper bound)
-python -m experiments.centralized_baseline.run_svm --oversampling smote \
-  --random_seed 42 --use_wandb true
-
-# HistGBM (centralized GBM upper bound)
-python -m experiments.centralized_baseline.run_gbm --oversampling smote \
-  --random_seed 42 --use_wandb true
-
-# XGBoost (centralized FedXGBllr upper bound)
-python -m experiments.centralized_baseline.run_xgb --oversampling smote \
-  --random_seed 42 --use_wandb true
-
-# FFD (centralized Conv1D upper bound)
-python -m experiments.centralized_baseline.run_ffd --oversampling smote \
-  --random_seed 42 --use_wandb true
+python -m experiments.collect_results              # writes results/summary_table.csv
+                                                   # AND prints a paste-ready Markdown table
+python -m experiments.collect_results --markdown-only
 ```
+
+The Markdown table is paste-ready for the [Results table](#results-table) section below. The planned sweep lives in [experiments/registry.yaml](experiments/registry.yaml); `status.py` cross-references it against existing CSVs.
 
 ---
 
@@ -564,12 +490,11 @@ Auto-populated by `python -m experiments.collect_results` — paste the output o
 ---
 
 ### Notes
-- Run sequentially to avoid memory issues with PaySim (~6.3M rows)
-- Each LR/SVM run ≈ X minutes, each GBM run ≈ X minutes
-  (fill in after first run completes)
-- W&B dashboard: https://wandb.ai — project: hfedxgboost-paysim
-- All runs use seed=42 for this initial scan
-  (full 3-seed runs with seeds 42, 123, 2024 come after FedXGBllr integration)
+- Run sequentially to avoid memory issues with PaySim (~6.3M rows).
+- Per-run wall-clock times — fill in after first sweep completes.
+- W&B dashboard: https://wandb.ai — project: `fraud-fl-TA`.
+- The single-seed (`SEEDS=42`) sweep is the initial scan; the full study runs
+  seeds `42 123 2024` via `SEEDS="42 123 2024" bash experiments/run_all.sh`.
 
 ---
 

@@ -39,6 +39,13 @@ from preprocessing.smote import apply_smote
 from preprocessing.adasyn import apply_adasyn
 
 
+# Minority:majority ratio after oversampling.
+#   0.01  -> 1:100 (fraud : non-fraud)
+#   "auto" -> 1:1   (imblearn default; old behaviour)
+SAMPLING_STRATEGY: float | str = 0.01
+RATIO_TAG = "1to100"  # used in output filenames / titles
+
+
 def plot_pca_scatter(
     ax,
     x_2d: np.ndarray,
@@ -92,13 +99,13 @@ def _global_oversample(
     """Run a single global resampling on x_train. Returns (x, y, note)."""
     if method == "smote":
         sampler = SMOTE(
-            sampling_strategy="auto",
+            sampling_strategy=SAMPLING_STRATEGY,
             k_neighbors=smote_k,
             random_state=random_state,
         )
     elif method == "adasyn":
         sampler = ADASYN(
-            sampling_strategy="auto",
+            sampling_strategy=SAMPLING_STRATEGY,
             n_neighbors=smote_k,
             random_state=random_state,
         )
@@ -225,16 +232,45 @@ def generate_png(
             title=f"Client {k} — Before {method_label}",
         )
 
-        client_resampled = apply_fn(
-            client,
-            enabled=True,
-            sampling_strategy="auto",
-            base_seed=random_state,
-            **apply_kwargs,
-        )
+        skip_note: str | None = None
+        n_nf_k = n_k - n_fr_k
+        if isinstance(SAMPLING_STRATEGY, float) and n_nf_k > 0:
+            target_n_fr = SAMPLING_STRATEGY * n_nf_k
+            if n_fr_k >= target_n_fr:
+                skip_note = (
+                    f"already >= target ratio "
+                    f"(fraud={n_fr_k} >= {target_n_fr:.1f} = "
+                    f"{SAMPLING_STRATEGY:g} * {n_nf_k})"
+                )
 
-        x_k_after = client_resampled["x"]
-        y_k_after = client_resampled["y"]
+        if skip_note is not None:
+            print(f"  [client {k}] skipping {method_label}: {skip_note}")
+            client_resampled = dict(client)
+            client_resampled[applied_key] = False
+            x_k_after = x_k
+            y_k_after = y_k
+        else:
+            try:
+                client_resampled = apply_fn(
+                    client,
+                    enabled=True,
+                    sampling_strategy=SAMPLING_STRATEGY,
+                    base_seed=random_state,
+                    **apply_kwargs,
+                )
+                x_k_after = client_resampled["x"]
+                y_k_after = client_resampled["y"]
+            except ValueError as exc:
+                print(
+                    f"  [client {k}] {method_label} ValueError: {exc} "
+                    f"— using raw data"
+                )
+                client_resampled = dict(client)
+                client_resampled[applied_key] = False
+                x_k_after = x_k
+                y_k_after = y_k
+                skip_note = f"{method_label} ValueError"
+
         x_k_after_2d = (
             pca.transform(x_k_after)
             if len(y_k_after) > 0
@@ -243,6 +279,11 @@ def generate_png(
 
         if client_resampled.get(applied_key, False):
             right_title = f"Client {k} — After {method_label}"
+        elif skip_note is not None:
+            right_title = (
+                f"Client {k} — After {method_label} "
+                f"({method_label} skipped: {skip_note})"
+            )
         else:
             right_title = (
                 f"Client {k} — After {method_label} "
@@ -292,33 +333,47 @@ def main() -> None:
 
     evr_note = f" (PC1+PC2 = {evr.sum() * 100:.2f}% variance)"
 
+    if isinstance(SAMPLING_STRATEGY, float):
+        ratio_label = (
+            f"1:{int(round(1 / SAMPLING_STRATEGY))}"
+            if SAMPLING_STRATEGY > 0
+            else f"{SAMPLING_STRATEGY:g}"
+        )
+    else:
+        ratio_label = str(SAMPLING_STRATEGY)
+    method_tag = f"ratio={ratio_label}"
+    print(
+        f"\nOversampling sampling_strategy = {SAMPLING_STRATEGY!r} "
+        f"({ratio_label} fraud:non-fraud)"
+    )
+
     schemes = [
         # SMOTE
         ("iid",       None, "smote",
-         os.path.join(out_dir, "pca_iid_smote.png"),
-         f"PCA Visualization — IID Partition (K=5) | SMOTE{evr_note}"),
+         os.path.join(out_dir, f"pca_iid_smote_{RATIO_TAG}.png"),
+         f"PCA Visualization — IID Partition (K=5) | SMOTE [{method_tag}]{evr_note}"),
         ("dirichlet", 0.5,  "smote",
-         os.path.join(out_dir, "pca_dirichlet_alpha0.5_smote.png"),
-         f"PCA Visualization — Dirichlet α=0.5 (K=5) | SMOTE{evr_note}"),
+         os.path.join(out_dir, f"pca_dirichlet_alpha0.5_smote_{RATIO_TAG}.png"),
+         f"PCA Visualization — Dirichlet α=0.5 (K=5) | SMOTE [{method_tag}]{evr_note}"),
         ("dirichlet", 1.0,  "smote",
-         os.path.join(out_dir, "pca_dirichlet_alpha1.0_smote.png"),
-         f"PCA Visualization — Dirichlet α=1.0 (K=5) | SMOTE{evr_note}"),
+         os.path.join(out_dir, f"pca_dirichlet_alpha1.0_smote_{RATIO_TAG}.png"),
+         f"PCA Visualization — Dirichlet α=1.0 (K=5) | SMOTE [{method_tag}]{evr_note}"),
         ("dirichlet", 5.0,  "smote",
-         os.path.join(out_dir, "pca_dirichlet_alpha5.0_smote.png"),
-         f"PCA Visualization — Dirichlet α=5.0 (K=5) | SMOTE{evr_note}"),
+         os.path.join(out_dir, f"pca_dirichlet_alpha5.0_smote_{RATIO_TAG}.png"),
+         f"PCA Visualization — Dirichlet α=5.0 (K=5) | SMOTE [{method_tag}]{evr_note}"),
         # ADASYN
         ("iid",       None, "adasyn",
-         os.path.join(out_dir, "pca_iid_adasyn.png"),
-         f"PCA Visualization — IID Partition (K=5) | ADASYN{evr_note}"),
+         os.path.join(out_dir, f"pca_iid_adasyn_{RATIO_TAG}.png"),
+         f"PCA Visualization — IID Partition (K=5) | ADASYN [{method_tag}]{evr_note}"),
         ("dirichlet", 0.5,  "adasyn",
-         os.path.join(out_dir, "pca_dirichlet_alpha0.5_adasyn.png"),
-         f"PCA Visualization — Dirichlet α=0.5 (K=5) | ADASYN{evr_note}"),
+         os.path.join(out_dir, f"pca_dirichlet_alpha0.5_adasyn_{RATIO_TAG}.png"),
+         f"PCA Visualization — Dirichlet α=0.5 (K=5) | ADASYN [{method_tag}]{evr_note}"),
         ("dirichlet", 1.0,  "adasyn",
-         os.path.join(out_dir, "pca_dirichlet_alpha1.0_adasyn.png"),
-         f"PCA Visualization — Dirichlet α=1.0 (K=5) | ADASYN{evr_note}"),
+         os.path.join(out_dir, f"pca_dirichlet_alpha1.0_adasyn_{RATIO_TAG}.png"),
+         f"PCA Visualization — Dirichlet α=1.0 (K=5) | ADASYN [{method_tag}]{evr_note}"),
         ("dirichlet", 5.0,  "adasyn",
-         os.path.join(out_dir, "pca_dirichlet_alpha5.0_adasyn.png"),
-         f"PCA Visualization — Dirichlet α=5.0 (K=5) | ADASYN{evr_note}"),
+         os.path.join(out_dir, f"pca_dirichlet_alpha5.0_adasyn_{RATIO_TAG}.png"),
+         f"PCA Visualization — Dirichlet α=5.0 (K=5) | ADASYN [{method_tag}]{evr_note}"),
     ]
 
     timings = []

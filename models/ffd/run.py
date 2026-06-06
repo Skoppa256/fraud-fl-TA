@@ -24,6 +24,7 @@ import time
 from typing import Any, Dict
 
 import flwr as fl
+import torch
 import yaml
 
 from evaluation.results_writer import build_run_name, write_fl_results
@@ -129,7 +130,7 @@ def run(cfg: dict):
         import wandb
 
         wandb_run = wandb.init(
-            project=cfg.get("wandb_project", "hfedxgboost-paysim"),
+            project=cfg.get("wandb_project", "fraud-fl-TA"),
             name=run_name,
             config=cfg,
         )
@@ -153,13 +154,22 @@ def run(cfg: dict):
     )
     client_fn = build_client_fn(clients, cfg, seed=seed)
 
-    print(f"[run] FL starting: {num_rounds} rounds, {num_clients} clients")
+    num_gpus_per_client = float(
+        cfg.get("num_gpus_per_client", 0.2 if torch.cuda.is_available() else 0.0)
+    )
+    num_cpus_per_client = int(cfg.get("num_cpus_per_client", 1))
+    client_resources = {"num_cpus": num_cpus_per_client, "num_gpus": num_gpus_per_client}
+
+    print(
+        f"[run] FL starting: {num_rounds} rounds, {num_clients} clients "
+        f"(client_resources={client_resources})"
+    )
     history = fl.simulation.start_simulation(
         client_fn=client_fn,
         num_clients=num_clients,
         config=fl.server.ServerConfig(num_rounds=num_rounds),
         strategy=strategy,
-        client_resources={"num_cpus": 1, "num_gpus": 0.2},
+        client_resources=client_resources,
     )
 
     print(

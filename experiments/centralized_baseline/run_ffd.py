@@ -62,7 +62,7 @@ def _parse_args() -> argparse.Namespace:
     p.add_argument("--lr", type=float, default=0.01)
     p.add_argument("--use_wandb", type=_str2bool, default=False)
     p.add_argument(
-        "--wandb_project", type=str, default="hfedxgboost-paysim"
+        "--wandb_project", type=str, default="fraud-fl-TA"
     )
     return p.parse_args()
 

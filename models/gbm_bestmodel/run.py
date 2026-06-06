@@ -135,7 +135,7 @@ def run(cfg: dict):
         import wandb
 
         wandb_run = wandb.init(
-            project=cfg.get("wandb_project", "hfedxgboost-paysim"),
+            project=cfg.get("wandb_project", "fraud-fl-TA"),
             name=run_name,
             config=cfg,
         )

@@ -7,7 +7,7 @@ oversampling: smote     # one of: smote, adasyn, none
 smote_k_neighbors: 5
 smote_sampling_strategy: "auto"
 use_wandb: false
-wandb_project: "hfedxgboost-paysim"
+wandb_project: "fraud-fl-TA"
 early_stop_patience: 10
 partition:
   scheme: iid

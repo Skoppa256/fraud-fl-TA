@@ -64,7 +64,7 @@ four flags:
 --oversampling   (str,  default="smote", one of: smote, adasyn, none)
 --random_seed    (int,  default=42)
 --use_wandb      (bool, default=false)
---wandb_project  (str,  default="hfedxgboost-paysim")
+--wandb_project  (str,  default="fraud-fl-TA")
 ```
 
 Run each from the project root (`fraud-fl-TA/`):
@@ -93,7 +93,7 @@ python -m experiments.centralized_baseline.run_xgb \
 
 To log to W&B, pass `--use_wandb true`; the run name is
 `centralized_<model>_seed<seed>` and the default project is
-`hfedxgboost-paysim`.
+`fraud-fl-TA`.
 
 ## Results
 
