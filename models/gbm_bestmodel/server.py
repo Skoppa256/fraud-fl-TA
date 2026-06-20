@@ -10,28 +10,6 @@ from __future__ import annotations
 
 from typing import Any, Dict
 
-import numpy as np
-from sklearn.metrics import (
-    average_precision_score,
-    f1_score,
-    precision_score,
-    recall_score,
-)
-
-
-def compute_metrics(
-    y_true: np.ndarray, scores: np.ndarray, threshold: float = 0.5
-) -> Dict[str, float]:
-    """AUPRC + thresholded F1 / precision / recall for one set of scores."""
-    preds = (scores > threshold).astype(np.int32)
-    return {
-        "auprc": float(average_precision_score(y_true, scores)),
-        "f1": float(f1_score(y_true, preds, zero_division=0)),
-        "precision": float(precision_score(y_true, preds, zero_division=0)),
-        "recall": float(recall_score(y_true, preds, zero_division=0)),
-    }
-
-
 def new_early_stop_state() -> Dict[str, Any]:
     """Initialise the shared tracker the strategy mutates each round."""
     return {

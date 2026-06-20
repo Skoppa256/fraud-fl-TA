@@ -3,7 +3,8 @@
 Notes:
 - ``enabled=False`` → SMOTE is skipped on every client
 - ``n_fraud < k_neighbors + 1`` → SMOTE is skipped for that client and a warning is printed identifying the client and the shortfall
-- Otherwise → SMOTE oversamples the minority class to a 1:1 ratio with the majority class (``sampling_strategy="auto"``).
+- ``sampling_strategy`` is a float *target* and a client already meets/exceeds it → SMOTE is skipped for that client (it only adds minority samples; forcing a lower ratio would require *removing* fraud, which raises ``ValueError``). This clamp keeps non-IID (Dirichlet) runs from crashing when a partition over-concentrates fraud.
+- Otherwise → SMOTE oversamples the minority class to the requested ratio (``sampling_strategy="auto"`` → 1:1 with the majority class).
 """
 
 from __future__ import annotations
@@ -35,7 +36,9 @@ def apply_smote(
     sampling_strategy:
         Passed through to :class:`imblearn.over_sampling.SMOTE`.
         ``"auto"`` resamples the minority to match the majority count
-        (final ratio 1:1).
+        (final ratio 1:1). A float is a minority:majority target; if a
+        client already meets/exceeds it, SMOTE is skipped for that client
+        (see module docstring) rather than raising ``ValueError``.
     k_neighbors:
         SMOTE neighbour count. The safety guard requires at least
         ``k_neighbors + 1`` minority samples per client.
@@ -61,6 +64,7 @@ def apply_smote(
     y: np.ndarray = out["y"]
     n_samples = int(len(y))
     n_fraud = int((y == 1).sum())
+    n_majority = n_samples - n_fraud
     min_required = k_neighbors + 1
 
     skip_reason: str | None = None
@@ -73,6 +77,20 @@ def apply_smote(
         )
         print(
             f"[smote] WARN client {client_id}: skipping SMOTE — {skip_reason}"
+        )
+    elif isinstance(sampling_strategy, float) and n_fraud >= sampling_strategy * n_majority:
+        # Float sampling_strategy is a minority:majority TARGET. SMOTE only
+        # adds minority points, so a client already at/above the target needs
+        # no oversampling — forcing it would require removing fraud, which
+        # imblearn rejects with ValueError. Common under non-IID (Dirichlet)
+        # partitions that concentrate fraud onto a few clients.
+        current_ratio = (n_fraud / n_majority) if n_majority > 0 else float("inf")
+        skip_reason = (
+            f"target already met (minority:majority {current_ratio:.4f} "
+            f">= target {sampling_strategy})"
+        )
+        print(
+            f"[smote] client {client_id}: skipping SMOTE — {skip_reason}"
         )
 
     if skip_reason is not None:

@@ -1,7 +1,11 @@
 n_estimators_client: 50
 num_rounds: 50
 client_num: 5
-num_iterations: 500
+# Local CNN aggregator updates per round. 500 overtrained the aggregator on
+# PaySim: it overshot its optimum each round and FedAvg averaging drifted the
+# global model's AUPRC down over rounds (0.97 -> 0.69). 50 takes small, stable
+# steps so AUPRC climbs over the first rounds and holds at the ~0.98 ceiling.
+num_iterations: 50
 xgb:
   max_depth: 6
 CNN:

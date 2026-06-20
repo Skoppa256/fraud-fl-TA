@@ -29,8 +29,10 @@ from flwr.server.client_manager import ClientManager
 from flwr.server.client_proxy import ClientProxy
 from sklearn.metrics import average_precision_score
 
+from evaluation.metrics import best_f1_threshold, metrics_at_threshold
+
 from .client import array_to_model
-from .server import compute_metrics, new_early_stop_state, update_early_stop
+from .server import new_early_stop_state, update_early_stop
 
 
 class BestModelSelection(fl.server.strategy.Strategy):
@@ -138,7 +140,10 @@ class BestModelSelection(fl.server.strategy.Strategy):
             return None, {}
 
         winner = max(eligible, key=lambda c: c["val_auprc"])
-        m_val = compute_metrics(self.y_val, winner["scores"], threshold=0.5)
+        # Tune the decision threshold on the winner's validation scores
+        # (max-F1); the AUPRC-based selection above is threshold-free.
+        threshold = best_f1_threshold(self.y_val, winner["scores"])
+        m_val = metrics_at_threshold(self.y_val, winner["scores"], threshold)
         val_loss = 1.0 - m_val["auprc"]
 
         self._log_round(server_round, per_client, winner, m_val, val_loss)
@@ -256,7 +261,9 @@ class BestModelSelection(fl.server.strategy.Strategy):
 
     def _final_test_eval(self, server_round: int, winner: Dict[str, Any]) -> None:
         test_scores = winner["model"].predict_proba(self.x_test)[:, 1]
-        m_test = compute_metrics(self.y_test, test_scores, threshold=0.5)
+        # Apply the val-tuned threshold (same policy as the per-round metrics).
+        threshold = best_f1_threshold(self.y_val, winner["scores"])
+        m_test = metrics_at_threshold(self.y_test, test_scores, threshold)
         test_loss = 1.0 - m_test["auprc"]
         print(
             f"[server] FINAL round {server_round} | "

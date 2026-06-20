@@ -28,12 +28,7 @@ import numpy as np
 from imblearn.over_sampling import ADASYN, SMOTE
 from sklearn.ensemble import HistGradientBoostingClassifier
 from sklearn.exceptions import ConvergenceWarning
-from sklearn.metrics import (
-    average_precision_score,
-    f1_score,
-    precision_score,
-    recall_score,
-)
+from evaluation.metrics import tuned_metrics
 
 from evaluation.results_writer import (
     build_centralized_run_name,
@@ -133,15 +128,6 @@ def _fraud_ratio(y: np.ndarray) -> float:
     return float((y == 1).sum()) / max(len(y), 1)
 
 
-def _metrics(y_true: np.ndarray, scores: np.ndarray, preds: np.ndarray) -> dict:
-    return {
-        "auprc": float(average_precision_score(y_true, scores)),
-        "f1": float(f1_score(y_true, preds, zero_division=0)),
-        "precision": float(precision_score(y_true, preds, zero_division=0)),
-        "recall": float(recall_score(y_true, preds, zero_division=0)),
-    }
-
-
 def main() -> None:
     args = _parse_args()
     seed = int(args.random_seed)
@@ -208,12 +194,9 @@ def main() -> None:
     train_time = time.time() - t0
 
     val_scores = model.predict_proba(x_val)[:, 1]
-    val_preds = model.predict(x_val)
-    v = _metrics(y_val, val_scores, val_preds)
-
     test_scores = model.predict_proba(x_test)[:, 1]
-    test_preds = model.predict(x_test)
-    t = _metrics(y_test, test_scores, test_preds)
+    # Tune the decision threshold on validation (max-F1), apply it to test.
+    threshold, v, t = tuned_metrics(y_val, val_scores, y_test, test_scores)
 
     print(
         f"[VAL]  auprc={v['auprc']:.4f} | f1={v['f1']:.4f} | "

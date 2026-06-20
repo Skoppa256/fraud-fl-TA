@@ -141,10 +141,17 @@ The CSV is large (~493 MB) and is git-ignored — download it once locally.
    clients each round using vanilla **FedAvg** aggregation. Linear, fast,
    and the natural FL baseline.
 
-3. **Linear SVM + FedAvg** — Linear support-vector classifier (hinge loss),
-   weights aggregated via **FedAvg**. Captures a different decision boundary
+3. **Linear SVM + FedAvg** — Linear support-vector classifier (hinge loss)
+   trained by SGD (`SGDClassifier(loss="hinge")`), weights aggregated via
+   **FedAvg**. SGD rather than `LinearSVC` is deliberate: a batch SVM solver
+   re-solves to its local optimum every round and ignores the aggregated
+   weights, leaving the federated metric curves flat after round 1. SGD
+   takes a few local steps *from* the aggregated weights each round, so
+   FedAvg makes incremental progress. Captures a different decision boundary
    from LR while staying within the FedAvg protocol so the comparison
-   isolates *model class* from *aggregation strategy*.
+   isolates *model class* from *aggregation strategy*. (The centralized SVM
+   upper bound still uses batch `LinearSVC` — it fits once and never needs
+   aggregating.)
 
 4. **GBM with Best-Model Selection** — Each client trains a local Gradient
    Boosting Machine. Instead of averaging, the server evaluates submitted

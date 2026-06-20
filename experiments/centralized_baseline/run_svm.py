@@ -1,10 +1,20 @@
 """Centralized baseline — Support Vector Machine (LinearSVC).
 
-Same model class and hyperparameters as models/fedavg_svm/client.py.
-No Flower, no client splitting, no aggregation.
+No Flower, no client splitting, no aggregation: a single batch solve over
+the full training set, serving as the SVM upper bound for the federated
+arm in models/fedavg_svm/.
 
 Methodological note:
-    Identical LinearSVC(C=1.0, max_iter=1000) as the federated SVM.
+    This baseline keeps the batch LinearSVC(C=1.0, max_iter=1000) solver,
+    which is appropriate here because a centralized run fits once and never
+    needs to be FedAvg-aggregated. The *federated* SVM in
+    models/fedavg_svm/ instead uses SGDClassifier(loss="hinge") so that
+    FedAvg can make incremental progress across rounds (LinearSVC re-solves
+    from scratch every fit, which leaves the federated curves flat). Both
+    are linear SVMs with a hinge-loss decision boundary, so the comparison
+    stays apples-to-apples at the model-class level even though the solver
+    differs.
+
     For AUPRC computation, decision_function() scores are used
     (LinearSVC has no predict_proba). The binary-prediction
     threshold is 0 (sign of the margin), which is what
@@ -26,12 +36,7 @@ import warnings
 import numpy as np
 from imblearn.over_sampling import ADASYN, SMOTE
 from sklearn.exceptions import ConvergenceWarning
-from sklearn.metrics import (
-    average_precision_score,
-    f1_score,
-    precision_score,
-    recall_score,
-)
+from evaluation.metrics import tuned_metrics
 from sklearn.svm import LinearSVC
 
 from evaluation.results_writer import (
@@ -132,15 +137,6 @@ def _fraud_ratio(y: np.ndarray) -> float:
     return float((y == 1).sum()) / max(len(y), 1)
 
 
-def _metrics(y_true: np.ndarray, scores: np.ndarray, preds: np.ndarray) -> dict:
-    return {
-        "auprc": float(average_precision_score(y_true, scores)),
-        "f1": float(f1_score(y_true, preds, zero_division=0)),
-        "precision": float(precision_score(y_true, preds, zero_division=0)),
-        "recall": float(recall_score(y_true, preds, zero_division=0)),
-    }
-
-
 def main() -> None:
     args = _parse_args()
     seed = int(args.random_seed)
@@ -205,12 +201,9 @@ def main() -> None:
     train_time = time.time() - t0
 
     val_scores = model.decision_function(x_val)
-    val_preds = model.predict(x_val)
-    v = _metrics(y_val, val_scores, val_preds)
-
     test_scores = model.decision_function(x_test)
-    test_preds = model.predict(x_test)
-    t = _metrics(y_test, test_scores, test_preds)
+    # Tune the margin cut-off on validation (max-F1), apply it to test.
+    threshold, v, t = tuned_metrics(y_val, val_scores, y_test, test_scores)
 
     print(
         f"[VAL]  auprc={v['auprc']:.4f} | f1={v['f1']:.4f} | "

@@ -231,6 +231,18 @@ def main(cfg: DictConfig) -> None:
             """Create a federated learning client."""
             return FlClient(cfg, trainloaders[int(cid)], valloaders[int(cid)], cid)
 
+        # Ray reserves a GPU fraction per virtual client (client_resources.
+        # num_gpus). On a CPU-only host (e.g. local macOS dev) there is no GPU
+        # to reserve, so the ActorPool comes up empty and the simulation aborts.
+        # Fall back to CPU-only placement when CUDA is unavailable; the GPU
+        # config is preserved on machines that have one (e.g. Kaggle).
+        if not torch.cuda.is_available() and cfg.client_resources.num_gpus:
+            print(
+                "[main] no CUDA device found — forcing client_resources.num_gpus=0 "
+                f"(was {cfg.client_resources.num_gpus})"
+            )
+            cfg.client_resources.num_gpus = 0
+
         # Start the simulation
         history = fl.simulation.start_simulation(
             client_fn=client_fn,

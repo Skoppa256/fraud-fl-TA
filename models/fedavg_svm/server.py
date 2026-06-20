@@ -1,9 +1,15 @@
 """Server-side evaluation for the FedAvg-SVM pipeline.
 
 Identical structure to the LR server, but builds a
-:class:`sklearn.svm.LinearSVC` for evaluation, uses
-``decision_function`` as the ranking score, and thresholds at ``0`` for
-binary predictions.
+:class:`sklearn.linear_model.SGDClassifier` (``loss="hinge"``, i.e. a
+linear SVM) for evaluation, uses ``decision_function`` as the ranking
+score, and tunes the binary-decision threshold on validation (max-F1).
+The raw ``decision_function`` margins are scale-agnostic, so the tuner
+sweeps them directly. The eval model is
+never trained — it only holds the server-aggregated ``coef_`` /
+``intercept_`` to score val/test — so its hyperparameters are irrelevant;
+the class just has to expose ``decision_function``. See the client module
+docstring for why the trainable model is SGD-hinge rather than LinearSVC.
 """
 
 from __future__ import annotations
@@ -11,51 +17,37 @@ from __future__ import annotations
 from typing import Any, Callable, Dict, List, Tuple
 
 import numpy as np
-from sklearn.metrics import (
-    average_precision_score,
-    f1_score,
-    precision_score,
-    recall_score,
-)
-from sklearn.svm import LinearSVC
+from sklearn.linear_model import SGDClassifier
+
+from evaluation.metrics import best_f1_threshold, metrics_at_threshold
 
 
 N_FEATURES: int = 13
+CLASSES: np.ndarray = np.array([0, 1])
 
 
-def _build_eval_svm(cfg: dict) -> LinearSVC:
+def _build_eval_svm(cfg: dict) -> SGDClassifier:
     params = dict(cfg.get("svm_params", {}))
-    params.pop("warm_start", None)  # LinearSVC doesn't accept warm_start
-    return LinearSVC(
-        C=float(params.get("C", 1.0)),
-        max_iter=int(params.get("max_iter", 1000)),
-        dual="auto",
+    return SGDClassifier(
+        loss="hinge",
+        alpha=float(params.get("alpha", 1e-4)),
+        max_iter=int(params.get("max_iter", 5)),
         random_state=int(cfg.get("random_seed", 42)),
     )
 
 
 def _set_params(
-    model: LinearSVC, parameters: List[np.ndarray], n_features: int
+    model: SGDClassifier, parameters: List[np.ndarray], n_features: int
 ) -> None:
     coef, intercept = parameters
     model.coef_ = coef.astype(np.float64, copy=False)
     model.intercept_ = intercept.astype(np.float64, copy=False)
-    model.classes_ = np.array([0, 1])
+    model.classes_ = CLASSES
     model.n_features_in_ = n_features
 
 
-def _scores(model: LinearSVC, x: np.ndarray) -> np.ndarray:
+def _scores(model: SGDClassifier, x: np.ndarray) -> np.ndarray:
     return model.decision_function(x)
-
-
-def _metrics(y_true: np.ndarray, scores: np.ndarray, threshold: float = 0.0) -> dict:
-    preds = (scores > threshold).astype(np.int32)
-    return {
-        "auprc": float(average_precision_score(y_true, scores)),
-        "f1": float(f1_score(y_true, preds, zero_division=0)),
-        "precision": float(precision_score(y_true, preds, zero_division=0)),
-        "recall": float(recall_score(y_true, preds, zero_division=0)),
-    }
 
 
 def make_server_eval_fn(
@@ -84,11 +76,14 @@ def make_server_eval_fn(
         _set_params(model, parameters, N_FEATURES)
 
         val_scores = _scores(model, x_val)
-        v = _metrics(y_val, val_scores, threshold=0.0)
+        # Tune the margin cut-off on validation (max-F1); AUPRC is
+        # threshold-free. See evaluation.metrics for the rationale.
+        threshold = best_f1_threshold(y_val, val_scores)
+        v = metrics_at_threshold(y_val, val_scores, threshold)
         val_loss = 1.0 - v["auprc"]
 
         print(
-            f"[server] round {server_round} | "
+            f"[server] round {server_round} | thr={threshold:.4f} | "
             f"val_auprc={v['auprc']:.4f} | val_f1={v['f1']:.4f} | "
             f"val_precision={v['precision']:.4f} | val_recall={v['recall']:.4f}"
         )
@@ -125,7 +120,8 @@ def make_server_eval_fn(
 
         if server_round == num_rounds:
             test_scores = _scores(model, x_test)
-            t = _metrics(y_test, test_scores, threshold=0.0)
+            # Reuse the threshold tuned on this round's validation scores.
+            t = metrics_at_threshold(y_test, test_scores, threshold)
             test_loss = 1.0 - t["auprc"]
             print(
                 f"[server] FINAL round {server_round} | "

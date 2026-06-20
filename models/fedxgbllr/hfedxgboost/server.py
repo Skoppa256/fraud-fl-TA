@@ -28,12 +28,7 @@ from omegaconf import DictConfig
 from torch.utils.data import DataLoader, TensorDataset
 from xgboost import XGBClassifier, XGBRegressor
 
-from sklearn.metrics import (
-    average_precision_score,
-    f1_score,
-    precision_score,
-    recall_score,
-)
+from evaluation import metrics as fair_metrics
 
 from hfedxgboost.models import CNN
 from hfedxgboost.utils import (
@@ -399,6 +394,11 @@ def serverside_eval(
     metric_name = cfg.dataset.task.metric.name
 
     device = cfg.server.device
+    # cfg.server.device defaults to "cuda" (upstream paper assumed a GPU).
+    # Fall back to CPU so server-side eval runs on a CPU-only host instead of
+    # crashing on model.to("cuda"); honours an explicit GPU when present.
+    if device == "cuda" and not torch.cuda.is_available():
+        device = "cpu"
     model = CNN(cfg)
     model.set_weights(parameters_to_ndarrays(parameters[0]))
     model.to(device)
@@ -417,17 +417,10 @@ def serverside_eval(
         loss, result, _, probs, preds, y_true = test_extended(
             cfg, model, testloader, device=device, log_progress=False
         )
-        auprc = float(average_precision_score(y_true, probs)) if y_true.size else 0.0
-        f1 = float(f1_score(y_true, preds, zero_division=0))
-        precision = float(precision_score(y_true, preds, zero_division=0))
-        recall = float(recall_score(y_true, preds, zero_division=0))
-
-        print(
-            f"Evaluation on the server: test_loss={loss:.4f},",
-            f"test_,{metric_name},={result:.4f},",
-            f"auprc={auprc:.4f}, f1={f1:.4f},",
-            f"precision={precision:.4f}, recall={recall:.4f}",
-        )
+        auprc = fair_metrics.auprc(y_true, probs)
+        # F1/precision/recall are computed below at a threshold tuned on the
+        # validation set (max-F1); default 0.5 if no val set is available.
+        server_threshold = 0.5
 
         # PaySim: also evaluate on val set each round
         val_metrics: Dict[str, float] = {}
@@ -450,12 +443,12 @@ def serverside_eval(
             v_loss, v_result, _, v_probs, v_preds, v_y = test_extended(
                 cfg, model, val_loader, device=device, log_progress=False
             )
-            v_auprc = (
-                float(average_precision_score(v_y, v_probs)) if v_y.size else 0.0
-            )
-            v_f1 = float(f1_score(v_y, v_preds, zero_division=0))
-            v_precision = float(precision_score(v_y, v_preds, zero_division=0))
-            v_recall = float(recall_score(v_y, v_preds, zero_division=0))
+            v_auprc = fair_metrics.auprc(v_y, v_probs)
+            # Tune the decision threshold on validation (max-F1); reused for the
+            # test metrics below so both are reported at the same cut-off.
+            server_threshold = fair_metrics.best_f1_threshold(v_y, v_probs)
+            vm = fair_metrics.metrics_at_threshold(v_y, v_probs, server_threshold)
+            v_f1, v_precision, v_recall = vm["f1"], vm["precision"], vm["recall"]
             val_metrics = {
                 "val_loss": v_loss,
                 "val_accuracy": (
@@ -472,6 +465,17 @@ def serverside_eval(
                 f"val_auprc={v_auprc:.4f}, val_f1={v_f1:.4f},",
                 f"val_precision={v_precision:.4f}, val_recall={v_recall:.4f}",
             )
+
+        # Test F1/precision/recall at the val-tuned threshold (0.5 fallback
+        # when no val set was available, e.g. non-PaySim datasets).
+        tm = fair_metrics.metrics_at_threshold(y_true, probs, server_threshold)
+        f1, precision, recall = tm["f1"], tm["precision"], tm["recall"]
+        print(
+            f"Evaluation on the server: test_loss={loss:.4f},",
+            f"test_,{metric_name},={result:.4f},",
+            f"thr={server_threshold:.4f}, auprc={auprc:.4f}, f1={f1:.4f},",
+            f"precision={precision:.4f}, recall={recall:.4f}",
+        )
 
         if cfg.use_wandb:
             payload = {

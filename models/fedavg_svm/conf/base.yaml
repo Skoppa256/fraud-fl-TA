@@ -12,7 +12,13 @@ early_stop_patience: 10
 partition:
   scheme: iid
   alpha: null
+# Linear SVM trained by SGD (sklearn SGDClassifier, loss="hinge").
+# SGD is used instead of LinearSVC so FedAvg can make incremental progress
+# across rounds; see models/fedavg_svm/client.py for the full rationale.
 svm_params:
-  C: 1.0
-  max_iter: 1000
-  warm_start: true
+  alpha: 0.0001          # L2 regularization strength (SGD-native; replaces LinearSVC's C)
+  max_iter: 5            # SGD epochs per LOCAL round — keep small so each round is a
+                         # partial update and FedAvg accumulates across rounds. Large
+                         # values re-converge to the local optimum and flatten the curves.
+  learning_rate: optimal # SGD step schedule; "optimal" derives the rate from alpha
+  eta0: 0.0              # initial LR; only used by constant/invscaling/adaptive schedules

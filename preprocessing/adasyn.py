@@ -7,12 +7,17 @@ Notes:
 - ``enabled=False`` → ADASYN is skipped on every client.
 - ``n_fraud < n_neighbors + 1`` → ADASYN is skipped for that client and a
   warning is printed identifying the client and the shortfall.
+- ``sampling_strategy`` is a float *target* and a client already meets/exceeds
+  it → ADASYN is skipped for that client (oversamplers only add minority
+  samples; forcing a lower ratio would require *removing* fraud, which raises
+  ``ValueError``). This clamp keeps non-IID (Dirichlet) runs from crashing when
+  a partition over-concentrates fraud.
 - ADASYN can raise ``ValueError`` ("No samples will be generated...") when the
   density-based weighting yields no candidates (e.g., when minority samples
   are all surrounded by other minority samples). In that case the client's
   data is returned unchanged with ``adasyn_applied=False``.
-- Otherwise → ADASYN oversamples the minority class to approximately 1:1 with
-  the majority class (``sampling_strategy="auto"``).
+- Otherwise → ADASYN oversamples the minority class to the requested ratio
+  (``sampling_strategy="auto"`` → approximately 1:1 with the majority class).
 """
 
 from __future__ import annotations
@@ -41,7 +46,10 @@ def apply_adasyn(
     enabled:
         Master switch — if ``False``, ADASYN is skipped on every call.
     sampling_strategy:
-        Passed through to :class:`imblearn.over_sampling.ADASYN`.
+        Passed through to :class:`imblearn.over_sampling.ADASYN`. A float is
+        a minority:majority target; if a client already meets/exceeds it,
+        ADASYN is skipped for that client (see module docstring) rather than
+        raising ``ValueError``.
     n_neighbors:
         ADASYN neighbour count. The safety guard requires at least
         ``n_neighbors + 1`` minority samples per client.
@@ -66,6 +74,7 @@ def apply_adasyn(
     y: np.ndarray = out["y"]
     n_samples = int(len(y))
     n_fraud = int((y == 1).sum())
+    n_majority = n_samples - n_fraud
     min_required = n_neighbors + 1
 
     skip_reason: str | None = None
@@ -78,6 +87,20 @@ def apply_adasyn(
         )
         print(
             f"[adasyn] WARN client {client_id}: skipping ADASYN — {skip_reason}"
+        )
+    elif isinstance(sampling_strategy, float) and n_fraud >= sampling_strategy * n_majority:
+        # Float sampling_strategy is a minority:majority TARGET. Oversamplers
+        # only add minority points, so a client already at/above the target
+        # needs none — forcing it would require removing fraud, which imblearn
+        # rejects with ValueError. Common under non-IID (Dirichlet) partitions
+        # that concentrate fraud onto a few clients.
+        current_ratio = (n_fraud / n_majority) if n_majority > 0 else float("inf")
+        skip_reason = (
+            f"target already met (minority:majority {current_ratio:.4f} "
+            f">= target {sampling_strategy})"
+        )
+        print(
+            f"[adasyn] client {client_id}: skipping ADASYN — {skip_reason}"
         )
 
     if skip_reason is not None:

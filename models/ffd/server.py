@@ -11,24 +11,9 @@ from typing import Any, Callable, Dict, List, Tuple
 
 import flwr as fl
 import numpy as np
-from sklearn.metrics import (
-    average_precision_score,
-    f1_score,
-    precision_score,
-    recall_score,
-)
+from evaluation.metrics import best_f1_threshold, metrics_at_threshold
 
 from .model import FFDModel
-
-
-def _metrics(y_true: np.ndarray, scores: np.ndarray, threshold: float = 0.5) -> dict:
-    preds = (scores >= threshold).astype(np.int32)
-    return {
-        "auprc": float(average_precision_score(y_true, scores)),
-        "f1": float(f1_score(y_true, preds, zero_division=0)),
-        "precision": float(precision_score(y_true, preds, zero_division=0)),
-        "recall": float(recall_score(y_true, preds, zero_division=0)),
-    }
 
 
 def make_server_eval_fn(
@@ -69,11 +54,14 @@ def make_server_eval_fn(
         model.set_weights(parameters)
 
         val_scores = model.predict_proba(x_val)[:, 1]
-        v = _metrics(y_val, val_scores, threshold=0.5)
+        # Tune the decision threshold on validation (max-F1); AUPRC is
+        # threshold-free. See evaluation.metrics for the rationale.
+        threshold = best_f1_threshold(y_val, val_scores)
+        v = metrics_at_threshold(y_val, val_scores, threshold)
         val_loss = 1.0 - v["auprc"]
 
         print(
-            f"[server] round {server_round} | "
+            f"[server] round {server_round} | thr={threshold:.4f} | "
             f"val_auprc={v['auprc']:.4f} | val_f1={v['f1']:.4f} | "
             f"val_precision={v['precision']:.4f} | val_recall={v['recall']:.4f}"
         )
@@ -111,7 +99,8 @@ def make_server_eval_fn(
 
         if server_round == num_rounds:
             test_scores = model.predict_proba(x_test)[:, 1]
-            t = _metrics(y_test, test_scores, threshold=0.5)
+            # Reuse the threshold tuned on this round's validation scores.
+            t = metrics_at_threshold(y_test, test_scores, threshold)
             test_loss = 1.0 - t["auprc"]
             print(
                 f"[server] FINAL round {server_round} | "

@@ -1,17 +1,44 @@
 """Flower NumPyClient for Linear SVM + FedAvg.
 
-Mirrors the LR client one-to-one except that the underlying estimator
-is :class:`sklearn.svm.LinearSVC`. Two consequences worth flagging:
+The underlying estimator is :class:`sklearn.linear_model.SGDClassifier`
+with ``loss="hinge"`` — i.e. a linear support-vector classifier trained
+by stochastic gradient descent. This is a deliberate choice over
+:class:`sklearn.svm.LinearSVC`: SGD is what makes the model
+**FedAvg-correct**.
 
-1. ``LinearSVC`` does **not** accept ``warm_start`` in sklearn 1.5, so
-   the corresponding yaml key is silently dropped when instantiating
-   the estimator. Each local ``fit`` therefore retrains from scratch on
-   that round's local subset; the server still aggregates the resulting
-   parameters via FedAvg.
+Why not ``LinearSVC``?
+----------------------
+``LinearSVC`` is a *batch* liblinear solver with no incremental fit and no
+``warm_start``. Every ``fit`` call solves the local problem to its global
+optimum from scratch, ignoring the server-aggregated weights set on
+``coef_``. With fixed local data and seeds that means each client returns
+the *same* coefficients every round, FedAvg averages identical inputs, and
+the global model never moves — the metric curves are flat after round 1.
 
-2. ``LinearSVC`` has no ``predict_proba``; ranking scores come from
-   :meth:`LinearSVC.decision_function`. The binary-prediction threshold
-   becomes ``0`` (sign of the margin), not ``0.5``.
+``SGDClassifier`` fixes this — but only if it is wired up correctly. Two
+non-obvious requirements:
+
+1. **Seed the aggregated weights via ``warm_start`` + ``fit``, not
+   ``partial_fit``.** SGD trains on a *private* buffer (``_standard_coef``)
+   that is only initialised from ``coef_`` when ``coef_init`` is passed.
+   ``partial_fit`` always passes ``coef_init=None``, so weights written onto
+   ``coef_`` by ``set_parameters`` are ignored and every round restarts from
+   zero — exactly the no-progress failure we are trying to avoid. ``fit``
+   with ``warm_start=True`` instead does ``coef_init = self.coef_``
+   internally, so the aggregated weights genuinely seed the next round.
+
+2. **Keep each local fit partial.** With ``tol=None`` and a *small*
+   ``max_iter`` (the SGD epoch budget per round), each ``fit`` takes a fixed
+   handful of gradient passes from the aggregated weights instead of
+   re-converging to the local optimum. A full re-solve every round would
+   flatten the curves just like LinearSVC did. Averaging these partial
+   updates is what lets the global model improve round over round.
+
+Scoring
+-------
+``loss="hinge"`` has no ``predict_proba``; ranking scores come from
+:meth:`~sklearn.linear_model.SGDClassifier.decision_function`. The
+binary-prediction threshold is ``0`` (sign of the margin), not ``0.5``.
 """
 
 from __future__ import annotations
@@ -22,36 +49,38 @@ from typing import Any, Dict, List
 import flwr as fl
 import numpy as np
 from sklearn.exceptions import ConvergenceWarning
+from sklearn.linear_model import SGDClassifier
 from sklearn.metrics import average_precision_score
-from sklearn.svm import LinearSVC
 
 
 N_FEATURES: int = 13
+CLASSES: np.ndarray = np.array([0, 1])
 
 
-def _build_svm(cfg: dict, seed: int) -> LinearSVC:
+def _build_svm(cfg: dict, seed: int) -> SGDClassifier:
     params = dict(cfg.get("svm_params", {}))
-    # LinearSVC has no warm_start in sklearn 1.5 — drop it if present so
-    # the yaml stays declarative without crashing the constructor.
-    params.pop("warm_start", None)
-    return LinearSVC(
-        C=float(params.get("C", 1.0)),
-        max_iter=int(params.get("max_iter", 1000)),
-        dual="auto",
+    return SGDClassifier(
+        loss="hinge",
+        alpha=float(params.get("alpha", 1e-4)),
+        max_iter=int(params.get("max_iter", 5)),  # SGD epochs per local round
+        tol=None,  # run a fixed #epochs; never early-stop to the local optimum
+        learning_rate=str(params.get("learning_rate", "optimal")),
+        eta0=float(params.get("eta0", 0.0)),
         random_state=seed,
+        warm_start=True,  # fit() seeds coef_init from the aggregated coef_
     )
 
 
-def _initialise_unfit(model: LinearSVC, n_features: int) -> None:
+def _initialise_unfit(model: SGDClassifier, n_features: int) -> None:
     """Pre-populate sklearn attributes so the model can score pre-fit."""
     model.coef_ = np.zeros((1, n_features), dtype=np.float64)
     model.intercept_ = np.zeros(1, dtype=np.float64)
-    model.classes_ = np.array([0, 1])
+    model.classes_ = CLASSES
     model.n_features_in_ = n_features
 
 
 class FraudFLClient(fl.client.NumPyClient):
-    """FedAvg Linear-SVM client. See module docstring for the LinearSVC caveat."""
+    """FedAvg linear-SVM (SGD-hinge) client. See module docstring for why SGD."""
 
     def __init__(self, client_data: dict, cfg: dict, seed: int) -> None:
         self.client_id: int = int(client_data["client_id"])
@@ -59,7 +88,7 @@ class FraudFLClient(fl.client.NumPyClient):
         self.y: np.ndarray = client_data["y"]
         self.seed: int = int(seed) + self.client_id
         self.cfg = cfg
-        self.model: LinearSVC = _build_svm(cfg, self.seed)
+        self.model: SGDClassifier = _build_svm(cfg, self.seed)
         _initialise_unfit(self.model, N_FEATURES)
 
     def get_parameters(self, config: Dict[str, Any]) -> List[np.ndarray]:
@@ -72,7 +101,7 @@ class FraudFLClient(fl.client.NumPyClient):
         coef, intercept = parameters
         self.model.coef_ = coef.astype(np.float64, copy=False)
         self.model.intercept_ = intercept.astype(np.float64, copy=False)
-        self.model.classes_ = np.array([0, 1])
+        self.model.classes_ = CLASSES
         self.model.n_features_in_ = N_FEATURES
 
     def fit(self, parameters, config):
@@ -91,6 +120,12 @@ class FraudFLClient(fl.client.NumPyClient):
                 {"client_id": float(self.client_id), "skipped": 1.0},
             )
 
+        # fit() with warm_start=True continues from the weights just loaded by
+        # set_parameters() (i.e. the server's aggregated model): it passes
+        # coef_init=self.coef_ into SGD's private buffer, which partial_fit
+        # would NOT do. With tol=None + small max_iter each call is a few
+        # gradient passes, not a full re-solve — that partialness is what lets
+        # FedAvg make progress across rounds.
         with warnings.catch_warnings():
             warnings.simplefilter("ignore", ConvergenceWarning)
             for _ in range(local_epochs):

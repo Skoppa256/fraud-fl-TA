@@ -15,11 +15,10 @@ import numpy as np
 import torch
 import torch.nn as nn
 from imblearn.over_sampling import ADASYN, SMOTE
-from sklearn.metrics import (
-    average_precision_score,
-    f1_score,
-    precision_score,
-    recall_score,
+from evaluation.metrics import (
+    best_f1_threshold,
+    metrics_at_threshold,
+    tuned_metrics,
 )
 from torch.utils.data import DataLoader, TensorDataset
 
@@ -124,15 +123,6 @@ def _fraud_ratio(y: np.ndarray) -> float:
     return float((y == 1).sum()) / max(len(y), 1)
 
 
-def _metrics(y_true: np.ndarray, scores: np.ndarray, preds: np.ndarray) -> dict:
-    return {
-        "auprc": float(average_precision_score(y_true, scores)),
-        "f1": float(f1_score(y_true, preds, zero_division=0)),
-        "precision": float(precision_score(y_true, preds, zero_division=0)),
-        "recall": float(recall_score(y_true, preds, zero_division=0)),
-    }
-
-
 def main() -> None:
     args = _parse_args()
     seed = int(args.random_seed)
@@ -217,8 +207,8 @@ def main() -> None:
         avg_loss = epoch_loss / max(n_batches, 1)
 
         val_scores = model.predict_proba(x_val)[:, 1]
-        val_preds = (val_scores >= 0.5).astype(np.int32)
-        v = _metrics(y_val, val_scores, val_preds)
+        ep_threshold = best_f1_threshold(y_val, val_scores)
+        v = metrics_at_threshold(y_val, val_scores, ep_threshold)
 
         print(
             f"[epoch {epoch:>3}/{num_epochs}] loss={avg_loss:.4f} | "
@@ -240,12 +230,9 @@ def main() -> None:
     train_time = time.time() - t0
 
     val_scores = model.predict_proba(x_val)[:, 1]
-    val_preds = (val_scores >= 0.5).astype(np.int32)
-    v = _metrics(y_val, val_scores, val_preds)
-
     test_scores = model.predict_proba(x_test)[:, 1]
-    test_preds = (test_scores >= 0.5).astype(np.int32)
-    t = _metrics(y_test, test_scores, test_preds)
+    # Tune the decision threshold on validation (max-F1), apply it to test.
+    threshold, v, t = tuned_metrics(y_val, val_scores, y_test, test_scores)
 
     print(
         f"[VAL]  auprc={v['auprc']:.4f} | f1={v['f1']:.4f} | "
