@@ -1,10 +1,5 @@
 # Federated Learning for Financial Fraud Detection — Comparative Study
 
-> **Undergraduate Thesis (Tugas Akhir / TA)** — Institut Teknologi Sepuluh
-> Nopember (ITS), Surabaya. This repository contains the source code,
-> configurations, and experiment scaffolding for the thesis comparing
-> federated learning approaches on mobile-money fraud detection.
-
 A research project benchmarking five model classes — four federated and
 their centralized upper bounds — on the PaySim mobile-money fraud dataset.
 The goal is to compare classical FL (FedAvg over linear models), tree-ensemble
@@ -570,22 +565,3 @@ and can be synced later with `wandb sync`.
 
 Accuracy is **deliberately omitted** as a headline number: predicting
 "never fraud" on PaySim achieves ~99.87% accuracy and zero recall.
-
----
-
-## Academic context
-
-This repository is part of an undergraduate thesis (**Tugas Akhir / TA**)
-submitted to **Institut Teknologi Sepuluh Nopember (ITS), Surabaya**.
-The contribution is empirical: a head-to-head comparison of federated
-learning strategies on a heavily imbalanced fraud-detection task, with a
-focus on whether the choice of aggregation (FedAvg vs. best-model
-selection vs. FedXGBllr's learnable aggregation) matters more than the
-choice of base learner under non-IID partitioning.
-
-If you reference this work, please cite the upstream baselines it
-builds on — FedXGBllr (Ma et al.) for the tree-ensemble FL pathway, the
-PaySim dataset (Lopez-Rojas et al.) for the synthetic data, and the
-Flower framework for the FL runtime.
-
----
