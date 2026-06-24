@@ -331,9 +331,9 @@ usage: python -m experiments.centralized_baseline.run_<model> [-h]
 Examples:
 
 ```bash
-python -m experiments.centralized_baseline.run_lr  --oversampling smote  --random_seed 42 --use_wandb true
-python -m experiments.centralized_baseline.run_svm --oversampling adasyn --random_seed 42 --use_wandb true
-python -m experiments.centralized_baseline.run_gbm --oversampling none   --random_seed 42 --use_wandb true
+python -m experiments.centralized_baseline.run_lr  --oversampling smote --sampling_strategy 0.01 --random_seed 42 --use_wandb true
+python -m experiments.centralized_baseline.run_svm --oversampling smote --sampling_strategy 0.01 --random_seed 42 --use_wandb true
+python -m experiments.centralized_baseline.run_gbm --oversampling smote --sampling_strategy 0.01 --random_seed 42 --use_wandb true
 python -m experiments.centralized_baseline.run_xgb --oversampling smote  --random_seed 42 --use_wandb true
 python -m experiments.centralized_baseline.run_ffd --oversampling smote  --num_epochs 30 --random_seed 42 --use_wandb true
 ```

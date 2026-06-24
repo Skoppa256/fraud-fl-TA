@@ -24,7 +24,6 @@ import time
 from typing import Any, Dict
 
 import flwr as fl
-import torch
 import yaml
 
 from evaluation.results_writer import build_run_name, write_fl_results
@@ -171,9 +170,7 @@ def run(cfg: dict):
     )
     client_fn = build_client_fn(clients, cfg, seed=seed)
 
-    num_gpus_per_client = float(
-        cfg.get("num_gpus_per_client", 0.2 if torch.cuda.is_available() else 0.0)
-    )
+    num_gpus_per_client = float(cfg.get("num_gpus_per_client", 0.0))
     num_cpus_per_client = int(cfg.get("num_cpus_per_client", 1))
     client_resources = {"num_cpus": num_cpus_per_client, "num_gpus": num_gpus_per_client}
 
