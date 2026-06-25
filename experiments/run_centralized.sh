@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# Centralized upper-bound baselines for all 5 model classes.
-# (3 oversamplers × 5 models × |SEEDS| = 15 runs per seed.)
+# Centralized upper-bound baselines for all model classes.
+# (3 oversamplers × 6 models × |SEEDS| = 18 runs per seed.)
 
 source "$(dirname "${BASH_SOURCE[0]}")/_run_helpers.sh"
 
@@ -26,6 +26,10 @@ for SEED in ${SEEDS}; do
 
     run_one "centralized_ffd_${OS}_seed${SEED}" "${LOG_DIR}" -- \
       python -m experiments.centralized_baseline.run_ffd \
+        --oversampling "${OS}" --random_seed "${SEED}" --use_wandb true
+
+    run_one "centralized_bert_fraud_${OS}_seed${SEED}" "${LOG_DIR}" -- \
+      python -m experiments.centralized_baseline.run_bert_fraud \
         --oversampling "${OS}" --random_seed "${SEED}" --use_wandb true
   done
 done

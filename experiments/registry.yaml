@@ -11,6 +11,7 @@
 
 models:
   - ffd
+  - bert_fraud
   - fedxgbllr
   - lr
   - svm
@@ -22,6 +23,7 @@ centralized_models:
   - gbm
   - xgb
   - ffd
+  - bert_fraud
 
 schemes:
   - iid
@@ -49,6 +51,7 @@ seeds:
 # have to import each model package).
 num_rounds:
   ffd: 50
+  bert_fraud: 50
   fedxgbllr: 50
   lr: 20
   svm: 20

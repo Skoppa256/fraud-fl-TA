@@ -1,0 +1,26 @@
+model: bert_fraud
+num_clients: 5
+num_rounds: 50
+local_epochs: 3
+batch_size: 64
+lr: 0.001
+weight_decay: 0.0001
+random_seed: 42
+oversampling: "smote"      # one of: smote, adasyn, none
+sampling_strategy: "auto"  # imblearn sampling_strategy; "auto"=1:1, e.g. 0.01 for 1:100
+use_wandb: false
+wandb_project: "fraud-fl-TA"
+early_stop_patience: 10
+# FL clients default to CPU; set "cuda" on GPU hosts and pair with num_gpus_per_client.
+device: "cpu"
+num_cpus_per_client: 1
+num_gpus_per_client: 0.0
+partition:
+  scheme: iid
+  alpha: null
+bert_params:
+  d_model: 64        # embedding dimension per feature token and [CLS]
+  nhead: 4           # attention heads (d_model must be divisible by nhead)
+  num_layers: 2      # stacked TransformerEncoderLayer blocks
+  dim_feedforward: 256  # FFN hidden size inside each encoder layer
+  dropout: 0.1
