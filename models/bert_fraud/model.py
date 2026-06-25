@@ -107,10 +107,17 @@ class BertFraudModel(nn.Module):
         for p, w in zip(self.parameters(), weights):
             p.data = torch.from_numpy(np.array(w)).to(p.device).type_as(p.data)
 
-    def predict_proba(self, x_np: np.ndarray) -> np.ndarray:
-        """Inference on numpy array. Returns (N, 2) softmax probabilities."""
+    def predict_proba(self, x_np: np.ndarray, batch_size: int = 2048) -> np.ndarray:
+        """Inference on numpy array. Returns (N, 2) softmax probabilities.
+
+        Processes in chunks to avoid OOM on large val/test sets (~945K rows).
+        """
         self.eval()
+        results = []
         with torch.no_grad():
-            x = torch.from_numpy(x_np.astype(np.float32)).to(self.device)
-            logits = self.forward(x)
-            return torch.softmax(logits, dim=1).cpu().numpy()
+            for start in range(0, len(x_np), batch_size):
+                chunk = x_np[start : start + batch_size].astype(np.float32)
+                x = torch.from_numpy(chunk).to(self.device)
+                probs = torch.softmax(self.forward(x), dim=1).cpu().numpy()
+                results.append(probs)
+        return np.concatenate(results, axis=0)
