@@ -40,7 +40,8 @@ class FFDClient(fl.client.NumPyClient):
         self.client_id: int = int(client_id)
         self.cfg: Dict[str, Any] = cfg
         self.seed: int = int(seed) + self.client_id
-        self.model: FFDModel = FFDModel(input_dim=int(x_local.shape[1]))
+        device = cfg.get("device", "cpu")
+        self.model: FFDModel = FFDModel(input_dim=int(x_local.shape[1]), device=device)
 
     def get_parameters(self, config: Dict[str, Any]) -> List[np.ndarray]:
         return self.model.get_weights()

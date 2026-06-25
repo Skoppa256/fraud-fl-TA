@@ -27,7 +27,7 @@ import torch.nn as nn
 
 
 class FFDModel(nn.Module):
-    def __init__(self, input_dim: int = 13) -> None:
+    def __init__(self, input_dim: int = 13, device: str | None = None) -> None:
         super().__init__()
         self.input_dim = int(input_dim)
 
@@ -52,7 +52,10 @@ class FFDModel(nn.Module):
             nn.Linear(512, 2),
         )
 
-        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        if device is not None:
+            self.device = torch.device(device)
+        else:
+            self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         self.to(self.device)
 
     def _get_flatten_dim(self, input_dim: int) -> int:
