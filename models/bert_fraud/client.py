@@ -32,7 +32,7 @@ def _build_model(cfg: Dict[str, Any]) -> BertFraudModel:
         num_layers=int(bp.get("num_layers", 2)),
         dim_feedforward=int(bp.get("dim_feedforward", 256)),
         dropout=float(bp.get("dropout", 0.1)),
-        device=cfg.get("device", "cpu"),
+        device=cfg.get("device", None),
     )
 
 

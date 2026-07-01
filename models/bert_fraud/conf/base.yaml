@@ -11,9 +11,9 @@ sampling_strategy: "auto"  # imblearn sampling_strategy; "auto"=1:1, e.g. 0.01 f
 use_wandb: false
 wandb_project: "fraud-fl-TA"
 early_stop_patience: 10
-# FL clients default to CPU; set "cuda" on GPU hosts and pair with num_gpus_per_client.
-device: "cpu"
-num_cpus_per_client: 1
+# 4 CPUs per client → pool of 5 concurrent actors (20 CPUs / 4 = 5).
+# Prevents RAM exhaustion from 20 simultaneous SMOTE + training operations.
+num_cpus_per_client: 4
 num_gpus_per_client: 0.0
 partition:
   scheme: iid
