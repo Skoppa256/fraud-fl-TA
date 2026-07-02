@@ -1,2 +1,5 @@
 dataset/
 outputs/
+# Re-include Hydra dataset config files (dataset/ above targets raw data downloads)
+!hfedxgboost/conf/dataset/
+!hfedxgboost/conf/dataset/**
