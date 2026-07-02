@@ -77,7 +77,7 @@ class FlClient(fl.client.Client):
 
         # Collected training loss and accuracy statistics
         n_samples = labels.size(0)
-        metric_val = metric_fn(outputs, labels.type(torch.int))
+        metric_val = metric_fn(outputs, labels.to(self.device).type(torch.int))
 
         return loss.item(), metric_val * n_samples, n_samples
 

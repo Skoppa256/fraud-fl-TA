@@ -34,8 +34,8 @@ server:
     device: "cuda"
 
 client_resources:
-    num_cpus: 4
-    num_gpus: 0.2
+    num_cpus: 10
+    num_gpus: 0.5
 
 strategy:
   _target_: hfedxgboost.strategy.FedXgbNnAvg
