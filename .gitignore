@@ -109,3 +109,6 @@ desktop.ini
 # Keep checked-in PCA visualizations (small reference plots)
 !results/visualizations/
 !results/visualizations/*.png
+# Keep Hydra wandb config (not a W&B run artifact — it's a static config file)
+!models/fedxgbllr/hfedxgboost/conf/wandb/
+!models/fedxgbllr/hfedxgboost/conf/wandb/default.yaml

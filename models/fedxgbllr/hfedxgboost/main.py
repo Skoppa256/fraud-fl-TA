@@ -256,6 +256,7 @@ def main(cfg: DictConfig) -> None:
             client_resources=cfg.client_resources,
             config=ServerConfig(num_rounds=cfg.run_experiment.num_rounds),
             strategy=strategy,
+            ray_init_args={"num_gpus": torch.cuda.device_count()},
         )
 
         print(history)

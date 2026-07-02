@@ -14,7 +14,7 @@ early_stop_patience: 10
 # 4 CPUs per client → pool of 5 concurrent actors (20 CPUs / 4 = 5).
 # Prevents RAM exhaustion from 20 simultaneous SMOTE + training operations.
 num_cpus_per_client: 4
-num_gpus_per_client: 0.0
+num_gpus_per_client: 0.2
 partition:
   scheme: iid
   alpha: null

@@ -28,6 +28,7 @@ import time
 from typing import Any, Dict
 
 import flwr as fl
+import torch
 import yaml
 
 from evaluation.results_writer import build_run_name, write_fl_results
@@ -206,6 +207,7 @@ def run(cfg: dict):
         config=fl.server.ServerConfig(num_rounds=num_rounds),
         strategy=strategy,
         client_resources=client_resources,
+        ray_init_args={"num_gpus": torch.cuda.device_count()},
     )
 
     print(
