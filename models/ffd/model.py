@@ -85,10 +85,20 @@ class FFDModel(nn.Module):
         for p, w in zip(self.parameters(), weights):
             p.data = torch.from_numpy(np.array(w)).to(p.device).type_as(p.data)
 
-    def predict_proba(self, x_np: np.ndarray) -> np.ndarray:
-        """Inference on numpy array. Returns ``(N, 2)`` softmax probabilities."""
+    def predict_proba(self, x_np: np.ndarray, batch_size: int = 8192) -> np.ndarray:
+        """Inference on numpy array. Returns ``(N, 2)`` softmax probabilities.
+
+        Inference is chunked into mini-batches. A full-batch forward pass over a
+        large local partition (e.g. ~400k rows) produces multi-GiB conv/FC
+        activations; with several Ray client actors sharing one GPU that
+        exhausts memory (CUDA OOM). Batching bounds the peak activation size.
+        """
         self.eval()
+        x_all = np.ascontiguousarray(x_np, dtype=np.float32)
+        out = np.empty((x_all.shape[0], 2), dtype=np.float32)
         with torch.no_grad():
-            x = torch.from_numpy(x_np.astype(np.float32)).to(self.device)
-            logits = self.forward(x)
-            return torch.softmax(logits, dim=1).cpu().numpy()
+            for start in range(0, x_all.shape[0], batch_size):
+                xb = torch.from_numpy(x_all[start : start + batch_size]).to(self.device)
+                logits = self.forward(xb)
+                out[start : start + batch_size] = torch.softmax(logits, dim=1).cpu().numpy()
+        return out
