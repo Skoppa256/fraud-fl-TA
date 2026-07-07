@@ -173,6 +173,12 @@ def run(cfg: dict):
 
     num_gpus_per_client = float(cfg.get("num_gpus_per_client", 0.0))
     num_cpus_per_client = int(cfg.get("num_cpus_per_client", 1))
+    # If no GPU is present, force num_gpus to 0. Otherwise Ray is inited with
+    # num_gpus=device_count()=0 (below) while each client still requests a
+    # fraction of a GPU, so no client can ever be scheduled and the simulation
+    # deadlocks. base.yaml carries num_gpus_per_client=0.2 for GPU servers.
+    if not torch.cuda.is_available():
+        num_gpus_per_client = 0.0
     client_resources = {"num_cpus": num_cpus_per_client, "num_gpus": num_gpus_per_client}
 
     print(
