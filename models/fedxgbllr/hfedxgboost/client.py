@@ -77,7 +77,11 @@ class FlClient(fl.client.Client):
 
         # Collected training loss and accuracy statistics
         n_samples = labels.size(0)
-        metric_val = metric_fn(outputs, labels.to(self.device).type(torch.int))
+        # metric_fn (torchmetrics) is instantiated on CPU; outputs/labels live on
+        # self.device (cuda when a GPU is present). Move both inputs to CPU to
+        # match the metric's device — same pattern as the eval path in utils.py.
+        # (Feeding cuda tensors to the CPU metric raises a device-mismatch error.)
+        metric_val = metric_fn(outputs.cpu(), labels.type(torch.int).cpu())
 
         return loss.item(), metric_val * n_samples, n_samples
 
