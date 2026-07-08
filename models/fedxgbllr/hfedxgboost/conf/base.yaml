@@ -34,8 +34,12 @@ server:
     device: "cuda"
 
 client_resources:
+    # num_gpus=1.0 → at most one client actor holds the GPU at a time
+    # (1.0 GPU / 1.0 = 1 concurrent), so clients run serialized on the GPU with
+    # no cross-actor VRAM contention. 0.5 packs 2 actors on one card; 0.2 packs
+    # 5 (which is what worked historically, so 1.0 is strictly safer).
     num_cpus: 10
-    num_gpus: 0.5
+    num_gpus: 1.0
 
 strategy:
   _target_: hfedxgboost.strategy.FedXgbNnAvg
