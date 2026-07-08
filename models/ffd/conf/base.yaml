@@ -14,7 +14,13 @@ early_stop_patience: 10
 # Prevents all 20 Ray actors from running SMOTE + training simultaneously,
 # which caused RAM exhaustion and server crash.
 num_cpus_per_client: 4
-num_gpus_per_client: 0.2
+# num_gpus_per_client controls how Ray shares the single GPU across client
+# actors. At 0.2, Ray packs all 5 client actors onto one GPU at once and they
+# exhaust VRAM (torch.OutOfMemoryError). At 1.0, at most one client actor holds
+# the GPU at a time (1.0 GPU / 1.0 = 1 concurrent), so clients run serialized on
+# the GPU — no cross-actor contention. At 0.0, Ray hides the GPU
+# (CUDA_VISIBLE_DEVICES="") and clients fall back to CPU.
+num_gpus_per_client: 1.0
 partition:
   scheme: iid
   alpha: null
