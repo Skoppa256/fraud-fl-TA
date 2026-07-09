@@ -1,13 +1,13 @@
 model: bert_fraud
 num_clients: 5
-num_rounds: 50
+num_rounds: 20
 local_epochs: 3
 batch_size: 64
 lr: 0.001
 weight_decay: 0.0001
 random_seed: 42
 oversampling: "smote"      # one of: smote, adasyn, none
-sampling_strategy: "auto"  # imblearn sampling_strategy; "auto"=1:1, e.g. 0.01 for 1:100
+sampling_strategy: 0.01  # imblearn sampling_strategy; "auto"=1:1, e.g. 0.01 for 1:100
 use_wandb: false
 wandb_project: "fraud-fl-TA"
 early_stop_patience: 10

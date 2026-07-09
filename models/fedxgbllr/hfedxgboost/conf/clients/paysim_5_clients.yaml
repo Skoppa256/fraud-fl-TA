@@ -1,5 +1,5 @@
 n_estimators_client: 50
-num_rounds: 50
+num_rounds: 20
 client_num: 5
 # Local CNN aggregator updates per round. 500 overtrained the aggregator on
 # PaySim: it overshot its optimum each round and FedAvg averaging drifted the

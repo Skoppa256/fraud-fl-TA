@@ -66,7 +66,7 @@ def _parse_args() -> argparse.Namespace:
     p.add_argument(
         "--sampling_strategy",
         type=str,
-        default="auto",
+        default="0.01",
         help=(
             "Passed to imblearn's sampling_strategy. 'auto' = 1:1 fraud:non-fraud. "
             "A float sets the post-resample minority/majority ratio "

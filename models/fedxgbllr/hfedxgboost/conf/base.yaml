@@ -1,7 +1,7 @@
 ---
 defaults: 
-  - dataset: cpusmall
-  - clients: cpusmall_5_clients
+  - dataset: paysim
+  - clients: paysim_5_clients
   - wandb: default
 
 centralized: False
