@@ -422,11 +422,13 @@ def serverside_eval(
         # validation set (max-F1); default 0.5 if no val set is available.
         server_threshold = 0.5
 
-        # PaySim: also evaluate on val set each round
+        # Pre-processed datasets (PaySim / creditcard): also evaluate on the
+        # held-out val set each round.
         val_metrics: Dict[str, float] = {}
-        from hfedxgboost.dataset_preparation import _PAYSIM_VAL_CACHE
-        if _PAYSIM_VAL_CACHE is not None and cfg.dataset.dataset_name == "paysim":
-            x_val_np, y_val_np = _PAYSIM_VAL_CACHE
+        from hfedxgboost.dataset_preparation import get_val_cache
+        _val_cache = get_val_cache(cfg.dataset.dataset_name)
+        if _val_cache is not None:
+            x_val_np, y_val_np = _val_cache
             x_val_t = torch.from_numpy(x_val_np.astype(np.float32))
             y_val_t = torch.from_numpy(y_val_np.astype(np.float32))
             val_ds = TensorDataset(x_val_t, y_val_t)

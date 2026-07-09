@@ -27,6 +27,7 @@ LOGS_ROOT = "results/logs"
 DEFAULT_OUT = "results/summary_table.csv"
 
 PRIMARY_COLUMNS: Sequence[str] = (
+    "dataset",
     "model",
     "scheme",
     "alpha",
@@ -88,6 +89,7 @@ def _sort_key(row: Dict[str, str]) -> tuple:
             return default
 
     return (
+        row.get("dataset", ""),
         row.get("model", ""),
         row.get("scheme", ""),
         _f("alpha", 1e9),
@@ -137,12 +139,12 @@ def print_markdown_table(rows: List[Dict[str, str]]) -> None:
         return
 
     header = (
-        "| Model | Scheme | Oversampling | Seed | "
+        "| Dataset | Model | Scheme | Oversampling | Seed | "
         "test_auprc | test_f1 | test_precision | test_recall | "
         "best_round | duration (s) |"
     )
     sep = (
-        "|-------|--------|--------------|------|"
+        "|---------|-------|--------|--------------|------|"
         "------------|---------|----------------|-------------|"
         "------------|--------------|"
     )
@@ -158,6 +160,7 @@ def print_markdown_table(rows: List[Dict[str, str]]) -> None:
             scheme_label = scheme or "—"
         print(
             "| "
+            f"{row.get('dataset', '-') or '-'} | "
             f"{row.get('model', '-')} | "
             f"{scheme_label} | "
             f"{row.get('oversampling', '-')} | "

@@ -22,7 +22,6 @@ from sklearn.linear_model import SGDClassifier
 from evaluation.metrics import best_f1_threshold, metrics_at_threshold
 
 
-N_FEATURES: int = 13
 CLASSES: np.ndarray = np.array([0, 1])
 
 
@@ -37,13 +36,15 @@ def _build_eval_svm(cfg: dict) -> SGDClassifier:
 
 
 def _set_params(
-    model: SGDClassifier, parameters: List[np.ndarray], n_features: int
+    model: SGDClassifier, parameters: List[np.ndarray]
 ) -> None:
     coef, intercept = parameters
     model.coef_ = coef.astype(np.float64, copy=False)
     model.intercept_ = intercept.astype(np.float64, copy=False)
     model.classes_ = CLASSES
-    model.n_features_in_ = n_features
+    # Feature count read from the aggregated coef so the eval model matches
+    # the dataset (13 for PaySim, 30 for creditcard, ...).
+    model.n_features_in_ = int(coef.shape[1])
 
 
 def _scores(model: SGDClassifier, x: np.ndarray) -> np.ndarray:
@@ -73,7 +74,7 @@ def make_server_eval_fn(
 
     def eval_fn(server_round: int, parameters: List[np.ndarray], eval_config: Dict[str, Any]):
         model = _build_eval_svm(cfg)
-        _set_params(model, parameters, N_FEATURES)
+        _set_params(model, parameters)
 
         val_scores = _scores(model, x_val)
         # Tune the margin cut-off on validation (max-F1); AUPRC is

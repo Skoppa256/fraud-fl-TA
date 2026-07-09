@@ -1,0 +1,12 @@
+n_estimators_client: 50
+num_rounds: 50
+client_num: 5
+# Local CNN aggregator updates per round. Copied verbatim from the PaySim
+# 5-client config — creditcard is also a highly imbalanced binary task, so the
+# same small-step schedule is a safe starting point (retune only if the AUPRC
+# curve drifts down over rounds, as documented for PaySim).
+num_iterations: 50
+xgb:
+  max_depth: 6
+CNN:
+  lr: 0.0005

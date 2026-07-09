@@ -24,9 +24,25 @@ _PROJECT_ROOT = _os.path.abspath(
 if _PROJECT_ROOT not in _sys.path:
     _sys.path.insert(0, _PROJECT_ROOT)
 
-# Cache for PaySim val set — populated by _load_paysim(), read by serverside_eval
-# NOT thread-safe — acceptable for single-process FL simulation only
+# Cache for the val set of a pre-processed dataset (PaySim / creditcard) —
+# populated by the corresponding _load_*() shim, read by serverside_eval.
+# NOT thread-safe — acceptable for single-process FL simulation only.
 _PAYSIM_VAL_CACHE: Optional[tuple] = None
+_CREDITCARD_VAL_CACHE: Optional[tuple] = None
+
+
+def get_val_cache(dataset_name: str) -> Optional[tuple]:
+    """Return the cached ``(x_val, y_val)`` for a pre-processed dataset.
+
+    Only PaySim and creditcard route through the shared preprocessing pipeline
+    and therefore have a held-out val split; every other (LibSVM) dataset
+    returns ``None``.
+    """
+    if dataset_name == "paysim":
+        return _PAYSIM_VAL_CACHE
+    if dataset_name == "creditcard":
+        return _CREDITCARD_VAL_CACHE
+    return None
 
 
 def _load_paysim() -> tuple:
@@ -56,6 +72,30 @@ def _load_paysim() -> tuple:
     )
 
 
+def _load_creditcard() -> tuple:
+    """Load the ULB credit-card dataset via the shared preprocessing pipeline.
+
+    Mirrors :func:`_load_paysim`. Uses preprocessing.creditcard.load_creditcard()
+    which scales only Time/Amount (fit on train), leaves V1..V28 untouched, and
+    applies the same stratified 70/15/15 split (seed=42).
+
+    Returns
+    -------
+        (x_train, y_train, x_test, y_test) as float32/int32 numpy arrays.
+        Val set (15%) is stored in _CREDITCARD_VAL_CACHE for serverside_eval.
+    """
+    global _CREDITCARD_VAL_CACHE
+    from preprocessing.creditcard import load_creditcard
+    data = load_creditcard(
+        data_path=_os.path.join(_PROJECT_ROOT, 'data', 'creditcard', 'creditcard.csv')
+    )
+    _CREDITCARD_VAL_CACHE = (data['x_val'], data['y_val'])
+    return (
+        data['x_train'], data['y_train'],
+        data['x_test'],  data['y_test'],
+    )
+
+
 def download_data(dataset_name: Optional[str] = "cod-rna"):
     """Download (if necessary) the dataset and returns the dataset path.
 
@@ -77,6 +117,9 @@ def download_data(dataset_name: Optional[str] = "cod-rna"):
         case "paysim":
             x_train, y_train, x_test, y_test = _load_paysim()
             return ("__paysim__", x_train, y_train, x_test, y_test)
+        case "creditcard":
+            x_train, y_train, x_test, y_test = _load_creditcard()
+            return ("__creditcard__", x_train, y_train, x_test, y_test)
         case "a9a":
             if not os.path.exists(dataset_path):
                 os.makedirs(dataset_path)

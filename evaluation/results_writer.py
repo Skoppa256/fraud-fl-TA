@@ -1,7 +1,8 @@
 """Shared CSV results writer for all FL and centralized baseline runs.
 
-Writes structured CSVs under ``results/logs/<subdir>/`` so that every model
-in the comparison emits identical schema. Two files per FL run:
+Writes structured CSVs under ``results/logs/<dataset>/<subdir>/`` so that every
+model in the comparison emits identical schema, and PaySim and creditcard runs
+never collide on disk. Two files per FL run:
 
 * ``<run_name>.csv``        — single-row summary
 * ``<run_name>_rounds.csv`` — per-round val metrics
@@ -26,6 +27,7 @@ from typing import Any, Dict, List, Optional, Sequence
 
 
 SUMMARY_COLUMNS: Sequence[str] = (
+    "dataset",
     "model",
     "scheme",
     "alpha",
@@ -137,6 +139,7 @@ def write_fl_results(
     history: List[Dict[str, Any]],
     final_test: Optional[Dict[str, float]],
     duration_seconds: float,
+    dataset: str = "paysim",
     subdir: Optional[str] = None,
 ) -> Dict[str, str]:
     """Write summary and per-round CSVs for a federated learning run.
@@ -145,6 +148,12 @@ def write_fl_results(
     ----------
     model
         Canonical short name: ``ffd``, ``lr``, ``svm``, ``gbm``, ``fedxgbllr``.
+    dataset
+        Dataset identifier (``paysim`` or ``creditcard``). Recorded in the
+        ``dataset`` column and used to namespace the output directory so runs
+        on different datasets never collide. Defaults to ``paysim`` — an
+        unchanged PaySim run keeps its exact ``run_name`` and CSV schema
+        (bar the new column) and only gains a ``paysim/`` parent level.
     scheme
         ``iid`` or ``dirichlet``.
     alpha
@@ -164,13 +173,14 @@ def write_fl_results(
         ``{"summary": <path>, "rounds": <path>, "run_name": <name>}``.
     """
     run_name = build_run_name(model, scheme, alpha, oversampling, seed)
-    out_dir = _logs_dir(subdir or model)
+    out_dir = _logs_dir(os.path.join(dataset, subdir or model))
 
     history = history or []
     best_val = _best_val_metrics(history, best_round)
     final_test = final_test or {}
 
     summary = {
+        "dataset": dataset,
         "model": model,
         "scheme": scheme,
         "alpha": "" if alpha is None else alpha,
@@ -232,6 +242,7 @@ def write_centralized_results(
     val_metrics: Dict[str, float],
     test_metrics: Dict[str, float],
     duration_seconds: float,
+    dataset: str = "paysim",
     subdir: str = "centralized",
 ) -> Dict[str, str]:
     """Write a single-row summary CSV for a centralized baseline.
@@ -244,9 +255,10 @@ def write_centralized_results(
     ``val_f1``, ``val_precision``, ``val_recall`` (and ``test_*`` likewise).
     """
     run_name = build_centralized_run_name(model, oversampling, seed)
-    out_dir = _logs_dir(subdir)
+    out_dir = _logs_dir(os.path.join(dataset, subdir))
 
     summary = {
+        "dataset": dataset,
         "model": model,
         "scheme": "centralized",
         "alpha": "",

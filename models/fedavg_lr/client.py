@@ -27,9 +27,6 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import average_precision_score
 
 
-N_FEATURES: int = 13
-
-
 def _build_lr(cfg: dict, seed: int) -> LogisticRegression:
     params = dict(cfg.get("lr_params", {}))
     return LogisticRegression(
@@ -68,7 +65,9 @@ class FraudFLClient(fl.client.NumPyClient):
         self.seed: int = int(seed) + self.client_id
         self.cfg = cfg
         self.model: LogisticRegression = _build_lr(cfg, self.seed)
-        _initialise_unfit(self.model, N_FEATURES)
+        # Feature count read from the local partition so the client model
+        # adapts to any dataset (13 for PaySim, 30 for creditcard, ...).
+        _initialise_unfit(self.model, int(self.x.shape[1]))
 
     def get_parameters(self, config: Dict[str, Any]) -> List[np.ndarray]:
         return [
@@ -81,7 +80,7 @@ class FraudFLClient(fl.client.NumPyClient):
         self.model.coef_ = coef.astype(np.float64, copy=False)
         self.model.intercept_ = intercept.astype(np.float64, copy=False)
         self.model.classes_ = np.array([0, 1])
-        self.model.n_features_in_ = N_FEATURES
+        self.model.n_features_in_ = int(coef.shape[1])
 
     def fit(self, parameters, config):
         self.set_parameters(parameters)

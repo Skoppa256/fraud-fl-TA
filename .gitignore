@@ -30,6 +30,9 @@ conda-meta/
 # =============================================================================
 # Data (large, downloaded locally, not committed)
 # =============================================================================
+# The `data/` rule already ignores every dataset CSV, including
+# data/paysim/paysim.csv and data/creditcard/creditcard.csv — no per-dataset
+# entry is needed when adding a new dataset directory.
 data/
 *.csv
 *.csv.gz

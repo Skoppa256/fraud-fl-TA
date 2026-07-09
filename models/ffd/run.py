@@ -29,7 +29,7 @@ import yaml
 
 from evaluation.results_writer import build_run_name, write_fl_results
 from partitioning.dirichlet import get_partition
-from preprocessing.paysim import load_paysim
+from preprocessing.loader import DATASETS, load_dataset
 
 from .client import build_client_fn
 from .model import FFDModel
@@ -38,7 +38,6 @@ from .strategy import get_strategy
 
 
 MODEL_NAME: str = "ffd"
-N_FEATURES: int = 13
 VALID_OVERSAMPLING = ("none", "smote", "adasyn")
 
 
@@ -68,6 +67,7 @@ def _load_base_cfg() -> Dict[str, Any]:
 
 def _parse_args() -> argparse.Namespace:
     p = argparse.ArgumentParser(description=f"FL run for {MODEL_NAME}")
+    p.add_argument("--dataset", choices=list(DATASETS), default=None)
     p.add_argument("--scheme", choices=["iid", "dirichlet"], default=None)
     p.add_argument("--alpha", type=float, default=None)
     p.add_argument("--num_rounds", type=int, default=None)
@@ -112,6 +112,7 @@ def run(cfg: dict):
     """Run the FFD pipeline end-to-end. Returns ``(history, state)``."""
     t_start = time.time()
     seed = int(cfg["random_seed"])
+    dataset = str(cfg.get("dataset", "paysim")).lower()
     scheme = cfg["partition"]["scheme"]
     alpha = cfg["partition"]["alpha"]
     num_clients = int(cfg["num_clients"])
@@ -119,15 +120,19 @@ def run(cfg: dict):
     oversampling = str(cfg.get("oversampling", "smote")).lower()
 
     print(
-        f"[run] === {MODEL_NAME} | scheme={scheme} alpha={alpha} "
+        f"[run] === {MODEL_NAME} | dataset={dataset} scheme={scheme} alpha={alpha} "
         f"K={num_clients} R={num_rounds} oversampling={oversampling} "
         f"seed={seed} ==="
     )
 
-    data = load_paysim(random_state=seed)
+    data = load_dataset(dataset, random_state=seed)
     x_train, y_train = data["x_train"], data["y_train"]
     x_val, y_val = data["x_val"], data["y_val"]
     x_test, y_test = data["x_test"], data["y_test"]
+    # Feature count is read from the data at runtime so the server's initial
+    # global model matches the client models for any dataset (13 for PaySim,
+    # 30 for creditcard, ...).
+    n_features = int(x_train.shape[1])
 
     clients = get_partition(
         x_train,
@@ -154,7 +159,7 @@ def run(cfg: dict):
 
     server_eval_fn, eval_state = make_server_eval_fn(
         cfg=cfg,
-        input_dim=N_FEATURES,
+        input_dim=n_features,
         x_val=x_val,
         y_val=y_val,
         x_test=x_test,
@@ -163,7 +168,7 @@ def run(cfg: dict):
     )
 
     # Initial parameters: a fresh FFDModel's weights.
-    init_model = FFDModel(input_dim=N_FEATURES)
+    init_model = FFDModel(input_dim=n_features)
     initial_parameters = fl.common.ndarrays_to_parameters(init_model.get_weights())
 
     strategy = get_strategy(
@@ -209,6 +214,7 @@ def run(cfg: dict):
     duration_seconds = time.time() - t_start
     write_fl_results(
         model=MODEL_NAME,
+        dataset=dataset,
         scheme=scheme,
         alpha=alpha,
         oversampling=oversampling,

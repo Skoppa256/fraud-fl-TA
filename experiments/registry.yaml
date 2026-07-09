@@ -8,6 +8,16 @@
 # Run-name convention (must stay aligned with evaluation/results_writer.py):
 #   FL          : <model>_<scheme>_alpha<alpha|->_<oversampling>_seed<seed>
 #   Centralized : centralized_<model>_<oversampling>_seed<seed>
+# Results are namespaced on disk by dataset:
+#   results/logs/<dataset>/<model>/<run_name>.csv
+
+# Datasets in the sweep. Every (dataset × model × ...) combination is a run.
+# creditcard is commented out by default so the baseline RQ1 sweep size is
+# unchanged — uncomment it (and provide data/creditcard/creditcard.csv) to
+# extend the sweep to the second dataset.
+datasets:
+  - paysim
+  # - creditcard
 
 models:
   - ffd

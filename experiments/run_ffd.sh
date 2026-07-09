@@ -17,16 +17,18 @@ MODEL="ffd"
 for SEED in ${SEEDS}; do
   # IID × {smote, adasyn, none}
   for OS in smote adasyn none; do
-    run_one "${MODEL}_iid_alpha-_${OS}_seed${SEED}" "${MODEL}" -- \
+    run_one "${MODEL}_iid_alpha-_${OS}_seed${SEED}" "${DATASET}/${MODEL}" -- \
       python -m models.ffd.run \
+        --dataset "${DATASET}" \
         --scheme iid --oversampling "${OS}" \
         --random_seed "${SEED}" --use_wandb true
   done
   # Dirichlet × {0.5, 1.0, 5.0} × {smote, adasyn, none}
   for ALPHA in 0.5 1.0 5.0; do
     for OS in smote adasyn none; do
-      run_one "${MODEL}_dirichlet_alpha${ALPHA}_${OS}_seed${SEED}" "${MODEL}" -- \
+      run_one "${MODEL}_dirichlet_alpha${ALPHA}_${OS}_seed${SEED}" "${DATASET}/${MODEL}" -- \
         python -m models.ffd.run \
+        --dataset "${DATASET}" \
           --scheme dirichlet --alpha "${ALPHA}" --oversampling "${OS}" \
           --random_seed "${SEED}" --use_wandb true
     done

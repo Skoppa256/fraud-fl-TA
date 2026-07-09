@@ -277,6 +277,7 @@ def main(cfg: DictConfig) -> None:
         )
         write_fl_results(
             model=CANONICAL_MODEL,
+            dataset=str(cfg.dataset.dataset_name),
             scheme=scheme,
             alpha=non_iid_alpha,
             oversampling=str(oversampling_method),

@@ -1,0 +1,14 @@
+defaults:
+  - task: Binary_Classification
+
+dataset_name: "creditcard"
+train_ratio: 0.70
+early_stop_patience_rounds: 10
+oversampling:
+  method: smote          # one of: smote, adasyn, none
+  k_neighbors: 5
+  sampling_strategy: "auto"   # imblearn sampling_strategy; "auto"=1:1, e.g. 0.01 for 1:100
+  base_seed: 42
+non_iid:
+  enabled: false
+  alpha: 1.0

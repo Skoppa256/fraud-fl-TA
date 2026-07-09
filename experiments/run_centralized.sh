@@ -4,33 +4,33 @@
 
 source "$(dirname "${BASH_SOURCE[0]}")/_run_helpers.sh"
 
-LOG_DIR="centralized"
+LOG_DIR="${DATASET}/centralized"
 
 for SEED in ${SEEDS}; do
   for OS in smote adasyn none; do
     run_one "centralized_lr_${OS}_seed${SEED}" "${LOG_DIR}" -- \
       python -m experiments.centralized_baseline.run_lr \
-        --oversampling "${OS}" --random_seed "${SEED}" --use_wandb true
+        --dataset "${DATASET}" --oversampling "${OS}" --random_seed "${SEED}" --use_wandb true
 
     run_one "centralized_svm_${OS}_seed${SEED}" "${LOG_DIR}" -- \
       python -m experiments.centralized_baseline.run_svm \
-        --oversampling "${OS}" --random_seed "${SEED}" --use_wandb true
+        --dataset "${DATASET}" --oversampling "${OS}" --random_seed "${SEED}" --use_wandb true
 
     run_one "centralized_gbm_${OS}_seed${SEED}" "${LOG_DIR}" -- \
       python -m experiments.centralized_baseline.run_gbm \
-        --oversampling "${OS}" --random_seed "${SEED}" --use_wandb true
+        --dataset "${DATASET}" --oversampling "${OS}" --random_seed "${SEED}" --use_wandb true
 
     run_one "centralized_xgb_${OS}_seed${SEED}" "${LOG_DIR}" -- \
       python -m experiments.centralized_baseline.run_xgb \
-        --oversampling "${OS}" --random_seed "${SEED}" --use_wandb true
+        --dataset "${DATASET}" --oversampling "${OS}" --random_seed "${SEED}" --use_wandb true
 
     run_one "centralized_ffd_${OS}_seed${SEED}" "${LOG_DIR}" -- \
       python -m experiments.centralized_baseline.run_ffd \
-        --oversampling "${OS}" --random_seed "${SEED}" --use_wandb true
+        --dataset "${DATASET}" --oversampling "${OS}" --random_seed "${SEED}" --use_wandb true
 
     run_one "centralized_bert_fraud_${OS}_seed${SEED}" "${LOG_DIR}" -- \
       python -m experiments.centralized_baseline.run_bert_fraud \
-        --oversampling "${OS}" --random_seed "${SEED}" --use_wandb true
+        --dataset "${DATASET}" --oversampling "${OS}" --random_seed "${SEED}" --use_wandb true
   done
 done
 

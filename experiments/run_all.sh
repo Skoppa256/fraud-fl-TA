@@ -18,6 +18,7 @@ cd "${REPO_ROOT}"
 
 : "${SEEDS:=42}"
 : "${SKIP_CENTRALIZED:=0}"
+: "${DATASET:=paysim}"
 
 # ---------------------------------------------------------------------------
 # Preflight checks
@@ -27,6 +28,7 @@ fail() { echo "[run_all] PREFLIGHT FAIL: $*" >&2; exit 1; }
 echo "[run_all] === preflight ==="
 echo "[run_all] cwd=${REPO_ROOT}"
 echo "[run_all] SEEDS=${SEEDS}"
+echo "[run_all] DATASET=${DATASET}"
 
 # 1. Conda environment is active and named (or at least, python is available).
 if [[ -z "${CONDA_DEFAULT_ENV:-}" ]]; then
@@ -40,10 +42,10 @@ fi
 python -c "import flwr, torch, xgboost, sklearn, pandas, imblearn, shap, wandb, hydra, yaml; print('[run_all] deps OK')" \
   || fail "Python imports failed — run: pip install -r requirements.txt && pip install -e models/fedxgbllr/"
 
-# 3. PaySim CSV present.
-[[ -f "data/paysim/paysim.csv" ]] \
-  || fail "PaySim CSV missing at data/paysim/paysim.csv — download from Kaggle (ealaxi/paysim1)."
-echo "[run_all] dataset: data/paysim/paysim.csv (present)"
+# 3. Selected dataset CSV present.
+[[ -f "data/${DATASET}/${DATASET}.csv" ]] \
+  || fail "Dataset CSV missing at data/${DATASET}/${DATASET}.csv (DATASET=${DATASET}) — provide it before running."
+echo "[run_all] dataset: data/${DATASET}/${DATASET}.csv (present)"
 
 # 4. W&B login (only if any run uses --use_wandb true, which all of them do).
 if ! python -c "import wandb, sys; sys.exit(0 if wandb.api.api_key else 1)" 2>/dev/null; then
@@ -52,7 +54,7 @@ fi
 echo "[run_all] W&B: logged in"
 
 # 5. Results directory tree exists (created by setup but re-assert here).
-mkdir -p results/logs/{ffd,fedxgbllr,lr,svm,gbm,centralized}
+mkdir -p results/logs/"${DATASET}"/{ffd,bert_fraud,fedxgbllr,lr,svm,gbm,centralized}
 echo "[run_all] log dirs: ready"
 
 echo "[run_all] === preflight OK ==="
@@ -61,7 +63,7 @@ echo
 # ---------------------------------------------------------------------------
 # Execution
 # ---------------------------------------------------------------------------
-export SEEDS
+export SEEDS DATASET
 
 if [[ "${SKIP_CENTRALIZED}" != "1" ]]; then
   echo "[run_all] >>> centralized baselines (upper bound reference)"

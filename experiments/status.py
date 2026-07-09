@@ -53,23 +53,29 @@ def centralized_run_name(model: str, oversampling: str, seed: int) -> str:
     return f"centralized_{model}_{oversampling}_seed{int(seed)}"
 
 
-def _enumerate_fl_runs(reg: Dict) -> List[Tuple[str, str, object, str, int]]:
-    """Yield ``(model, scheme, alpha, oversampling, seed)`` for every planned FL run."""
+def _datasets(reg: Dict) -> List[str]:
+    """Datasets in the sweep. Defaults to ``[paysim]`` for older registries."""
+    return list(reg.get("datasets", ["paysim"]))
+
+
+def _enumerate_fl_runs(reg: Dict) -> List[Tuple[str, str, str, object, str, int]]:
+    """Yield ``(dataset, model, scheme, alpha, oversampling, seed)`` per planned FL run."""
     runs = []
-    for model, oversampling, seed in itertools.product(
-        reg["models"], reg["oversamplings"], reg["seeds"]
+    for dataset, model, oversampling, seed in itertools.product(
+        _datasets(reg), reg["models"], reg["oversamplings"], reg["seeds"]
     ):
         # IID: alpha is None.
-        runs.append((model, "iid", None, oversampling, seed))
+        runs.append((dataset, model, "iid", None, oversampling, seed))
         # Dirichlet: every alpha in the registry.
         for alpha in reg["alphas"]:
-            runs.append((model, "dirichlet", alpha, oversampling, seed))
+            runs.append((dataset, model, "dirichlet", alpha, oversampling, seed))
     return runs
 
 
-def _enumerate_centralized_runs(reg: Dict) -> List[Tuple[str, str, int]]:
+def _enumerate_centralized_runs(reg: Dict) -> List[Tuple[str, str, str, int]]:
     return list(
         itertools.product(
+            _datasets(reg),
             reg.get("centralized_models", []),
             reg["oversamplings"],
             reg["seeds"],
@@ -77,22 +83,28 @@ def _enumerate_centralized_runs(reg: Dict) -> List[Tuple[str, str, int]]:
     )
 
 
-def _csv_path_fl(model: str, run_name: str) -> str:
-    return os.path.join(LOGS_ROOT, model, f"{run_name}.csv")
+def _csv_path_fl(dataset: str, model: str, run_name: str) -> str:
+    return os.path.join(LOGS_ROOT, dataset, model, f"{run_name}.csv")
 
 
-def _csv_path_centralized(run_name: str) -> str:
-    return os.path.join(LOGS_ROOT, "centralized", f"{run_name}.csv")
+def _csv_path_centralized(dataset: str, run_name: str) -> str:
+    return os.path.join(LOGS_ROOT, dataset, "centralized", f"{run_name}.csv")
 
 
 def _fl_command(
-    model: str, scheme: str, alpha, oversampling: str, seed: int, num_rounds: int
+    dataset: str,
+    model: str,
+    scheme: str,
+    alpha,
+    oversampling: str,
+    seed: int,
+    num_rounds: int,
 ) -> str:
     if model == "fedxgbllr":
         bits = [
             "python -m hfedxgboost.main",
-            "dataset=paysim",
-            "clients=paysim_5_clients",
+            f"dataset={dataset}",
+            f"clients={dataset}_5_clients",
             f"run_experiment.num_rounds={num_rounds}",
             f"dataset.oversampling.method={oversampling}",
             f"random_seed={seed}",
@@ -114,6 +126,7 @@ def _fl_command(
     }[model]
     bits = [
         f"python -m {module}",
+        f"--dataset {dataset}",
         f"--scheme {scheme}",
         f"--num_rounds {num_rounds}",
         f"--oversampling {oversampling}",
@@ -121,14 +134,15 @@ def _fl_command(
         "--use_wandb true",
     ]
     if scheme == "dirichlet":
-        bits.insert(2, f"--alpha {alpha}")
+        bits.insert(3, f"--alpha {alpha}")
     return " \\\n  ".join(bits)
 
 
-def _centralized_command(model: str, oversampling: str, seed: int) -> str:
+def _centralized_command(dataset: str, model: str, oversampling: str, seed: int) -> str:
     return (
         f"python -m experiments.centralized_baseline.run_{model} "
-        f"--oversampling {oversampling} --random_seed {seed} --use_wandb true"
+        f"--dataset {dataset} --oversampling {oversampling} "
+        f"--random_seed {seed} --use_wandb true"
     )
 
 
@@ -169,9 +183,9 @@ def main() -> int:
     fl_done: List[Tuple] = []
     fl_pending: List[Tuple] = []
     for run in fl_runs:
-        model, scheme, alpha, oversampling, seed = run
+        dataset, model, scheme, alpha, oversampling, seed = run
         name = fl_run_name(model, scheme, alpha, oversampling, seed)
-        if os.path.isfile(_csv_path_fl(model, name)):
+        if os.path.isfile(_csv_path_fl(dataset, model, name)):
             fl_done.append(run)
         else:
             fl_pending.append(run)
@@ -179,9 +193,9 @@ def main() -> int:
     cen_done: List[Tuple] = []
     cen_pending: List[Tuple] = []
     for run in centralized_runs:
-        model, oversampling, seed = run
+        dataset, model, oversampling, seed = run
         name = centralized_run_name(model, oversampling, seed)
-        if os.path.isfile(_csv_path_centralized(name)):
+        if os.path.isfile(_csv_path_centralized(dataset, name)):
             cen_done.append(run)
         else:
             cen_pending.append(run)
@@ -201,26 +215,27 @@ def main() -> int:
     if not args.pending_only:
         if fl_done:
             print("\n[done — FL]")
-            for model, scheme, alpha, oversampling, seed in fl_done:
+            for dataset, model, scheme, alpha, oversampling, seed in fl_done:
                 print(
-                    "  ✓ "
+                    f"  ✓ [{dataset}] "
                     + fl_run_name(model, scheme, alpha, oversampling, seed)
                 )
         if cen_done:
             print("\n[done — centralized]")
-            for model, oversampling, seed in cen_done:
+            for dataset, model, oversampling, seed in cen_done:
                 print(
-                    "  ✓ "
+                    f"  ✓ [{dataset}] "
                     + centralized_run_name(model, oversampling, seed)
                 )
 
     if fl_pending or cen_pending:
         print("\n[pending]")
-        for model, scheme, alpha, oversampling, seed in fl_pending:
+        for dataset, model, scheme, alpha, oversampling, seed in fl_pending:
             name = fl_run_name(model, scheme, alpha, oversampling, seed)
-            print(f"  · {name}")
+            print(f"  · [{dataset}] {name}")
             if args.print_commands:
                 cmd = _fl_command(
+                    dataset,
                     model,
                     scheme,
                     alpha,
@@ -229,11 +244,14 @@ def main() -> int:
                     int(reg["num_rounds"][model]),
                 )
                 print("      " + cmd.replace("\n", "\n      "))
-        for model, oversampling, seed in cen_pending:
+        for dataset, model, oversampling, seed in cen_pending:
             name = centralized_run_name(model, oversampling, seed)
-            print(f"  · {name}")
+            print(f"  · [{dataset}] {name}")
             if args.print_commands:
-                print("      " + _centralized_command(model, oversampling, seed))
+                print(
+                    "      "
+                    + _centralized_command(dataset, model, oversampling, seed)
+                )
 
     return 0 if pending == 0 else 1
 

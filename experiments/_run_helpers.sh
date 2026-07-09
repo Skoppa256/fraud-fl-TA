@@ -48,3 +48,10 @@ run_one() {
 # Default seed list for one-shot RQ1 scan. Override on CLI:
 #   SEEDS="42 123 2024" bash experiments/run_ffd.sh
 : "${SEEDS:=42}"
+
+# Dataset to run against. Defaults to paysim so existing invocations are
+# unchanged. Override on CLI:
+#   DATASET=creditcard bash experiments/run_ffd.sh
+# Drivers pass this to each model (argparse --dataset / Hydra dataset=) and
+# namespace logs + CSVs under results/logs/<DATASET>/<model>/.
+: "${DATASET:=paysim}"

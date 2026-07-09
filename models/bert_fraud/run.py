@@ -33,7 +33,7 @@ import yaml
 
 from evaluation.results_writer import build_run_name, write_fl_results
 from partitioning.dirichlet import get_partition
-from preprocessing.paysim import load_paysim
+from preprocessing.loader import DATASETS, load_dataset
 
 from .client import build_client_fn
 from .model import BertFraudModel
@@ -42,7 +42,6 @@ from .strategy import get_strategy
 
 
 MODEL_NAME: str = "bert_fraud"
-N_FEATURES: int = 13
 VALID_OVERSAMPLING = ("none", "smote", "adasyn")
 
 
@@ -72,6 +71,7 @@ def _load_base_cfg() -> Dict[str, Any]:
 
 def _parse_args() -> argparse.Namespace:
     p = argparse.ArgumentParser(description=f"FL run for {MODEL_NAME}")
+    p.add_argument("--dataset", choices=list(DATASETS), default=None)
     p.add_argument("--scheme", choices=["iid", "dirichlet"], default=None)
     p.add_argument("--alpha", type=float, default=None)
     p.add_argument("--num_rounds", type=int, default=None)
@@ -118,7 +118,7 @@ def _apply_cli_overrides(cfg: dict, args: argparse.Namespace) -> dict:
 def _build_init_model(cfg: dict) -> BertFraudModel:
     bp = cfg.get("bert_params", {})
     return BertFraudModel(
-        input_dim=N_FEATURES,
+        input_dim=int(cfg["input_dim"]),
         d_model=int(bp.get("d_model", 64)),
         nhead=int(bp.get("nhead", 4)),
         num_layers=int(bp.get("num_layers", 2)),
@@ -132,25 +132,28 @@ def run(cfg: dict):
     """Run the BertFraud FL pipeline end-to-end. Returns ``(history, state)``."""
     t_start = time.time()
     seed = int(cfg["random_seed"])
+    dataset = str(cfg.get("dataset", "paysim")).lower()
     scheme = cfg["partition"]["scheme"]
     alpha = cfg["partition"]["alpha"]
     num_clients = int(cfg["num_clients"])
     num_rounds = int(cfg["num_rounds"])
     oversampling = str(cfg.get("oversampling", "smote")).lower()
 
-    # Propagate input_dim so client._build_model() doesn't need N_FEATURES hard-coded
-    cfg["input_dim"] = N_FEATURES
-
     print(
-        f"[run] === {MODEL_NAME} | scheme={scheme} alpha={alpha} "
+        f"[run] === {MODEL_NAME} | dataset={dataset} scheme={scheme} alpha={alpha} "
         f"K={num_clients} R={num_rounds} oversampling={oversampling} "
         f"seed={seed} ==="
     )
 
-    data = load_paysim(random_state=seed)
+    data = load_dataset(dataset, random_state=seed)
     x_train, y_train = data["x_train"], data["y_train"]
     x_val, y_val = data["x_val"], data["y_val"]
     x_test, y_test = data["x_test"], data["y_test"]
+    # Feature count read from the data at runtime (13 for PaySim, 30 for
+    # creditcard, ...). Propagate input_dim so client._build_model(), the
+    # server eval model, and the initial global model all agree on the shape.
+    n_features = int(x_train.shape[1])
+    cfg["input_dim"] = n_features
 
     clients = get_partition(
         x_train,
@@ -177,7 +180,7 @@ def run(cfg: dict):
 
     server_eval_fn, eval_state = make_server_eval_fn(
         cfg=cfg,
-        input_dim=N_FEATURES,
+        input_dim=n_features,
         x_val=x_val,
         y_val=y_val,
         x_test=x_test,
@@ -225,6 +228,7 @@ def run(cfg: dict):
     duration_seconds = time.time() - t_start
     write_fl_results(
         model=MODEL_NAME,
+        dataset=dataset,
         scheme=scheme,
         alpha=alpha,
         oversampling=oversampling,

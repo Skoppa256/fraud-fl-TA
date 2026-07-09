@@ -35,7 +35,7 @@ from evaluation.results_writer import (
     build_centralized_run_name,
     write_centralized_results,
 )
-from preprocessing.paysim import load_paysim
+from preprocessing.loader import DATASETS, load_dataset
 
 
 MODEL_NAME: str = "lr"
@@ -57,6 +57,7 @@ def _parse_args() -> argparse.Namespace:
     p = argparse.ArgumentParser(
         description=f"Centralized baseline ({MODEL_NAME})"
     )
+    p.add_argument("--dataset", choices=list(DATASETS), default="paysim")
     p.add_argument(
         "--oversampling",
         choices=list(OVERSAMPLING_CHOICES),
@@ -133,7 +134,8 @@ def main() -> None:
     args = _parse_args()
     seed = int(args.random_seed)
 
-    data = load_paysim(random_state=seed)
+    dataset = str(args.dataset).lower()
+    data = load_dataset(dataset, random_state=seed)
     x_train, y_train = data["x_train"], data["y_train"]
     x_val, y_val = data["x_val"], data["y_val"]
     x_test, y_test = data["x_test"], data["y_test"]
@@ -209,6 +211,7 @@ def main() -> None:
 
     write_centralized_results(
         model=MODEL_NAME,
+        dataset=dataset,
         oversampling=oversampling,
         seed=seed,
         val_metrics={

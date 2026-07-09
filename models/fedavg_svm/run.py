@@ -19,7 +19,7 @@ import flwr as fl
 import yaml
 
 from evaluation.results_writer import build_run_name, write_fl_results
-from preprocessing.paysim import load_paysim
+from preprocessing.loader import DATASETS, load_dataset
 from preprocessing.oversampling import apply_oversampling_to_all_clients, VALID_METHODS
 from partitioning.dirichlet import get_partition
 
@@ -29,7 +29,6 @@ from .strategy import get_strategy
 
 
 MODEL_NAME: str = "svm"
-N_FEATURES: int = 13
 
 
 def _str2bool(v) -> bool:
@@ -58,6 +57,7 @@ def _load_base_cfg() -> Dict[str, Any]:
 
 def _parse_args() -> argparse.Namespace:
     p = argparse.ArgumentParser(description=f"FL run for {MODEL_NAME}")
+    p.add_argument("--dataset", choices=list(DATASETS), default=None)
     p.add_argument("--scheme", choices=["iid", "dirichlet"], default=None)
     p.add_argument("--alpha", type=float, default=None)
     p.add_argument("--num_rounds", type=int, default=None)
@@ -100,6 +100,7 @@ def run(cfg: dict):
     """Run the FedAvg-SVM pipeline end-to-end. Returns ``(history, state)``."""
     t_start = time.time()
     seed = int(cfg["random_seed"])
+    dataset = str(cfg.get("dataset", "paysim")).lower()
     scheme = cfg["partition"]["scheme"]
     alpha = cfg["partition"]["alpha"]
     oversampling = str(cfg.get("oversampling", "smote")).lower()
@@ -107,15 +108,18 @@ def run(cfg: dict):
     num_rounds = int(cfg["num_rounds"])
 
     print(
-        f"[run] === {MODEL_NAME} | scheme={scheme} alpha={alpha} "
+        f"[run] === {MODEL_NAME} | dataset={dataset} scheme={scheme} alpha={alpha} "
         f"K={num_clients} R={num_rounds} oversampling={oversampling} "
         f"seed={seed} ==="
     )
 
-    data = load_paysim(random_state=seed)
+    data = load_dataset(dataset, random_state=seed)
     x_train, y_train = data["x_train"], data["y_train"]
     x_val, y_val = data["x_val"], data["y_val"]
     x_test, y_test = data["x_test"], data["y_test"]
+    # Initial global coef shape is derived from the data at runtime so the
+    # strategy/clients agree on the feature dimension for any dataset.
+    n_features = int(x_train.shape[1])
 
     clients = get_partition(
         x_train,
@@ -154,7 +158,7 @@ def run(cfg: dict):
         wandb_run=wandb_run,
     )
 
-    strategy = get_strategy(cfg, n_features=N_FEATURES, server_eval_fn=server_eval_fn)
+    strategy = get_strategy(cfg, n_features=n_features, server_eval_fn=server_eval_fn)
     client_fn = build_client_fn(clients, cfg, seed=seed)
 
     print(f"[run] FL starting: {num_rounds} rounds, {num_clients} clients")
@@ -181,6 +185,7 @@ def run(cfg: dict):
     duration_seconds = time.time() - t_start
     write_fl_results(
         model=MODEL_NAME,
+        dataset=dataset,
         scheme=scheme,
         alpha=alpha,
         oversampling=oversampling,
