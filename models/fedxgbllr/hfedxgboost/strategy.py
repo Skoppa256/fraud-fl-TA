@@ -48,7 +48,21 @@ class FedXgbNnAvg(FedAvg):
         results: List[Tuple[ClientProxy, FitRes]],
         failures: List[Union[Tuple[ClientProxy, FitRes], BaseException]],
     ) -> Tuple[Optional[Any], Dict[str, Scalar]]:
-        """Aggregate fit results using weighted average."""
+        """Aggregate fit results with sample-count-weighted FedAvg (CNN only).
+
+        The CNN "learnable learning rates" are combined via flwr's
+        ``aggregate`` = Sum(w_k * n_k) / Sum(n_k), where each client's weight
+        ``n_k`` is ``fit_res.num_examples``. Each client reports its local
+        partition size N_k (pre-SMOTE row count; see ``client.FlClient.fit``),
+        so this is genuinely data-proportional FedAvg over local sample counts,
+        matching Ma et al. 2023 (arXiv:2304.07537) §3.1/§3.4. Under unequal
+        (Dirichlet non-IID) splits the per-client weights differ; under equal
+        splits proportional and uniform averaging coincide.
+
+        Note: only the CNN weights are averaged here. The XGBoost tree
+        ensembles are concatenated across clients (one block per client), not
+        averaged, so this weighting concerns the CNN aggregator alone.
+        """
         if not results:
             return None, {}
         # Do not aggregate if there are failures and failures are not accepted

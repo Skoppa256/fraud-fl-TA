@@ -320,21 +320,33 @@ class FlClient(fl.client.Client):
             "Client", self.cid, ": training for", num_iterations, "iterations/updates"
         )
         self.net.to(self.device)
-        train_loss, train_result, num_examples = self.train(
+        train_loss, train_result, num_update_samples = self.train(
             self.net,
             trainloader,
             num_iterations=num_iterations,
         )
+
+        # FedAvg weight (Ma et al. 2023, §3.1/§3.4): the CNN aggregation must be
+        # weighted by each client's local sample count N_k, NOT by the number of
+        # mini-batch updates (num_iterations * batch_size), which is identical
+        # across clients and collapses flwr's weighted average into a plain mean.
+        # Use the PRE-SMOTE partition size: trainloader_original holds the raw
+        # assigned rows; SMOTE/ADASYN is applied later inside get_parameters and
+        # must not inflate the weight, so non-IID (Dirichlet) heterogeneity is
+        # preserved.
+        local_num_examples = len(self.trainloader_original.dataset)
         print(
-            f"Client {self.cid}: training round complete, {num_examples}",
-            "examples processed",
+            f"Client {self.cid}: training round complete, {num_update_samples}",
+            f"update-samples over {num_iterations} updates; reporting FedAvg",
+            f"weight N_k={local_num_examples} (pre-SMOTE local partition size)",
         )
 
-        # Return training information: model, number of examples processed and metrics
+        # Return training information: model, local sample count (FedAvg weight)
+        # and metrics
         return FitRes(
             status=Status(Code.OK, ""),
             parameters=self.get_parameters(ins.config),
-            num_examples=num_examples,
+            num_examples=local_num_examples,
             metrics={
                 "loss": train_loss,
                 self.config.dataset.task.metric.name: train_result,

@@ -78,7 +78,8 @@ class CNN(nn.Module):
 
     The trees are fitted ONCE per client and frozen, so this margin tensor is
     identical every FL round; only the CNN weights change. Across clients the
-    CNN weights are FedAvg-averaged each round (``strategy.FedXgbNnAvg``),
+    CNN weights are aggregated by sample-count-weighted FedAvg each round
+    (weighted by each client's local sample count N_k; ``strategy.FedXgbNnAvg``),
     while the frozen ensembles are concatenated (not averaged) and ride along
     in the broadcast as fixed context.
     """

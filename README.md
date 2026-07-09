@@ -11,7 +11,7 @@ partitioning and extreme class imbalance.
 > **Aggregation is not uniform across arms.** Only LR and SVM use vanilla
 > FedAvg. FFD and BERT use `AccuracyWeightedFedAvg` (weight by data size ×
 > local AUPRC); GBM uses server-side best-model selection (no averaging); and
-> FedXGBllr uses a hybrid (frozen trees concatenated, CNN via FedAvg). See the
+> FedXGBllr uses a hybrid (frozen trees concatenated, CNN via sample-count-weighted FedAvg). See the
 > [Project Pipeline](#project-pipeline) aggregation table for the per-model
 > truth taken from code.
 
@@ -130,6 +130,27 @@ labelled fraud (≈0.13% positive rate).
 
 The CSV is large (~493 MB) and is git-ignored — download it once locally.
 
+### Second dataset — ULB credit-card
+
+A second, parallel dataset can be selected at run time (see [CLI reference](#cli-reference)); PaySim remains the default, and both share the same models, aggregation, and metrics.
+
+**Credit Card Fraud Detection** — real European card transactions over two days,
+already dimensionality-reduced with PCA. 284,807 transactions across 31 columns,
+of which 492 are fraud (≈0.172% positive rate).
+
+- **Source**: Kaggle — `mlg-ulb/creditcardfraud`
+  (https://www.kaggle.com/datasets/mlg-ulb/creditcardfraud)
+- **Place the file at**: `data/creditcard/creditcard.csv`
+- **Schema** (31 columns): `Time, V1 … V28, Amount, Class` — label is `Class`.
+- **Preprocessing** (`preprocessing/creditcard.py`): no identifier drop, no one-hot,
+  no balance engineering. Only `Time` and `Amount` are standardized (scaler fit on
+  train only); `V1 … V28` are already PCA-standardized and left untouched. Same
+  stratified 70/15/15 split and seed handling as PaySim → a **30-feature** vector.
+
+Like PaySim, the CSV is git-ignored — download it once locally. Selecting a dataset
+namespaces every output under `results/logs/<dataset>/…` and stamps a `dataset`
+column into each summary CSV, so PaySim and creditcard runs never collide on disk.
+
 ---
 
 ## Models compared
@@ -140,8 +161,10 @@ The CSV is large (~493 MB) and is git-ignored — download it once locally.
    **concatenated** across clients (not averaged, not retrained) into a global
    forest. A small 1-D CNN consumes the per-tree margin outputs of that frozen
    forest and learns per-tree weights ("learnable learning rates"); the CNN
-   weights are aggregated **via FedAvg** each round while the frozen trees ride
-   along in the broadcast as fixed context. (Baseline; complete in
+   weights are aggregated via **sample-count-weighted FedAvg** (weighted by each
+   client's local sample count N_k) each round while the frozen trees are
+   **concatenated, not averaged**, riding along in the broadcast as fixed
+   context. (Baseline; complete in
    `models/fedxgbllr/`.) See [Project Pipeline](#project-pipeline) for the exact
    mechanics.
 
@@ -242,7 +265,7 @@ the `(N, 1, 250)` tree-margin tensor (see the FedXGBllr box below).
 | **LR** | `LogisticRegression` (warm-start, resumes from aggregated coef) | `[coef_(1,13), intercept_(1,)]` | **Vanilla FedAvg** (sample-count weighted) | `fedavg_lr/client.py`, `strategy.py:38-49` |
 | **SVM** | `SGDClassifier(loss="hinge")` — linear SVM by SGD, warm-start, `tol=None` | `[coef_(1,13), intercept_(1,)]` | **Vanilla FedAvg** | `fedavg_svm/client.py`, `strategy.py:38-49` |
 | **GBM** | `HistGradientBoostingClassifier`, retrained from scratch each round | whole model, pickled → uint8 array | **Best-model selection** (argmax val AUPRC; no averaging) | `gbm_bestmodel/client.py`, `strategy.py:124-188` |
-| **FedXGBllr** | 50 XGBoost trees/client (fitted once, frozen) **+** shared 1-D CNN | `[CNN weights, this client's tree ensemble]` | **Hybrid**: CNN via FedAvg; trees **concatenated** (kept whole, sorted by cid) | `fedxgbllr/hfedxgboost/strategy.py:45-79` |
+| **FedXGBllr** | 50 XGBoost trees/client (fitted once, frozen) **+** shared 1-D CNN | `[CNN weights, this client's tree ensemble]` | **Hybrid**: CNN via sample-count-weighted FedAvg (by local N_k); trees **concatenated** (kept whole, sorted by cid) | `fedxgbllr/hfedxgboost/strategy.py:45-79` |
 | **FFD** | 1-D CNN on the 13 features (`(B,1,13)`), SGD, 5 local epochs | all CNN weights | **`AccuracyWeightedFedAvg`** (n_c · local AUPRC) | `ffd/strategy.py:46-106` |
 | **BERT** | FT-Transformer (per-feature token + `[CLS]` + 2× attention), AdamW, 3 epochs | all Transformer weights | **`AccuracyWeightedFedAvg`** (same as FFD) | `bert_fraud/strategy.py:36-92` |
 
@@ -269,9 +292,14 @@ Read `models/fedxgbllr/hfedxgboost/{models.py, utils.py:265-329, strategy.py}`.
   exactly one client's 50-tree block → `(B,64,5)` → flatten `(B,320)` →
   `Linear(320→1)` → `Sigmoid`, trained with **BCELoss**. The conv filters *are*
   the "learnable learning rates" (`models.py` `CNN`).
-- **CNN weights are FedAvg-averaged** across clients each round
-  (`strategy.py:59-66`); the frozen trees ride along in the broadcast purely as
-  fixed context.
+- **CNN weights are aggregated by sample-count-weighted FedAvg** across clients
+  each round — flwr's `Σ(wₖ·nₖ)/Σ(nₖ)` where `nₖ` is each client's local
+  partition size N_k (pre-SMOTE row count, reported by `client.py` `fit`;
+  `strategy.py:59-66`). This is data-proportional FedAvg (Ma et al. §3.1/§3.4):
+  under unequal Dirichlet non-IID splits the per-client weights differ, while
+  under equal splits it coincides with a plain uniform mean. **This weighting
+  applies to the CNN aggregator only** — the frozen trees are concatenated (not
+  averaged) and merely ride along in the broadcast as fixed context.
 - **At test time**, test transactions are pushed through the **same
   train-fitted frozen trees** to build their `(N,1,250)` tensor, then scored by
   the single averaged CNN. This is standard train→test application, **not
@@ -285,7 +313,7 @@ Read `models/fedxgbllr/hfedxgboost/{models.py, utils.py:265-329, strategy.py}`.
 | Core | `Conv1d(1→64, k=50, s=50)` | 2× `Conv1d`+`MaxPool` | 2× `TransformerEncoderLayer` (Pre-LN, GELU) |
 | Output | `(B,1)` **Sigmoid** | `(B,2)` logits → softmax | `(B,2)` logits → softmax |
 | Loss / optimizer | BCELoss / Adam 5e-4 | CrossEntropy / SGD 1e-2 | CrossEntropy / AdamW 1e-3 |
-| Aggregation | FedAvg (CNN) + tree concat | AccuracyWeightedFedAvg | AccuracyWeightedFedAvg |
+| Aggregation | sample-count-weighted FedAvg (CNN) + tree concat | AccuracyWeightedFedAvg | AccuracyWeightedFedAvg |
 
 ### Documentation notes / open questions
 
@@ -322,6 +350,16 @@ Items found while re-deriving these docs from source. Per this task's scope,
 7. **SHAP is not implemented.** `evaluation/shap_analysis.py` is a stub, so the
    per-client SHAP-stability analysis mentioned as a research goal is not yet
    wired into any run.
+8. **FedXGBllr CNN weighting is data-proportional, and only because of what the
+   client reports.** flwr's `aggregate` weights each client's CNN update by the
+   `num_examples` it returns. The client reports its local partition size N_k
+   (pre-SMOTE row count; `client.py` `fit`), so the CNN aggregation is genuine
+   sample-count-weighted FedAvg per Ma et al. §3.1/§3.4. Note the sensitivity:
+   an earlier revision reported `num_examples = num_iterations × batch_size`
+   (identical for every client), which silently collapsed the same
+   `Σ(wₖ·nₖ)/Σ(nₖ)` into a uniform mean — the two only diverge under unequal
+   (Dirichlet non-IID) splits. This concerns the CNN aggregator only; the trees
+   are concatenated, never averaged.
 
 ---
 
@@ -376,10 +414,13 @@ The summary schema is defined once in [evaluation/results_writer.py](evaluation/
 
 CLI flags override the corresponding key in the model's `conf/base.yaml` (Hydra equivalent: `conf/dataset/paysim.yaml`); omit a flag to keep the YAML default.
 
+**Choosing the dataset.** Every entry point takes a dataset selector that defaults to `paysim`, so existing commands are unchanged. Pass `--dataset creditcard` (argparse) or `dataset=creditcard clients=creditcard_5_clients` (Hydra) to run the ULB credit-card dataset instead. Feature count (13 for PaySim, 30 for creditcard) is read from the data at run time — no other flag changes.
+
 #### Federated — argparse (FFD / BERT / LR / SVM / GBM)
 
 ```
 usage: python -m models.<model>.run [-h]
+       [--dataset {paysim,creditcard}]
        [--scheme {iid,dirichlet}] [--alpha ALPHA]
        [--num_rounds N] [--num_clients K] [--local_epochs E]
        [--oversampling {smote,adasyn,none}]
@@ -397,6 +438,7 @@ usage: python -m models.<model>.run [-h]
 
 | Flag | Type | Choices / range | YAML default | Notes |
 |------|------|-----------------|--------------|-------|
+| `--dataset` | str | `paysim`, `creditcard` | `paysim` | Dataset to load. Sets the feature count (13 / 30) and the `results/logs/<dataset>/…` namespace. |
 | `--scheme` | str | `iid`, `dirichlet` | `iid` | Partition strategy. |
 | `--alpha` | float | > 0 | `null` | Dirichlet concentration; required when `--scheme dirichlet`. |
 | `--num_rounds` | int | ≥ 1 | `50` | FL communication rounds. Sweep scripts pass `20` (LR/SVM) and `10` (GBM). |
@@ -427,6 +469,10 @@ python -m models.ffd.run --scheme dirichlet --alpha 0.5 --oversampling adasyn \
 # No oversampling, multi-seed (one invocation per seed)
 python -m models.ffd.run --scheme iid --oversampling none \
     --random_seed 2024 --use_wandb true
+
+# Same run on the ULB credit-card dataset (30 features, auto-detected)
+python -m models.ffd.run --dataset creditcard --scheme iid --oversampling smote \
+    --random_seed 42 --use_wandb true
 ```
 
 #### Federated — Hydra (FedXGBllr)
@@ -439,8 +485,8 @@ Hydra overrides are `key=value` pairs chained on the command line.
 
 | Override | Choices / range | Default | Notes |
 |----------|-----------------|---------|-------|
-| `dataset` | `paysim` | — | Selects `conf/dataset/paysim.yaml`. |
-| `clients` | `paysim_5_clients` | — | Client count config. |
+| `dataset` | `paysim`, `creditcard` | `paysim` | Selects `conf/dataset/<dataset>.yaml`. |
+| `clients` | `paysim_5_clients`, `creditcard_5_clients`, `*_2_clients` | `paysim_5_clients` | Client-count config; match the dataset (e.g. `creditcard_5_clients`). |
 | `run_experiment.num_rounds` | int ≥ 1 | `50` | FL rounds. |
 | `dataset.non_iid.enabled` | `true` / `false` | `false` | Switch to Dirichlet partitioning. |
 | `dataset.non_iid.alpha` | float > 0 | `1.0` | Dirichlet α. |
@@ -466,12 +512,20 @@ python -m hfedxgboost.main \
     dataset.non_iid.enabled=true dataset.non_iid.alpha=0.5 \
     dataset.oversampling.method=adasyn \
     random_seed=42 use_wandb=true
+
+# Credit-card dataset (swap both dataset= and clients= together)
+python -m hfedxgboost.main \
+    dataset=creditcard clients=creditcard_5_clients \
+    run_experiment.num_rounds=50 \
+    dataset.oversampling.method=smote \
+    random_seed=42 use_wandb=true
 ```
 
 #### Centralized upper bounds (LR / SVM / GBM / XGB / FFD)
 
 ```
 usage: python -m experiments.centralized_baseline.run_<model> [-h]
+       [--dataset {paysim,creditcard}]
        [--oversampling {smote,adasyn,none}]
        [--sampling_strategy {auto,FLOAT}]
        [--random_seed SEED] [--use_wandb {true,false}]
@@ -483,6 +537,7 @@ usage: python -m experiments.centralized_baseline.run_<model> [-h]
 
 | Flag | Type | Choices / range | Default | Notes |
 |------|------|-----------------|---------|-------|
+| `--dataset` | str | `paysim`, `creditcard` | `paysim` | Dataset to load; also sets the `results/logs/<dataset>/centralized/…` namespace. |
 | `--oversampling` | str | `smote`, `adasyn`, `none` | `smote` | Global resampler. |
 | `--sampling_strategy` | str / float | `auto` or float ∈ (0, 1] | `auto` | Passed to imblearn's `sampling_strategy`. `auto` = 1:1 fraud:non-fraud. Float = post-resample minority/majority ratio (e.g. `0.01` → 1:100). |
 | `--random_seed` | int | — | `42` | |
@@ -500,6 +555,9 @@ python -m experiments.centralized_baseline.run_svm --oversampling smote --sampli
 python -m experiments.centralized_baseline.run_gbm --oversampling smote --sampling_strategy 0.01 --random_seed 42 --use_wandb true
 python -m experiments.centralized_baseline.run_xgb --oversampling smote  --sampling_strategy 0.01 --random_seed 42 --use_wandb true
 python -m experiments.centralized_baseline.run_ffd --oversampling smote  --num_epochs 30 --random_seed 42 --use_wandb true
+
+# Credit-card dataset
+python -m experiments.centralized_baseline.run_lr  --dataset creditcard --oversampling smote --random_seed 42 --use_wandb true
 ```
 
 #### Picking a non-1:1 oversampling ratio
@@ -540,8 +598,8 @@ The startup log echoes the resolved value and the post-resample fraud ratio so y
 ### Sweep drivers (shell scripts)
 
 ```
-usage: [SEEDS="<seed> [seed ...]"] bash experiments/run_<model>.sh
-usage: [SEEDS="..."] [SKIP_CENTRALIZED={0,1}] bash experiments/run_all.sh
+usage: [SEEDS="<seed> [seed ...]"] [DATASET={paysim,creditcard}] bash experiments/run_<model>.sh
+usage: [SEEDS="..."] [DATASET=...] [SKIP_CENTRALIZED={0,1}] bash experiments/run_all.sh
 ```
 
 Env-var overrides:
@@ -549,6 +607,7 @@ Env-var overrides:
 | Variable | Default | Applies to | Notes |
 |----------|---------|------------|-------|
 | `SEEDS` | `42` | all `run_*.sh` | Space-separated list, e.g. `"42 123 2024"`. |
+| `DATASET` | `paysim` | all `run_*.sh` | Dataset to sweep; passed through as `--dataset` / `dataset=` and namespaces logs + CSVs under `results/logs/<DATASET>/`. |
 | `SKIP_CENTRALIZED` | `0` | `run_all.sh` only | `1` skips the centralized upper-bound passes. |
 
 Per-model sweeps — each covers IID + Dirichlet ∈ {0.5, 1.0, 5.0} × {SMOTE, ADASYN, none}:
@@ -564,6 +623,9 @@ bash experiments/run_centralized.sh   # 18 runs / seed (6 models × 3 oversample
 
 # Multi-seed
 SEEDS="42 123 2024" bash experiments/run_ffd.sh
+
+# Sweep the credit-card dataset instead of PaySim
+DATASET=creditcard bash experiments/run_ffd.sh
 ```
 
 End-to-end orchestration (preflight check + every script in order):
@@ -572,9 +634,10 @@ End-to-end orchestration (preflight check + every script in order):
 bash experiments/run_all.sh                          # seed 42, all stages
 SEEDS="42 123 2024" bash experiments/run_all.sh      # full 3-seed sweep
 SKIP_CENTRALIZED=1 bash experiments/run_all.sh       # skip upper-bound passes
+DATASET=creditcard bash experiments/run_all.sh       # run the full sweep on creditcard
 ```
 
-`run_all.sh` aborts on first preflight failure: conda env active, `data/paysim/paysim.csv` exists, W&B logged in, and core Python deps import.
+`run_all.sh` aborts on first preflight failure: conda env active, the selected dataset's CSV (`data/${DATASET}/${DATASET}.csv`, default `data/paysim/paysim.csv`) exists, W&B logged in, and core Python deps import.
 
 ---
 
