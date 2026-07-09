@@ -1,8 +1,9 @@
 """Dispatch wrapper that selects between SMOTE and ADASYN per client.
 
-The four FL model run scripts and the centralized baselines all need to apply
-one of {SMOTE, ADASYN, none} to per-client partitions before training. This
-module centralises that dispatch so each script only needs a single call.
+Every FL model run script (LR, SVM, GBM, FFD, BERT/FT-Transformer, and
+FedXGBllr) and the centralized baselines need to apply one of
+{SMOTE, ADASYN, none} to per-client partitions before training. This module
+centralises that dispatch so each script only needs a single call.
 """
 
 from __future__ import annotations

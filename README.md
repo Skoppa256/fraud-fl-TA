@@ -1,11 +1,19 @@
 # Federated Learning for Financial Fraud Detection — Comparative Study
 
-A research project benchmarking five model classes — four federated and
+A research project benchmarking several model classes — six federated arms and
 their centralized upper bounds — on the PaySim mobile-money fraud dataset.
-The goal is to compare classical FL (FedAvg over linear models), tree-ensemble
-FL with learnable aggregation (FedXGBllr), a model-selection variant
-(GBM with best-model promotion), and a CNN-based fraud detector (FFD)
-under non-IID partitioning and extreme class imbalance.
+The goal is to compare classical FL (FedAvg over linear models: LR, SVM),
+tree-ensemble FL with learnable aggregation (FedXGBllr), a model-selection
+variant (GBM with best-model promotion), a CNN-based fraud detector (FFD), and
+a from-scratch tabular Transformer (BERT/FT-Transformer) under non-IID
+partitioning and extreme class imbalance.
+
+> **Aggregation is not uniform across arms.** Only LR and SVM use vanilla
+> FedAvg. FFD and BERT use `AccuracyWeightedFedAvg` (weight by data size ×
+> local AUPRC); GBM uses server-side best-model selection (no averaging); and
+> FedXGBllr uses a hybrid (frozen trees concatenated, CNN via FedAvg). See the
+> [Project Pipeline](#project-pipeline) aggregation table for the per-model
+> truth taken from code.
 
 The study targets **AUPRC** (Area Under the Precision–Recall Curve) as the
 primary metric, because the PaySim fraud rate is ~0.13% and accuracy is
@@ -51,14 +59,15 @@ fraud-fl-TA/
 ├── models/
 │   ├── fedxgbllr/                 # FedXGBllr (Flower hfedxgboost — Hydra CLI)
 │   ├── fedavg_lr/                 # Logistic Regression + FedAvg
-│   ├── fedavg_svm/                # Linear SVM + FedAvg
+│   ├── fedavg_svm/                # Linear SVM (SGD-hinge) + FedAvg
 │   ├── gbm_bestmodel/             # HistGBM with server-side best-model selection
-│   └── ffd/                       # FFD — Conv1D fraud detector (Yang et al., 2019)
+│   ├── ffd/                       # FFD — Conv1D fraud detector (Yang et al., 2019)
+│   └── bert_fraud/                # FT-Transformer (Gorishniy et al., 2021) — NOT HuggingFace BERT
 │
 ├── evaluation/
 │   ├── results_writer.py          # Unified summary/per-round CSV schema
-│   ├── metrics.py                 # AUPRC/F1/Precision/Recall helpers (TBD)
-│   └── shap_analysis.py           # SHAP explainability driver (TBD)
+│   ├── metrics.py                 # AUPRC + val-tuned-threshold F1/Precision/Recall helpers
+│   └── shap_analysis.py           # SHAP explainability driver (stub — not yet implemented)
 │
 ├── experiments/
 │   ├── centralized_baseline/      # Upper-bound non-FL runs (LR/SVM/GBM/XGB/FFD)
@@ -125,11 +134,16 @@ The CSV is large (~493 MB) and is git-ignored — download it once locally.
 
 ## Models compared
 
-1. **FedXGBllr** — Federated XGBoost with Learnable Learning Rates.
-   Each client trains a local XGBoost ensemble; trees are exchanged with the
-   server and concatenated into a global forest. A small 1-D CNN, trained
-   federatedly under FedAvg, learns per-tree weights so the global ensemble
-   produces calibrated predictions. (Baseline; complete in `models/fedxgbllr/`.)
+1. **FedXGBllr** — Federated XGBoost with Learnable Learning Rates
+   (Ma et al., 2023). Each client fits a local XGBoost ensemble **once**
+   (50 trees/client → 250 for K=5) and then **freezes** it. Trees are
+   **concatenated** across clients (not averaged, not retrained) into a global
+   forest. A small 1-D CNN consumes the per-tree margin outputs of that frozen
+   forest and learns per-tree weights ("learnable learning rates"); the CNN
+   weights are aggregated **via FedAvg** each round while the frozen trees ride
+   along in the broadcast as fixed context. (Baseline; complete in
+   `models/fedxgbllr/`.) See [Project Pipeline](#project-pipeline) for the exact
+   mechanics.
 
 2. **Logistic Regression + FedAvg** — Each client fits a standard logistic
    regression on its local partition. Model weights are averaged across
@@ -148,20 +162,166 @@ The CSV is large (~493 MB) and is git-ignored — download it once locally.
    upper bound still uses batch `LinearSVC` — it fits once and never needs
    aggregating.)
 
-4. **GBM with Best-Model Selection** — Each client trains a local Gradient
-   Boosting Machine. Instead of averaging, the server evaluates submitted
-   models on a held-out validation slice and **promotes the single best-AUPRC
-   model** as the new global. This explores whether model selection beats
+4. **GBM with Best-Model Selection** — Each client trains a local
+   **`HistGradientBoostingClassifier`** (histogram-based GBM, chosen for speed
+   on ~4.4M rows) from scratch each round, ignoring the global model. Instead
+   of averaging, the server evaluates submitted models on a held-out
+   validation slice and **promotes the single best-AUPRC model** as the new
+   global (Aljunaid et al., 2025). This explores whether model selection beats
    parameter averaging when local distributions diverge sharply.
 
 5. **FFD (Conv1D Fraud Detector)** — A small 1-D CNN architecture from
    Yang et al. (2019), adapted to PaySim's 13-feature tabular input.
-   Lives in `models/ffd/`; weights are averaged via **FedAvg**.
+   Lives in `models/ffd/`; weights are aggregated via
+   **`AccuracyWeightedFedAvg`** — each client's update is weighted by
+   `n_c · local_AUPRC`, not by data size alone (falls back to plain FedAvg at
+   cold start when all local AUPRCs are 0).
 
-All five FL arms use **Dirichlet partitioning** (`α` ∈ {0.5, 1.0, 5.0}) to induce
+6. **BERT/FT-Transformer** *(extra — not part of the original 4-model
+   proposal, but fully wired: registry, sweep script, centralized baseline)* —
+   A from-scratch **Feature-Tokenizer Transformer** (Gorishniy et al., 2021),
+   **not** a HuggingFace/pretrained BERT and with **no tokenizer/text**. Each
+   of the 13 scalar features gets a learned linear projection to a token; a
+   learnable `[CLS]` token + self-attention pool them for classification. Lives
+   in `models/bert_fraud/`; aggregated via the same **`AccuracyWeightedFedAvg`**
+   as FFD. "BERT" is a naming convention only (CLS-token + attention), so treat
+   the label with care.
+
+All six FL arms use **Dirichlet partitioning** (`α` ∈ {0.5, 1.0, 5.0}) to induce
 non-IID client splits, and per-client oversampling — either **SMOTE** or
 **ADASYN**, selected via `--oversampling {smote, adasyn, none}` — to soften
 the fraud-rate imbalance before training.
+
+---
+
+## Project Pipeline
+
+End-to-end, every run follows the same five stages. Stages 1–3 and 5 are
+shared code; only stage 4 (local training + aggregation) differs per model.
+All line citations are to source as of this writing.
+
+```
+ raw paysim.csv (~6.3M rows, 11 cols)
+        │
+        ▼
+ (1) PREPROCESS  preprocessing/paysim.py
+     drop nameOrig/nameDest/isFlaggedFraud · engineer errorBalanceOrig/Dest
+     one-hot `type` (5 cols) · stratified 70/15/15 split · StandardScaler FIT ON TRAIN ONLY
+        │  → 13 float32 features, int32 label; x_val/x_test kept on the server
+        ▼
+ (2) PARTITION  partitioning/dirichlet.py   (train split only)
+     IID (shuffle + K-way split)  |  Dirichlet(α) per-class draw → K clients
+     small α ⇒ a client can get ZERO fraud (intentional)
+        │
+        ▼
+ (3) OVERSAMPLE  preprocessing/{oversampling,smote,adasyn}.py   (per client)
+     SMOTE | ADASYN | none · SKIP a client when n_fraud < k_neighbors+1 (i.e. < 6)
+        │
+        ▼
+ (4) LOCAL TRAIN + FEDERATED AGGREGATE  models/<name>/   (K clients × R rounds)
+     per-model — see aggregation table below
+        │
+        ▼
+ (5) EVALUATE on the central test set  evaluation/metrics.py
+     AUPRC (primary, threshold-free) · F1/Precision/Recall at a threshold
+     TUNED on the validation set (max-F1) then applied unchanged to test
+     (per-client SHAP stability is planned — evaluation/shap_analysis.py is a stub)
+```
+
+**Shared 13-feature input** (`preprocessing/paysim.py:114-180`), in order:
+`step, amount, oldbalanceOrg, newbalanceOrig, oldbalanceDest, newbalanceDest,
+errorBalanceOrig, errorBalanceDest, type_CASH_IN, type_CASH_OUT, type_DEBIT,
+type_PAYMENT, type_TRANSFER`. Every model consumes exactly this vector — **with
+one twist: FedXGBllr's CNN does not see these features directly.** Its input is
+the `(N, 1, 250)` tree-margin tensor (see the FedXGBllr box below).
+
+### Per-model local training + aggregation (from code)
+
+| Model | Local estimator (what the client trains) | Parameter exchanged | Aggregation | Source |
+|-------|------------------------------------------|---------------------|-------------|--------|
+| **LR** | `LogisticRegression` (warm-start, resumes from aggregated coef) | `[coef_(1,13), intercept_(1,)]` | **Vanilla FedAvg** (sample-count weighted) | `fedavg_lr/client.py`, `strategy.py:38-49` |
+| **SVM** | `SGDClassifier(loss="hinge")` — linear SVM by SGD, warm-start, `tol=None` | `[coef_(1,13), intercept_(1,)]` | **Vanilla FedAvg** | `fedavg_svm/client.py`, `strategy.py:38-49` |
+| **GBM** | `HistGradientBoostingClassifier`, retrained from scratch each round | whole model, pickled → uint8 array | **Best-model selection** (argmax val AUPRC; no averaging) | `gbm_bestmodel/client.py`, `strategy.py:124-188` |
+| **FedXGBllr** | 50 XGBoost trees/client (fitted once, frozen) **+** shared 1-D CNN | `[CNN weights, this client's tree ensemble]` | **Hybrid**: CNN via FedAvg; trees **concatenated** (kept whole, sorted by cid) | `fedxgbllr/hfedxgboost/strategy.py:45-79` |
+| **FFD** | 1-D CNN on the 13 features (`(B,1,13)`), SGD, 5 local epochs | all CNN weights | **`AccuracyWeightedFedAvg`** (n_c · local AUPRC) | `ffd/strategy.py:46-106` |
+| **BERT** | FT-Transformer (per-feature token + `[CLS]` + 2× attention), AdamW, 3 epochs | all Transformer weights | **`AccuracyWeightedFedAvg`** (same as FFD) | `bert_fraud/strategy.py:36-92` |
+
+Only **LR** and **SVM** use stock FedAvg. **FFD** and **BERT** use
+`AccuracyWeightedFedAvg` (data size × local AUPRC). **GBM** does not average at
+all. **FedXGBllr** is hybrid.
+
+### FedXGBllr mechanics (the most-misunderstood model)
+
+Read `models/fedxgbllr/hfedxgboost/{models.py, utils.py:265-329, strategy.py}`.
+
+- **Trees are fitted ONCE** on each client's train partition (50 trees/client
+  → 250 total for K=5), then **FROZEN**. There is no per-round tree retraining.
+- **"Tree aggregation" = concatenation/collection** of whole ensembles (each
+  tagged by cid and sorted, `utils.py:311`), **not averaging** and **not
+  retraining**.
+- **The `(N, 1, 250)` CNN input** is built by pushing samples through the
+  frozen trees with `output_margin=True` — one raw pre-sigmoid vote per tree —
+  laid out in **contiguous per-client blocks of 50** (`utils.py:305-322`). The
+  tabular row is *not* fed to the CNN.
+- Because the trees are frozen, **this margin tensor is identical every round**;
+  only the CNN weights change round to round.
+- **CNN** = `Conv1d(1→64, kernel=stride=50)` so each non-overlapping window is
+  exactly one client's 50-tree block → `(B,64,5)` → flatten `(B,320)` →
+  `Linear(320→1)` → `Sigmoid`, trained with **BCELoss**. The conv filters *are*
+  the "learnable learning rates" (`models.py` `CNN`).
+- **CNN weights are FedAvg-averaged** across clients each round
+  (`strategy.py:59-66`); the frozen trees ride along in the broadcast purely as
+  fixed context.
+- **At test time**, test transactions are pushed through the **same
+  train-fitted frozen trees** to build their `(N,1,250)` tensor, then scored by
+  the single averaged CNN. This is standard train→test application, **not
+  leakage** (the trees never saw test labels; they were fit only on train).
+
+### Neural-network summary
+
+| | FedXGBllr CNN | FFD CNN | BERT / FT-Transformer |
+|---|---|---|---|
+| Input to net | tree margins `(B,1,250)` | features `(B,1,13)` | features `(B,13)` → tokens `(B,14,64)` |
+| Core | `Conv1d(1→64, k=50, s=50)` | 2× `Conv1d`+`MaxPool` | 2× `TransformerEncoderLayer` (Pre-LN, GELU) |
+| Output | `(B,1)` **Sigmoid** | `(B,2)` logits → softmax | `(B,2)` logits → softmax |
+| Loss / optimizer | BCELoss / Adam 5e-4 | CrossEntropy / SGD 1e-2 | CrossEntropy / AdamW 1e-3 |
+| Aggregation | FedAvg (CNN) + tree concat | AccuracyWeightedFedAvg | AccuracyWeightedFedAvg |
+
+### Documentation notes / open questions
+
+Items found while re-deriving these docs from source. Per this task's scope,
+**no logic was changed** — these are recorded, not fixed:
+
+1. **README framing was stale on model count and aggregation.** The intro said
+   "five model classes / four federated"; the code has **six** FL arms
+   (`experiments/registry.yaml:12-18`) including a fully-wired BERT arm. FFD was
+   described as "averaged via FedAvg" but uses `AccuracyWeightedFedAvg`. Both
+   fixed in this doc pass.
+2. **"BERT" is a misnomer.** `models/bert_fraud/` is a from-scratch
+   FT-Transformer (Gorishniy 2021) with per-feature linear tokenization — no
+   pretrained weights, no tokenizer, no text (`bert_fraud/model.py:1-101`).
+   Renaming the module is a code change and was left alone.
+3. **`num_rounds` default vs. sweep value.** LR/SVM/GBM `conf/base.yaml` default
+   `num_rounds: 50`, but the effective sweep values are LR/SVM = 20, GBM = 10
+   (`experiments/registry.yaml:52-58`; the shell drivers pass the override). The
+   YAML default is therefore not what the sweep runs.
+4. **GBM clients ignore the global model.** `set_parameters` is a no-op and each
+   round retrains from scratch (`gbm_bestmodel/client.py:104-142`); "best-model
+   selection" keeps the single best client model server-side with no
+   cross-client knowledge transfer into local training. Intentional per the
+   in-code note, but worth stating.
+5. **Pickle-over-the-wire in GBM** is flagged unsafe for untrusted networks
+   (arbitrary-code-execution risk) and is fine only because the whole
+   simulation runs on one machine (`gbm_bestmodel/client.py:8-15`). Not for
+   production as-is.
+6. **`models/fedxgbllr/README.md`** is the upstream Flower baseline README
+   (a9a/cod-rna/ijcnn1, `n_estimators=500`, Poetry setup) and does **not**
+   describe the PaySim configuration used here (50 trees/client, 50 CNN
+   iterations — `conf/clients/paysim_5_clients.yaml`). Read it as upstream
+   provenance, not as this project's run config.
+7. **SHAP is not implemented.** `evaluation/shap_analysis.py` is a stub, so the
+   per-client SHAP-stability analysis mentioned as a research goal is not yet
+   wired into any run.
 
 ---
 
@@ -203,6 +363,7 @@ The summary schema is defined once in [evaluation/results_writer.py](evaluation/
 | Schemes | IID, Dirichlet α ∈ {0.5, 1.0, 5.0} |
 | Oversampling | `smote` / `adasyn` / `none` |
 | FFD rounds | 50 |
+| BERT rounds | 50 |
 | FedXGBllr rounds | 50 |
 | LR / SVM rounds | 20 |
 | GBM rounds | 10 |
@@ -215,7 +376,7 @@ The summary schema is defined once in [evaluation/results_writer.py](evaluation/
 
 CLI flags override the corresponding key in the model's `conf/base.yaml` (Hydra equivalent: `conf/dataset/paysim.yaml`); omit a flag to keep the YAML default.
 
-#### Federated — argparse (FFD / LR / SVM / GBM)
+#### Federated — argparse (FFD / BERT / LR / SVM / GBM)
 
 ```
 usage: python -m models.<model>.run [-h]
@@ -225,11 +386,14 @@ usage: python -m models.<model>.run [-h]
        [--sampling_strategy {auto,FLOAT}]
        [--random_seed SEED] [--use_wandb {true,false}]
        [--wandb_project NAME]
-       [--batch_size B] [--lr LR]                       # ffd only
+       [--batch_size B] [--lr LR]                       # ffd / bert_fraud
+       [--weight_decay WD]                              # bert_fraud only
        [--max_iter N] [--max_depth D] [--learning_rate LR]   # gbm_bestmodel only
 ```
 
-`<model>` ∈ {`ffd`, `fedavg_lr`, `fedavg_svm`, `gbm_bestmodel`}.
+`<model>` ∈ {`ffd`, `bert_fraud`, `fedavg_lr`, `fedavg_svm`, `gbm_bestmodel`}.
+`bert_fraud` defaults: `local_epochs=3`, `batch_size=64`, `lr=0.001`,
+`weight_decay=1e-4` (`models/bert_fraud/conf/base.yaml`).
 
 | Flag | Type | Choices / range | YAML default | Notes |
 |------|------|-----------------|--------------|-------|
@@ -249,7 +413,7 @@ usage: python -m models.<model>.run [-h]
 | `--max_depth` *(GBM)* | int | ≥ 1 | `6` | HistGBM tree depth. |
 | `--learning_rate` *(GBM)* | float | > 0 | `0.1` | HistGBM shrinkage. |
 
-Examples (substitute `ffd` → `fedavg_lr` / `fedavg_svm` / `gbm_bestmodel`):
+Examples (substitute `ffd` → `bert_fraud` / `fedavg_lr` / `fedavg_svm` / `gbm_bestmodel`):
 
 ```bash
 # IID + SMOTE
@@ -315,7 +479,7 @@ usage: python -m experiments.centralized_baseline.run_<model> [-h]
        [--num_epochs N] [--batch_size B] [--lr LR]      # run_ffd only
 ```
 
-`<model>` ∈ {`lr`, `svm`, `gbm`, `xgb`, `ffd`}. Oversampling is applied **globally** to the full `x_train` (one resampling pass) rather than per-client.
+`<model>` ∈ {`lr`, `svm`, `gbm`, `xgb`, `ffd`, `bert_fraud`}. Oversampling is applied **globally** to the full `x_train` (one resampling pass) rather than per-client.
 
 | Flag | Type | Choices / range | Default | Notes |
 |------|------|-----------------|---------|-------|
@@ -391,11 +555,12 @@ Per-model sweeps — each covers IID + Dirichlet ∈ {0.5, 1.0, 5.0} × {SMOTE, 
 
 ```bash
 bash experiments/run_ffd.sh           # 12 runs / seed
+bash experiments/run_bert_fraud.sh    # 12 runs / seed
 bash experiments/run_fedxgbllr.sh     # 12 runs / seed
 bash experiments/run_lr.sh            # 12 runs / seed
 bash experiments/run_svm.sh           # 12 runs / seed
 bash experiments/run_gbm.sh           # 12 runs / seed
-bash experiments/run_centralized.sh   # 15 runs / seed (5 models × 3 oversamplers)
+bash experiments/run_centralized.sh   # 18 runs / seed (6 models × 3 oversamplers)
 
 # Multi-seed
 SEEDS="42 123 2024" bash experiments/run_ffd.sh

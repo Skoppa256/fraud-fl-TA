@@ -1,8 +1,11 @@
-"""PaySim preprocessing pipeline shared by all four FL models.
+"""PaySim preprocessing pipeline shared by every model in the study.
 
-Implements Level 1 of the partitioning scheme: 
+All six FL arms (LR, SVM, GBM, FFD, BERT/FT-Transformer, FedXGBllr) and the
+centralized baselines consume the identical 13-feature vector produced here.
+
+Implements Level 1 of the partitioning scheme:
     - load the raw CSV
-    - drop irrelevant identifiers (CURRENT: 'isFlaggedFraud' dropped)
+    - drop irrelevant identifiers (nameOrig, nameDest, isFlaggedFraud)
     - engineer balance-error features
     - one-hot encode the transaction type
     - fit a StandardScaler on the training split only
@@ -225,7 +228,9 @@ def load_paysim(
 ) -> Dict[str, object]:
     """Convenience wrapper around :class:`PaySimPreprocessor`.
 
-    All four FL models import this function as the canonical entry point::
+    Every model's run script imports this function as the canonical entry
+    point (the argparse arms directly; FedXGBllr via its
+    ``dataset_preparation`` shim)::
 
         from preprocessing.paysim import load_paysim
         data = load_paysim()

@@ -1,9 +1,12 @@
 """Flower NumPyClient for GBM with best-model selection.
 
-Each client trains a fresh :class:`sklearn.ensemble.GradientBoostingClassifier`
-on its local subset every round and ships the whole model to the server.
-Tree ensembles cannot be element-wise averaged, so the server picks one
-winner per round (see ``strategy.BestModelSelection``).
+Each client trains a fresh
+:class:`sklearn.ensemble.HistGradientBoostingClassifier` (histogram-based GBM,
+chosen over the exact ``GradientBoostingClassifier`` for tractability on
+PaySim's ~4.4M rows — see the import comment below) on its local subset every
+round and ships the whole model to the server. Tree ensembles cannot be
+element-wise averaged, so the server picks one winner per round (argmax
+validation AUPRC — Aljunaid et al. 2025) — see ``strategy.BestModelSelection``.
 
 Serialization
 -------------

@@ -53,7 +53,35 @@ def fit_xgboost(
 
 
 class CNN(nn.Module):
-    """CNN model."""
+    """1-D CNN aggregator for FedXGBllr — the "learnable learning rates".
+
+    This CNN does NOT consume raw tabular features. Its input is the
+    tree-margin tensor of shape ``(B, 1, client_num * n_estimators_client)``
+    (for PaySim: ``(B, 1, 250)`` = 5 clients × 50 trees), built by
+    ``utils.single_tree_preds_from_each_client``: every sample is pushed
+    through each client's frozen XGBoost trees with ``output_margin=True``,
+    one raw pre-sigmoid vote per tree, laid out in contiguous per-client
+    blocks of ``n_estimators_client``.
+
+    Because ``kernel_size == stride == n_estimators_client``, the Conv1d
+    slides in non-overlapping windows of exactly one client's tree block, so
+    each conv filter is a learned weighted combination over that client's
+    tree margins — i.e. per-tree contribution weights ("learnable learning
+    rates"). Shapes (PaySim, BINARY):
+
+        input           (B, 1, 250)
+        conv1d(1->64,k=50,s=50) -> (B, 64, 5)   # 5 = one window per client
+        flatten(start_dim=1)    -> (B, 320)      # 320 = 64 channels × 5 clients
+        relu                    -> (B, 320)
+        layer_direct(320->1)    -> (B, 1)
+        final_layer (Sigmoid)   -> (B, 1)        # fraud probability, trained with BCELoss
+
+    The trees are fitted ONCE per client and frozen, so this margin tensor is
+    identical every FL round; only the CNN weights change. Across clients the
+    CNN weights are FedAvg-averaged each round (``strategy.FedXgbNnAvg``),
+    while the frozen ensembles are concatenated (not averaged) and ride along
+    in the broadcast as fixed context.
+    """
 
     def __init__(self, cfg: DictConfig, n_channel: int = 64) -> None:
         super().__init__()

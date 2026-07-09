@@ -121,7 +121,7 @@ def get_partition(
     num_clients: int = 5,
     random_state: int = 42,
 ) -> List[dict]:
-    """Unified entry point used by all four FL models.
+    """Unified entry point used by every FL model in the study.
 
     Parameters
     ----------
