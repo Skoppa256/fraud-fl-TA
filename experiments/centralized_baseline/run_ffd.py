@@ -187,11 +187,11 @@ def main() -> None:
     optimizer = torch.optim.SGD(model.parameters(), lr=lr)
     criterion = nn.CrossEntropyLoss()
 
-    dataset = TensorDataset(
+    train_ds = TensorDataset(
         torch.from_numpy(x_train.astype(np.float32)),
         torch.from_numpy(y_train.astype(np.int64)),
     )
-    loader = DataLoader(dataset, batch_size=batch_size, shuffle=True)
+    loader = DataLoader(train_ds, batch_size=batch_size, shuffle=True)
 
     t0 = time.time()
     for epoch in range(1, num_epochs + 1):
