@@ -21,6 +21,24 @@ uninformative under this skew. F1, Precision, and Recall are reported as
 supporting metrics. Explanations are produced per-client via SHAP.
 
 ---
+## Documentation (`buku/`)
+
+`buku/` is the undergraduate thesis (Tugas Akhir) source, written in Typst — it is
+an authored deliverable, not generated output. Chapters 1–3 document this
+pipeline; Chapters 4–5 are intentional stubs (no results yet).
+
+```bash
+typst compile buku/thesis.typ buku/thesis.pdf   # one-shot build
+typst watch   buku/thesis.typ buku/thesis.pdf   # live rebuild
+```
+
+**Documentation updates ship with the code change that causes them** — if you
+change the pipeline, models, hyperparameters, dataset handling, or dependencies,
+update `buku/content.typ` in the same change and confirm the thesis still
+compiles. The enforceable rule and the code→section mapping live in
+[`CLAUDE.md`](CLAUDE.md).
+
+---
 
 ## Tech stack
 

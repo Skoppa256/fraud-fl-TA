@@ -115,3 +115,6 @@ desktop.ini
 # Keep Hydra wandb config (not a W&B run artifact — it's a static config file)
 !models/fedxgbllr/hfedxgboost/conf/wandb/
 !models/fedxgbllr/hfedxgboost/conf/wandb/default.yaml
+
+buku/thesis.pdf
+buku/Proposal TA v2.1.pdf

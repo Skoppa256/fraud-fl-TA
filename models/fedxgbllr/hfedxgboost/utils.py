@@ -415,13 +415,36 @@ def test(
 
 
 class EarlyStop:
-    """Stop the tain when no progress is happening."""
+    """Stop training when the monitored metric stops improving.
+
+    Monitors AUPRC (maximize), matching every other FL arm in this repo
+    (ffd/bert/lr/svm/gbm all early-stop on ``val_auprc``). On these highly
+    imbalanced fraud datasets BCE loss is dominated by the majority class and
+    plateaus while AUPRC is still climbing, so loss is a poor stop signal.
+    Prefers validation AUPRC; falls back to test AUPRC, and finally to the
+    original loss-minimize criterion for datasets that report no AUPRC
+    (e.g. regression tasks).
+    """
 
     def __init__(self, cfg):
         self.num_waiting_rounds = cfg.dataset.early_stop_patience_rounds
         self.counter = 0
+        self.best_auprc = -float("inf")
         self.min_loss = float("inf")
         self.metric_value = None
+
+    @staticmethod
+    def _extract_auprc(metrics) -> Optional[float]:
+        """Pull the AUPRC to monitor from the eval metrics dict.
+
+        Prefers validation AUPRC (the stop decision never peeks at test);
+        falls back to test AUPRC, then to None when neither is reported.
+        """
+        for key in ("val_auprc", "test_auprc"):
+            if key in metrics:
+                val = metrics[key]
+                return val.item() if hasattr(val, "item") else float(val)
+        return None
 
     def early_stop(self, res) -> Optional[Tuple[float, float]]:
         """Check if the model made any progress in number of rounds.
@@ -432,40 +455,57 @@ class EarlyStop:
 
         Parameters
         ----------
-            res: tuple of 2 elements, res[0] is a float that indicate the loss,
-            res[1] is actually a 1 element dictionary that looks like this
-            {'Accuracy': tensor(0.8405)}
+            res: tuple of 2 elements, res[0] is a float that indicates the loss,
+            res[1] is the eval metrics dict, which for binary-classification
+            (fraud) tasks carries 'val_auprc' / 'test_auprc'.
 
         Returns
         -------
-            Optional[Tuple[float,float]]: (best loss the model achieved,
-            best metric value associated with that loss)
+            Optional[Tuple[float,float]]: (best AUPRC the model achieved,
+            best loss associated with it) when training should stop, else None.
         """
         loss = res[0]
-        metric_val = list(res[1].values())[0].item()
-        if loss < self.min_loss:
+        auprc = self._extract_auprc(res[1])
+
+        # Fallback: no AUPRC reported (e.g. regression) → monitor loss as before.
+        if auprc is None:
+            if loss < self.min_loss:
+                self.min_loss = loss
+                self.counter = 0
+            elif loss > self.min_loss:
+                self.counter += 1
+                if self.counter >= self.num_waiting_rounds:
+                    print(
+                        "That training is been stopped as the model achieved",
+                        "no loss progress, loss =",
+                        self.min_loss,
+                    )
+                    return (self.metric_value, self.min_loss)
+            return None
+
+        # Primary path: maximize AUPRC.
+        if auprc > self.best_auprc:
+            self.best_auprc = auprc
+            self.metric_value = auprc
             self.min_loss = loss
-            self.metric_value = metric_val
             self.counter = 0
             print(
-                "New best loss value achieved,",
+                "New best AUPRC achieved,",
+                "auprc",
+                self.best_auprc,
                 "loss",
-                self.min_loss,
-                "metric value",
-                self.metric_value,
+                loss,
             )
-        elif loss > (self.min_loss):
+        elif auprc < self.best_auprc:
             self.counter += 1
             if self.counter >= self.num_waiting_rounds:
                 print(
                     "That training is been stopped as the",
                     "model achieve no progress with",
-                    "loss =",
-                    self.min_loss,
-                    "result =",
-                    self.metric_value,
+                    "auprc =",
+                    self.best_auprc,
                 )
-                return (self.metric_value, self.min_loss)
+                return (self.best_auprc, self.min_loss)
         return None
 
 
