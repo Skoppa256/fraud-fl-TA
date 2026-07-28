@@ -24,6 +24,20 @@ def weighted_average(metrics: List[Tuple[int, Dict[str, float]]]) -> Dict[str, f
     return out
 
 
+class _AbortOnTotalFailureFedAvg(fl.server.strategy.FedAvg):
+    """FedAvg that aborts (raises) when a round has 0 successful fit results —
+    all clients failed. Vanilla FedAvg would silently keep the old parameters and
+    continue producing nothing round after round."""
+
+    def aggregate_fit(self, server_round, results, failures):
+        if not results:
+            raise RuntimeError(
+                f"round {server_round}: all clients failed (0 successful fit "
+                f"results) — aborting run."
+            )
+        return super().aggregate_fit(server_round, results, failures)
+
+
 def get_strategy(
     cfg: dict, n_features: int, server_eval_fn: Callable
 ) -> fl.server.strategy.FedAvg:
@@ -35,7 +49,7 @@ def get_strategy(
     num_clients = int(cfg["num_clients"])
     local_epochs = int(cfg["local_epochs"])
 
-    return fl.server.strategy.FedAvg(
+    return _AbortOnTotalFailureFedAvg(
         fraction_fit=1.0,
         fraction_evaluate=0.0,
         min_fit_clients=num_clients,

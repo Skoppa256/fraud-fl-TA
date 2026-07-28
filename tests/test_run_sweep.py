@@ -100,6 +100,25 @@ def test_env_propagates_thread_pins_and_wandb():
         shutil.rmtree(s.run_dir, ignore_errors=True)
 
 
+def test_build_env_carries_gpu_fraction_to_child():
+    """SWEEP_GPU_FRACTION (set by main() from --gpu-fraction) must survive into
+    the child env — build_env copies os.environ, so the child's for_model reads
+    the requested fraction rather than the config default."""
+    import shutil
+    prev = os.environ.get("SWEEP_GPU_FRACTION")
+    s = RunSpec("baf", "bert_fraud", "no-smote", "noniid", seed=42, alpha=0.5)
+    try:
+        os.environ["SWEEP_GPU_FRACTION"] = "0.2"
+        env = R.build_env(s, offline=True, use_wandb=False)
+        assert env["SWEEP_GPU_FRACTION"] == "0.2", env.get("SWEEP_GPU_FRACTION")
+    finally:
+        if prev is None:
+            os.environ.pop("SWEEP_GPU_FRACTION", None)
+        else:
+            os.environ["SWEEP_GPU_FRACTION"] = prev
+        shutil.rmtree(s.run_dir, ignore_errors=True)
+
+
 def test_resume_fingerprint_changes_with_config():
     s = RunSpec("baf", "lr", "smote", "iid", seed=42)
     fp1 = R._config_fingerprint(s, "datahashA", "parthashA")

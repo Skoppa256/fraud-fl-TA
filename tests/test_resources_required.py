@@ -75,6 +75,48 @@ def test_model_missing_key_raises():
     raise AssertionError("expected ValueError for model missing a required key")
 
 
+def test_gpu_fraction_env_crosses_to_child():
+    """--gpu-fraction 0.2 must produce num_gpus:0.2 in the CHILD's resolved
+    resources, not just the parent's plan.
+
+    The runner publishes the resolved fraction as SWEEP_GPU_FRACTION; the child
+    independently calls for_model() and must read it. Regression guard for the
+    no-op where the flag only touched the parent and Ray ran everything at 1.0.
+    """
+    prev = os.environ.get("SWEEP_GPU_FRACTION")
+    try:
+        os.environ["SWEEP_GPU_FRACTION"] = "0.2"
+        # GPU model on a GPU box: fraction applies.
+        r = resources.for_model("bert_fraud", gpu_available=True)
+        assert r["num_gpus"] == 0.2, r
+        assert r["device"] == "gpu", r
+        # ffd is also a GPU model.
+        assert resources.for_model("ffd", gpu_available=True)["num_gpus"] == 0.2
+        # CPU-only model is untouched by the fraction (config num_gpus == 0).
+        assert resources.for_model("lr", gpu_available=True)["num_gpus"] == 0.0
+        # No GPU on the box: fraction is irrelevant, forced to 0.0 (CPU fallback).
+        r_cpu = resources.for_model("bert_fraud", gpu_available=False)
+        assert r_cpu["num_gpus"] == 0.0 and r_cpu["device"] == "cpu"
+    finally:
+        if prev is None:
+            os.environ.pop("SWEEP_GPU_FRACTION", None)
+        else:
+            os.environ["SWEEP_GPU_FRACTION"] = prev
+
+
+def test_no_gpu_fraction_env_uses_config_default():
+    """Absent SWEEP_GPU_FRACTION, a GPU model resolves to the config value."""
+    prev = os.environ.pop("SWEEP_GPU_FRACTION", None)
+    try:
+        r = resources.for_model("ffd", gpu_available=True)
+        assert r["num_gpus"] == float(
+            resources.load_resources()["models"]["ffd"]["num_gpus"]
+        ), r
+    finally:
+        if prev is not None:
+            os.environ["SWEEP_GPU_FRACTION"] = prev
+
+
 def test_real_config_loads_and_resolves():
     """The shipped sweep_resources.yaml loads and CPU-resolves correctly."""
     cfg = resources.load_resources()  # default path

@@ -99,6 +99,14 @@ def for_model(
     num_cpus = int(m["num_cpus"])
     num_gpus = float(m["num_gpus"])
     device = str(m["device"])
+    # --gpu-fraction crosses the subprocess boundary via SWEEP_GPU_FRACTION so the
+    # CHILD (which independently calls for_model) actually gets the requested
+    # per-client GPU fraction — not the config default. Without this the flag only
+    # affected the parent's plan/manifest, and Ray ran everything sequentially at
+    # 1.0 regardless. Applies only to GPU models (config num_gpus > 0).
+    frac = os.environ.get("SWEEP_GPU_FRACTION")
+    if frac is not None and num_gpus > 0.0:
+        num_gpus = float(frac)
     if not gpu_available:
         num_gpus = 0.0
         device = "cpu"

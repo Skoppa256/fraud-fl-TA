@@ -64,7 +64,10 @@ class FedXgbNnAvg(FedAvg):
         averaged, so this weighting concerns the CNN aggregator alone.
         """
         if not results:
-            return None, {}
+            raise RuntimeError(
+                f"round {server_round}: all clients failed (0 successful fit "
+                f"results) — aborting run."
+            )
         # Do not aggregate if there are failures and failures are not accepted
         if not self.accept_failures and failures:
             return None, {}

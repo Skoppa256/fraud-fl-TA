@@ -53,7 +53,13 @@ class AccuracyWeightedFedAvg(fl.server.strategy.FedAvg):
 
     def aggregate_fit(self, server_round, results, failures):
         if not results:
-            return None, {}
+            # All clients failed this round (0 successful fit results). Continuing
+            # would produce empty aggregations round after round while still
+            # reporting in-progress. Abort loudly instead.
+            raise RuntimeError(
+                f"round {server_round}: all clients failed (0 successful fit "
+                f"results) — aborting run."
+            )
 
         weights_results: List[Tuple[List[np.ndarray], int, float]] = []
         for _, fit_res in results:

@@ -189,6 +189,10 @@ def main() -> None:
     # auto-detected); downgraded to cpu when no GPU is present.
     _gpu = detect_gpus()[0] > 0
     _xgb = resources.xgboost_params(gpu_available=_gpu)
+    print(
+        f"[centralized {MODEL_NAME}] resolved compute: device={_xgb['device']} "
+        f"tree_method={_xgb['tree_method']} (gpu_available={_gpu})"
+    )
     resources.pin_threads()
     model = XGBClassifier(
         n_estimators=50,

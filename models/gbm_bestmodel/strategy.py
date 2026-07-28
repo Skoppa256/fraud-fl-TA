@@ -128,7 +128,10 @@ class BestModelSelection(fl.server.strategy.Strategy):
         failures,
     ) -> Tuple[Optional[Parameters], Dict[str, Scalar]]:
         if not results:
-            return None, {}
+            raise RuntimeError(
+                f"round {server_round}: all clients failed (0 successful fit "
+                f"results) — aborting run."
+            )
 
         per_client = self._evaluate_each_client(results)
         eligible = [c for c in per_client if not c["skipped"]]

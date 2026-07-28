@@ -30,6 +30,7 @@ from __future__ import annotations
 import argparse
 import csv
 import os
+import signal
 import subprocess
 import sys
 import time
@@ -311,17 +312,26 @@ def _write_marker(spec: RunSpec, fingerprint: str, extra: dict) -> None:
 # Ray orphan check + cleanup
 # --------------------------------------------------------------------------- #
 def ray_orphan_check_and_clean(context: str) -> None:
-    """Kill stray Ray actors that could survive a killed subprocess and starve the
-    next run. Best-effort; safe when Ray isn't installed / nothing is running."""
+    """Detect + clean up stray Ray actors that could survive a killed subprocess
+    and starve the next run. Best-effort; safe when Ray isn't running.
+
+    NB: the `ray stop` CLI is broken in this env (click/Sentinel incompatibility:
+    "ValueError: not a valid Sentinel"), so we use ``ray.shutdown()`` (no-op if
+    Ray isn't up in this process). A child's own Ray actors live in the child's
+    process group and are reaped by the process-group kill in execute_run.
+    """
     try:
         r = subprocess.run(["pgrep", "-f", "ray::"], capture_output=True, text=True)
         stray = [p for p in r.stdout.split() if p.strip()]
+        if stray:
+            print(f"[ray] {context}: {len(stray)} stray Ray process(es) detected "
+                  f"(pids {','.join(stray)}); relying on process-group kill.")
     except Exception:
-        stray = []
-    if stray:
-        print(f"[ray] {context}: {len(stray)} stray Ray process(es) — running `ray stop`")
+        pass
     try:
-        subprocess.run(["ray", "stop", "--force"], capture_output=True, text=True, timeout=60)
+        import ray
+        if ray.is_initialized():
+            ray.shutdown()
     except Exception:
         pass
 
@@ -329,6 +339,43 @@ def ray_orphan_check_and_clean(context: str) -> None:
 # --------------------------------------------------------------------------- #
 # Execution
 # --------------------------------------------------------------------------- #
+# The currently-running child Popen, so a SIGTERM/SIGINT to the runner tears down
+# the WHOLE child process group (Ray actors included) instead of orphaning it —
+# `pkill -f run_sweep` previously left a models.bert_fraud.run child alive 25 min.
+_CURRENT_CHILD: "Optional[subprocess.Popen]" = None
+
+
+def _now_stamp() -> str:
+    return time.strftime("%Y-%m-%dT%H:%M:%S", time.localtime())
+
+
+def _kill_child_group(sig=signal.SIGTERM) -> None:
+    proc = _CURRENT_CHILD
+    if proc is None or proc.poll() is not None:
+        return
+    try:
+        os.killpg(os.getpgid(proc.pid), sig)  # child started with start_new_session=True
+    except ProcessLookupError:
+        pass
+    except Exception:
+        try:
+            proc.terminate()
+        except Exception:
+            pass
+
+
+def _install_signal_handlers() -> None:
+    def _handler(signum, _frame):
+        print(f"\n[runner] received signal {signum} — killing child process group and exiting.")
+        _kill_child_group(signal.SIGTERM)
+        raise SystemExit(130)
+    for _s in (signal.SIGTERM, signal.SIGINT):
+        try:
+            signal.signal(_s, _handler)
+        except Exception:
+            pass
+
+
 def _child_run_name(spec: RunSpec) -> str:
     """The run_name the child entry point writes under (build_run_name convention).
     Centralized FedXGBllr is run_xgb → model 'xgb'."""
@@ -372,29 +419,37 @@ def execute_run(spec: RunSpec, gpu_available: bool, offline: bool,
     env = build_env(spec, offline, use_wandb, data_hash=data_hash, partition_hash=partition_hash)
 
     ray_orphan_check_and_clean(f"before {spec.run_name}")
+    # Append (never truncate): a re-run of the same cell must not destroy the
+    # previous attempt's log (that erased forensic evidence during a diagnosis).
+    attempt_ts = _now_stamp()
     header = (
-        f"=== {spec.run_name} ===\n"
+        f"\n=== ATTEMPT {attempt_ts} | {spec.run_name} ===\n"
         f"cwd: {cwd}\ncmd: {' '.join(argv)}\n"
         f"resolved resources: {resources.for_model(spec.model, gpu_available=gpu_available)}\n"
         f"threads/actor: {resources.threads_per_actor()}\n"
         f"data_hash: {data_hash}  partition_hash: {partition_hash}\n"
         f"{'-'*70}\n"
     )
+    global _CURRENT_CHILD
     t0 = time.time()
     status, exit_code = "failed", None
     try:
-        with open(logf, "w") as fh:
+        with open(logf, "a") as fh:   # append mode — accumulate attempts
             fh.write(header)
             fh.flush()
-            proc = subprocess.run(argv, cwd=str(cwd), env=env, stdout=fh,
-                                  stderr=subprocess.STDOUT)
-        exit_code = proc.returncode
+            # start_new_session=True → child is its own process-group leader, so a
+            # signal to the runner can tear down the whole group (Ray actors too).
+            proc = subprocess.Popen(argv, cwd=str(cwd), env=env, stdout=fh,
+                                    stderr=subprocess.STDOUT, start_new_session=True)
+            _CURRENT_CHILD = proc
+            exit_code = proc.wait()
         status = "success" if exit_code == 0 else "failed"
     except Exception as exc:  # noqa: BLE001
         with open(logf, "a") as fh:
             fh.write(f"\n[runner] subprocess raised: {exc}\n")
         status = "failed"
     finally:
+        _CURRENT_CHILD = None
         ray_orphan_check_and_clean(f"after {spec.run_name}")  # cleanup in finally
 
     # Completeness assert (commit 5b): a run that trained successfully but
@@ -565,12 +620,21 @@ def _resolve(args) -> Tuple[List[str], List[str], List[str]]:
 
 
 def main(argv=None) -> int:
+    _install_signal_handlers()
     args = parse_args(argv)
     datasets, models, conditions = _resolve(args)
     arms = list(SMOTE_ARMS) if args.smote_arms == "both" else [args.smote_arms]
     specs = build_matrix(datasets, models, conditions, args.alpha, args.seeds, arms)
     gpu_count, _vram = sweep_preflight.detect_gpus()
     gpu_available = gpu_count > 0
+
+    # Resolve --gpu-fraction and publish it via env so it crosses the subprocess
+    # boundary to every child (build_env copies os.environ) AND so the runner's own
+    # manifest/preflight (which call resources.for_model) report what will actually
+    # run — not the config default. This is the fix for "--gpu-fraction had no
+    # effect": children read SWEEP_GPU_FRACTION in resources.for_model.
+    gpu_fraction = args.gpu_fraction if args.gpu_fraction is not None else resources.gpu_fraction_default()
+    os.environ["SWEEP_GPU_FRACTION"] = str(gpu_fraction)
 
     # No args at all → manifest only (never launch 108 jobs by accident).
     if args.dry_run or len(sys.argv) == 1:
@@ -583,7 +647,7 @@ def main(argv=None) -> int:
     # Preflight (aborts before run 1 on any capacity/disk violation).
     to_run_est = sum(1 for s in specs if not (s.arm == "smote" and smote_status(s)[0]))
     sweep_preflight.run_preflight(
-        models=models, gpu_fraction=(args.gpu_fraction or resources.gpu_fraction_default()),
+        models=models, gpu_fraction=gpu_fraction,
         n_runs=to_run_est,
         est_bytes_per_run=(2 + 15) * 1024 ** 2,  # model artifacts (measured ~0.5) + wandb offline
     )
