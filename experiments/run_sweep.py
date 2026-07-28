@@ -34,6 +34,7 @@ import signal
 import subprocess
 import sys
 import time
+import yaml
 from dataclasses import dataclass, field, asdict
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple
@@ -44,6 +45,7 @@ sys.path.insert(0, str(PROJECT_ROOT))
 from experiments import data_cache, resources  # noqa: E402
 from experiments import sweep_preflight  # noqa: E402
 from evaluation import model_persistence as _mp  # noqa: E402
+from evaluation.results_writer import build_centralized_run_name  # noqa: E402
 
 # --- Experiment constants (mirror the model configs; uniform across datasets). --
 SAMPLING_STRATEGY = 0.01
@@ -249,20 +251,26 @@ def build_env(spec: RunSpec, offline: bool, use_wandb: bool,
         env["WANDB_DIR"] = str(WANDB_OFFLINE_DIR)
         env["WANDB_MODE"] = "offline" if offline else "online"
         # Extra config fields merged into wandb.config (no entry-point edit).
+        # wandb's dict_from_config_file expects the NESTED form
+        # ``key: {value: ...}`` (plus optional ``wandb_version: 1``) and crashes at
+        # ``v["value"]`` on a flat ``key: value`` file. Emit the nested form.
         spec.run_dir.mkdir(parents=True, exist_ok=True)
         cfg_path = spec.run_dir / "wandb_config.yaml"
-        cfg_lines = [
-            f"dataset: {spec.dataset}",
-            f"model: {spec.model}",
-            f"smote_arm: {spec.arm}",
-            f"condition: {spec.condition}",
-            f"alpha: {spec.alpha_label}",
-            f"seed: {spec.seed}",
-            f"smote_inoperative: {str(spec.smote_inoperative).lower()}",
-            f"data_hash: {data_hash}",
-            f"partition_hash: {partition_hash}",
-        ]
-        cfg_path.write_text("\n".join(cfg_lines) + "\n")
+        cfg_fields = {
+            "dataset": spec.dataset,
+            "model": spec.model,
+            "smote_arm": spec.arm,
+            "condition": spec.condition,
+            "alpha": spec.alpha_label,
+            "seed": spec.seed,
+            "smote_inoperative": bool(spec.smote_inoperative),
+            "data_hash": data_hash,
+            "partition_hash": partition_hash,
+        }
+        doc = {"wandb_version": 1}
+        for k, v in cfg_fields.items():
+            doc[k] = {"value": v}
+        cfg_path.write_text(yaml.safe_dump(doc, sort_keys=False))
         env["WANDB_CONFIG_PATHS"] = str(cfg_path)
     return env
 
@@ -600,6 +608,14 @@ def parse_args(argv=None) -> argparse.Namespace:
     p.add_argument("--gpu-fraction", type=float, default=None,
                    help="override per-client GPU fraction (default: central config value).")
     p.add_argument("--dry-run", action="store_true")
+    p.add_argument("--smoke", action="store_true",
+                   help="pre-launch gate: run the cheapest cell (centralized LR on "
+                        "creditcard, no-smote) end-to-end exactly as the runner "
+                        "invokes it (subprocess + real wandb.init via "
+                        "WANDB_CONFIG_PATHS), and FAIL loudly unless it yields a "
+                        "complete results row AND a loadable artifact. Run with "
+                        "--offline. Catches a sweep that goes green while producing "
+                        "nothing.")
     p.add_argument("--resume", action="store_true")
     p.add_argument("--offline", action="store_true", help="wandb offline mode.")
     p.add_argument("--no-wandb", action="store_true")
@@ -640,6 +656,9 @@ def main(argv=None) -> int:
     if args.dry_run or len(sys.argv) == 1:
         print_manifest(specs, gpu_available)
         return 0
+
+    if args.smoke:
+        return _smoke_gate(args.offline)
 
     if args.timing_probe:
         return _timing_probe(specs[0], gpu_available, args)
@@ -691,6 +710,73 @@ def main(argv=None) -> int:
     if use_wandb and args.offline:
         print(f"[wandb] offline runs in {WANDB_OFFLINE_DIR} — sync later with `wandb sync`")
     return 0 if failed == 0 else 1
+
+
+# Metric/identity columns that MUST be populated for a centralized summary row to
+# count as complete. The intentionally-blank FL-only columns (num_rounds,
+# best_round, alpha) are excluded on purpose. "NA" counts as present — it is a
+# recorded value (e.g. SVM calibration), not an empty cell.
+_SMOKE_REQUIRED_COLS = (
+    "test_auprc", "test_f1", "test_precision", "test_recall",
+    "best_val_auprc", "best_val_f1", "threshold", "data_hash",
+    "baseline_auprc", "timestamp", "duration_seconds", "run_name",
+)
+
+
+def _summary_row_complete(path: Path) -> Tuple[bool, List[str]]:
+    """(complete?, missing_cols) for the last data row of a summary CSV."""
+    if not path.is_file():
+        return False, ["<summary CSV missing>"]
+    with open(path, newline="") as f:
+        rows = list(csv.DictReader(f))
+    if not rows:
+        return False, ["<no data row>"]
+    row = rows[-1]
+    missing = [c for c in _SMOKE_REQUIRED_COLS if str(row.get(c, "")).strip() == ""]
+    return (not missing), missing
+
+
+def _smoke_gate(offline: bool) -> int:
+    """Execute the cheapest cell end-to-end — centralized LR on creditcard,
+    no-smote — EXACTLY as the runner invokes it (subprocess, WANDB_CONFIG_PATHS,
+    real ``wandb.init()``), and fail loudly unless it produces BOTH a complete
+    results row (no empty metric columns) AND a loadable artifact.
+
+    This is the pre-launch gate: a matrix that goes green while silently
+    producing nothing — the ``wandb.init()`` crash that took down all 96 runs, or
+    a persistence regression — is caught here before an overnight window is burnt.
+    Run with ``--offline`` (wandb still reads WANDB_CONFIG_PATHS in offline mode,
+    so the exact format that broke is exercised)."""
+    spec = RunSpec("creditcard", "lr", "no-smote", "centralized", seed=42, alpha=None)
+    print(f"=== SMOKE GATE: {spec.run_name} (offline={offline}) ===")
+    gpu_count, _vram = sweep_preflight.detect_gpus()
+    gpu_available = gpu_count > 0
+    os.environ.setdefault("SWEEP_GPU_FRACTION", str(resources.gpu_fraction_default()))
+    data_hash, partition_hash = cache_hashes(spec)
+
+    # use_wandb=True so wandb.init() + the WANDB_CONFIG_PATHS yaml are exercised.
+    rec = execute_run(spec, gpu_available, offline, use_wandb=True,
+                      data_hash=data_hash, partition_hash=partition_hash)
+
+    run_name = build_centralized_run_name(spec.model, spec.oversampling, spec.seed)
+    summary_csv = (PROJECT_ROOT / "results" / "logs" / spec.dataset /
+                   "centralized" / f"{run_name}.csv")
+    row_ok, missing = _summary_row_complete(summary_csv)
+    artifact_ok = _mp.manifest_ok(_artifact_dir(spec))
+    status_ok = rec["status"] == "success"
+
+    print("\n=== SMOKE GATE RESULT ===")
+    print(f"  status          : {rec['status']} (exit {rec['exit_code']})")
+    print(f"  results row      : {'OK' if row_ok else 'INCOMPLETE'}  ({summary_csv})")
+    if not row_ok:
+        print(f"     empty/missing columns: {missing}")
+    print(f"  loadable artifact: {'OK' if artifact_ok else 'MISSING'}  ({_artifact_dir(spec)})")
+    passed = status_ok and row_ok and artifact_ok
+    print(f"\n  SMOKE GATE: {'PASS' if passed else 'FAIL'} — "
+          f"see {rec['log']}")
+    if not passed:
+        print("  Refusing to certify launch: a green sweep would produce nothing.")
+    return 0 if passed else 1
 
 
 def _timing_probe(spec: RunSpec, gpu_available: bool, args) -> int:

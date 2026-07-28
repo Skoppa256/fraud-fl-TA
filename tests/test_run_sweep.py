@@ -91,11 +91,20 @@ def test_env_propagates_thread_pins_and_wandb():
         assert env["WANDB_RUN_GROUP"] == s.group and env["WANDB_NAME"] == s.run_name
         assert env["WANDB_TAGS"] == "baf,bert_fraud,noniid"
         # Extra config fields merged into wandb.config via WANDB_CONFIG_PATHS.
-        cfg = open(env["WANDB_CONFIG_PATHS"]).read()
-        for needed in ("smote_arm: smote", "condition: noniid", "alpha: 0.5",
-                       "seed: 42", "smote_inoperative: false",
-                       "data_hash: " + "dh" * 32, "partition_hash: " + "ph" * 32):
-            assert needed in cfg, f"missing wandb config field: {needed!r}"
+        # Validate against wandb's REAL parser (dict_from_config_file), not just
+        # substring presence — a flat key:value file crashes it at v["value"],
+        # which is exactly how all 96 runs failed. This is the regression guard.
+        from wandb.sdk.lib.config_util import dict_from_config_file
+        parsed = dict_from_config_file(env["WANDB_CONFIG_PATHS"])
+        assert parsed["dataset"] == "baf"
+        assert parsed["model"] == "bert_fraud"
+        assert parsed["smote_arm"] == "smote"
+        assert parsed["condition"] == "noniid"
+        assert str(parsed["alpha"]) == "0.5"
+        assert parsed["seed"] == 42
+        assert parsed["smote_inoperative"] is False
+        assert parsed["data_hash"] == "dh" * 32
+        assert parsed["partition_hash"] == "ph" * 32
     finally:
         shutil.rmtree(s.run_dir, ignore_errors=True)
 

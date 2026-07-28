@@ -146,7 +146,7 @@ def main() -> None:
 
     print(f"=== CENTRALIZED BASELINE — {MODEL_NAME.upper()} ===")
     print(
-        f"Dataset: PaySim | x_train: {x_train.shape} | "
+        f"Dataset: {dataset} | x_train: {x_train.shape} | "
         f"fraud ratio: {ratio_before * 100:.4f}%"
     )
 
