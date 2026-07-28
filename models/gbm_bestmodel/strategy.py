@@ -29,7 +29,7 @@ from flwr.server.client_manager import ClientManager
 from flwr.server.client_proxy import ClientProxy
 from sklearn.metrics import average_precision_score
 
-from evaluation.metrics import best_f1_threshold, metrics_at_threshold
+from evaluation.metrics import best_f1_threshold, metrics_at_threshold, calibration_for
 
 from .client import array_to_model
 from .server import new_early_stop_state, update_early_stop
@@ -276,7 +276,10 @@ class BestModelSelection(fl.server.strategy.Strategy):
             "test_f1": m_test["f1"],
             "test_precision": m_test["precision"],
             "test_recall": m_test["recall"],
+            "threshold": threshold,
+            **calibration_for(self.y_test, test_scores, is_probability=True),
         }
+        self.state["final_model"] = winner["model"]
         if self.wandb_run is not None:
             self.wandb_run.log(
                 {

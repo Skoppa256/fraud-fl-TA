@@ -1,4 +1,11 @@
 #!/usr/bin/env bash
+#
+# ============================================================================
+# DEPRECATED (kept as fallback). Superseded by experiments/run_sweep.py, the
+# single unified runner (full matrix, isolation, resume, preflight, persistence,
+# hashes). Retained for a mid-sweep manual fallback on one dataset — do not
+# delete. Prefer: python experiments/run_sweep.py --datasets <ds> ...
+# ============================================================================
 # Combined orchestration for ONE dataset: every model under THREE scenarios —
 #   1) centralized            (no partitioning; one run per centralized arm)
 #   2) federated IID

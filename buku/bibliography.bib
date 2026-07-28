@@ -112,6 +112,13 @@
   url    = {http://arxiv.org/abs/1909.06335}
 }
 
+@inproceedings{jesus2022baf,
+  author    = {Jesus, S{\'e}rgio and Pombal, Jos{\'e} and Alves, Duarte and Cruz, Andr{\'e} and Saleiro, Pedro and Ribeiro, Rita P. and Gama, Jo{\~a}o and Bizarro, Pedro},
+  title     = {Turning the Tables: Biased, Imbalanced, Dynamic Tabular Datasets for ML Evaluation},
+  booktitle = {Advances in Neural Information Processing Systems (NeurIPS) Datasets and Benchmarks Track},
+  year      = {2022}
+}
+
 @misc{kairouz2021,
   author = {Kairouz, Peter and McMahan, H. Brendan and Avent, Brendan and Bellet, Aur{\'e}lien and Bennis, Mehdi and Bhagoji, Arjun Nitin and Bonawitz, Keith and Charles, Zachary and Cormode, Graham and Cummings, Rachel and others},
   title  = {Advances and Open Problems in Federated Learning},
@@ -269,4 +276,173 @@
   institution = {Association of Certified Fraud Examiners (ACFE)},
   year        = {2024},
   url         = {https://www.acfe.com/report-to-the-nations}
+}
+
+% ---------------------------------------------------------------------------
+% Class imbalance, SMOTE theory, calibration, sample size, and FL imbalance.
+% Added for the oversampling limitations / calibration discussion (BAB 2, 3, 5).
+% ---------------------------------------------------------------------------
+
+@article{weiss2004rarity,
+  author  = {Weiss, Gary M.},
+  title   = {Mining with Rarity: A Unifying Framework},
+  journal = {ACM SIGKDD Explorations Newsletter},
+  volume  = {6},
+  number  = {1},
+  pages   = {7--19},
+  year    = {2004}
+}
+
+@article{goorbergh2022harm,
+  author  = {van den Goorbergh, Ruben and van Smeden, Maarten and Timmerman, Dirk and Van Calster, Ben},
+  title   = {The harm of class imbalance corrections for risk prediction models: illustration and simulation using logistic regression},
+  journal = {Journal of the American Medical Informatics Association (JAMIA)},
+  volume  = {29},
+  number  = {9},
+  pages   = {1525--1534},
+  year    = {2022},
+  doi     = {10.1093/jamia/ocac093}
+}
+
+@article{blagus2013smote,
+  author  = {Blagus, Rok and Lusa, Lara},
+  title   = {{SMOTE} for high-dimensional class-imbalanced data},
+  journal = {BMC Bioinformatics},
+  volume  = {14},
+  pages   = {106},
+  year    = {2013},
+  doi     = {10.1186/1471-2105-14-106}
+}
+
+@article{elreedy2019smote,
+  author  = {Elreedy, Dina and Atiya, Amir F.},
+  title   = {A Comprehensive Analysis of Synthetic Minority Oversampling Technique ({SMOTE}) for handling class imbalance},
+  journal = {Information Sciences},
+  volume  = {505},
+  pages   = {32--64},
+  year    = {2019}
+}
+
+@article{elreedy2024smote,
+  author  = {Elreedy, Dina and Atiya, Amir F. and Kamalov, Firuz},
+  title   = {A theoretical distribution analysis of synthetic minority oversampling technique ({SMOTE}) for imbalanced learning},
+  journal = {Machine Learning},
+  volume  = {113},
+  number  = {7},
+  pages   = {4903--4923},
+  year    = {2024},
+  doi     = {10.1007/s10994-022-06296-4}
+}
+
+@article{fernandez2018smote,
+  author  = {Fern{\'a}ndez, Alberto and Garc{\'i}a, Salvador and Herrera, Francisco and Chawla, Nitesh V.},
+  title   = {{SMOTE} for Learning from Imbalanced Data: Progress and Challenges, Marking the 15-year Anniversary},
+  journal = {Journal of Artificial Intelligence Research (JAIR)},
+  volume  = {61},
+  pages   = {863--905},
+  year    = {2018}
+}
+
+@article{batista2004balancing,
+  author  = {Batista, Gustavo E. A. P. A. and Prati, Ronaldo C. and Monard, Maria Carolina},
+  title   = {A Study of the Behavior of Several Methods for Balancing Machine Learning Training Data},
+  journal = {ACM SIGKDD Explorations Newsletter},
+  volume  = {6},
+  number  = {1},
+  pages   = {20--29},
+  year    = {2004}
+}
+
+@inproceedings{han2005borderline,
+  author    = {Han, Hui and Wang, Wen-Yuan and Mao, Bing-Huan},
+  title     = {Borderline-{SMOTE}: A New Over-Sampling Method in Imbalanced Data Sets Learning},
+  booktitle = {International Conference on Intelligent Computing (ICIC 2005)},
+  pages     = {878--887},
+  year      = {2005},
+  publisher = {Springer}
+}
+
+@inproceedings{bunkhumpornpat2009safelevel,
+  author    = {Bunkhumpornpat, Chumphol and Sinapiromsaran, Krung and Lursinsap, Chidchanok},
+  title     = {Safe-Level-{SMOTE}: Safe-Level-Synthetic Minority Over-Sampling Technique for Handling the Class Imbalanced Problem},
+  booktitle = {Advances in Knowledge Discovery and Data Mining (PAKDD 2009)},
+  pages     = {475--482},
+  year      = {2009},
+  publisher = {Springer}
+}
+
+@article{vansmeden2016epv,
+  author  = {van Smeden, Maarten and de Groot, Joris A. H. and Moons, Karel G. M. and Collins, Gary S. and Altman, Douglas G. and Eijkemans, Marinus J. C. and Reitsma, Johannes B.},
+  title   = {No rationale for 1 variable per 10 events criterion for binary logistic regression analysis},
+  journal = {BMC Medical Research Methodology},
+  volume  = {16},
+  pages   = {163},
+  year    = {2016}
+}
+
+@article{vansmeden2019samplesize,
+  author  = {van Smeden, Maarten and Moons, Karel G. M. and de Groot, Joris A. H. and Collins, Gary S. and Altman, Douglas G. and Eijkemans, Marinus J. C. and Reitsma, Johannes B.},
+  title   = {Sample size for binary logistic prediction models: Beyond events per variable criteria},
+  journal = {Statistical Methods in Medical Research},
+  volume  = {28},
+  number  = {8},
+  pages   = {2455--2474},
+  year    = {2019}
+}
+
+@article{riley2019minimum,
+  author  = {Riley, Richard D. and Snell, Kym I. E. and Ensor, Joie and Burke, Danielle L. and Harrell Jr., Frank E. and Moons, Karel G. M. and Collins, Gary S.},
+  title   = {Minimum sample size for developing a multivariable prediction model: {PART II} - binary and time-to-event outcomes},
+  journal = {Statistics in Medicine},
+  volume  = {38},
+  number  = {7},
+  pages   = {1276--1296},
+  year    = {2019}
+}
+
+@inproceedings{wang2021fedimbalance,
+  author    = {Wang, Lixu and Xu, Shichao and Wang, Xiao and Zhu, Qi},
+  title     = {Addressing Class Imbalance in Federated Learning},
+  booktitle = {Proceedings of the AAAI Conference on Artificial Intelligence},
+  volume    = {35},
+  number    = {11},
+  pages     = {10165--10173},
+  year      = {2021}
+}
+
+@inproceedings{duan2019astraea,
+  author    = {Duan, Moming and Liu, Duo and Chen, Xianzhang and Tan, Yujuan and Ren, Jinting and Qiao, Lei and Liang, Liang},
+  title     = {Astraea: Self-Balancing Federated Learning for Improving Classification Accuracy of Mobile Deep Learning Applications},
+  booktitle = {IEEE 37th International Conference on Computer Design (ICCD 2019)},
+  pages     = {246--254},
+  year      = {2019},
+  publisher = {IEEE}
+}
+
+@inproceedings{weiss2007costsensitive,
+  author    = {Weiss, Gary M. and McCarthy, Kate and Zabar, Bibi},
+  title     = {Cost-Sensitive Learning vs. Sampling: Which is Best for Handling Unbalanced Classes with Unequal Error Costs?},
+  booktitle = {Proceedings of the International Conference on Data Mining (DMIN 2007)},
+  pages     = {35--41},
+  year      = {2007}
+}
+
+@misc{elor2022smote,
+  author       = {Elor, Yotam and Averbuch-Elor, Hadar},
+  title        = {To {SMOTE}, or not to {SMOTE}?},
+  year         = {2022},
+  eprint       = {2201.08528},
+  archivePrefix = {arXiv},
+  primaryClass = {cs.LG},
+  note         = {arXiv preprint arXiv:2201.08528},
+  url          = {https://arxiv.org/abs/2201.08528}
+}
+
+@inproceedings{he2008adasyn,
+  author    = {He, Haibo and Bai, Yang and Garcia, Edwardo A. and Li, Shutao},
+  title     = {{ADASYN}: Adaptive Synthetic Sampling Approach for Imbalanced Learning},
+  booktitle = {IEEE International Joint Conference on Neural Networks (IJCNN 2008)},
+  pages     = {1322--1328},
+  year      = {2008},
+  publisher = {IEEE}
 }

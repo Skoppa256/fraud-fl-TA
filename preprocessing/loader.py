@@ -15,7 +15,7 @@ from __future__ import annotations
 
 from typing import Dict
 
-DATASETS = ("paysim", "creditcard")
+DATASETS = ("paysim", "creditcard", "baf")
 DEFAULT_DATASET = "paysim"
 
 
@@ -28,7 +28,7 @@ def load_dataset(
     Parameters
     ----------
     name:
-        ``"paysim"`` (default) or ``"creditcard"``.
+        ``"paysim"`` (default), ``"creditcard"``, or ``"baf"``.
     random_state:
         Seed forwarded to the per-dataset stratified split.
     """
@@ -41,6 +41,10 @@ def load_dataset(
         from preprocessing.creditcard import load_creditcard
 
         return load_creditcard(random_state=random_state)
+    if key == "baf":
+        from preprocessing.baf import load_baf
+
+        return load_baf(random_state=random_state)
     raise ValueError(
         f"unknown dataset {name!r}; expected one of {DATASETS}"
     )

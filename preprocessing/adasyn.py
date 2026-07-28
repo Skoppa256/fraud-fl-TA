@@ -77,14 +77,19 @@ def apply_adasyn(
     n_majority = n_samples - n_fraud
     min_required = n_neighbors + 1
 
+    # skip_category: machine-readable reason (see preprocessing.smote). The two
+    # target/insufficient skips mean opposite things for the ablation.
     skip_reason: str | None = None
+    skip_category: str | None = None
     if not enabled:
         skip_reason = "ADASYN disabled (ablation arm)"
+        skip_category = "disabled"
     elif n_fraud < min_required:
         skip_reason = (
             f"insufficient fraud samples (have {n_fraud}, "
             f"need >= {min_required} = n_neighbors+1)"
         )
+        skip_category = "insufficient_minority"
         print(
             f"[adasyn] WARN client {client_id}: skipping ADASYN — {skip_reason}"
         )
@@ -99,12 +104,13 @@ def apply_adasyn(
             f"target already met (minority:majority {current_ratio:.4f} "
             f">= target {sampling_strategy})"
         )
+        skip_category = "target_met"
         print(
             f"[adasyn] client {client_id}: skipping ADASYN — {skip_reason}"
         )
 
     if skip_reason is not None:
-        return _no_op_result(out, x, y, n_samples, n_fraud)
+        return _no_op_result(out, x, y, n_samples, n_fraud, skip_category)
 
     adasyn = ADASYN(
         sampling_strategy=sampling_strategy,
@@ -118,19 +124,35 @@ def apply_adasyn(
             f"[adasyn] WARN client {client_id}: ADASYN failed — {exc}; "
             f"returning client data unchanged"
         )
-        return _no_op_result(out, x, y, n_samples, n_fraud)
+        return _no_op_result(out, x, y, n_samples, n_fraud, "no_candidates")
 
     x_res = x_res.astype(np.float32, copy=False)
     y_res = y_res.astype(np.int32, copy=False)
     n_total_after = int(len(y_res))
     n_fraud_after = int((y_res == 1).sum())
 
+    # Synthesis multiplier: synthetic minority points interpolated per real
+    # minority point on this client (see preprocessing.smote for the rationale).
+    n_synthetic = n_fraud_after - n_fraud
+    synthesis_multiplier = (
+        float(n_synthetic / n_fraud) if n_fraud > 0 else 0.0
+    )
+    print(
+        f"[adasyn] client {client_id}: applied — "
+        f"{n_synthetic:,} synthetic from {n_fraud:,} real minority "
+        f"(x{synthesis_multiplier:.1f} synthesis multiplier)"
+    )
+
     out["x"] = x_res
     out["y"] = y_res
     out["adasyn_applied"] = True
+    out["skip_reason"] = None
     out["n_samples_after"] = n_total_after
     out["n_fraud_after"] = n_fraud_after
     out["fraud_ratio_after"] = float(n_fraud_after / n_total_after)
+    out["n_real_minority"] = n_fraud
+    out["n_synthetic"] = n_synthetic
+    out["synthesis_multiplier"] = synthesis_multiplier
     return out
 
 
@@ -162,30 +184,49 @@ def _no_op_result(
     y: np.ndarray,
     n_samples: int,
     n_fraud: int,
+    skip_category: str | None = None,
 ) -> Dict[str, Any]:
     out["x"] = x.astype(np.float32, copy=False)
     out["y"] = y.astype(np.int32, copy=False)
     out["adasyn_applied"] = False
+    out["skip_reason"] = skip_category
     out["n_samples_after"] = n_samples
     out["n_fraud_after"] = n_fraud
     out["fraud_ratio_after"] = (
         float(n_fraud / n_samples) if n_samples > 0 else 0.0
     )
+    out["n_real_minority"] = n_fraud
+    out["n_synthetic"] = 0
+    out["synthesis_multiplier"] = 0.0
     return out
 
 
 def _print_adasyn_summary(clients: List[Dict[str, Any]]) -> None:
-    """Print a compact per-client ADASYN summary table."""
+    """Print a compact per-client ADASYN summary table.
+
+    Includes the per-client synthesis multiplier and an ``applied N/K`` line —
+    under non-IID partitions oversampling is not uniform across clients (see
+    :func:`preprocessing.smote._print_smote_summary`).
+    """
     header = (
         f"  {'cid':>3} | {'n_before':>11} | {'n_after':>11} | "
         f"{'fraud_before':>13} | {'fraud_after':>12} | "
-        f"{'ratio_after':>11} | {'applied':>7}"
+        f"{'ratio_after':>11} | {'synth_mult':>10} | {'applied':>7}"
     )
     sep = "-" * len(header)
     print("\n[adasyn] === per-client ADASYN summary ===")
     print(header)
     print(sep)
+    n_applied = 0
+    n_skip_insufficient = 0
+    n_skip_target = 0
+    n_skip_other = 0
     for c in clients:
+        n_applied += int(bool(c.get("adasyn_applied")))
+        cat = c.get("skip_reason")
+        n_skip_insufficient += int(cat == "insufficient_minority")
+        n_skip_target += int(cat == "target_met")
+        n_skip_other += int(cat in ("no_candidates", "disabled"))
         print(
             f"  {c['client_id']:>3} | "
             f"{c['n_samples']:>11,} | "
@@ -193,6 +234,17 @@ def _print_adasyn_summary(clients: List[Dict[str, Any]]) -> None:
             f"{c['n_fraud']:>13,} | "
             f"{c['n_fraud_after']:>12,} | "
             f"{c['fraud_ratio_after'] * 100:>10.4f}% | "
+            f"{'x' + format(c.get('synthesis_multiplier', 0.0), '.1f'):>10} | "
             f"{str(c['adasyn_applied']):>7}"
         )
+    print(sep)
+    # Report skip reasons SEPARATELY — insufficient-minority and target-met mean
+    # opposite things for the ablation; "other" covers the density ValueError
+    # (no synthesis candidates) and the disabled arm.
+    print(
+        f"[adasyn] applied on {n_applied}/{len(clients)} clients | "
+        f"skipped: {n_skip_insufficient} insufficient-minority, "
+        f"{n_skip_target} target-already-met"
+        + (f", {n_skip_other} other" if n_skip_other else "")
+    )
     print("[adasyn] === end summary ===\n")

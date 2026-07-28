@@ -10,17 +10,8 @@ sampling_strategy: 0.01  # imblearn sampling_strategy; "auto"=1:1, e.g. 0.01 for
 use_wandb: false
 wandb_project: "fraud-fl-TA"
 early_stop_patience: 10
-# 4 CPUs per client → pool of 5 concurrent actors (20 CPUs / 4 = 5).
-# Prevents all 20 Ray actors from running SMOTE + training simultaneously,
-# which caused RAM exhaustion and server crash.
-num_cpus_per_client: 4
-# num_gpus_per_client controls how Ray shares the single GPU across client
-# actors. At 0.2, Ray packs all 5 client actors onto one GPU at once and they
-# exhaust VRAM (torch.OutOfMemoryError). At 1.0, at most one client actor holds
-# the GPU at a time (1.0 GPU / 1.0 = 1 concurrent), so clients run serialized on
-# the GPU — no cross-actor contention. At 0.0, Ray hides the GPU
-# (CUDA_VISIBLE_DEVICES="") and clients fall back to CPU.
-num_gpus_per_client: 1.0
+# NB: Ray CPU/GPU allocation (num_cpus/num_gpus per client) is NOT here — it lives
+# solely in experiments/sweep_resources.yaml and is loaded via experiments.resources.
 partition:
   scheme: iid
   alpha: null

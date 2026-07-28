@@ -369,6 +369,7 @@ def serverside_eval(
     config: Dict[str, Scalar],
     cfg: DictConfig,
     testloader: DataLoader,
+    capture: Dict[str, Any] = None,
 ) -> Tuple[float, Dict[str, float]]:
     """Perform server-side evaluation.
 
@@ -404,6 +405,11 @@ def serverside_eval(
     model.to(device)
 
     trees_aggregated = parameters[1]
+    # Capture the frozen final global model (CNN + trees) at the last round so the
+    # run script can persist the two-stage artifact for the SHAP phase.
+    if capture is not None and int(server_round) == int(cfg.run_experiment.num_rounds):
+        capture["cnn"] = model
+        capture["trees"] = trees_aggregated
     testloader = single_tree_preds_from_each_client(
         testloader,
         cfg.run_experiment.batch_size,
@@ -506,6 +512,14 @@ def serverside_eval(
             ("test_recall", recall),
         ):
             history_metrics[name] = torch.tensor(float(raw))
+        # Calibration: FedXGBllr's CNN head is a Sigmoid, so `probs` are genuine
+        # probabilities (not logits) — calibration applies directly. Skip any NA
+        # (degenerate) value so the tensor-only history stays clean.
+        history_metrics["threshold"] = torch.tensor(float(server_threshold))
+        _cal = fair_metrics.calibration_for(y_true, probs, is_probability=True)
+        for _name in ("test_brier", "test_cal_intercept", "test_cal_slope"):
+            if _cal[_name] != fair_metrics.NA:
+                history_metrics[_name] = torch.tensor(float(_cal[_name]))
         for k, v in val_metrics.items():
             try:
                 history_metrics[k] = torch.tensor(float(v))

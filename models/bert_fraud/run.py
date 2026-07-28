@@ -17,7 +17,9 @@ CLI examples
 ------------
     python -m models.bert_fraud.run --scheme iid --num_rounds 50
     python -m models.bert_fraud.run --scheme dirichlet --alpha 0.5 --oversampling smote
-    python -m models.bert_fraud.run --scheme iid --device cuda --num_gpus_per_client 0.2
+
+Ray CPU/GPU allocation comes from experiments/sweep_resources.yaml (central), not
+from CLI flags.
 """
 
 from __future__ import annotations
@@ -32,6 +34,10 @@ import torch
 import yaml
 
 from evaluation.results_writer import build_run_name, write_fl_results
+from experiments import resources
+from experiments import data_cache
+from evaluation.metrics import baseline_auprc
+from evaluation import model_persistence
 from partitioning.dirichlet import get_partition
 from preprocessing.loader import DATASETS, load_dataset
 
@@ -99,8 +105,9 @@ def _parse_args() -> argparse.Namespace:
         default=None,
         help="Device for client training: 'cpu' or 'cuda' (default: cpu).",
     )
-    p.add_argument("--num_gpus_per_client", type=float, default=None)
-    p.add_argument("--num_cpus_per_client", type=int, default=None)
+    # NB: Ray CPU/GPU allocation is sourced from experiments/sweep_resources.yaml
+    # (the single source of truth), not from CLI flags — there is intentionally no
+    # --num_gpus_per_client / --num_cpus_per_client here.
     return p.parse_args()
 
 
@@ -145,7 +152,7 @@ def run(cfg: dict):
         f"seed={seed} ==="
     )
 
-    data = load_dataset(dataset, random_state=seed)
+    data, data_hash = data_cache.get_preprocessed(dataset, seed)  # cache-consumed; fail loudly if absent
     x_train, y_train = data["x_train"], data["y_train"]
     x_val, y_val = data["x_val"], data["y_val"]
     x_test, y_test = data["x_test"], data["y_test"]
@@ -155,14 +162,10 @@ def run(cfg: dict):
     n_features = int(x_train.shape[1])
     cfg["input_dim"] = n_features
 
-    clients = get_partition(
-        x_train,
-        y_train,
-        scheme=scheme,
-        alpha=alpha,
-        num_clients=num_clients,
-        random_state=seed,
+    clients, partition_hash = data_cache.get_partition_clients(
+        dataset, seed, scheme, alpha, num_clients
     )
+    n_below_floor = sum(1 for c in clients if int(c["n_fraud"]) < 6)
 
     # NB: oversampling is NOT pre-applied here; BertFraudClient applies it
     # per-round inside fit() following the FFD procedure (Yang et al., 2019).
@@ -196,9 +199,16 @@ def run(cfg: dict):
     )
     client_fn = build_client_fn(clients, cfg, seed=seed)
 
-    num_gpus_per_client = float(cfg.get("num_gpus_per_client", 0.0))
-    num_cpus_per_client = int(cfg.get("num_cpus_per_client", 1))
-    client_resources = {"num_cpus": num_cpus_per_client, "num_gpus": num_gpus_per_client}
+    # Resource allocation from the central config (experiments/sweep_resources.yaml)
+    # — the single source of truth. gpu_available=False (no CUDA) zeroes the GPU
+    # request so Ray (inited with num_gpus=device_count()=0 below) can still
+    # schedule the client actor instead of failing with "ActorPool is empty". On a
+    # GPU box this is a no-op, so training semantics are unchanged. No per-client
+    # resource literal lives here any more.
+    _gpu = torch.cuda.is_available()
+    _res = resources.for_model("bert_fraud", gpu_available=_gpu)
+    resources.pin_threads()
+    client_resources = {"num_cpus": _res["num_cpus"], "num_gpus": _res["num_gpus"]}
 
     print(
         f"[run] FL starting: {num_rounds} rounds, {num_clients} clients "
@@ -210,7 +220,10 @@ def run(cfg: dict):
         config=fl.server.ServerConfig(num_rounds=num_rounds),
         strategy=strategy,
         client_resources=client_resources,
-        ray_init_args={"num_gpus": torch.cuda.device_count()},
+        ray_init_args={
+            "num_gpus": torch.cuda.device_count(),
+            "object_store_memory": resources.object_store_memory(),
+        },
     )
 
     print(
@@ -226,6 +239,22 @@ def run(cfg: dict):
         )
 
     duration_seconds = time.time() - t_start
+    if eval_state.get("final_model") is not None:
+        _ft = eval_state.get("final_test") or {}
+        _bp = cfg.get("bert_params", {})
+        model_persistence.persist_run(
+            "torch", dataset=dataset, run_name=run_name,
+            scaler=data.get("scaler"), feature_names=data.get("feature_names", []),
+            data_hash=data_hash, partition_hash=partition_hash,
+            threshold=_ft.get("threshold"), torch_model=eval_state["final_model"],
+            reference_pred=eval_state["final_model"].predict_proba(x_test[:64]),
+            arch_config={"input_dim": n_features,
+                         "d_model": int(_bp.get("d_model", 64)),
+                         "nhead": int(_bp.get("nhead", 4)),
+                         "num_layers": int(_bp.get("num_layers", 2)),
+                         "dim_feedforward": int(_bp.get("dim_feedforward", 256)),
+                         "dropout": float(_bp.get("dropout", 0.1))},
+        )
     write_fl_results(
         model=MODEL_NAME,
         dataset=dataset,
@@ -240,6 +269,11 @@ def run(cfg: dict):
         history=eval_state.get("history") or [],
         final_test=eval_state.get("final_test"),
         duration_seconds=duration_seconds,
+        data_hash=data_hash,
+        partition_hash=partition_hash,
+        rounds_completed=len(eval_state.get("history") or []),
+        n_clients_below_smote_floor=n_below_floor,
+        baseline_auprc=baseline_auprc(y_test),
     )
 
     if wandb_run is not None:

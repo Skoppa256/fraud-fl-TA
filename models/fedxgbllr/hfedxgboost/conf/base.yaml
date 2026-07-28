@@ -28,18 +28,20 @@ XGBoost:
   gamma: 5
   num_parallel_tree: 1
   min_child_weight: 1
+  # Explicit XGBoost compute method AND device (never auto-detected). `device` is
+  # a safe CPU placeholder so a bare (non-runner) invocation never silently picks
+  # up XGBoost's default device; the sweep runner overrides it to cuda/cpu from
+  # experiments/sweep_resources.yaml (resolved against actual GPU presence).
+  tree_method: hist
+  device: cpu
 
 server:
     max_workers: None
     device: "cuda"
 
-client_resources:
-    # num_gpus=1.0 → at most one client actor holds the GPU at a time
-    # (1.0 GPU / 1.0 = 1 concurrent), so clients run serialized on the GPU with
-    # no cross-actor VRAM contention. 0.5 packs 2 actors on one card; 0.2 packs
-    # 5 (which is what worked historically, so 1.0 is strictly safer).
-    num_cpus: 10
-    num_gpus: 1.0
+# NB: client_resources (num_cpus/num_gpus per client) is intentionally NOT here.
+# Ray allocation is sourced solely from experiments/sweep_resources.yaml via
+# experiments.resources (see hfedxgboost/main.py).
 
 strategy:
   _target_: hfedxgboost.strategy.FedXgbNnAvg

@@ -46,11 +46,12 @@ def load_single_dataset(
     datafiles_paths = download_data(dataset_name)
 
     # Fast path for datasets pre-processed by the shared pipeline (PaySim,
-    # creditcard): download_data returns a ("__<name>__", x_train, ...) tuple
-    # instead of file paths, so no LibSVM parsing is needed.
+    # creditcard, BAF): download_data returns a ("__<name>__", x_train, ...)
+    # tuple instead of file paths, so no LibSVM parsing is needed.
     if isinstance(datafiles_paths, tuple) and datafiles_paths[0] in (
         "__paysim__",
         "__creditcard__",
+        "__baf__",
     ):
         _, x_train, y_train, x_test, y_test = datafiles_paths
         x_train = x_train.astype(np.float32)

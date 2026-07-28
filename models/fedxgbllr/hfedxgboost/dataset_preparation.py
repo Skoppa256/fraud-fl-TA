@@ -29,20 +29,40 @@ if _PROJECT_ROOT not in _sys.path:
 # NOT thread-safe — acceptable for single-process FL simulation only.
 _PAYSIM_VAL_CACHE: Optional[tuple] = None
 _CREDITCARD_VAL_CACHE: Optional[tuple] = None
+_BAF_VAL_CACHE: Optional[tuple] = None
 
 
 def get_val_cache(dataset_name: str) -> Optional[tuple]:
     """Return the cached ``(x_val, y_val)`` for a pre-processed dataset.
 
-    Only PaySim and creditcard route through the shared preprocessing pipeline
-    and therefore have a held-out val split; every other (LibSVM) dataset
-    returns ``None``.
+    Only PaySim, creditcard and BAF route through the shared preprocessing
+    pipeline and therefore have a held-out val split; every other (LibSVM)
+    dataset returns ``None``.
     """
     if dataset_name == "paysim":
         return _PAYSIM_VAL_CACHE
     if dataset_name == "creditcard":
         return _CREDITCARD_VAL_CACHE
+    if dataset_name == "baf":
+        return _BAF_VAL_CACHE
     return None
+
+
+def set_val_cache(dataset_name: str, val_tuple: tuple) -> None:
+    """Populate the server-side val cache for a pre-processed dataset.
+
+    Normally set as a side effect of ``download_data`` → ``_load_*``. When the
+    caller instead routes data through ``experiments.data_cache`` (the shared
+    content-addressed cache), it must set the val cache explicitly so
+    ``serverside_eval`` still finds the held-out validation split.
+    """
+    global _PAYSIM_VAL_CACHE, _CREDITCARD_VAL_CACHE, _BAF_VAL_CACHE
+    if dataset_name == "paysim":
+        _PAYSIM_VAL_CACHE = val_tuple
+    elif dataset_name == "creditcard":
+        _CREDITCARD_VAL_CACHE = val_tuple
+    elif dataset_name == "baf":
+        _BAF_VAL_CACHE = val_tuple
 
 
 def _load_paysim() -> tuple:
@@ -96,6 +116,32 @@ def _load_creditcard() -> tuple:
     )
 
 
+def _load_baf() -> tuple:
+    """Load the Bank Account Fraud (Base) dataset via the shared pipeline.
+
+    Mirrors :func:`_load_paysim`. Uses preprocessing.baf.load_baf() which drops
+    the constant ``device_fraud_count`` column, holds out ``month`` as a
+    non-feature side column, adds missing-indicators + train-median imputation
+    for the five ``-1`` sentinel columns, one-hots the five categoricals, and
+    applies the same stratified 70/15/15 split (seed=42). Final width: 55.
+
+    Returns
+    -------
+        (x_train, y_train, x_test, y_test) as float32/int32 numpy arrays.
+        Val set (15%) is stored in _BAF_VAL_CACHE for serverside_eval.
+    """
+    global _BAF_VAL_CACHE
+    from preprocessing.baf import load_baf
+    data = load_baf(
+        data_path=_os.path.join(_PROJECT_ROOT, 'data', 'baf', 'baf.csv')
+    )
+    _BAF_VAL_CACHE = (data['x_val'], data['y_val'])
+    return (
+        data['x_train'], data['y_train'],
+        data['x_test'],  data['y_test'],
+    )
+
+
 def download_data(dataset_name: Optional[str] = "cod-rna"):
     """Download (if necessary) the dataset and returns the dataset path.
 
@@ -120,6 +166,9 @@ def download_data(dataset_name: Optional[str] = "cod-rna"):
         case "creditcard":
             x_train, y_train, x_test, y_test = _load_creditcard()
             return ("__creditcard__", x_train, y_train, x_test, y_test)
+        case "baf":
+            x_train, y_train, x_test, y_test = _load_baf()
+            return ("__baf__", x_train, y_train, x_test, y_test)
         case "a9a":
             if not os.path.exists(dataset_path):
                 os.makedirs(dataset_path)

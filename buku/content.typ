@@ -147,7 +147,11 @@ Penelitian ini diajukan untuk menjawab ketiga celah tersebut melalui evaluasi
 komparatif yang sistematis. Dataset PaySim @lopezrojas2016paysim, yang merupakan
 simulasi transaksi mobile money dengan rasio fraud sekitar 0,13%, digunakan
 sebagai benchmark karena karakteristiknya yang merepresentasikan tantangan nyata
-deteksi fraud pada sektor keuangan. Skenario Non-IID dibangun melalui partisi
+deteksi fraud pada sektor keuangan. Untuk menguji generalisasi lintas domain,
+digunakan pula dataset ULB Credit Card yang bersifat riil namun fiturnya
+teranonimkan, serta dataset Bank Account Fraud (BAF) @jesus2022baf yang
+menyediakan fitur riil bernama dan bermakna semantik sehingga memperkuat analisis
+interpretabilitas. Skenario Non-IID dibangun melalui partisi
 Dirichlet untuk merefleksikan heterogenitas data antar institusi, dan kerangka
 Flower @beutel2022flower digunakan sebagai infrastruktur simulasi FL. Dengan
 demikian, hasil penelitian ini diharapkan tidak hanya memperkaya literatur FL
@@ -188,14 +192,17 @@ Agar penelitian ini terfokus, terarah, dan dapat dipertanggungjawabkan secara
 metodologis, ditetapkan sejumlah batasan masalah sebagai berikut:
 
 + *Batasan Domain dan Dataset.* Penelitian ini dibatasi pada deteksi financial
-  fraud dengan menggunakan dataset Financial Fraud Detection Dataset yang
-  merupakan turunan dari simulator PaySim @lopezrojas2016paysim, bersumber dari
-  repositori publik Kaggle. Dataset lain dengan domain berbeda (misalnya kartu
-  kredit, insurance fraud, atau anti-money laundering) tidak digunakan agar
-  pembanding antar model dilakukan pada distribusi data yang sama. Pembatasan
-  ini diperlukan untuk menjaga validitas internal eksperimen serta untuk
-  memastikan ketersediaan label ground truth yang konsisten di seluruh skenario
-  uji.
+  fraud dengan menggunakan tiga dataset publik dari repositori Kaggle, yaitu
+  Financial Fraud Detection Dataset yang merupakan turunan dari simulator PaySim
+  @lopezrojas2016paysim sebagai dataset utama, ULB Credit Card Fraud Detection
+  Dataset sebagai dataset pembanding lintas domain, dan Bank Account Fraud (BAF)
+  @jesus2022baf terbitan Feedzai (NeurIPS 2022), yang dipilih karena menyediakan
+  fitur riil bernama dan bermakna semantik sehingga analisis interpretabilitas
+  berbasis SHAP dapat dimaknai secara lebih substantif. Varian yang digunakan
+  dari BAF adalah varian Base. Domain fraud lain seperti insurance fraud atau anti-money
+  laundering tidak digunakan. Pembatasan ini diperlukan untuk menjaga validitas
+  internal eksperimen serta untuk memastikan ketersediaan label ground truth yang
+  konsisten di seluruh skenario uji.
 + *Batasan Model yang Dievaluasi.* Model yang dievaluasi dalam penelitian ini
   terbatas pada enam algoritma, yaitu Logistic Regression (LR) dan Support
   Vector Machine (SVM) sebagai representasi model parametrik dengan agregasi
@@ -250,8 +257,9 @@ metodologis, ditetapkan sejumlah batasan masalah sebagai berikut:
   diterapkan secara lokal pada setiap client sebelum proses pelatihan federated.
   Pendekatan global SMOTE tidak digunakan karena akan melanggar prinsip privasi
   FL. Teknik lain seperti undersampling, cost-sensitive learning, focal loss,
-  atau Adaptive Synthetic Sampling (ADASYN) tidak dievaluasi sebagai variabel
-  utama, melainkan dijadikan komponen studi ablasi (dengan dan tanpa SMOTE).
+  atau Adaptive Synthetic Sampling (ADASYN) @he2008adasyn tidak dievaluasi
+  sebagai variabel utama, melainkan dijadikan komponen studi ablasi (dengan dan
+  tanpa SMOTE).
 + *Batasan Metrik Evaluasi.* Evaluasi performa model menggunakan empat metrik
   utama, yaitu Area Under the Precision-Recall Curve (AUPRC) sebagai metrik utama
   mengingat karakteristik imbalanced data, F1-score, Precision, dan Recall.
@@ -432,6 +440,21 @@ memperkenalkan dimensi explainability ke dalam FL, penelitian tersebut belum
 membandingkan hasilnya dengan model FL berbasis tree yang lebih modern seperti
 FedXGBllr, dan belum mengkaji secara spesifik bagaimana skema agregasi yang
 berbeda memengaruhi stabilitas interpretasi SHAP di bawah kondisi Non-IID.
+
+Terdapat pula kesenjangan antara dua untai literatur mengenai penanganan class
+imbalance. Untai terapan pada deteksi fraud berbasis FL — termasuk
+#cite(<aljunaid2025>, form: "prose") sebagai pembanding langsung penelitian ini —
+lazimnya menerapkan penyeimbangan seperti SMOTE sebagai langkah praproses baku
+tanpa mengevaluasi apakah koreksi tersebut memang diperlukan; sepanjang yang
+dilaporkan, ablasi eksplisit dengan dan tanpa koreksi imbalance tidak menjadi
+bagian dari evaluasinya. Sebaliknya, untai metodologis menemukan bahwa koreksi
+sering kali tidak diperlukan atau bahkan merugikan: #cite(<goorbergh2022harm>, form: "prose")
+menunjukkan koreksi tidak meningkatkan diskriminasi namun menyebabkan overestimasi
+probabilitas, dan @blagus2013smote menemukan SMOTE kurang efektif dibanding
+undersampling pada data berdimensi tinggi. Penelitian ini menguji konvensi
+tersebut secara empiris lintas tiga dataset dan empat paradigma agregasi,
+alih-alih mengasumsikannya — sebuah pengujian terhadap konvensi yang berlaku di
+literatur terapan, bukan klaim mengenai praktik terbaik.
 
 === Integrasi Model Berbasis Tree ke dalam Kerangka Federated Learning
 
@@ -790,15 +813,87 @@ lebih variatif dibandingkan sekadar duplikasi.
 Pada penelitian ini, SMOTE diterapkan secara lokal pada setiap client sebelum
 proses pelatihan federated dimulai, agar prinsip privasi FL tetap terjaga.
 Penerapan SMOTE secara global akan mengharuskan agregasi data mentah ke satu
-titik komputasi, yang melanggar paradigma FL. Pendekatan SMOTE lokal ini memiliki
-konsekuensi: pada client dengan jumlah sampel fraud yang sangat sedikit, SMOTE
-mungkin menghasilkan sampel sintetis yang kurang representatif. Hal ini menjadi
-salah satu pertimbangan dalam studi ablasi pada penelitian ini.
+titik komputasi, yang melanggar paradigma FL.
 
 #figure(
   image("resources/fig-2-4-smote-illustration.jpg", width: 70%),
   caption: [Ilustrasi mekanisme SMOTE. Sumber: #cite(<chawla2002smote>, form: "prose").],
 ) <fig-2-4>
+
+==== Keterbatasan Teoretis SMOTE pada Regime Sampel Minoritas Kecil
+
+Efektivitas SMOTE tidak seragam di seluruh kondisi data, dan hal ini menjadi
+sangat relevan pada FL dengan partisi Non-IID yang dapat menghasilkan client
+bersampel fraud sangat sedikit. #cite(<weiss2004rarity>, form: "prose")
+membedakan dua bentuk kelangkaan: *relative rarity*, yaitu rasio kelas yang
+timpang, dan *absolute rarity*, yaitu jumlah sampel minoritas yang terlalu
+sedikit secara absolut. Oversampling adalah satu-satunya keluarga teknik yang
+secara langsung menangani absolute rarity — dengan menduplikasi contoh langka
+(yang menurutnya tidak selalu dianjurkan), mensintesis contoh baru, atau idealnya
+memperoleh contoh nyata yang benar-benar baru — sedangkan untuk relative rarity,
+sampling hanya menyeimbangkan distribusi. Implikasinya penting untuk penelitian
+ini: dataset secara utuh menunjukkan relative rarity, tetapi partisi Dirichlet
+menginduksi *absolute rarity* pada client yang starved, dan interpolasi tidak
+dapat menyembuhkan absolute rarity karena tidak menambahkan informasi baru apa
+pun tentang manifold minoritas — ia hanya menata ulang informasi dari segelintir
+titik nyata yang sudah ada.
+
+Ketergantungan kualitas SMOTE pada jumlah sampel juga telah dianalisis secara
+formal. @elreedy2019smote menurunkan ekspektasi dan kovariansi data hasil SMOTE
+dan mengidentifikasi dimensi input, nilai K, serta jumlah sampel minoritas
+sebagai faktor penentu, dengan performa pasca-SMOTE membaik seiring meningkatnya
+jumlah minoritas nyata. @elreedy2024smote menunjukkan bahwa titik sintetis
+cenderung terletak lebih ke dalam (inward) relatif terhadap seed-nya, sehingga
+distribusi sintetis menjadi lebih terkontraksi dibanding distribusi sebenarnya,
+dan menyatakan bahwa SMOTE dapat menempatkan sampel di dalam wilayah kelas
+mayoritas serta memperkuat seed yang noisy.
+
+Pada data berdimensi tinggi, degradasi ini makin nyata. @blagus2013smote
+menemukan bahwa SMOTE gagal meredam bias ke arah kelas mayoritas untuk sebagian
+besar klasifikator pada data berdimensi tinggi dan kurang efektif dibandingkan
+random undersampling, sekaligus menurunkan variabilitas dan menginduksi korelasi
+antar sampel yang dihasilkan; simulasi mereka dijalankan pada jumlah minoritas
+sekecil 5 dan 10 — persis regime yang muncul pada client starved dalam penelitian
+ini.
+
+Terakhir, apakah koreksi imbalance memang diperlukan sama sekali masih
+diperdebatkan. #cite(<goorbergh2022harm>, form: "prose") membandingkan tanpa
+koreksi, random undersampling, random oversampling, dan SMOTE pada regresi
+logistik dan ridge lintas berbagai fraksi kejadian termasuk 1%, dan menemukan
+bahwa koreksi tidak meningkatkan diskriminasi namun menghasilkan overestimasi
+sistematis pada probabilitas prediksi, dengan perolehan pada metrik klasifikasi
+yang sebenarnya dapat dicapai hanya dengan menggeser ambang keputusan.
+Kesimpulan mereka — bahwa ketimpangan kelas bukanlah masalah inheren dan koreksi
+justru dapat memperburuk performa — memotivasi penelitian ini untuk memperlakukan
+konfigurasi tanpa koreksi sebagai baseline dan SMOTE sebagai intervensi yang
+diuji, bukan sebaliknya.
+
+Sejumlah varian dirancang untuk memitigasi kelemahan ini — SMOTE yang membatasi
+seed pada wilayah perbatasan (@han2005borderline, @bunkhumpornpat2009safelevel)
+dan hibrida yang membersihkan sampel pasca-oversampling (@batista2004balancing),
+sebagaimana dirangkum oleh @fernandez2018smote — namun keseluruhannya berada di
+luar cakupan penelitian ini sesuai Batasan Masalah, yang membatasi penanganan
+imbalance pada SMOTE standar.
+
+==== Interpolasi pada Fitur Kategorikal (Keterbatasan SMOTE-NC)
+
+Perlu ditegaskan bahwa penelitian ini menerapkan SMOTE standar pada matriks
+fitur yang memuat kolom kategorikal hasil one-hot encoding (26 dari 55 kolom pada
+BAF, 5 dari sekitar 15 pada PaySim; ULB tidak terpengaruh karena seluruh fiturnya
+merupakan komponen PCA). Karena SMOTE melakukan interpolasi kontinu, sampel
+sintetis memperoleh nilai pecahan pada kolom one-hot, sehingga menghasilkan
+kombinasi kategori yang mustahil pada data nyata — sebuah transaksi BAF sintetis
+dapat, misalnya, secara pecahan menjadi dua jenis payment_type sekaligus.
+#cite(<chawla2002smote>, form: "prose") sebenarnya memperkenalkan *SMOTE-NC*
+(Nominal-Continuous) pada makalah yang sama untuk data campuran nominal–kontinu,
+yang menangani fitur nominal melalui voting mayoritas di antara tetangga alih-alih
+interpolasi, dan pustaka `imbalanced-learn` menyediakan implementasinya melalui
+`SMOTENC`. SMOTE standar tetap dipertahankan demi konsistensi dengan fokus utama
+penelitian, yaitu perbandingan antar paradigma agregasi, dan migrasi ke SMOTE-NC
+direkomendasikan untuk penelitian lanjutan. Konsekuensinya berbeda antar keluarga
+model: model berbasis pohon dapat sebagian memulihkan indikator biner melalui
+split di sekitar 0,5, sedangkan model parametrik dan deep learning mengonsumsi
+nilai pecahan tersebut secara langsung.
 
 === Metrik Evaluasi untuk Imbalanced Classification
 
@@ -828,6 +923,52 @@ Precision-Recall yang dibentuk dari berbagai threshold klasifikasi.
 dibandingkan AUC-ROC pada data dengan class imbalance ekstrem, karena AUC-ROC
 cenderung optimistis ketika kelas negatif jauh lebih banyak dari kelas positif.
 Oleh karena itu, AUPRC dipilih sebagai metrik utama dalam penelitian ini.
+
+Perlu ditegaskan bahwa nilai AUPRC dari sebuah pengklasifikasi acak sama dengan
+prevalensi kelas positif, sehingga batas bawah AUPRC berbeda antar dataset dan
+nilai AUPRC tidak dapat dibandingkan secara langsung lintas dataset. Sebagai
+contoh, garis dasar acak bernilai sekitar 0,0013 untuk PaySim, 0,0017 untuk ULB,
+dan 0,011 untuk BAF, sehingga skor pada BAF akan tampak lebih tinggi hanya karena
+prevalensinya lebih besar. Untuk itu, penelitian ini melaporkan garis dasar acak
+(prevalensi) berdampingan dengan setiap nilai AUPRC, alih-alih menormalkannya,
+agar nilai AUPRC mentah tetap dapat dibandingkan di dalam satu dataset sekaligus
+dibaca relatif terhadap batas bawahnya saat dibandingkan antar dataset.
+
+*Kalibrasi.* Keempat metrik di atas hanya mengukur diskriminasi dan tidak dapat
+mendeteksi pergeseran skala probabilitas. Karena
+#cite(<goorbergh2022harm>, form: "prose") menemukan bahwa koreksi imbalance
+menyebabkan overestimasi sistematis probabilitas prediksi, penelitian ini
+menambahkan metrik kalibrasi pada test set terpusat. Yang pertama adalah *Brier
+score*, yaitu rerata kuadrat selisih antara probabilitas prediksi dan luaran
+biner (semakin kecil semakin baik). Yang kedua adalah *calibration intercept* dan
+*calibration slope*, diperoleh melalui logistic recalibration, yaitu meregresikan
+luaran sebenarnya terhadap logit probabilitas prediksi menggunakan model
+logistik tanpa penalti. Kalibrasi sempurna ditandai oleh intercept 0 dan slope 1;
+mengikuti konvensi #cite(<goorbergh2022harm>, form: "prose"), intercept bernilai
+negatif menandakan overestimasi sistematis (probabilitas terlalu tinggi),
+sedangkan slope kurang dari 1 menandakan probabilitas yang terlalu ekstrem
+(over-confident).
+
+Ketersediaan probabilitas berbeda antar model dan ditangani secara jujur. LR,
+GBM, FFD, dan BERT mengeluarkan probabilitas terkalibrasi sehingga kalibrasi
+dihitung langsung. FedXGBllr merutekan luarannya melalui 1D CNN yang lapisan
+akhirnya adalah fungsi Sigmoid, sehingga keluarannya sudah berupa probabilitas
+dan kalibrasi dihitung tanpa transformasi tambahan. SVM diimplementasikan sebagai
+`SGDClassifier` dengan loss hinge yang hanya mengekspos `decision_function`,
+yaitu margin dan bukan probabilitas; untuk SVM metrik kalibrasi dilaporkan sebagai
+`NA`, karena melewatkan margin hinge melalui sigmoid akan menghasilkan kalibrasi
+yang direkayasa, bukan yang terukur.
+
+*Ambang klasifikasi.* AUPRC bersifat bebas ambang (threshold-independent) sehingga
+tidak terpengaruh pergeseran skala probabilitas, sedangkan F1, Precision, dan
+Recall bergantung pada ambang. Karena oversampling menggeser skala probabilitas,
+ambang tetap (misalnya 0,5) akan membuat ketiga metrik itu bergerak karena alasan
+yang tidak terkait kualitas peringkat. Untuk menetralkan konfound ini, ambang
+keputusan disetel per-arm pada validation set terpusat dengan memaksimalkan F1,
+lalu diterapkan tanpa perubahan pada test set; kebijakan ini seragam untuk seluruh
+model dan skenario. #cite(<elor2022smote>, form: "prose") — sebuah preprint —
+merekomendasikan optimasi ambang sebagai alternatif terhadap penyeimbangan, yang
+berada di luar cakupan penelitian ini.
 
 === Explainable Artificial Intelligence (XAI) dan SHAP
 
@@ -1049,13 +1190,30 @@ model menggunakan SHAP secara per-client.
 
 == Dataset yang Digunakan
 
-=== Karakteristik Dataset
+Penelitian ini menggunakan tiga dataset deteksi fraud finansial dengan
+karakteristik domain yang berbeda untuk menguji generalisasi metode lintas
+domain. Dataset utama adalah Financial Fraud Detection Dataset (turunan simulator
+PaySim), yaitu simulasi transaksi mobile money. Dataset kedua adalah
+ULB Credit Card Fraud Detection Dataset, yaitu transaksi kartu kredit riil yang
+fiturnya telah dianonimkan melalui Principal Component Analysis (PCA). Dataset
+ketiga adalah Bank Account Fraud (BAF), yaitu dataset pembukaan rekening bank
+terbitan Feedzai yang, berbeda dengan kedua dataset lainnya, menyediakan fitur
+riil bernama dan bermakna semantik. PaySim berperan sebagai benchmark utama karena
+skala dan karakteristik fiturnya, sementara ULB Credit Card dan BAF digunakan
+sebagai dataset pembanding untuk menilai generalisasi model pada domain fraud
+yang berbeda; BAF secara khusus menjadi dataset tempat analisis interpretabilitas
+berbasis SHAP memiliki bobot makna paling kuat. Ketiga dataset diproses melalui
+antarmuka pipeline yang identik sehingga seluruh model, skema agregasi, dan
+metrik evaluasi dapat diterapkan tanpa modifikasi.
 
-Penelitian ini menggunakan Financial Fraud Detection Dataset yang dipublikasikan
-pada platform Kaggle oleh Sriharsha Eedala. Dataset tersebut merupakan turunan
-dari simulator PaySim @lopezrojas2016paysim, yaitu simulator transaksi mobile
-money yang dikembangkan berdasarkan log transaksi nyata dari sebuah perusahaan
-jasa keuangan di Afrika. Dataset ini dipilih karena memenuhi tiga kriteria yang
+=== Karakteristik Dataset Utama (PaySim)
+
+Dataset utama penelitian ini adalah Financial Fraud Detection Dataset yang
+dipublikasikan pada platform Kaggle oleh Sriharsha Eedala. Dataset tersebut
+merupakan turunan dari simulator PaySim @lopezrojas2016paysim, yaitu simulator
+transaksi mobile money yang dikembangkan berdasarkan log transaksi nyata dari
+sebuah perusahaan jasa keuangan di Afrika. Dataset ini dipilih karena memenuhi
+tiga kriteria yang
 relevan dengan konteks penelitian, yaitu (1) class imbalance yang ekstrem dengan
 rasio fraud sekitar 0,13%, (2) struktur fitur transaksional tabular yang mewakili
 karakteristik nyata sektor keuangan, dan (3) skala data yang memadai untuk
@@ -1076,7 +1234,7 @@ pada @tab-3-1.
     [Rasio fraud], [± 0,13% (kelas minoritas ekstrem)],
     [Tipe fitur], [Numerik dan kategorikal],
   ),
-  caption: [Karakteristik Dataset],
+  caption: [Karakteristik Dataset PaySim],
 ) <tab-3-1>
 
 Deskripsi setiap fitur dataset disajikan pada @tab-3-2.
@@ -1099,16 +1257,97 @@ Deskripsi setiap fitur dataset disajikan pada @tab-3-2.
     [isFraud], [Biner], [Label target (1 = fraud, 0 = normal)],
     [isFlaggedFraud], [Biner], [Flag deteksi rule-based legacy],
   ),
-  caption: [Deskripsi Fitur Dataset],
+  caption: [Deskripsi Fitur Dataset PaySim],
 ) <tab-3-2>
+
+=== Karakteristik Dataset Kedua (ULB Credit Card)
+
+Dataset kedua penelitian ini adalah Credit Card Fraud Detection Dataset yang
+dipublikasikan pada platform Kaggle oleh Machine Learning Group Université Libre
+de Bruxelles (ULB). Dataset tersebut berisi transaksi kartu kredit riil nasabah
+di Eropa selama dua hari pada September 2013. Berbeda dengan PaySim yang bersifat
+sintetis, dataset ini merepresentasikan pola fraud kartu kredit yang nyata,
+sehingga berfungsi sebagai pembanding untuk menilai generalisasi model pada
+domain fraud yang berbeda. Karakteristik utama dataset disajikan pada @tab-3-3.
+
+#figure(
+  kind: table,
+  table(
+    columns: (5cm, 1fr),
+    align: (left, left),
+    table.header([*Atribut*], [*Nilai*]),
+    [Sumber], [Kaggle (mlg-ulb/creditcardfraud, ULB)],
+    [Jenis data], [Transaksi kartu kredit tabular (fitur ter-PCA)],
+    [Jumlah baris], [284.807 transaksi],
+    [Jumlah fitur], [31 kolom (30 fitur + 1 label)],
+    [Label target], [Class (biner: 0 = normal, 1 = fraud)],
+    [Rasio fraud], [± 0,172% (492 transaksi fraud)],
+    [Tipe fitur], [Numerik (Time, Amount, dan V1–V28 hasil PCA)],
+  ),
+  caption: [Karakteristik Dataset ULB Credit Card],
+) <tab-3-3>
+
+Struktur fitur dataset ini berbeda secara fundamental dari PaySim. Fitur V1
+hingga V28 merupakan komponen hasil transformasi PCA yang telah dianonimkan untuk
+menjaga kerahasiaan informasi nasabah, sehingga makna aslinya tidak dipublikasikan
+dan nilainya sudah terstandardisasi. Hanya dua fitur yang tersaji dalam skala
+asli, yaitu Time (selisih waktu dalam detik terhadap transaksi pertama) dan Amount
+(nominal transaksi). Konsekuensinya, tahap preprocessing untuk dataset ini jauh
+lebih ringkas dibandingkan PaySim: tidak diperlukan pembersihan kolom identifier,
+one-hot encoding, maupun feature engineering saldo. Hanya fitur Time dan Amount
+yang dinormalisasi menggunakan StandardScaler (di-fit pada training set saja),
+sedangkan V1–V28 dibiarkan apa adanya karena telah terstandardisasi. Setelah
+proses ini, dataset menghasilkan vektor berdimensi 30 fitur yang dikonsumsi oleh
+seluruh model secara identik dengan pipeline PaySim.
+
+=== Karakteristik Dataset Ketiga (Bank Account Fraud)
+
+Dataset ketiga penelitian ini adalah Bank Account Fraud (BAF) yang dipublikasikan
+oleh Feedzai pada NeurIPS 2022 @jesus2022baf dan tersedia di platform Kaggle.
+BAF berisi data aplikasi pembukaan rekening bank daring, dengan label fraud yang
+menandai aplikasi yang teridentifikasi sebagai penipuan identitas. Penelitian ini
+menggunakan varian Base. Karakteristik utama dataset disajikan pada @tab-baf-char.
+
+#figure(
+  kind: table,
+  table(
+    columns: (5cm, 1fr),
+    align: (left, left),
+    table.header([*Atribut*], [*Nilai*]),
+    [Sumber], [Kaggle (sgpjesus/bank-account-fraud-dataset-neurips-2022)],
+    [Jenis data], [Aplikasi pembukaan rekening bank tabular],
+    [Jumlah baris], [1.000.000 aplikasi],
+    [Jumlah fitur], [32 kolom (31 fitur + 1 label)],
+    [Label target], [fraud_bool (biner: 0 = normal, 1 = fraud)],
+    [Rasio fraud], [± 1,10% (11.029 aplikasi fraud)],
+    [Tipe fitur], [Numerik dan kategorikal (fitur riil bernama)],
+  ),
+  caption: [Karakteristik Dataset Bank Account Fraud (BAF)],
+) <tab-baf-char>
+
+Berbeda dengan PaySim yang memiliki sedikit fitur dan ULB yang fiturnya
+teranonimkan melalui PCA, BAF menyediakan fitur riil yang bernama dan bermakna
+semantik, seperti income, customer_age, credit_risk_score, proposed_credit_limit,
+serta sejumlah fitur velocity dan riwayat alamat. Kondisi ini menjadikan BAF
+sebagai dataset yang paling relevan untuk analisis interpretabilitas berbasis
+SHAP, karena kontribusi setiap fitur dapat ditafsirkan secara langsung dalam
+konteks domain. Dataset ini memuat lima fitur kategorikal (payment_type,
+employment_status, housing_status, source, dan device_os) dan selebihnya
+merupakan fitur numerik. Rincian penanganan preprocessing BAF, yang mengikuti
+alur bertipe PaySim (encoding kategorikal dan scaling), diuraikan pada Subbab
+Perancangan Tahap Preprocessing.
 
 === Pembagian dan Penggunaan Dataset
 
 Pembagian dataset dirancang dalam dua tingkat (two-level split) untuk
 merefleksikan konteks penelitian yang melibatkan baseline terpusat sekaligus
 simulasi federated learning. Tingkat pertama merupakan pembagian global yang
-dilakukan satu kali pada keseluruhan dataset PaySim, sedangkan tingkat kedua
-merupakan partisi training set ke seluruh client untuk skenario federated.
+dilakukan satu kali pada keseluruhan dataset, sedangkan tingkat kedua merupakan
+partisi training set ke seluruh client untuk skenario federated. Skema pembagian
+dan partisi yang sama diterapkan secara identik pada ketiga dataset (PaySim,
+ULB Credit Card, dan BAF), termasuk proporsi split, stratifikasi berdasarkan
+label, dan penetapan random seed, sehingga hasil antar dataset dapat dibandingkan
+secara setara. Uraian berikut menggunakan PaySim sebagai contoh.
 
 Pada tingkat pertama, dataset dibagi menjadi tiga subset dengan proporsi
 70:15:15 untuk training set, validation set, dan test set. Pembagian dilakukan
@@ -1186,6 +1425,38 @@ tiga subset dengan proporsi 70:15:15 untuk training, validation, dan testing
 menggunakan stratified sampling berdasarkan label isFraud, sehingga distribusi
 kelas minoritas tetap representatif pada setiap subset.
 
+Rangkaian langkah di atas berlaku untuk dataset utama PaySim. Untuk dataset ULB
+Credit Card, tahap preprocessing jauh lebih ringkas sebagaimana diuraikan pada
+Subbab Karakteristik Dataset Kedua, yaitu tanpa pembersihan identifier, one-hot
+encoding, maupun feature engineering, dan hanya menormalisasi fitur Time dan
+Amount karena V1–V28 telah terstandardisasi melalui PCA.
+
+Dataset BAF mengikuti alur bertipe PaySim karena memuat fitur kategorikal dan
+numerik pada skala mentah. Kolom device_fraud_count dihapus karena bernilai
+konstan nol di seluruh dataset sehingga tidak membawa informasi. Kolom month
+dikeluarkan dari himpunan fitur dan disimpan sebagai kolom pendamping (bukan
+fitur), karena prevalensi fraud pada BAF berubah antar bulan sementara pembagian
+data bersifat stratified-random dan bukan temporal; menyertakan month sebagai
+fitur akan membuat model mempelajari prevalensi per-bulan dan menerapkannya pada
+sampel uji dari bulan yang sama, sehingga menggelembungkan AUPRC secara artifisial.
+Lima fitur kategorikal di-encode menggunakan one-hot encoding dengan daftar
+kategori tetap agar himpunan kolom identik di seluruh client dan split. Lima
+kolom numerik menggunakan nilai −1 sebagai sentinel "tidak tersedia"
+(prev_address_months_count, bank_months_count, current_address_months_count,
+session_length_in_minutes, dan device_distinct_emails_8w); untuk setiap kolom
+tersebut ditambahkan indikator biner _missing_, nilai −1 diganti menjadi kosong,
+kemudian diimputasi dengan median yang dihitung hanya pada training set. Kolom
+yang memang bernilai negatif secara wajar (intended_balcon_amount, velocity_6h,
+dan credit_risk_score) tidak diperlakukan sebagai sentinel. Perlu dicatat bahwa
+prev_address_months_count memiliki tingkat ketidaktersediaan sekitar 71%,
+sehingga setelah imputasi median kolom tersebut menjadi hampir konstan dan
+sebagian besar sinyalnya justru terkandung pada indikator _missing_-nya; hal ini
+merupakan properti data yang diketahui, bukan anomali. Setelah one-hot encoding
+dan penambahan indikator, seluruh matriks fitur dinormalisasi menggunakan
+StandardScaler yang di-fit pada training set saja, menghasilkan vektor berdimensi
+55 fitur (24 numerik + 5 indikator _missing_ + 26 kolom one-hot) yang dikonsumsi
+oleh seluruh model secara identik.
+
 === Perancangan Skema Partisi Client
 
 Skema partisi data antar client dirancang dalam dua mode untuk merepresentasikan
@@ -1225,18 +1496,58 @@ distribusi evaluasi.
 
 SMOTE diterapkan secara lokal pada setiap client sebelum proses pelatihan
 dimulai. Pemilihan SMOTE lokal, bukan SMOTE global, dilakukan untuk menjaga
-prinsip privasi FL, yaitu data tidak boleh meninggalkan client. Rasio
-penyeimbangan ditetapkan melalui parameter sampling_strategy sebesar 0,01, yaitu
-menargetkan proporsi kelas minoritas terhadap kelas mayoritas sebesar 1:100 pada
-setiap client yang memenuhi syarat. Target parsial ini dipilih, alih-alih
-penyeimbangan penuh 1:1, agar sampel sintetis tidak mendominasi partisi lokal
-yang berukuran besar sekaligus menjaga biaya komputasi tetap wajar. Pada client
-yang memiliki sampel fraud sangat sedikit (kurang dari k_neighbors + 1 = 6),
-SMOTE akan di-skip dan client tersebut tetap dilatih dengan data aslinya untuk
-menghindari sintesis sampel yang tidak representatif. Client yang proporsi
-fraud-nya sudah mencapai atau melampaui target juga tidak dioversample, karena
-SMOTE hanya menambah sampel minoritas. Studi ablasi dengan dan tanpa SMOTE
-dilakukan untuk mengisolasi pengaruh teknik ini.
+prinsip privasi FL, yaitu data tidak boleh meninggalkan client.
+
+Aturan penyeimbangan ditetapkan secara *seragam* untuk ketiga dataset:
+parameter sampling_strategy sebesar 0,01 (target proporsi minoritas terhadap
+mayoritas 1:100), dengan k_neighbors = 5, diterapkan lokal per client, dan
+dilewati bila sebuah client memiliki kurang dari 6 sampel minoritas atau telah
+memenuhi target. Prevalensi dasar ketiga dataset berbeda hingga sekitar 8,5 kali
+(PaySim 0,13%, ULB 0,172%, BAF 1,10%), sehingga tidak ada konfigurasi yang
+"identik" dalam segala pengertian sekaligus — seseorang dapat menahan parameter
+tetap konstan, atau endpoint tetap konstan, atau penguatan multiplikatif tetap
+konstan, tetapi tidak ketiganya bersamaan. Penelitian ini menahan *parameter*
+tetap konstan, sehingga diperoleh satu aturan tunggal tanpa penyetelan
+per-dataset yang perlu dijustifikasi. Nilai 0,01 tidak memiliki optimum yang
+diturunkan dari literatur — tidak ada optimum semacam itu — dan merupakan pilihan
+pragmatis.
+
+Penyeimbangan penuh (1:1) ditolak dengan alasan yang telah diberikan pada subbab
+ini, yaitu sampel sintetis tidak boleh mendominasi partisi lokal. Sebagai
+gambaran konkret, pada skenario IID sebuah client PaySim dengan sekitar 1.160
+sampel fraud nyata dan sekitar 890.000 sampel mayoritas akan membutuhkan sekitar
+889.000 sampel sintetis untuk mencapai 1:1, yakni multiplier sekitar 766 kali —
+partisi lokalnya akan menjadi mayoritas data sintetis.
+
+Konsekuensi dari aturan tunggal ini terungkap pada sensus per-client (disajikan
+pada Subbab Implementasi Modul SMOTE Lokal). Karena prevalensi global BAF telah
+melampaui target 1:100, aturan tersebut menjadi tidak beroperasi pada BAF dalam
+skenario IID — seluruh client dilewati melalui kondisi `target_met`, sehingga
+arm dengan-SMOTE menjadi identik dengan arm tanpa-SMOTE. Pada skenario Dirichlet
+$alpha = 0.5$, ketimpangan partisi mendorong client yang starved jauh di bawah
+target, sehingga SMOTE justru menyala secara selektif tepat pada partisi-partisi
+sparse tersebut. Hal ini disajikan sebagai temuan: *sebuah target rasio absolut
+yang tetap menjadi tidak beroperasi begitu prevalensi dasar suatu dataset
+melampauinya, sehingga perlakuan efektif dalam setting federated ditentukan
+secara bersama oleh target dan partisi, bukan oleh target semata.*
+
+Ambang skip sebesar k_neighbors + 1 = 6 merupakan persyaratan algoritmik SMOTE
+@chawla2002smote (interpolasi K-Nearest Neighbors membutuhkan minimal sekian
+tetangga minoritas), bukan ambang berbasis bukti mengenai kapan SMOTE masih
+valid; ambang berbasis bukti semacam itu tidak tersedia dalam literatur. Client
+yang telah memenuhi atau melampaui target juga tidak dioversample karena SMOTE
+hanya menambah sampel minoritas. Karena kedua ambang tersebut bersifat
+per-client, penerapan SMOTE tidak selalu seragam antar client pada skenario
+Non-IID — sebagian client dilewati sementara yang lain melakukan oversampling —
+dan kondisi ini dicatat eksplisit agar studi ablasi tidak salah ditafsirkan
+sebagai kondisi aktif/nonaktif yang seragam.
+
+Dalam kerangka ini, konfigurasi *tanpa* koreksi diperlakukan sebagai baseline dan
+SMOTE sebagai intervensi yang diuji, mengikuti temuan
+#cite(<goorbergh2022harm>, form: "prose") bahwa koreksi imbalance belum tentu
+diperlukan; penekanan ini bersifat penamaan kerangka saja dan tidak mengubah
+rancangan eksperimen. Studi ablasi dengan dan tanpa SMOTE dilakukan untuk
+mengisolasi pengaruh teknik ini.
 
 === Perancangan Pelatihan Model dan Skema Agregasi
 
@@ -1251,7 +1562,7 @@ FedAvg, yaitu rata-rata berbobot ganda menurut ukuran data lokal sekaligus AUPRC
 lokal masing-masing client @yang2019federated. Untuk FedXGBllr, proses mengikuti
 dua tahap: (1) tahap tree ensemble aggregation di putaran ke-0, dan (2) tahap
 pelatihan 1D CNN secara federated dengan FedAvg pada putaran 1 hingga $R$. Keenam
-model dilatih dengan empat skema agregasi sebagaimana diringkas pada @tab-3-3.
+model dilatih dengan empat skema agregasi sebagaimana diringkas pada @tab-3-4.
 
 #figure(
   kind: table,
@@ -1267,7 +1578,7 @@ model dilatih dengan empat skema agregasi sebagaimana diringkas pada @tab-3-3.
     [FedXGBllr], [Tree ensemble + CNN], [Tree Ensemble Aggregation + Learnable LR],
   ),
   caption: [Pemetaan Model dengan Skema Agregasi Federated Learning],
-) <tab-3-3>
+) <tab-3-4>
 
 === Perancangan Modul Evaluasi
 
@@ -1363,7 +1674,7 @@ disusun sejajar dengan subbab perancangan untuk memudahkan pelacakan kesesuaian
 antara desain dan realisasi. Sebelum implementasi diuraikan, terlebih dahulu
 disajikan spesifikasi lingkungan pengembangan yang menjadi prerequisite seluruh
 modul implementasi. Implementasi penelitian ini dilakukan dalam lingkungan
-komputasi yang spesifikasinya disajikan pada @tab-3-4.
+komputasi yang spesifikasinya disajikan pada @tab-3-5.
 
 #figure(
   kind: table,
@@ -1384,7 +1695,7 @@ komputasi yang spesifikasinya disajikan pada @tab-3-4.
     [Version control], [Git + GitHub],
   ),
   caption: [Spesifikasi Lingkungan Pengembangan],
-) <tab-3-4>
+) <tab-3-5>
 
 === Implementasi Tahap Preprocessing
 
@@ -1461,22 +1772,159 @@ kelas fraud pada suatu client tidak mencukupi untuk operasi interpolasi
 K-Nearest Neighbors (kurang dari k_neighbors + 1 = 6 sampel), proses SMOTE pada
 client tersebut diabaikan dan pelatihan dilakukan menggunakan data asli untuk
 menghindari sintesis sampel yang tidak representatif. Konfigurasi rasio
-penyeimbangan ditetapkan melalui parameter sampling_strategy sebesar 0,01
-(target proporsi minoritas terhadap mayoritas 1:100) pada setiap client yang
-memenuhi syarat; client yang telah mencapai atau melampaui target tersebut
-dilewati karena SMOTE hanya menambah sampel kelas minoritas. Sebagai bagian
-integral dari studi
-ablasi, modul SMOTE dapat dinonaktifkan secara global melalui parameter
-konfigurasi yang relevan, sehingga memungkinkan pengamatan kontribusi murni
-teknik penanganan class imbalance terhadap performa akhir model.
+penyeimbangan ditetapkan melalui parameter sampling_strategy secara seragam
+sebesar 0,01 untuk ketiga dataset (lihat Subbab Perancangan Skema Class Imbalance
+Handling); client yang telah mencapai atau melampaui target tersebut dilewati
+karena SMOTE hanya menambah sampel kelas minoritas. Untuk mendukung analisis pada
+Bab berikutnya, modul mencatat secara eksplisit pada setiap client (dan pada
+setiap putaran untuk FFD yang menerapkan SMOTE ulang tiap putaran) jumlah sampel
+sintetis relatif terhadap jumlah sampel minoritas riil, yaitu multiplier sintesis,
+beserta status diterapkan atau dilewatinya SMOTE. Pencatatan ini memberikan bukti
+empiris langsung mengenai potensi sintesis yang tidak representatif ketika sebuah
+client hanya memiliki sedikit sampel fraud riil namun target memaksa pembangkitan
+banyak sampel sintetis. Sebagai gambaran besaran risiko, pada partisi Non-IID kuat
+($alpha = 0.5$) sebuah client dapat memperoleh hanya beberapa puluh sampel fraud
+riil sementara target 1:100 tetap menuntut pembangkitan ribuan sampel sintetis,
+sehingga multiplier sintesis dapat mencapai orde ratusan kali (terukur hingga
+sekitar 185 kali pada kasus terburuk, lihat di bawah); kondisi ini merupakan
+properti bawaan dari kombinasi target dan partisi yang diketahui sejak
+perancangan, bukan anomali, dan justru menjadi alasan pencatatan multiplier
+per-client dilakukan. Sebagai bagian integral dari studi ablasi, modul SMOTE dapat
+dinonaktifkan secara global melalui parameter konfigurasi yang relevan, sehingga
+memungkinkan pengamatan kontribusi murni teknik penanganan class imbalance
+terhadap performa akhir model.
+
+==== Diagnostik Geometri Sintesis SMOTE pada Client Terburuk BAF
+
+Untuk memeriksa secara langsung apakah sintesis pada regime sampel minoritas kecil
+menghasilkan penambahan informasi yang berarti, dilakukan diagnostik geometri pada
+client dengan sampel fraud paling sedikit, yaitu client BAF dengan seed 42,
+partisi Dirichlet $alpha = 0.5$, yang hanya memuat 21 sampel fraud riil di antara
+391.355 baris. SMOTE dijalankan persis seperti pada pelatihan (sampling_strategy
+= 0,01, k_neighbors = 5), lalu titik sintetis dibandingkan dengan seed nyata pada
+proyeksi PCA dan t-SNE (@fig-3-4-smote-geometry).
+
+#figure(
+  image("resources/fig-3-4-smote-geometry-baf.png", width: 100%),
+  caption: [Geometri sintesis SMOTE pada client terburuk BAF (seed 42, Dirichlet
+  $alpha = 0.5$, client indeks 1, sampling_strategy = 0,01, random state SMOTE =
+  43). Partisi penuh berisi 391.334 mayoritas nyata, 21 minoritas nyata, dan
+  3.892 sintetis; yang diplot adalah 8.000 mayoritas dan 3.892 sintetis
+  (subsampel untuk t-SNE) beserta seluruh 21 minoritas. Panel kiri t-SNE, panel
+  kanan PCA. Titik minoritas nyata digambar paling akhir dan lebih besar agar
+  tetap terlihat terhadap massa sintetis.],
+) <fig-3-4-smote-geometry>
+
+Untuk memisahkan pengaruh besaran target dari pengaruh jumlah seed, diagnostik
+yang sama dijalankan pada dua nilai rasio pada client yang identik; hasilnya
+disajikan pada @tab-smote-geometry.
+
+#figure(
+  kind: table,
+  table(
+    columns: (1.6fr, 1fr, 1fr),
+    align: (left, right, right),
+    table.header([*Kuantitas*], [*0,01 (konfigurasi eksperimen)*], [*0,10 (pembanding)*]),
+    [Minoritas nyata (seed)], [21], [21],
+    [Mayoritas nyata], [391.334], [391.334],
+    [Sintetis minoritas], [3.892], [39.112],
+    [Multiplier sintesis], [×185], [×1862],
+    [Segmen terisi], [82 dari 210], [82 dari 210],
+    [Titik per segmen (rerata)], [47,5], [477],
+    [Residual on-segment (median)], [2,6e−7], [2,6e−7],
+    [Tetangga nyata terdekat = mayoritas], [16,03%], [15,04%],
+  ),
+  caption: [Geometri sintesis SMOTE pada client terburuk BAF untuk dua nilai
+  sampling_strategy. Jumlah seed, segmen, dimensionalitas, dan fraksi kontaminasi
+  praktis tidak berubah; hanya volume sintetis yang berubah.],
+) <tab-smote-geometry>
+
+Client dengan 21 sampel fraud nyata lolos dari ambang 6, namun setiap titik
+sintetis terletak pada segmen antara sebuah seed dan salah satu dari lima tetangga
+minoritas terdekatnya — paling banyak sekitar 105 segmen berdimensi satu pada
+ruang berdimensi 55, dan pada praktiknya hanya 82 segmen yang menampung seluruh
+massa sintetis. Kelas minoritas pada partisi tersebut berbentuk *wireframe*, bukan
+awan (cloud); residual on-segment yang mendekati nol (2,6e−7) mengonfirmasi bahwa
+titik-titik benar-benar berada tepat pada segmen tersebut. Fraksi 16,03% titik
+sintetis yang tetangga *nyata* terdekatnya adalah sampel mayoritas mewujudkan
+fenomena pembangkitan di wilayah mayoritas yang dijelaskan @elreedy2024smote,
+sedangkan salinan kolinear di sepanjang segmen mewujudkan penurunan variabilitas
+dan korelasi terinduksi yang dilaporkan @blagus2013smote. Dalam terminologi
+@weiss2004rarity, client ini mengalami absolute rarity, yang tidak dapat
+disembuhkan oleh interpolasi.
+
+Perbandingan dua rasio pada tabel mengubah klaim kausal menjadi pengukuran:
+*volume* sintetis berskala dengan sampling_strategy (3.892 pada 0,01 versus 39.112
+pada 0,10; 47,5 versus 477 titik per segmen), sedangkan jumlah segmen (82),
+dimensionalitas, dan fraksi kontaminasi (~15–16%) tidak berubah. Kolapsnya
+sintesis menjadi struktur satu dimensi ditentukan oleh jumlah seed, bukan oleh
+rasio target. Karena di bawah partisi Dirichlet jumlah seed adalah fungsi dari
+$alpha$, maka partisi Dirichlet-lah yang memproduksi regime sampel-kecil tempat
+SMOTE sudah diketahui gagal — dalam FL cross-silo, jumlah minoritas bukan properti
+tetap dataset melainkan produk partisi, sehingga $alpha$ secara langsung mengatur
+seberapa jauh client sparse jatuh ke dalam regime tersebut.
+
+Sensus per-client atas seluruh kombinasi dataset × skema × seed disajikan pada
+@tab-minority-census, yang mengukur seberapa terekspos tiap dataset terhadap
+regime ini.
+
+#figure(
+  kind: table,
+  table(
+    columns: (auto, auto, auto, auto, auto, auto, auto),
+    align: (left, left, right, right, right, right, right),
+    table.header(
+      [*Dataset*], [*Skema*], [*client < 10*], [*min*], [*median*],
+      [*multiplier terburuk*], [*skip: target_met*],
+    ),
+    [PaySim], [IID], [0], [1069], [1155], [×7], [0/15],
+    [PaySim], [Dirichlet α=0,5], [2], [2], [1080], [×30], [2/15],
+    [PaySim], [Dirichlet α=1,0], [0], [88], [1030], [×123], [2/15],
+    [PaySim], [Dirichlet α=5,0], [0], [249], [1164], [×41], [0/15],
+    [ULB], [IID], [0], [53], [67], [×7], [0/15],
+    [ULB], [Dirichlet α=0,5], [2], [4], [53], [×30], [1/15],
+    [ULB], [Dirichlet α=1,0], [0], [17], [49], [×23], [2/15],
+    [ULB], [Dirichlet α=5,0], [0], [41], [69], [×11], [0/15],
+    [BAF], [IID], [0], [1494], [1540], [×0], [15/15],
+    [BAF], [Dirichlet α=0,5], [1], [3], [1095], [×185], [8/15],
+    [BAF], [Dirichlet α=1,0], [0], [128], [1016], [×13], [8/15],
+    [BAF], [Dirichlet α=5,0], [0], [782], [1445], [×1], [8/15],
+  ),
+  caption: [Sensus minoritas per-client (sampling_strategy = 0,01), diagregasi
+  atas 3 seed × 5 client = 15 instansi per baris. "client < 10" menghitung instansi
+  dengan minoritas di bawah 10; "skip: target_met" menghitung instansi yang
+  dilewati karena telah memenuhi target.],
+) <tab-minority-census>
+
+Sensus menegaskan dua hal. Pertama, dataset yang paling terekspos bukanlah yang
+diduga semula: tidak ada satu pun sel yang menghasilkan client bernol minoritas,
+namun ULB paling terekspos dalam pengertian berbeda — ia miskin minoritas secara
+kronis di *seluruh* client (median hanya 53 lawan sekitar 1.080 pada PaySim dan
+BAF), yaitu sekitar 1,8 kejadian per parameter (events per parameter), bukan hanya
+pada ekornya. Rasio kejadian per parameter serendah ini berada jauh di bawah
+ambang yang lazim dibahas pada literatur ukuran sampel model prediksi
+(@vansmeden2016epv, @vansmeden2019samplesize, @riley2019minimum); nilai ini
+dilaporkan sebagai deskriptor eksposur, bukan sebagai gerbang. Kedua,
+sebuah target absolut yang tetap menjadi tidak beroperasi ketika prevalensi dasar
+telah melampauinya: pada BAF IID seluruh 15 instansi dilewati melalui
+`target_met`, sehingga arm dengan-SMOTE identik dengan arm tanpa-SMOTE, sementara
+pada PaySim dan ULB kondisi ini nyaris tidak muncul.
 
 === Implementasi Pelatihan Model dan Skema Agregasi
 
 Realisasi pelatihan keenam model dengan empat skema agregasi yang dirangkum pada
-@tab-3-3 dibangun di atas kerangka kerja Flower, dengan setiap skema agregasi
+@tab-3-4 dibangun di atas kerangka kerja Flower, dengan setiap skema agregasi
 diimplementasikan sebagai strategi terkustomisasi yang mewarisi antarmuka
 strategi standar dari Flower. Pendekatan modular ini memungkinkan pertukaran
 skema agregasi tanpa memodifikasi komponen lain pada pipeline sistem.
+
+Terkait reproduktibilitas, dengan penetapan random seed yang konsisten, model
+parametrik (LR, SVM) dan model berbasis pohon (GBM, FedXGBllr) bersifat
+reproducible secara bit-per-bit, sedangkan model deep learning (FFD dan BERT)
+hanya reproducible secara distribusi — nilai metriknya stabil antar-eksekusi
+namun tidak identik bit-per-bit — karena operasi floating-point yang
+non-asosiatif pada perangkat pelatihan; mode deterministik penuh pada model deep
+learning sengaja tidak dipaksakan agar tidak mengorbankan kecepatan pelatihan.
 
 *FedAvg untuk LR dan SVM.* Skema agregasi FedAvg sebagaimana dirumuskan pada
 @eq-fedavg diaplikasikan untuk model Logistic Regression dan Support Vector
@@ -1544,7 +1992,7 @@ antar skema agregasi, sehingga perbedaan performa yang teramati dapat dianalisis
 secara terisolasi pada level paradigma agregasi.
 
 Konfigurasi hyperparameter yang digunakan pada seluruh model disajikan pada
-@tab-3-5. Pemilihan nilai hyperparameter dilakukan secara terbatas, baik melalui
+@tab-3-6. Pemilihan nilai hyperparameter dilakukan secara terbatas, baik melalui
 grid search sederhana maupun adopsi nilai default yang direkomendasikan oleh
 literatur, untuk menjaga fokus penelitian pada perbandingan paradigma agregasi
 dan menghindari potensi bias akibat optimasi hyperparameter yang ekstensif.
@@ -1562,7 +2010,7 @@ dan menghindari potensi bias akibat optimasi hyperparameter yang ekstensif.
       [Dirichlet $alpha$], [{0,5 ; 1,0 ; 5,0}],
       [Random seed], [42],
       [SMOTE: k_neighbors], [5],
-      [SMOTE: sampling_strategy], [0,01 (target minoritas:mayoritas 1:100)],
+      [SMOTE: sampling_strategy], [Per-dataset: 0,01 (1:100) untuk PaySim dan ULB; 0,10 (1:10) untuk BAF],
 
       table.cell(colspan: 2)[_Logistic Regression (LR)_],
       [Local epochs (E)], [1],
@@ -1600,7 +2048,7 @@ dan menghindari potensi bias akibat optimasi hyperparameter yang ekstensif.
     )
   ],
   caption: [Konfigurasi Hyperparameter Eksperimen],
-) <tab-3-5>
+) <tab-3-6>
 
 === Implementasi Modul Evaluasi dan SHAP
 
@@ -1694,6 +2142,50 @@ Explainable Federated Learning.
 
 // TODO: BAB 5 belum ada di Proposal TA v2.1. Isi dengan Kesimpulan (menjawab
 // ketiga rumusan masalah) dan Saran untuk penelitian lanjutan.
+
+// ===========================================================================
+// DRAF SARAN — disisipkan atas instruksi eksplisit penulis. Kesimpulan (yang
+// menjawab rumusan masalah) BELUM ditulis karena Bab 4 belum ada; blok ini
+// TIDAK memuat hasil, angka, atau temuan eksperimen. Tingkat keyakinan tiap
+// butir sengaja dibedakan — jangan diratakan. Tinjau ulang setelah Bab 4.
+// ===========================================================================
+
+== Saran (draf — menunggu hasil Bab 4)
+
+Blok berikut merupakan draf arah penelitian lanjutan pada tingkat keyakinan yang
+berbeda-beda, disusun sebelum hasil eksperimen tersedia dan perlu ditinjau ulang
+setelah Bab 4 rampung.
+
++ *Gerbang oversampling berdasarkan jumlah minoritas nyata minimum per client.*
+  Mengikuti @blagus2013smote dan @elreedy2019smote yang menunjukkan degradasi
+  SMOTE pada jumlah minoritas kecil, namun ini merupakan inferensi penelitian ini
+  sendiri: belum ada penelitian terdahulu yang mengusulkan gerbang semacam itu
+  untuk FL, dan tidak ada ambang numerik yang dapat disitasi.
+
++ *Random undersampling sebagai alternatif.* Paling didukung untuk regime ini —
+  @blagus2013smote membandingkannya secara langsung dan mengunggulkannya pada data
+  berdimensi tinggi. Teknik ini dikecualikan dari penelitian ini sesuai Batasan
+  Masalah.
+
++ *Pelatihan lokal berbasis biaya (cost-sensitive).* Masuk akal namun masih
+  diperdebatkan. Literatur FL cenderung menempuh penanganan pada level fungsi loss
+  (@wang2021fedimbalance, @duan2019astraea), tetapi @weiss2007costsensitive tidak
+  menemukan pemenang yang konsisten antara cost-sensitive learning dan sampling
+  (pada venue minor). Arah ini terbuka dan belum tuntas.
+
++ *Migrasi ke SMOTE-NC* untuk data bertipe campuran, sebagaimana diperkenalkan
+  #cite(<chawla2002smote>, form: "prose"), guna menghindari nilai pecahan pada
+  kolom kategorikal hasil one-hot.
+
++ *Melaporkan kalibrasi berdampingan dengan diskriminasi* pada penelitian
+  imbalance FL selanjutnya, mengikuti @goorbergh2022harm.
+
+Varian SMOTE yang membatasi seed pada perbatasan (@han2005borderline,
+@bunkhumpornpat2009safelevel) serta hibrida pembersihan (@batista2004balancing)
+diperkirakan tidak membantu pada kondisi sekitar 21 seed, karena mayoritas seed
+akan tergolong sebagai *danger* atau *noise* — hal ini merupakan konsekuensi dari
+definisi algoritma-algoritma tersebut, bukan hasil yang telah diuji secara
+empiris.
 
 //=============================================================================
 // REFERENSI SINTAKS (contoh dikomentari — jangan dihapus, bukan bagian isi)

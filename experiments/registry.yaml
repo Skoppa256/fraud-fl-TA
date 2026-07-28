@@ -12,12 +12,14 @@
 #   results/logs/<dataset>/<model>/<run_name>.csv
 
 # Datasets in the sweep. Every (dataset × model × ...) combination is a run.
-# creditcard is commented out by default so the baseline RQ1 sweep size is
-# unchanged — uncomment it (and provide data/creditcard/creditcard.csv) to
-# extend the sweep to the second dataset.
+# creditcard and baf are commented out by default so the baseline RQ1 sweep
+# size is unchanged — uncomment one (and provide its CSV under data/<name>/)
+# to extend the sweep. BAF (Feedzai, NeurIPS 2022) is the Base variant at
+# data/baf/baf.csv.
 datasets:
   - paysim
   # - creditcard
+  # - baf
 
 models:
   - ffd

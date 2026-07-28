@@ -67,14 +67,22 @@ def apply_smote(
     n_majority = n_samples - n_fraud
     min_required = k_neighbors + 1
 
+    # skip_category is a machine-readable reason so the ablation analysis can
+    # tell the two skips apart — they mean OPPOSITE things: "insufficient_minority"
+    # is a sparse client that could NOT be oversampled, while "target_met" is a
+    # dense client that did NOT need it. Collapsing them would misread the
+    # ablation. None here means SMOTE actually ran.
     skip_reason: str | None = None
+    skip_category: str | None = None
     if not enabled:
         skip_reason = "SMOTE disabled (ablation arm)"
+        skip_category = "disabled"
     elif n_fraud < min_required:
         skip_reason = (
             f"insufficient fraud samples (have {n_fraud}, "
             f"need >= {min_required} = k_neighbors+1)"
         )
+        skip_category = "insufficient_minority"
         print(
             f"[smote] WARN client {client_id}: skipping SMOTE — {skip_reason}"
         )
@@ -89,6 +97,7 @@ def apply_smote(
             f"target already met (minority:majority {current_ratio:.4f} "
             f">= target {sampling_strategy})"
         )
+        skip_category = "target_met"
         print(
             f"[smote] client {client_id}: skipping SMOTE — {skip_reason}"
         )
@@ -97,11 +106,17 @@ def apply_smote(
         out["x"] = x.astype(np.float32, copy=False)
         out["y"] = y.astype(np.int32, copy=False)
         out["smote_applied"] = False
+        out["skip_reason"] = skip_category
         out["n_samples_after"] = n_samples
         out["n_fraud_after"] = n_fraud
         out["fraud_ratio_after"] = (
             float(n_fraud / n_samples) if n_samples > 0 else 0.0
         )
+        # No synthesis on a skipped client — record zeros so the ablation
+        # analysis can tell "SMOTE off here" apart from "SMOTE ran".
+        out["n_real_minority"] = n_fraud
+        out["n_synthetic"] = 0
+        out["synthesis_multiplier"] = 0.0
         return out
 
     smote = SMOTE(
@@ -116,12 +131,33 @@ def apply_smote(
     n_total_after = int(len(y_res))
     n_fraud_after = int((y_res == 1).sum())
 
+    # Synthesis multiplier: how many synthetic minority points were interpolated
+    # per real minority point on this client. This is the direct empirical
+    # evidence for the "unrepresentative synthesis" concern (§2.2.6): under a
+    # Dirichlet partition a client can hold only a handful of real fraud rows,
+    # so a high multiplier means many synthetic points were interpolated among
+    # very few real ones. Logged per client (and per round for FFD, which
+    # re-SMOTEs each round). Bab 4 quantifies this.
+    n_synthetic = n_fraud_after - n_fraud
+    synthesis_multiplier = (
+        float(n_synthetic / n_fraud) if n_fraud > 0 else 0.0
+    )
+    print(
+        f"[smote] client {client_id}: applied — "
+        f"{n_synthetic:,} synthetic from {n_fraud:,} real minority "
+        f"(x{synthesis_multiplier:.1f} synthesis multiplier)"
+    )
+
     out["x"] = x_res
     out["y"] = y_res
     out["smote_applied"] = True
+    out["skip_reason"] = None
     out["n_samples_after"] = n_total_after
     out["n_fraud_after"] = n_fraud_after
     out["fraud_ratio_after"] = float(n_fraud_after / n_total_after)
+    out["n_real_minority"] = n_fraud
+    out["n_synthetic"] = n_synthetic
+    out["synthesis_multiplier"] = synthesis_multiplier
     return out
 
 
@@ -157,17 +193,34 @@ def apply_smote_to_all_clients(
 
 
 def _print_smote_summary(clients: List[Dict[str, Any]]) -> None:
-    """Print a compact per-client SMOTE summary table."""
+    """Print a compact per-client SMOTE summary table.
+
+    Includes the per-client synthesis multiplier (synthetic:real minority) and
+    the ``applied`` flag. Under non-IID (Dirichlet) partitions "SMOTE on" is NOT
+    uniform across clients — a client that draws a large share of the minority
+    class can exceed the target locally and be skipped while its peers
+    oversample. The trailing "applied N/K clients" line makes that explicit so
+    the ablation is not misread as a clean on/off across all clients.
+    """
     header = (
         f"  {'cid':>3} | {'n_before':>11} | {'n_after':>11} | "
         f"{'fraud_before':>13} | {'fraud_after':>12} | "
-        f"{'ratio_after':>11} | {'applied':>7}"
+        f"{'ratio_after':>11} | {'synth_mult':>10} | {'applied':>7}"
     )
     sep = "-" * len(header)
     print("\n[smote] === per-client SMOTE summary ===")
     print(header)
     print(sep)
+    n_applied = 0
+    n_skip_insufficient = 0
+    n_skip_target = 0
+    n_skip_disabled = 0
     for c in clients:
+        n_applied += int(bool(c.get("smote_applied")))
+        cat = c.get("skip_reason")
+        n_skip_insufficient += int(cat == "insufficient_minority")
+        n_skip_target += int(cat == "target_met")
+        n_skip_disabled += int(cat == "disabled")
         print(
             f"  {c['client_id']:>3} | "
             f"{c['n_samples']:>11,} | "
@@ -175,6 +228,17 @@ def _print_smote_summary(clients: List[Dict[str, Any]]) -> None:
             f"{c['n_fraud']:>13,} | "
             f"{c['n_fraud_after']:>12,} | "
             f"{c['fraud_ratio_after'] * 100:>10.4f}% | "
+            f"{'x' + format(c.get('synthesis_multiplier', 0.0), '.1f'):>10} | "
             f"{str(c['smote_applied']):>7}"
         )
+    print(sep)
+    # Report the two skip reasons SEPARATELY — "insufficient_minority" (a sparse
+    # client that could not be oversampled) and "target_met" (a dense client that
+    # did not need it) mean opposite things for the ablation.
+    print(
+        f"[smote] applied on {n_applied}/{len(clients)} clients | "
+        f"skipped: {n_skip_insufficient} insufficient-minority, "
+        f"{n_skip_target} target-already-met"
+        + (f", {n_skip_disabled} disabled" if n_skip_disabled else "")
+    )
     print("[smote] === end summary ===\n")

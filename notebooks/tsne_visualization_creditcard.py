@@ -1,24 +1,27 @@
 """
-t-SNE Visualization (Credit Card dataset) — Global Before/After oversampling.
+t-SNE Visualization (Credit Card dataset) — Global oversampling, synthetic highlighted.
 
 Credit-card sibling of ``tsne_visualization.py`` (which targets PaySim). Same
 logic, only the data source and output tags differ, so the PaySim script and its
 PNGs are left untouched.
 
-Generates 2 PNGs:
-  - tsne_global_smote_creditcard_1to100.png
-  - tsne_global_adasyn_creditcard_1to100.png
+Generates PNGs (select the oversampler with ``--method {smote,adasyn,both}``,
+default both; each filename carries a run timestamp so runs never overwrite):
+  - tsne_global_smote_creditcard_1to100_<YYYYMMDD_HHMMSS>.png
+  - tsne_global_adasyn_creditcard_1to100_<YYYYMMDD_HHMMSS>.png
 
 See ``tsne_visualization.py`` for the full description of the plotting logic.
 
-Output: results/visualizations/tsne_global_{smote,adasyn}_creditcard_1to100.png
+Output: results/visualizations/tsne_global_{smote,adasyn}_creditcard_1to100_<timestamp>.png
 """
 
 from __future__ import annotations
 
+import argparse
 import os
 import sys
 import time
+from datetime import datetime
 
 import numpy as np
 
@@ -44,15 +47,19 @@ RATIO_TAG = "1to100"
 # with the PaySim ones.
 DATASET_TAG = "creditcard"
 
-# Subsample size for the fraction of x_train fed into t-SNE.
-# All fraud rows from x_train are always kept (no cap); non-fraud is capped.
+# Non-fraud cap for the fraction of x_train fed into t-SNE.
+# All fraud rows from x_train are always kept (no cap); non-fraud is capped at
+# this many rows. Set to ``None`` to disable the cap and use the ENTIRE dataset
+# (all non-fraud + all fraud). The credit-card training split has only ~199k
+# non-fraud rows, so t-SNE on the full set is heavy but tractable.
 #
 # NOTE: credit card has only ~344 fraud rows in x_train. For a 1:100 target the
-# desired fraud count is N_NONFRAUD * SAMPLING_STRATEGY; if that is <= the real
-# fraud count, SMOTE/ADASYN would have to *remove* fraud and refuse (they only
-# add). So N_NONFRAUD must be large enough that N_NONFRAUD * SAMPLING_STRATEGY
-# exceeds the real fraud count for any synthetic samples to be generated.
-N_NONFRAUD = 100_000
+# desired fraud count is (non-fraud count) * SAMPLING_STRATEGY; if that is <= the
+# real fraud count, SMOTE/ADASYN would have to *remove* fraud and refuse (they
+# only add). Using the full dataset (~199k non-fraud) keeps the target
+# (~1,990 fraud) well above the ~344 real fraud, so synthetic samples are
+# generated.
+N_NONFRAUD: int | None = None
 
 # t-SNE parameters.
 TSNE_PERPLEXITY = 30
@@ -63,16 +70,31 @@ def plot_tsne_scatter(
     ax,
     x_2d: np.ndarray,
     y: np.ndarray,
+    n_original: int,
     title: str,
     fraud_size: int = 8,
+    synth_size: int = 8,
     nonfraud_size: int = 2,
 ) -> None:
-    """Plot t-SNE scatter with blue non-fraud and red fraud dots."""
+    """Plot a single t-SNE panel distinguishing synthetic (added) samples.
+
+    Rows ``[0:n_original]`` are the real subsample (in the original order);
+    rows ``[n_original:]`` are the synthetic samples appended by SMOTE/ADASYN.
+
+    Colours:
+      - blue  : non-fraud (all original)
+      - red   : original fraud
+      - green : synthetic fraud (the samples added by oversampling)
+    """
     y = np.asarray(y).astype(np.int32)
+    idx = np.arange(len(y))
     nf_mask = y == 0
-    fr_mask = y == 1
+    orig_fraud_mask = (y == 1) & (idx < n_original)
+    synth_mask = idx >= n_original  # synthetic rows are all minority (fraud)
+
     n_nf = int(nf_mask.sum())
-    n_fr = int(fr_mask.sum())
+    n_fr = int(orig_fraud_mask.sum())
+    n_syn = int(synth_mask.sum())
 
     ax.scatter(
         x_2d[nf_mask, 0],
@@ -85,13 +107,23 @@ def plot_tsne_scatter(
         linewidths=0,
     )
     ax.scatter(
-        x_2d[fr_mask, 0],
-        x_2d[fr_mask, 1],
+        x_2d[orig_fraud_mask, 0],
+        x_2d[orig_fraud_mask, 1],
         s=fraud_size,
         c="red",
         alpha=0.8,
-        label=f"Fraud (N={n_fr:,})",
+        label=f"Fraud — original (N={n_fr:,})",
         zorder=2,
+        linewidths=0,
+    )
+    ax.scatter(
+        x_2d[synth_mask, 0],
+        x_2d[synth_mask, 1],
+        s=synth_size,
+        c="green",
+        alpha=0.7,
+        label=f"Fraud — synthetic (N={n_syn:,})",
+        zorder=3,
         linewidths=0,
     )
 
@@ -105,15 +137,19 @@ def plot_tsne_scatter(
 def stratified_subsample(
     x: np.ndarray,
     y: np.ndarray,
-    n_nonfraud: int,
+    n_nonfraud: int | None,
     random_state: int,
 ) -> tuple[np.ndarray, np.ndarray]:
-    """Return (x_sub, y_sub) with ALL fraud rows + up to ``n_nonfraud`` non-fraud rows."""
+    """Return (x_sub, y_sub) with ALL fraud rows + up to ``n_nonfraud`` non-fraud rows.
+
+    ``n_nonfraud=None`` disables the cap and keeps every non-fraud row (the full
+    dataset).
+    """
     rng = np.random.default_rng(random_state)
     idx_fr = np.where(y == 1)[0]
     idx_nf = np.where(y == 0)[0]
 
-    if len(idx_nf) > n_nonfraud:
+    if n_nonfraud is not None and len(idx_nf) > n_nonfraud:
         idx_nf = rng.choice(idx_nf, size=n_nonfraud, replace=False)
 
     idx = np.concatenate([idx_fr, idx_nf])
@@ -185,7 +221,7 @@ def generate_png(
     smote_k: int = 5,
     random_state: int = 42,
 ) -> float:
-    """Generate one PNG: Global Before vs After oversampling, shared embedding.
+    """Generate one PNG: Global t-SNE with synthetic (added) samples highlighted.
 
     Returns elapsed seconds.
     """
@@ -195,10 +231,11 @@ def generate_png(
     method_label = method.upper()
     t0 = time.time()
 
-    fig, axes = plt.subplots(nrows=1, ncols=2, figsize=(18, 8))
+    fig, ax = plt.subplots(nrows=1, ncols=1, figsize=(10, 8))
 
     # ---------- Stratified subsample (shared by both panels) ----------
-    print(f"  [subsample] all fraud + up to {N_NONFRAUD:,} non-fraud...")
+    nf_cap_txt = "all (full dataset)" if N_NONFRAUD is None else f"up to {N_NONFRAUD:,}"
+    print(f"  [subsample] all fraud + {nf_cap_txt} non-fraud...")
     x_sub, y_sub = stratified_subsample(
         x_train, y_train, N_NONFRAUD, random_state=random_state
     )
@@ -227,16 +264,17 @@ def generate_png(
         f"(fraud: {n_fr_before:,} -> {n_fr_after:,}, synthetic: {n_synth:,})"
     )
 
-    # Guard: if no synthetic rows were generated, the "After" panel is identical
-    # to "Before" and the PNG is meaningless. Fail loudly instead of saving it.
+    # Guard: if no synthetic rows were generated, there are no green (added)
+    # points to show and the PNG is meaningless. Fail loudly instead of saving it.
     if n_synth <= 0:
-        target_fraud = int(round(N_NONFRAUD * SAMPLING_STRATEGY))
+        target_fraud = int(round(n_nf_before * SAMPLING_STRATEGY))
         raise RuntimeError(
             f"{method_label} produced 0 synthetic samples "
             f"(note={note or 'n/a'}). The {SAMPLING_STRATEGY:g} target implies "
             f"~{target_fraud:,} fraud vs {n_fr_before:,} real fraud in the "
-            f"subsample. Increase N_NONFRAUD (currently {N_NONFRAUD:,}) so that "
-            f"N_NONFRAUD * SAMPLING_STRATEGY > real fraud count."
+            f"subsample of {n_nf_before:,} non-fraud. Raise N_NONFRAUD (or set it "
+            f"to None for the full dataset) so that non-fraud * SAMPLING_STRATEGY "
+            f"> real fraud count."
         )
 
     # imblearn convention: the first n_before rows of x_res are the original
@@ -250,19 +288,11 @@ def generate_png(
     # ---------- Single t-SNE fit on (originals + synthetic) ----------
     x_2d, kl, _ = fit_tsne(x_res, label=f"{method_label} combined")
 
-    # ---------- Before: only the original subsample rows ----------
-    plot_tsne_scatter(
-        axes[0],
-        x_2d[:n_before],
-        y_sub,
-        title=f"Global — Before {method_label}  (KL={kl:.3f})",
-    )
-
-    # ---------- After: all rows (originals stay put, synthetic added) ----------
-    right_title = f"Global — After {method_label}  (KL={kl:.3f})"
+    # ---------- Single panel: originals + synthetic, synthetic in green ----------
+    panel_title = f"Global — {method_label} oversampling  (KL={kl:.3f})"
     if note:
-        right_title = f"{right_title} {note}"
-    plot_tsne_scatter(axes[1], x_2d, y_res, title=right_title)
+        panel_title = f"{panel_title} {note}"
+    plot_tsne_scatter(ax, x_2d, y_res, n_original=n_before, title=panel_title)
 
     fig.suptitle(fig_title, fontsize=13, y=0.99)
     fig.tight_layout(rect=[0, 0, 1, 0.96])
@@ -273,6 +303,17 @@ def generate_png(
 
 
 def main() -> None:
+    parser = argparse.ArgumentParser(
+        description="t-SNE global oversampling visualization, Credit Card (synthetic samples in green)."
+    )
+    parser.add_argument(
+        "--method",
+        choices=("smote", "adasyn", "both"),
+        default="both",
+        help="which oversampler to visualize (default: both)",
+    )
+    args = parser.parse_args()
+
     print("Loading Credit Card data...")
     data_path = os.path.join(PROJECT_ROOT, "data/creditcard/creditcard.csv")
     data = load_creditcard(data_path=data_path)
@@ -286,12 +327,16 @@ def main() -> None:
     out_dir = os.path.join(PROJECT_ROOT, "results/visualizations")
     os.makedirs(out_dir, exist_ok=True)
 
+    # Timestamp baked into each filename so successive runs never overwrite.
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+
     ratio_label = (
         "1:1" if SAMPLING_STRATEGY >= 1.0
         else f"1:{int(round(1 / SAMPLING_STRATEGY))}"
     )
+    nf_note = "all non-fraud (full dataset)" if N_NONFRAUD is None else f"<={N_NONFRAUD:,} non-fraud"
     sub_note = (
-        f"(subsample: all fraud + <={N_NONFRAUD:,} non-fraud, "
+        f"(all fraud + {nf_note}, "
         f"shared embedding, perplexity={TSNE_PERPLEXITY})"
     )
     print(
@@ -300,18 +345,20 @@ def main() -> None:
     )
     print(f"t-SNE: {sub_note}")
 
-    runs = [
-        (
+    all_runs = {
+        "smote": (
             "smote",
-            os.path.join(out_dir, f"tsne_global_smote_{DATASET_TAG}_{RATIO_TAG}.png"),
+            os.path.join(out_dir, f"tsne_global_smote_{DATASET_TAG}_{RATIO_TAG}_{timestamp}.png"),
             f"t-SNE Visualization — Global (Credit Card) | SMOTE [ratio={ratio_label}] {sub_note}",
         ),
-        (
+        "adasyn": (
             "adasyn",
-            os.path.join(out_dir, f"tsne_global_adasyn_{DATASET_TAG}_{RATIO_TAG}.png"),
+            os.path.join(out_dir, f"tsne_global_adasyn_{DATASET_TAG}_{RATIO_TAG}_{timestamp}.png"),
             f"t-SNE Visualization — Global (Credit Card) | ADASYN [ratio={ratio_label}] {sub_note}",
         ),
-    ]
+    }
+    methods = ("smote", "adasyn") if args.method == "both" else (args.method,)
+    runs = [all_runs[m] for m in methods]
 
     timings = []
     for method, output_path, fig_title in runs:

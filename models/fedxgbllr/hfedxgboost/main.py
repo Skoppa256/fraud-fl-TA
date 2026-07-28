@@ -19,9 +19,20 @@ from hydra.utils import instantiate
 from omegaconf import DictConfig, OmegaConf
 from torch.utils.data import TensorDataset
 
+import numpy as np
+
 from evaluation.results_writer import build_run_name, write_fl_results
+from evaluation.metrics import baseline_auprc
+from evaluation import model_persistence
+from experiments import resources
+from experiments import data_cache
 from hfedxgboost.client import FlClient
-from hfedxgboost.dataset import divide_dataset_between_clients, load_single_dataset
+from hfedxgboost import dataset_preparation as _dp
+from hfedxgboost.dataset import (
+    divide_dataset_between_clients,
+    get_dataloader,
+    load_single_dataset,
+)
 from hfedxgboost.server import FlServer, serverside_eval
 from hfedxgboost.utils import (
     CentralizedResultsWriter,
@@ -64,6 +75,10 @@ def _build_history_state(
     test_f1_map = _series_to_map("test_f1")
     test_precision_map = _series_to_map("test_precision")
     test_recall_map = _series_to_map("test_recall")
+    test_brier_map = _series_to_map("test_brier")
+    test_cal_intercept_map = _series_to_map("test_cal_intercept")
+    test_cal_slope_map = _series_to_map("test_cal_slope")
+    threshold_map = _series_to_map("threshold")
 
     hist_rows: List[Dict[str, Any]] = []
     for r in rounds_sorted:
@@ -99,6 +114,15 @@ def _build_history_state(
             "test_precision": test_precision_map.get(final_round, 0.0),
             "test_recall": test_recall_map.get(final_round, 0.0),
         }
+        # Calibration + threshold (present only if the server surfaced them).
+        if final_round in test_brier_map:
+            final_test["test_brier"] = test_brier_map[final_round]
+        if final_round in test_cal_intercept_map:
+            final_test["test_cal_intercept"] = test_cal_intercept_map[final_round]
+        if final_round in test_cal_slope_map:
+            final_test["test_cal_slope"] = test_cal_slope_map[final_round]
+        if final_round in threshold_map:
+            final_test["threshold"] = threshold_map[final_round]
 
     return {
         "best_round": best_round,
@@ -176,24 +200,53 @@ def main(cfg: DictConfig) -> None:
 
         print("Dataset Name", cfg.dataset.dataset_name)
         early_stopper = EarlyStop(cfg)
-        x_train, y_train, x_test, y_test = load_single_dataset(
-            cfg.dataset.task.task_type,
-            cfg.dataset.dataset_name,
-            train_ratio=cfg.dataset.train_ratio,
+        # Route data + partition through the shared content-addressed cache so
+        # FedXGBllr consumes byte-identical data/partition as every other model
+        # and emits matching data_hash/partition_hash. This also FIXES the legacy
+        # IID divergence: dataset.py partitioned IID via torch
+        # random_split(manual_seed(0)) — a different, seed-independent split from
+        # the shared numpy partitioner every other model uses. Non-IID already
+        # used the shared partitioner and is unchanged. The two-stage training
+        # (tree ensemble aggregation → CNN) below is untouched.
+        _dataset_name = str(cfg.dataset.dataset_name)
+        _data, data_hash = data_cache.get_preprocessed(_dataset_name, random_seed)
+        x_test = np.asarray(_data["x_test"], dtype=np.float32)
+        y_test = np.asarray(_data["y_test"], dtype=np.float32)
+        # serverside_eval reads the held-out val split via get_val_cache; populate
+        # it explicitly since we bypass the download_data side effect.
+        _dp.set_val_cache(
+            _dataset_name,
+            (np.asarray(_data["x_val"], dtype=np.float32),
+             np.asarray(_data["y_val"], dtype=np.float32)),
         )
-
-        trainloaders, valloaders, testloader = divide_dataset_between_clients(
-            TensorDataset(torch.from_numpy(x_train), torch.from_numpy(y_train)),
+        _scheme_cache = "iid" if non_iid_alpha is None else "dirichlet"
+        clients, partition_hash = data_cache.get_partition_clients(
+            _dataset_name, random_seed, _scheme_cache, non_iid_alpha,
+            int(cfg.clients.client_num),
+        )
+        n_below_floor = sum(1 for c in clients if int(c["n_fraud"]) < 6)
+        # y as float32 for BCE (matches the previous load path). val_ratio is 0.0
+        # in this study (central val used instead), so no inner client val split.
+        assert float(cfg.val_ratio) == 0.0, (
+            "cache-routed FedXGBllr assumes val_ratio=0.0 (central val); "
+            f"got {cfg.val_ratio}"
+        )
+        client_datasets = [
+            TensorDataset(
+                torch.from_numpy(np.asarray(c["x"], dtype=np.float32)),
+                torch.from_numpy(np.asarray(c["y"], dtype=np.float32)),
+            )
+            for c in clients
+        ]
+        trainloaders = [get_dataloader(ds, "train", cfg.batch_size) for ds in client_datasets]
+        valloaders = [None] * len(client_datasets)
+        testloader = get_dataloader(
             TensorDataset(torch.from_numpy(x_test), torch.from_numpy(y_test)),
-            batch_size=cfg.batch_size,
-            pool_size=cfg.clients.client_num,
-            val_ratio=cfg.val_ratio,
-            non_iid_alpha=non_iid_alpha,
-            random_state=random_seed,
+            "test", cfg.batch_size,
         )
         print(
             f"Data partitioned across {cfg.clients.client_num} clients"
-            f" and {cfg.val_ratio} of local dataset reserved for validation."
+            f" via shared cache (scheme={_scheme_cache}); central val used."
         )
         if cfg.show_each_client_performance_on_its_local_data:
             local_clients_performance(
@@ -209,6 +262,7 @@ def main(cfg: DictConfig) -> None:
             }
 
         # FedXgbNnAvg
+        _final_capture: Dict[str, Any] = {}
         strategy = instantiate(
             cfg.strategy,
             on_fit_config_fn=fit_config,
@@ -219,6 +273,7 @@ def main(cfg: DictConfig) -> None:
                 serverside_eval,
                 cfg=cfg,
                 testloader=testloader,
+                capture=_final_capture,
             ),
         )
 
@@ -231,17 +286,15 @@ def main(cfg: DictConfig) -> None:
             """Create a federated learning client."""
             return FlClient(cfg, trainloaders[int(cid)], valloaders[int(cid)], cid)
 
-        # Ray reserves a GPU fraction per virtual client (client_resources.
-        # num_gpus). On a CPU-only host (e.g. local macOS dev) there is no GPU
-        # to reserve, so the ActorPool comes up empty and the simulation aborts.
-        # Fall back to CPU-only placement when CUDA is unavailable; the GPU
-        # config is preserved on machines that have one (e.g. Kaggle).
-        if not torch.cuda.is_available() and cfg.client_resources.num_gpus:
-            print(
-                "[main] no CUDA device found — forcing client_resources.num_gpus=0 "
-                f"(was {cfg.client_resources.num_gpus})"
-            )
-            cfg.client_resources.num_gpus = 0
+        # Ray CPU/GPU allocation from the central config
+        # (experiments/sweep_resources.yaml) — the single source of truth, not the
+        # Hydra config. gpu_available=False (no CUDA) zeroes the GPU request so the
+        # ActorPool is not empty on a CPU-only host; on a GPU box it is a no-op.
+        _gpu = torch.cuda.is_available()
+        _res = resources.for_model("fedxgbllr", gpu_available=_gpu)
+        resources.pin_threads()
+        client_resources = {"num_cpus": _res["num_cpus"], "num_gpus": _res["num_gpus"]}
+        print(f"[main] client_resources={client_resources} (from sweep_resources.yaml)")
 
         # Start the simulation
         history = fl.simulation.start_simulation(
@@ -253,10 +306,13 @@ def main(cfg: DictConfig) -> None:
                 strategy=strategy,
             ),
             num_clients=cfg.clients.client_num,
-            client_resources=cfg.client_resources,
+            client_resources=client_resources,
             config=ServerConfig(num_rounds=cfg.run_experiment.num_rounds),
             strategy=strategy,
-            ray_init_args={"num_gpus": torch.cuda.device_count()},
+            ray_init_args={
+                "num_gpus": torch.cuda.device_count(),
+                "object_store_memory": resources.object_store_memory(),
+            },
         )
 
         print(history)
@@ -289,7 +345,29 @@ def main(cfg: DictConfig) -> None:
             history=state["history"],
             final_test=state["final_test"],
             duration_seconds=duration_seconds,
+            data_hash=data_hash,
+            partition_hash=partition_hash,
+            rounds_completed=len(state.get("history") or []),
+            n_clients_below_smote_floor=n_below_floor,
+            baseline_auprc=baseline_auprc(y_test),
         )
+        # Persist the two-stage final global model: per-client boosters + CNN.
+        if _final_capture.get("cnn") is not None and _final_capture.get("trees") is not None:
+            _trees_raw = _final_capture["trees"]
+            _trees = [t[0] if isinstance(t, (tuple, list)) else t for t in _trees_raw]
+            _ft = state.get("final_test") or {}
+            _run_name = build_run_name(
+                CANONICAL_MODEL, scheme, non_iid_alpha, str(oversampling_method), random_seed)
+            model_persistence.persist_run(
+                "fedxgbllr", dataset=_dataset_name, run_name=_run_name,
+                scaler=_data.get("scaler"), feature_names=_data.get("feature_names", []),
+                data_hash=data_hash, partition_hash=partition_hash,
+                threshold=_ft.get("threshold"),
+                fedxgbllr_trees=_trees, fedxgbllr_cnn=_final_capture["cnn"],
+                arch_config={"n_channel": 64,
+                             "n_estimators_client": int(cfg.n_estimators_client),
+                             "client_num": int(cfg.clients.client_num)},
+            )
 
         if cfg.use_wandb:
             wandb.summary["best_val_auprc"] = state["best_val_auprc"]

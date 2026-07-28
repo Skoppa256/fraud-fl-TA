@@ -26,6 +26,11 @@ import flwr as fl
 import yaml
 
 from evaluation.results_writer import build_run_name, write_fl_results
+from experiments import resources
+from experiments import data_cache
+from evaluation.metrics import baseline_auprc
+from evaluation import model_persistence
+from experiments.sweep_preflight import detect_gpus
 from preprocessing.loader import DATASETS, load_dataset
 from preprocessing.oversampling import apply_oversampling_to_all_clients, VALID_METHODS
 from partitioning.dirichlet import get_partition
@@ -126,19 +131,15 @@ def run(cfg: dict):
         f"seed={seed} ==="
     )
 
-    data = load_dataset(dataset, random_state=seed)
+    data, data_hash = data_cache.get_preprocessed(dataset, seed)  # cache-consumed; fail loudly if absent
     x_train, y_train = data["x_train"], data["y_train"]
     x_val, y_val = data["x_val"], data["y_val"]
     x_test, y_test = data["x_test"], data["y_test"]
 
-    clients = get_partition(
-        x_train,
-        y_train,
-        scheme=scheme,
-        alpha=alpha,
-        num_clients=num_clients,
-        random_state=seed,
+    clients, partition_hash = data_cache.get_partition_clients(
+        dataset, seed, scheme, alpha, num_clients
     )
+    n_below_floor = sum(1 for c in clients if int(c["n_fraud"]) < 6)
 
     clients = apply_oversampling_to_all_clients(
         clients,
@@ -169,13 +170,26 @@ def run(cfg: dict):
     )
     client_fn = build_client_fn(clients, cfg, seed=seed)
 
-    print(f"[run] FL starting: {num_rounds} rounds, {num_clients} clients")
+    # Resource allocation from the central config (experiments/sweep_resources.yaml)
+    # — the single source of truth. GBM is CPU-only, so gpu_available is
+    # irrelevant (config pins num_gpus=0); pass False to make that explicit.
+    _res = resources.for_model(MODEL_NAME, gpu_available=False)
+    resources.pin_threads()
+    client_resources = {"num_cpus": _res["num_cpus"], "num_gpus": _res["num_gpus"]}
+    print(
+        f"[run] FL starting: {num_rounds} rounds, {num_clients} clients "
+        f"(client_resources={client_resources})"
+    )
     history = fl.simulation.start_simulation(
         client_fn=client_fn,
         num_clients=num_clients,
         config=fl.server.ServerConfig(num_rounds=num_rounds),
         strategy=strategy,
-        client_resources={"num_cpus": 1, "num_gpus": 0},
+        client_resources=client_resources,
+        ray_init_args={
+            "num_gpus": detect_gpus()[0],
+            "object_store_memory": resources.object_store_memory(),
+        },
     )
 
     state = strategy.state
@@ -200,6 +214,15 @@ def run(cfg: dict):
         print(f"[run] selection trace: {trace}")
 
     duration_seconds = time.time() - t_start
+    # Persist the frozen final global model + provenance (commit 5b).
+    if state.get("final_model") is not None:
+        _ft = state.get("final_test") or {}
+        model_persistence.persist_run(
+            "sklearn", dataset=dataset, run_name=run_name,
+            scaler=data.get("scaler"), feature_names=data.get("feature_names", []),
+            data_hash=data_hash, partition_hash=partition_hash,
+            threshold=_ft.get("threshold"), sklearn_model=state["final_model"],
+        )
     write_fl_results(
         model=MODEL_NAME,
         dataset=dataset,
@@ -214,6 +237,11 @@ def run(cfg: dict):
         history=state.get("history") or [],
         final_test=state.get("final_test"),
         duration_seconds=duration_seconds,
+        data_hash=data_hash,
+        partition_hash=partition_hash,
+        rounds_completed=len(state.get("history") or []),
+        n_clients_below_smote_floor=n_below_floor,
+        baseline_auprc=baseline_auprc(y_test),
     )
 
     if wandb_run is not None:

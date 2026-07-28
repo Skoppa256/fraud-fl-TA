@@ -1,0 +1,23 @@
+defaults:
+  - task: Binary_Classification
+
+dataset_name: "baf"
+train_ratio: 0.70
+early_stop_patience_rounds: 10
+oversampling:
+  method: smote          # one of: smote, adasyn, none
+  k_neighbors: 5
+  # Uniform rule across all three datasets (PaySim, ULB, BAF): hold the PARAMETER
+  # constant at 0.01 (target minority:majority 1:100) rather than tuning per
+  # dataset. Base prevalence differs ~8.5x across datasets, so no single value is
+  # "identical" in every sense — this study holds the parameter, not the endpoint
+  # or the multiplicative lift. Consequence on BAF: global prevalence (~1.10%)
+  # already exceeds 1:100, so every client skips via `target_met` under IID; only
+  # under Dirichlet skew (esp. alpha=0.5) do starved clients fall below the target
+  # and oversample. This selectively isolates the intervention onto exactly the
+  # sparse partitions. See preprocessing.smote for the per-client skip guard.
+  sampling_strategy: 0.01
+  base_seed: 42
+non_iid:
+  enabled: false
+  alpha: 1.0

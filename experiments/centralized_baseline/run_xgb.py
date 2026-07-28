@@ -26,14 +26,18 @@ import time
 
 import numpy as np
 from imblearn.over_sampling import ADASYN, SMOTE
-from evaluation.metrics import tuned_metrics
+from evaluation.metrics import tuned_metrics, calibration_for, baseline_auprc
+from evaluation import model_persistence
 from xgboost import XGBClassifier
 
 from evaluation.results_writer import (
     build_centralized_run_name,
     write_centralized_results,
 )
+from experiments import resources
+from experiments.sweep_preflight import detect_gpus
 from preprocessing.loader import DATASETS, load_dataset
+from experiments.data_cache import get_preprocessed
 
 
 MODEL_NAME: str = "xgb"
@@ -133,7 +137,7 @@ def main() -> None:
     seed = int(args.random_seed)
 
     dataset = str(args.dataset).lower()
-    data = load_dataset(dataset, random_state=seed)
+    data, data_hash = get_preprocessed(dataset, seed)  # cache-consumed; fail loudly if absent
     x_train, y_train = data["x_train"], data["y_train"]
     x_val, y_val = data["x_val"], data["y_val"]
     x_test, y_test = data["x_test"], data["y_test"]
@@ -181,6 +185,11 @@ def main() -> None:
             },
         )
 
+    # XGBoost compute device/tree_method from the central config (explicit, never
+    # auto-detected); downgraded to cpu when no GPU is present.
+    _gpu = detect_gpus()[0] > 0
+    _xgb = resources.xgboost_params(gpu_available=_gpu)
+    resources.pin_threads()
     model = XGBClassifier(
         n_estimators=50,
         max_depth=6,
@@ -190,6 +199,8 @@ def main() -> None:
         eval_metric="aucpr",
         random_state=seed,
         use_label_encoder=False,
+        tree_method=_xgb["tree_method"],
+        device=_xgb["device"],
     )
 
     t0 = time.time()
@@ -211,6 +222,12 @@ def main() -> None:
     )
     print(f"Training time: {train_time:.2f}s")
 
+    model_persistence.persist_run(
+        "sklearn", dataset=dataset, run_name=run_name,
+        scaler=data.get("scaler"), feature_names=data.get("feature_names", []),
+        data_hash=data_hash, partition_hash="n/a (centralized)",
+        threshold=threshold, sklearn_model=model,
+    )
     write_centralized_results(
         model=MODEL_NAME,
         dataset=dataset,
@@ -227,8 +244,13 @@ def main() -> None:
             "test_f1": t["f1"],
             "test_precision": t["precision"],
             "test_recall": t["recall"],
+            "threshold": threshold,
+            **calibration_for(y_test, test_scores, is_probability=True),
         },
         duration_seconds=train_time,
+        data_hash=data_hash,
+        threshold=threshold,
+        baseline_auprc=baseline_auprc(y_test),
     )
 
     if wandb_run is not None:

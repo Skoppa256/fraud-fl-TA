@@ -10,7 +10,7 @@ from __future__ import annotations
 from typing import Any, Callable, Dict, List, Tuple
 
 import numpy as np
-from evaluation.metrics import best_f1_threshold, metrics_at_threshold
+from evaluation.metrics import best_f1_threshold, metrics_at_threshold, calibration_for
 
 from .model import BertFraudModel
 
@@ -119,7 +119,10 @@ def make_server_eval_fn(
                 "test_f1": t["f1"],
                 "test_precision": t["precision"],
                 "test_recall": t["recall"],
+                "threshold": threshold,
+                **calibration_for(y_test, test_scores, is_probability=True),
             }
+            state["final_model"] = model
             if wandb_run is not None:
                 wandb_run.log(
                     {

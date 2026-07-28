@@ -1,0 +1,12 @@
+n_estimators_client: 50
+num_rounds: 50
+client_num: 5
+# Local CNN aggregator updates per round. Carried over from the PaySim/ULB
+# 5-client configs (§3.4.4 limited-tuning policy) — BAF is also a highly
+# imbalanced binary task, so the same small-step schedule is a safe starting
+# point. Retune only if the AUPRC curve drifts down over rounds.
+num_iterations: 50
+xgb:
+  max_depth: 6
+CNN:
+  lr: 0.0005

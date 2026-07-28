@@ -62,11 +62,17 @@ compiles. The enforceable rule and the code→section mapping live in
 ```
 fraud-fl-TA/
 ├── data/
-│   └── paysim/
-│       └── paysim.csv             # PaySim mobile-money fraud CSV (~6.3M rows)
+│   ├── paysim/
+│   │   └── paysim.csv             # PaySim mobile-money fraud CSV (~6.3M rows)
+│   ├── creditcard/
+│   │   └── creditcard.csv         # ULB credit-card fraud CSV (285k rows)
+│   └── baf/
+│       └── baf.csv                # BAF Base variant CSV (1M rows)
 │
 ├── preprocessing/
 │   ├── paysim.py                  # PaySim cleaning / feature engineering
+│   ├── creditcard.py              # ULB credit-card preprocessing
+│   ├── baf.py                     # BAF preprocessing (drop/one-hot/impute/scale)
 │   ├── smote.py                   # Per-client local SMOTE wrapper
 │   ├── adasyn.py                  # Per-client local ADASYN wrapper
 │   └── oversampling.py            # Dispatch between SMOTE / ADASYN / none
@@ -168,6 +174,34 @@ of which 492 are fraud (≈0.172% positive rate).
 Like PaySim, the CSV is git-ignored — download it once locally. Selecting a dataset
 namespaces every output under `results/logs/<dataset>/…` and stamps a `dataset`
 column into each summary CSV, so PaySim and creditcard runs never collide on disk.
+
+### Third dataset — Bank Account Fraud (BAF)
+
+**Bank Account Fraud** (Feedzai, NeurIPS 2022) — online bank-account-opening
+applications with a `fraud_bool` label. This project uses the **Base** variant:
+1,000,000 rows across 32 columns, of which 11,029 are fraud (≈1.10% positive rate).
+Unlike PaySim (few features) and ULB (PCA-anonymized), BAF has **real, named,
+semantically meaningful features**, so it is the dataset where the SHAP analysis
+carries the most interpretive weight.
+
+- **Source**: Kaggle — `sgpjesus/bank-account-fraud-dataset-neurips-2022`
+  (https://www.kaggle.com/datasets/sgpjesus/bank-account-fraud-dataset-neurips-2022)
+- **Place the file at**: `data/baf/baf.csv`. The Kaggle download contains six
+  files (`Base.csv` and `Variant I–V.csv`); this project uses only the
+  **unmodified `Base.csv`** — rename it to `baf.csv` (the `<dataset>/<dataset>.csv`
+  convention every driver expects). The Variant files are not used.
+- **Preprocessing** (`preprocessing/baf.py`, PaySim-like): drop constant
+  `device_fraud_count`; hold out `month` as a non-feature side column; one-hot the
+  five categoricals (fixed category lists); for the five `-1` missing sentinels add
+  a `<col>_missing` flag + train-median impute; StandardScaler fit on train over the
+  full matrix. Same stratified 70/15/15 split and seed handling as PaySim → a
+  **55-feature** vector.
+- **SMOTE target**: `sampling_strategy=0.10` (not the `0.01` used for PaySim/ULB).
+  BAF's base rate already exceeds 0.01, so 0.01 would be a no-op; drive BAF via
+  `experiments/run_all_centralized_iid_dirichlet1.0_baf.sh`, which pins `0.10`
+  across all six models (the bare per-model `run_*.sh` do not and are unsafe for BAF).
+
+Like the others, the CSV is git-ignored — download it once locally.
 
 ---
 
@@ -432,13 +466,13 @@ The summary schema is defined once in [evaluation/results_writer.py](evaluation/
 
 CLI flags override the corresponding key in the model's `conf/base.yaml` (Hydra equivalent: `conf/dataset/paysim.yaml`); omit a flag to keep the YAML default.
 
-**Choosing the dataset.** Every entry point takes a dataset selector that defaults to `paysim`, so existing commands are unchanged. Pass `--dataset creditcard` (argparse) or `dataset=creditcard clients=creditcard_5_clients` (Hydra) to run the ULB credit-card dataset instead. Feature count (13 for PaySim, 30 for creditcard) is read from the data at run time — no other flag changes.
+**Choosing the dataset.** Every entry point takes a dataset selector that defaults to `paysim`, so existing commands are unchanged. Pass `--dataset creditcard` (argparse) or `dataset=creditcard clients=creditcard_5_clients` (Hydra) to run the ULB credit-card dataset instead. Feature count (13 for PaySim, 30 for creditcard, 55 for baf) is read from the data at run time — no other flag changes. Note: for BAF, use `--sampling_strategy 0.10` (or the unified BAF driver); the default 0.01 is a no-op on BAF.
 
 #### Federated — argparse (FFD / BERT / LR / SVM / GBM)
 
 ```
 usage: python -m models.<model>.run [-h]
-       [--dataset {paysim,creditcard}]
+       [--dataset {paysim,creditcard,baf}]
        [--scheme {iid,dirichlet}] [--alpha ALPHA]
        [--num_rounds N] [--num_clients K] [--local_epochs E]
        [--oversampling {smote,adasyn,none}]
@@ -456,7 +490,7 @@ usage: python -m models.<model>.run [-h]
 
 | Flag | Type | Choices / range | YAML default | Notes |
 |------|------|-----------------|--------------|-------|
-| `--dataset` | str | `paysim`, `creditcard` | `paysim` | Dataset to load. Sets the feature count (13 / 30) and the `results/logs/<dataset>/…` namespace. |
+| `--dataset` | str | `paysim`, `creditcard`, `baf` | `paysim` | Dataset to load. Sets the feature count (13 / 30 / 55) and the `results/logs/<dataset>/…` namespace. |
 | `--scheme` | str | `iid`, `dirichlet` | `iid` | Partition strategy. |
 | `--alpha` | float | > 0 | `null` | Dirichlet concentration; required when `--scheme dirichlet`. |
 | `--num_rounds` | int | ≥ 1 | `50` | FL communication rounds. Sweep scripts pass `20` (LR/SVM) and `10` (GBM). |
@@ -503,8 +537,8 @@ Hydra overrides are `key=value` pairs chained on the command line.
 
 | Override | Choices / range | Default | Notes |
 |----------|-----------------|---------|-------|
-| `dataset` | `paysim`, `creditcard` | `paysim` | Selects `conf/dataset/<dataset>.yaml`. |
-| `clients` | `paysim_5_clients`, `creditcard_5_clients`, `*_2_clients` | `paysim_5_clients` | Client-count config; match the dataset (e.g. `creditcard_5_clients`). |
+| `dataset` | `paysim`, `creditcard`, `baf` | `paysim` | Selects `conf/dataset/<dataset>.yaml`. |
+| `clients` | `paysim_5_clients`, `creditcard_5_clients`, `baf_5_clients`, `*_2_clients` | `paysim_5_clients` | Client-count config; match the dataset (e.g. `baf_5_clients`). |
 | `run_experiment.num_rounds` | int ≥ 1 | `50` | FL rounds. |
 | `dataset.non_iid.enabled` | `true` / `false` | `false` | Switch to Dirichlet partitioning. |
 | `dataset.non_iid.alpha` | float > 0 | `1.0` | Dirichlet α. |
@@ -543,7 +577,7 @@ python -m hfedxgboost.main \
 
 ```
 usage: python -m experiments.centralized_baseline.run_<model> [-h]
-       [--dataset {paysim,creditcard}]
+       [--dataset {paysim,creditcard,baf}]
        [--oversampling {smote,adasyn,none}]
        [--sampling_strategy {auto,FLOAT}]
        [--random_seed SEED] [--use_wandb {true,false}]
@@ -555,7 +589,7 @@ usage: python -m experiments.centralized_baseline.run_<model> [-h]
 
 | Flag | Type | Choices / range | Default | Notes |
 |------|------|-----------------|---------|-------|
-| `--dataset` | str | `paysim`, `creditcard` | `paysim` | Dataset to load; also sets the `results/logs/<dataset>/centralized/…` namespace. |
+| `--dataset` | str | `paysim`, `creditcard`, `baf` | `paysim` | Dataset to load; also sets the `results/logs/<dataset>/centralized/…` namespace. |
 | `--oversampling` | str | `smote`, `adasyn`, `none` | `smote` | Global resampler. |
 | `--sampling_strategy` | str / float | `auto` or float ∈ (0, 1] | `auto` | Passed to imblearn's `sampling_strategy`. `auto` = 1:1 fraud:non-fraud. Float = post-resample minority/majority ratio (e.g. `0.01` → 1:100). |
 | `--random_seed` | int | — | `42` | |
@@ -616,7 +650,7 @@ The startup log echoes the resolved value and the post-resample fraud ratio so y
 ### Sweep drivers (shell scripts)
 
 ```
-usage: [SEEDS="<seed> [seed ...]"] [DATASET={paysim,creditcard}] bash experiments/run_<model>.sh
+usage: [SEEDS="<seed> [seed ...]"] [DATASET={paysim,creditcard,baf}] bash experiments/run_<model>.sh
 usage: [SEEDS="..."] [DATASET=...] [SKIP_CENTRALIZED={0,1}] bash experiments/run_all.sh
 ```
 

@@ -13,7 +13,7 @@ from typing import Any, Callable, Dict, List, Tuple
 import numpy as np
 from sklearn.linear_model import LogisticRegression
 
-from evaluation.metrics import best_f1_threshold, metrics_at_threshold
+from evaluation.metrics import best_f1_threshold, metrics_at_threshold, calibration_for
 
 
 def _build_eval_lr(cfg: dict) -> LogisticRegression:
@@ -133,7 +133,12 @@ def make_server_eval_fn(
                 "test_f1": t["f1"],
                 "test_precision": t["precision"],
                 "test_recall": t["recall"],
+                "threshold": threshold,
+                **calibration_for(y_test, test_scores, is_probability=True),
             }
+            # Stash the frozen final global model for the run script to persist
+            # (it holds the scaler / feature_names / hashes).
+            state["final_model"] = model
             if wandb_run is not None:
                 wandb_run.log(
                     {

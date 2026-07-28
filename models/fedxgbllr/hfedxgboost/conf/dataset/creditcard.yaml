@@ -7,7 +7,11 @@ early_stop_patience_rounds: 10
 oversampling:
   method: smote          # one of: smote, adasyn, none
   k_neighbors: 5
-  sampling_strategy: "auto"   # imblearn sampling_strategy; "auto"=1:1, e.g. 0.01 for 1:100
+  # Was "auto" (1:1) — a confound: the other five ULB models use 0.01, so
+  # FedXGBllr would have trained on a different class distribution than its
+  # comparators (RQ1). Aligned to 0.01 to match Tabel 3.6 and the argparse
+  # models on every driver path. Any pre-fix ULB FedXGBllr run must be redone.
+  sampling_strategy: 0.01     # imblearn sampling_strategy; "auto"=1:1, e.g. 0.01 for 1:100
   base_seed: 42
 non_iid:
   enabled: false

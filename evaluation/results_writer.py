@@ -44,6 +44,23 @@ SUMMARY_COLUMNS: Sequence[str] = (
     "test_f1",
     "test_precision",
     "test_recall",
+    # Calibration (van den Goorbergh et al. 2022). "NA" for models that emit
+    # margins, not probabilities (e.g. SVM decision_function). See
+    # evaluation.metrics.calibration_metrics.
+    "test_brier",
+    "test_cal_intercept",
+    "test_cal_slope",
+    # Threshold policy (Decision 2): tuned per arm on the central validation set.
+    "threshold_policy",
+    "threshold",
+    # Comparability proof (Part 3): hashes of the data/partition the model
+    # actually consumed, emitted by the child itself.
+    "data_hash",
+    "partition_hash",
+    # Interpretation context (Part 4).
+    "rounds_completed",
+    "n_clients_below_smote_floor",
+    "baseline_auprc",
     "timestamp",
     "duration_seconds",
     "run_name",
@@ -78,7 +95,16 @@ def build_centralized_run_name(model: str, oversampling: str, seed: int) -> str:
     return f"centralized_{model}_{oversampling}_seed{int(seed)}"
 
 
-def _logs_dir(subdir: str, root: str = "results/logs") -> str:
+# Repo root, so every model writes to the SAME results/logs/ regardless of the
+# cwd it runs in. FedXGBllr runs with cwd=models/fedxgbllr (Hydra needs its conf/),
+# so a cwd-relative "results/logs" would silently scatter its results into
+# models/fedxgbllr/results/logs/ where the collector and verify_hashes (which walk
+# the repo results/logs/) would never find them.
+_REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+
+def _logs_dir(subdir: str, root: str = None) -> str:
+    root = root or os.path.join(_REPO_ROOT, "results", "logs")
     path = os.path.join(root, subdir)
     os.makedirs(path, exist_ok=True)
     return path
@@ -141,6 +167,13 @@ def write_fl_results(
     duration_seconds: float,
     dataset: str = "paysim",
     subdir: Optional[str] = None,
+    data_hash: str = "",
+    partition_hash: str = "",
+    threshold_policy: str = "val_f1_tuned",
+    threshold: object = "",
+    rounds_completed: object = "",
+    n_clients_below_smote_floor: object = "",
+    baseline_auprc: object = "",
 ) -> Dict[str, str]:
     """Write summary and per-round CSVs for a federated learning run.
 
@@ -199,6 +232,18 @@ def write_fl_results(
         "test_f1": final_test.get("test_f1", ""),
         "test_precision": final_test.get("test_precision", ""),
         "test_recall": final_test.get("test_recall", ""),
+        # Calibration — "NA" when the arm did not supply it (e.g. SVM margins,
+        # or an arm whose eval has not yet been wired to compute calibration).
+        "test_brier": final_test.get("test_brier", "NA"),
+        "test_cal_intercept": final_test.get("test_cal_intercept", "NA"),
+        "test_cal_slope": final_test.get("test_cal_slope", "NA"),
+        "threshold_policy": threshold_policy,
+        "threshold": final_test.get("threshold", threshold),
+        "data_hash": data_hash,
+        "partition_hash": partition_hash,
+        "rounds_completed": rounds_completed,
+        "n_clients_below_smote_floor": n_clients_below_smote_floor,
+        "baseline_auprc": baseline_auprc,
         "timestamp": _utc_iso(),
         "duration_seconds": round(float(duration_seconds), 3),
         "run_name": run_name,
@@ -244,6 +289,10 @@ def write_centralized_results(
     duration_seconds: float,
     dataset: str = "paysim",
     subdir: str = "centralized",
+    data_hash: str = "",
+    threshold_policy: str = "val_f1_tuned",
+    threshold: object = "",
+    baseline_auprc: object = "",
 ) -> Dict[str, str]:
     """Write a single-row summary CSV for a centralized baseline.
 
@@ -275,6 +324,16 @@ def write_centralized_results(
         "test_f1": test_metrics.get("test_f1", ""),
         "test_precision": test_metrics.get("test_precision", ""),
         "test_recall": test_metrics.get("test_recall", ""),
+        "test_brier": test_metrics.get("test_brier", "NA"),
+        "test_cal_intercept": test_metrics.get("test_cal_intercept", "NA"),
+        "test_cal_slope": test_metrics.get("test_cal_slope", "NA"),
+        "threshold_policy": threshold_policy,
+        "threshold": test_metrics.get("threshold", threshold),
+        "data_hash": data_hash,
+        "partition_hash": "n/a (centralized)",
+        "rounds_completed": "n/a",
+        "n_clients_below_smote_floor": "n/a",
+        "baseline_auprc": baseline_auprc,
         "timestamp": _utc_iso(),
         "duration_seconds": round(float(duration_seconds), 3),
         "run_name": run_name,

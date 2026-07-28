@@ -19,6 +19,8 @@ from evaluation.metrics import (
     best_f1_threshold,
     metrics_at_threshold,
     tuned_metrics,
+    calibration_for,
+    baseline_auprc,
 )
 from torch.utils.data import DataLoader, TensorDataset
 
@@ -28,6 +30,8 @@ from evaluation.results_writer import (
     write_centralized_results,
 )
 from preprocessing.loader import DATASETS, load_dataset
+from experiments.data_cache import get_preprocessed
+from evaluation import model_persistence
 
 
 MODEL_NAME: str = "bert_fraud"
@@ -146,7 +150,7 @@ def main() -> None:
     np.random.seed(seed)
 
     dataset = str(args.dataset).lower()
-    data = load_dataset(dataset, random_state=seed)
+    data, data_hash = get_preprocessed(dataset, seed)  # cache-consumed; fail loudly if absent
     x_train, y_train = data["x_train"], data["y_train"]
     x_val, y_val = data["x_val"], data["y_val"]
     x_test, y_test = data["x_test"], data["y_test"]
@@ -273,6 +277,15 @@ def main() -> None:
     )
     print(f"Training time: {train_time:.2f}s")
 
+    model_persistence.persist_run(
+        "torch", dataset=dataset, run_name=run_name,
+        scaler=data.get("scaler"), feature_names=data.get("feature_names", []),
+        data_hash=data_hash, partition_hash="n/a (centralized)",
+        threshold=threshold, torch_model=model,
+        arch_config={"input_dim": n_features, "d_model": args.d_model,
+                     "nhead": args.nhead, "num_layers": args.num_layers,
+                     "dim_feedforward": args.dim_feedforward, "dropout": args.dropout},
+    )
     write_centralized_results(
         model=MODEL_NAME,
         dataset=dataset,
@@ -289,8 +302,13 @@ def main() -> None:
             "test_f1": t["f1"],
             "test_precision": t["precision"],
             "test_recall": t["recall"],
+            "threshold": threshold,
+            **calibration_for(y_test, test_scores, is_probability=True),
         },
         duration_seconds=train_time,
+        data_hash=data_hash,
+        threshold=threshold,
+        baseline_auprc=baseline_auprc(y_test),
     )
 
     if wandb_run is not None:

@@ -19,7 +19,7 @@ from typing import Any, Callable, Dict, List, Tuple
 import numpy as np
 from sklearn.linear_model import SGDClassifier
 
-from evaluation.metrics import best_f1_threshold, metrics_at_threshold
+from evaluation.metrics import best_f1_threshold, metrics_at_threshold, calibration_for
 
 
 CLASSES: np.ndarray = np.array([0, 1])
@@ -135,7 +135,10 @@ def make_server_eval_fn(
                 "test_f1": t["f1"],
                 "test_precision": t["precision"],
                 "test_recall": t["recall"],
+                "threshold": threshold,
+                **calibration_for(y_test, test_scores, is_probability=False),
             }
+            state["final_model"] = model
             if wandb_run is not None:
                 wandb_run.log(
                     {

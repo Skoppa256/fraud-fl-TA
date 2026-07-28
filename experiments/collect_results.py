@@ -26,6 +26,24 @@ from typing import Any, Dict, List, Sequence
 LOGS_ROOT = "results/logs"
 DEFAULT_OUT = "results/summary_table.csv"
 
+# Random-classifier AUPRC equals the positive-class prevalence, so AUPRC's floor
+# scales with the fraud rate and is NOT comparable across datasets: a BAF score
+# looks better than a PaySim score for free. Reporting this baseline alongside
+# every test_auprc (rather than a normalized metric) keeps the raw, standard
+# AUPRC while making the cross-dataset floor explicit. Values are the test-set
+# fraud prevalence per dataset (stratified split preserves the overall rate).
+DATASET_BASELINE_AUPRC = {
+    "paysim": 0.00129,
+    "creditcard": 0.00173,
+    "baf": 0.01103,
+}
+
+
+def _baseline_auprc(dataset: str) -> str:
+    """Random-baseline AUPRC (= prevalence) for a dataset, or '' if unknown."""
+    v = DATASET_BASELINE_AUPRC.get((dataset or "").lower())
+    return "" if v is None else f"{v:.5f}"
+
 PRIMARY_COLUMNS: Sequence[str] = (
     "dataset",
     "model",
@@ -140,13 +158,13 @@ def print_markdown_table(rows: List[Dict[str, str]]) -> None:
 
     header = (
         "| Dataset | Model | Scheme | Oversampling | Seed | "
-        "test_auprc | test_f1 | test_precision | test_recall | "
-        "best_round | duration (s) |"
+        "test_auprc | baseline (prev.) | test_f1 | test_precision | test_recall | "
+        "brier | cal_int | cal_slope | best_round | duration (s) |"
     )
     sep = (
         "|---------|-------|--------|--------------|------|"
-        "------------|---------|----------------|-------------|"
-        "------------|--------------|"
+        "------------|------------------|---------|----------------|-------------|"
+        "-------|---------|-----------|------------|--------------|"
     )
     print(header)
     print(sep)
@@ -166,9 +184,13 @@ def print_markdown_table(rows: List[Dict[str, str]]) -> None:
             f"{row.get('oversampling', '-')} | "
             f"{row.get('random_seed', '-')} | "
             f"{_fmt(row.get('test_auprc'))} | "
+            f"{_fmt(row.get('baseline_auprc') or _baseline_auprc(row.get('dataset', '')))} | "
             f"{_fmt(row.get('test_f1'))} | "
             f"{_fmt(row.get('test_precision'))} | "
             f"{_fmt(row.get('test_recall'))} | "
+            f"{_fmt(row.get('test_brier'))} | "
+            f"{_fmt(row.get('test_cal_intercept'))} | "
+            f"{_fmt(row.get('test_cal_slope'))} | "
             f"{row.get('best_round', '-') or '-'} | "
             f"{_fmt(row.get('duration_seconds'), digits=1)} |"
         )
@@ -199,6 +221,10 @@ def _parse_args() -> argparse.Namespace:
 def main() -> None:
     args = _parse_args()
     rows = _read_summary_rows(args.logs_root)
+    # Stamp the random-baseline AUPRC (= prevalence) onto every row so both the
+    # master CSV and the Markdown table carry the cross-dataset floor.
+    for row in rows:
+        row["baseline_auprc"] = _baseline_auprc(row.get("dataset", ""))
     if not args.markdown_only:
         write_summary_csv(rows, args.out)
     print()

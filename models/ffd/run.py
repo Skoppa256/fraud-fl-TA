@@ -28,6 +28,10 @@ import torch
 import yaml
 
 from evaluation.results_writer import build_run_name, write_fl_results
+from experiments import resources
+from experiments import data_cache
+from evaluation.metrics import baseline_auprc
+from evaluation import model_persistence
 from partitioning.dirichlet import get_partition
 from preprocessing.loader import DATASETS, load_dataset
 
@@ -125,7 +129,7 @@ def run(cfg: dict):
         f"seed={seed} ==="
     )
 
-    data = load_dataset(dataset, random_state=seed)
+    data, data_hash = data_cache.get_preprocessed(dataset, seed)  # cache-consumed; fail loudly if absent
     x_train, y_train = data["x_train"], data["y_train"]
     x_val, y_val = data["x_val"], data["y_val"]
     x_test, y_test = data["x_test"], data["y_test"]
@@ -134,14 +138,10 @@ def run(cfg: dict):
     # 30 for creditcard, ...).
     n_features = int(x_train.shape[1])
 
-    clients = get_partition(
-        x_train,
-        y_train,
-        scheme=scheme,
-        alpha=alpha,
-        num_clients=num_clients,
-        random_state=seed,
+    clients, partition_hash = data_cache.get_partition_clients(
+        dataset, seed, scheme, alpha, num_clients
     )
+    n_below_floor = sum(1 for c in clients if int(c["n_fraud"]) < 6)
 
     # NB: oversampling is NOT pre-applied here. FFD applies it per-round
     # inside FFDClient.fit() per Yang et al. (2019) procedure step 3.
@@ -176,15 +176,15 @@ def run(cfg: dict):
     )
     client_fn = build_client_fn(clients, cfg, seed=seed)
 
-    num_gpus_per_client = float(cfg.get("num_gpus_per_client", 0.0))
-    num_cpus_per_client = int(cfg.get("num_cpus_per_client", 1))
-    # If no GPU is present, force num_gpus to 0. Otherwise Ray is inited with
-    # num_gpus=device_count()=0 (below) while each client still requests a
-    # fraction of a GPU, so no client can ever be scheduled and the simulation
-    # deadlocks. base.yaml carries num_gpus_per_client=0.2 for GPU servers.
-    if not torch.cuda.is_available():
-        num_gpus_per_client = 0.0
-    client_resources = {"num_cpus": num_cpus_per_client, "num_gpus": num_gpus_per_client}
+    # Resource allocation from the central config (experiments/sweep_resources.yaml)
+    # — the single source of truth. gpu_available=False (no CUDA) makes for_model
+    # zero the GPU request, so Ray (inited with num_gpus=device_count()=0 below)
+    # can still schedule the client actor instead of deadlocking with an empty
+    # ActorPool. No per-client resource literal lives here any more.
+    _gpu = torch.cuda.is_available()
+    _res = resources.for_model("ffd", gpu_available=_gpu)
+    resources.pin_threads()
+    client_resources = {"num_cpus": _res["num_cpus"], "num_gpus": _res["num_gpus"]}
 
     print(
         f"[run] FL starting: {num_rounds} rounds, {num_clients} clients "
@@ -196,7 +196,10 @@ def run(cfg: dict):
         config=fl.server.ServerConfig(num_rounds=num_rounds),
         strategy=strategy,
         client_resources=client_resources,
-        ray_init_args={"num_gpus": torch.cuda.device_count()},
+        ray_init_args={
+            "num_gpus": torch.cuda.device_count(),
+            "object_store_memory": resources.object_store_memory(),
+        },
     )
 
     print(
@@ -212,6 +215,16 @@ def run(cfg: dict):
         )
 
     duration_seconds = time.time() - t_start
+    if eval_state.get("final_model") is not None:
+        _ft = eval_state.get("final_test") or {}
+        model_persistence.persist_run(
+            "torch", dataset=dataset, run_name=run_name,
+            scaler=data.get("scaler"), feature_names=data.get("feature_names", []),
+            data_hash=data_hash, partition_hash=partition_hash,
+            threshold=_ft.get("threshold"), torch_model=eval_state["final_model"],
+            reference_pred=eval_state["final_model"].predict_proba(x_test[:64]),
+            arch_config={"input_dim": n_features},
+        )
     write_fl_results(
         model=MODEL_NAME,
         dataset=dataset,
@@ -226,6 +239,11 @@ def run(cfg: dict):
         history=eval_state.get("history") or [],
         final_test=eval_state.get("final_test"),
         duration_seconds=duration_seconds,
+        data_hash=data_hash,
+        partition_hash=partition_hash,
+        rounds_completed=len(eval_state.get("history") or []),
+        n_clients_below_smote_floor=n_below_floor,
+        baseline_auprc=baseline_auprc(y_test),
     )
 
     if wandb_run is not None:
