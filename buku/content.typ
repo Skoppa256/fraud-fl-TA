@@ -940,14 +940,24 @@ mendeteksi pergeseran skala probabilitas. Karena
 menyebabkan overestimasi sistematis probabilitas prediksi, penelitian ini
 menambahkan metrik kalibrasi pada test set terpusat. Yang pertama adalah *Brier
 score*, yaitu rerata kuadrat selisih antara probabilitas prediksi dan luaran
-biner (semakin kecil semakin baik). Yang kedua adalah *calibration intercept* dan
-*calibration slope*, diperoleh melalui logistic recalibration, yaitu meregresikan
-luaran sebenarnya terhadap logit probabilitas prediksi menggunakan model
-logistik tanpa penalti. Kalibrasi sempurna ditandai oleh intercept 0 dan slope 1;
-mengikuti konvensi #cite(<goorbergh2022harm>, form: "prose"), intercept bernilai
-negatif menandakan overestimasi sistematis (probabilitas terlalu tinggi),
-sedangkan slope kurang dari 1 menandakan probabilitas yang terlalu ekstrem
-(over-confident).
+biner (semakin kecil semakin baik). Yang kedua adalah *calibration slope* dan
+*calibration intercept*, yang mengikuti hierarki kalibrasi
+#cite(<vancalster2016hierarchy>, form: "prose") dilaporkan sebagai dua angka yang
+independen. *Calibration slope* adalah koefisien $b$ dari regresi logistik gabungan
+tanpa penalti $y ~ a + b dot "logit"(p)$; slope 1 menandakan kalibrasi sempurna,
+slope kurang dari 1 menandakan probabilitas yang terlalu ekstrem (over-confident),
+sedangkan slope lebih dari 1 menandakan probabilitas yang terlalu terkompresi
+(under-confident). *Calibration intercept* dilaporkan sebagai
+*calibration-in-the-large*, yaitu intercept $a$ dari model offset dengan slope
+dikunci pada 1, $y ~ 1 + "offset"("logit"(p))$, yang menyelesaikan
+$"mean"(sigma("logit"(p) + a)) = "mean"(y)$. Angka ini dipisahkan dari slope karena
+intercept pada regresi gabungan terkopel dengan slope sehingga tidak dapat
+ditafsirkan sendiri — pada model yang sangat under-dispersed intercept gabungan
+membengkak ke nilai yang tak bermakna, sementara calibration-in-the-large tetap
+terinterpretasi. Mengikuti konvensi #cite(<goorbergh2022harm>, form: "prose"),
+intercept 0 berarti terkalibrasi secara rata-rata; intercept negatif menandakan
+overestimasi sistematis (probabilitas terlalu tinggi), sedangkan intercept positif
+menandakan underestimasi sistematis.
 
 Ketersediaan probabilitas berbeda antar model dan ditangani secara jujur. LR,
 GBM, FFD, dan BERT mengeluarkan probabilitas terkalibrasi sehingga kalibrasi

@@ -45,7 +45,6 @@ sys.path.insert(0, str(PROJECT_ROOT))
 from experiments import data_cache, resources  # noqa: E402
 from experiments import sweep_preflight  # noqa: E402
 from evaluation import model_persistence as _mp  # noqa: E402
-from evaluation.results_writer import build_centralized_run_name  # noqa: E402
 
 # --- Experiment constants (mirror the model configs; uniform across datasets). --
 SAMPLING_STRATEGY = 0.01
@@ -723,6 +722,17 @@ _SMOKE_REQUIRED_COLS = (
 )
 
 
+def _summary_csv_path(spec: RunSpec) -> Path:
+    """Path to the single-row summary CSV the child writes for any cell
+    (centralized or FL), following the results_writer subdir convention."""
+    if spec.condition == "centralized":
+        subdir = "centralized"
+    else:
+        subdir = "fedxgbllr" if spec.model == "fedxgbllr" else spec.model
+    return (PROJECT_ROOT / "results" / "logs" / spec.dataset / subdir /
+            f"{_child_run_name(spec)}.csv")
+
+
 def _summary_row_complete(path: Path) -> Tuple[bool, List[str]]:
     """(complete?, missing_cols) for the last data row of a summary CSV."""
     if not path.is_file():
@@ -736,44 +746,62 @@ def _summary_row_complete(path: Path) -> Tuple[bool, List[str]]:
     return (not missing), missing
 
 
-def _smoke_gate(offline: bool) -> int:
-    """Execute the cheapest cell end-to-end — centralized LR on creditcard,
-    no-smote — EXACTLY as the runner invokes it (subprocess, WANDB_CONFIG_PATHS,
-    real ``wandb.init()``), and fail loudly unless it produces BOTH a complete
-    results row (no empty metric columns) AND a loadable artifact.
+# The smoke gate exercises two structurally different paths end-to-end:
+#   1. centralized LR on creditcard — cheapest cell; the argparse + wandb.init +
+#      WANDB_CONFIG_PATHS + sklearn-persist path.
+#   2. federated FedXGBllr on creditcard (iid, no-smote) — the Hydra two-stage
+#      path (per-client boosters + aggregator CNN) that the LR cell never touches:
+#      early-stopping capture, two-stage persistence, and CNN-probability
+#      calibration. This one early-stops (~round 12) so it also guards the
+#      last-executed-round persistence capture (~4 min).
+_SMOKE_CELLS: Tuple[RunSpec, ...] = (
+    RunSpec("creditcard", "lr", "no-smote", "centralized", seed=42, alpha=None),
+    RunSpec("creditcard", "fedxgbllr", "no-smote", "iid", seed=42, alpha=None),
+)
 
-    This is the pre-launch gate: a matrix that goes green while silently
-    producing nothing — the ``wandb.init()`` crash that took down all 96 runs, or
-    a persistence regression — is caught here before an overnight window is burnt.
-    Run with ``--offline`` (wandb still reads WANDB_CONFIG_PATHS in offline mode,
-    so the exact format that broke is exercised)."""
-    spec = RunSpec("creditcard", "lr", "no-smote", "centralized", seed=42, alpha=None)
-    print(f"=== SMOKE GATE: {spec.run_name} (offline={offline}) ===")
+
+def _smoke_gate(offline: bool) -> int:
+    """Execute representative cells end-to-end EXACTLY as the runner invokes them
+    (subprocess, WANDB_CONFIG_PATHS, real ``wandb.init()``) and fail loudly unless
+    EACH produces BOTH a complete results row (no empty metric columns) AND a
+    loadable artifact.
+
+    Pre-launch gate: a matrix that goes green while silently producing nothing —
+    the ``wandb.init()`` crash that took down all 96 runs, an early-stop
+    persistence miss on FedXGBllr, or any persistence regression — is caught here
+    before an overnight window is burnt. Run with ``--offline`` (wandb still reads
+    WANDB_CONFIG_PATHS in offline mode, so the exact format that broke is
+    exercised)."""
     gpu_count, _vram = sweep_preflight.detect_gpus()
     gpu_available = gpu_count > 0
     os.environ.setdefault("SWEEP_GPU_FRACTION", str(resources.gpu_fraction_default()))
-    data_hash, partition_hash = cache_hashes(spec)
 
-    # use_wandb=True so wandb.init() + the WANDB_CONFIG_PATHS yaml are exercised.
-    rec = execute_run(spec, gpu_available, offline, use_wandb=True,
-                      data_hash=data_hash, partition_hash=partition_hash)
-
-    run_name = build_centralized_run_name(spec.model, spec.oversampling, spec.seed)
-    summary_csv = (PROJECT_ROOT / "results" / "logs" / spec.dataset /
-                   "centralized" / f"{run_name}.csv")
-    row_ok, missing = _summary_row_complete(summary_csv)
-    artifact_ok = _mp.manifest_ok(_artifact_dir(spec))
-    status_ok = rec["status"] == "success"
+    results = []
+    for spec in _SMOKE_CELLS:
+        print(f"\n=== SMOKE CELL: {spec.run_name} (offline={offline}) ===")
+        data_hash, partition_hash = cache_hashes(spec)
+        # use_wandb=True so wandb.init() + the WANDB_CONFIG_PATHS yaml are exercised.
+        rec = execute_run(spec, gpu_available, offline, use_wandb=True,
+                          data_hash=data_hash, partition_hash=partition_hash)
+        summary_csv = _summary_csv_path(spec)
+        row_ok, missing = _summary_row_complete(summary_csv)
+        artifact_ok = _mp.manifest_ok(_artifact_dir(spec))
+        ok = rec["status"] == "success" and row_ok and artifact_ok
+        results.append((spec, rec, summary_csv, row_ok, missing, artifact_ok, ok))
 
     print("\n=== SMOKE GATE RESULT ===")
-    print(f"  status          : {rec['status']} (exit {rec['exit_code']})")
-    print(f"  results row      : {'OK' if row_ok else 'INCOMPLETE'}  ({summary_csv})")
-    if not row_ok:
-        print(f"     empty/missing columns: {missing}")
-    print(f"  loadable artifact: {'OK' if artifact_ok else 'MISSING'}  ({_artifact_dir(spec)})")
-    passed = status_ok and row_ok and artifact_ok
-    print(f"\n  SMOKE GATE: {'PASS' if passed else 'FAIL'} — "
-          f"see {rec['log']}")
+    for spec, rec, summary_csv, row_ok, missing, artifact_ok, ok in results:
+        print(f"  [{'PASS' if ok else 'FAIL'}] {spec.run_name}")
+        print(f"        status={rec['status']} (exit {rec['exit_code']}) | "
+              f"row={'OK' if row_ok else 'INCOMPLETE'} | "
+              f"artifact={'OK' if artifact_ok else 'MISSING'}")
+        if not row_ok:
+            print(f"        empty/missing columns: {missing}  ({summary_csv})")
+        if not artifact_ok:
+            print(f"        artifact dir: {_artifact_dir(spec)}")
+        print(f"        log: {rec['log']}")
+    passed = all(r[-1] for r in results)
+    print(f"\n  SMOKE GATE: {'PASS' if passed else 'FAIL'}")
     if not passed:
         print("  Refusing to certify launch: a green sweep would produce nothing.")
     return 0 if passed else 1

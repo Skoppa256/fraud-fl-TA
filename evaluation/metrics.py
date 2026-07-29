@@ -108,12 +108,24 @@ def calibration_metrics(y_true, probs, is_probability: bool = True) -> Dict[str,
 
     * **Brier score** — mean squared error between predicted probability and the
       0/1 outcome (lower is better).
-    * **Calibration intercept & slope** — from *logistic recalibration*: the true
-      outcome is regressed on the logit of the predicted probability with an
-      unpenalised logistic model. Perfect calibration is intercept ``0`` and
-      slope ``1``; intercept ``> 0`` indicates systematic *under*-prediction and
-      ``< 0`` over-prediction of the log-odds, while slope ``< 1`` indicates
-      over-confident (too extreme) probabilities.
+    * **Calibration slope** — from the *joint* logistic recalibration
+      ``y ~ a + b·logit(p)``: the coefficient ``b``. Slope ``1`` is ideal;
+      ``< 1`` means over-confident (too extreme) probabilities, ``> 1`` means
+      under-confident (too compressed — e.g. FedXGBllr, whose CNN collapses its
+      outputs toward 0 while still ranking well, so a large positive slope is the
+      correct, cleanly-converged diagnostic that the probabilities are far too
+      compressed, not a numerical artifact).
+    * **Calibration-in-the-large (reported as ``cal_intercept``)** — the
+      intercept ``a`` of a *slope-fixed-at-1* offset model
+      ``y ~ 1 + offset(logit(p))``, i.e. the shift solving
+      ``mean(sigmoid(logit(p) + a)) = mean(y)``. Following van Calster et al.'s
+      calibration hierarchy, this "are predictions right on average" number is
+      reported SEPARATELY from the slope because the joint-fit intercept is
+      coupled with the slope and is not independently interpretable (for a badly
+      under-dispersed model the joint intercept explodes to meaningless
+      magnitudes, e.g. 138, while calibration-in-the-large stays interpretable).
+      ``0`` = calibrated in the large; ``> 0`` = systematic *under*-prediction
+      (mean predicted below the event rate); ``< 0`` = *over*-prediction.
 
     ``is_probability=False`` (e.g. an SVM ``decision_function`` margin, which is
     NOT a probability) returns :data:`NA` for every field — a hinge-loss margin
@@ -148,16 +160,44 @@ def calibration_metrics(y_true, probs, is_probability: bool = True) -> Dict[str,
     try:
         from sklearn.linear_model import LogisticRegression
 
+        # Calibration SLOPE: coefficient b of the joint fit y ~ a + b·logit(p).
         # Unpenalised so the fit is a true recalibration, not shrunk toward 0.
         lr = LogisticRegression(penalty=None, solver="lbfgs", max_iter=1000)
         lr.fit(logit.reshape(-1, 1), y_true)
-        intercept = float(lr.intercept_[0])
         slope = float(lr.coef_[0][0])
+        # Calibration-in-the-large: intercept of the slope-fixed-at-1 offset model.
+        intercept = _calibration_in_the_large(logit, y_true)
     except Exception as exc:  # numerical failure — report Brier, NA the rest
         print(f"  [calibration] recalibration failed ({exc}); intercept/slope=NA")
         return {"brier": brier, "cal_intercept": NA, "cal_slope": NA}
 
     return {"brier": brier, "cal_intercept": intercept, "cal_slope": slope}
+
+
+def _calibration_in_the_large(logit: np.ndarray, y_true: np.ndarray) -> float:
+    """Intercept ``a`` of the slope-fixed-at-1 offset model ``y ~ 1 + offset(logit)``.
+
+    Solves ``mean(sigmoid(logit + a)) = mean(y)`` — the MLE first-order condition
+    for the intercept-only logistic model with ``logit(p)`` as a fixed offset.
+    ``mean(sigmoid(logit + a))`` is strictly increasing in ``a`` and brackets
+    ``mean(y) ∈ (0, 1)``, so a plain bisection is exact and dependency-free (no
+    scipy/statsmodels needed). Returns ``0`` when already calibrated in the large.
+    """
+    ybar = float(np.mean(y_true))
+    lo, hi = -50.0, 50.0
+
+    def mean_pred(a: float) -> float:
+        return float(np.mean(1.0 / (1.0 + np.exp(-(logit + a)))))
+
+    for _ in range(200):
+        mid = 0.5 * (lo + hi)
+        if mean_pred(mid) < ybar:
+            lo = mid
+        else:
+            hi = mid
+        if hi - lo < 1e-10:
+            break
+    return float(0.5 * (lo + hi))
 
 
 def calibration_for(y_test, test_scores, is_probability: bool) -> Dict[str, object]:

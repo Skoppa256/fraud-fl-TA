@@ -405,11 +405,16 @@ def serverside_eval(
     model.to(device)
 
     trees_aggregated = parameters[1]
-    # Capture the frozen final global model (CNN + trees) at the last round so the
-    # run script can persist the two-stage artifact for the SHAP phase.
-    if capture is not None and int(server_round) == int(cfg.run_experiment.num_rounds):
+    # Capture the frozen global model (CNN + trees) on EVERY evaluated round,
+    # overwriting, so the final capture always reflects the LAST EXECUTED round.
+    # Early stopping can end training before cfg.run_experiment.num_rounds (e.g.
+    # stop at round 12 of 20); keying the stash off the configured final index
+    # meant it never fired on any early-stopped run — which is every federated
+    # run — leaving persist_run with nothing (→ PERSISTENCE MISSING / failed_no_artifact).
+    if capture is not None and int(server_round) >= 1:
         capture["cnn"] = model
         capture["trees"] = trees_aggregated
+        capture["round"] = int(server_round)
     testloader = single_tree_preds_from_each_client(
         testloader,
         cfg.run_experiment.batch_size,

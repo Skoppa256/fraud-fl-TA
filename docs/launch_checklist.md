@@ -14,21 +14,27 @@
   confirmed (cache-consumed, model built, training) but CPU-slow to finish; its
   persist/calibration/hash wiring is byte-identical to FL BERT (verified
   end-to-end). The GPU box closes this.
-- [ ] **Smoke gate — one complete cell, end-to-end (MANDATORY before every launch).**
-  Runs the cheapest cell (centralized LR on creditcard, no-smote) exactly as the
-  runner invokes it — subprocess + real `wandb.init()` through
-  `WANDB_CONFIG_PATHS` — and fails loudly unless it produces BOTH a complete
-  results row (no empty metric columns) AND a loadable artifact:
+- [ ] **Smoke gate — two representative cells, end-to-end (MANDATORY before every launch).**
+  Runs two structurally different cells exactly as the runner invokes them —
+  subprocess + real `wandb.init()` through `WANDB_CONFIG_PATHS` — and fails
+  loudly unless EACH produces BOTH a complete results row (no empty metric
+  columns) AND a loadable artifact:
+    1. **centralized LR on creditcard** (argparse + sklearn-persist path), and
+    2. **federated FedXGBllr on creditcard, iid/no-smote** (the Hydra two-stage
+       path: per-client boosters + aggregator CNN, early-stop persistence
+       capture, CNN-probability calibration) — the LR cell never touches this.
 
   ```bash
   python experiments/run_sweep.py --smoke --offline
   ```
 
-  Exit 0 = PASS. This catches a sweep that goes green while silently producing
-  nothing — e.g. the flat-YAML `wandb.init()` crash that took down all 96 runs
-  (a `dict_from_config_file` `TypeError`), or a persistence regression. Field
-  presence alone is not enough; this exercises the real parser. The gate leaves
-  no byproducts you must keep — re-run it freely.
+  Exit 0 = PASS (~4–5 min, dominated by the FedXGBllr cell). Catches a sweep that
+  goes green while silently producing nothing — e.g. the flat-YAML `wandb.init()`
+  crash that took down all 96 runs (a `dict_from_config_file` `TypeError`), or the
+  early-stop persistence miss that failed every federated FedXGBllr run
+  (`failed_no_artifact`). A presence check alone is not enough; this exercises the
+  real parser and the real two-stage persistence. The gate leaves no byproducts
+  you must keep — re-run it freely.
 - [ ] **Timing probe (THIS BOX'S JOB).** See priority below.
 
 ## Timing-probe priority — BERT-on-PaySim (NOT a footnote)
