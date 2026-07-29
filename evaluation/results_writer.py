@@ -59,6 +59,10 @@ SUMMARY_COLUMNS: Sequence[str] = (
     "partition_hash",
     # Interpretation context (Part 4).
     "rounds_completed",
+    # GBM validation-set iteration selection: boosting-prefix length kept
+    # (max-AUPRC on central val). "n/a" for every non-GBM model. See
+    # models.gbm_bestmodel.iteration_selection.
+    "n_iter_selected",
     "n_clients_below_smote_floor",
     "baseline_auprc",
     "timestamp",
@@ -174,6 +178,7 @@ def write_fl_results(
     rounds_completed: object = "",
     n_clients_below_smote_floor: object = "",
     baseline_auprc: object = "",
+    n_iter_selected: object = "n/a",
 ) -> Dict[str, str]:
     """Write summary and per-round CSVs for a federated learning run.
 
@@ -242,6 +247,7 @@ def write_fl_results(
         "data_hash": data_hash,
         "partition_hash": partition_hash,
         "rounds_completed": rounds_completed,
+        "n_iter_selected": n_iter_selected,
         "n_clients_below_smote_floor": n_clients_below_smote_floor,
         "baseline_auprc": baseline_auprc,
         "timestamp": _utc_iso(),
@@ -293,6 +299,7 @@ def write_centralized_results(
     threshold_policy: str = "val_f1_tuned",
     threshold: object = "",
     baseline_auprc: object = "",
+    n_iter_selected: object = "n/a",
 ) -> Dict[str, str]:
     """Write a single-row summary CSV for a centralized baseline.
 
@@ -332,6 +339,7 @@ def write_centralized_results(
         "data_hash": data_hash,
         "partition_hash": "n/a (centralized)",
         "rounds_completed": "n/a",
+        "n_iter_selected": n_iter_selected,
         "n_clients_below_smote_floor": "n/a",
         "baseline_auprc": baseline_auprc,
         "timestamp": _utc_iso(),

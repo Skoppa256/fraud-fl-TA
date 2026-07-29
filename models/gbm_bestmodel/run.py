@@ -242,6 +242,7 @@ def run(cfg: dict):
         rounds_completed=len(state.get("history") or []),
         n_clients_below_smote_floor=n_below_floor,
         baseline_auprc=baseline_auprc(y_test),
+        n_iter_selected=state.get("n_iter_selected", "n/a"),
     )
 
     if wandb_run is not None:

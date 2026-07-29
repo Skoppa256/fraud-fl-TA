@@ -13,6 +13,7 @@ server for the round's centralized eval and any final-round test eval.
 
 from __future__ import annotations
 
+import hashlib
 from typing import Any, Dict, List, Optional, Tuple
 
 import flwr as fl
@@ -27,11 +28,11 @@ from flwr.common import (
 )
 from flwr.server.client_manager import ClientManager
 from flwr.server.client_proxy import ClientProxy
-from sklearn.metrics import average_precision_score
 
 from evaluation.metrics import best_f1_threshold, metrics_at_threshold, calibration_for
 
-from .client import array_to_model
+from .client import array_to_model, model_to_parameters
+from .iteration_selection import select_best_iteration, truncate_to_iterations
 from .server import new_early_stop_state, update_early_stop
 
 
@@ -71,6 +72,11 @@ class BestModelSelection(fl.server.strategy.Strategy):
         self.num_rounds: int = int(cfg["num_rounds"])
         self.patience: int = int(cfg.get("early_stop_patience", 10))
         self.state: Dict[str, Any] = new_early_stop_state()
+        # Validation-set iteration selection is cached by client-model bytes: the
+        # client retrains deterministically from scratch each round, so its model
+        # is byte-identical across rounds and the staged AUPRC scan (~20s on
+        # PaySim val) runs once per distinct model, not once per round.
+        self._iter_sel_cache: Dict[bytes, Tuple[int, np.ndarray, float, Any, Any]] = {}
 
     # ------------------------------------------------------------------ #
     # Initialization & client orchestration
@@ -208,21 +214,36 @@ class BestModelSelection(fl.server.strategy.Strategy):
                         "params": None,
                         "val_auprc": -1.0,
                         "scores": None,
+                        "n_iter_selected": "",
                         "skipped": True,
                     }
                 )
                 continue
             arrays = fl.common.parameters_to_ndarrays(fit_res.parameters)
-            model = array_to_model(arrays[0])
-            scores = model.predict_proba(self.x_val)[:, 1]
-            auprc = float(average_precision_score(self.y_val, scores))
+            # Validation-set iteration selection on the CENTRAL val set: keep the
+            # boosting prefix maximising AUPRC (same signal used across clients,
+            # here across iterations). Cached by model bytes so the ~20s staged
+            # scan runs once per distinct client model, not once per round;
+            # correctness is independent of the cache (a miss just recomputes).
+            key = hashlib.sha1(arrays[0].tobytes()).digest()
+            cached = self._iter_sel_cache.get(key)
+            if cached is None:
+                full_model = array_to_model(arrays[0])
+                k_star, scores, auprc = select_best_iteration(
+                    full_model, self.x_val, self.y_val
+                )
+                model_k = truncate_to_iterations(full_model, k_star)
+                cached = (k_star, scores, auprc, model_k, model_to_parameters(model_k))
+                self._iter_sel_cache[key] = cached
+            k_star, scores, auprc, model_k, params_k = cached
             per_client.append(
                 {
                     "client_id": client_id,
-                    "model": model,
-                    "params": fit_res.parameters,
+                    "model": model_k,
+                    "params": params_k,
                     "val_auprc": auprc,
                     "scores": scores,
+                    "n_iter_selected": k_star,
                     "skipped": False,
                 }
             )
@@ -283,6 +304,8 @@ class BestModelSelection(fl.server.strategy.Strategy):
             **calibration_for(self.y_test, test_scores, is_probability=True),
         }
         self.state["final_model"] = winner["model"]
+        # Boosting-prefix length of the persisted winner (central-val selected).
+        self.state["n_iter_selected"] = winner.get("n_iter_selected", "n/a")
         if self.wandb_run is not None:
             self.wandb_run.log(
                 {

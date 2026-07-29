@@ -35,6 +35,10 @@ from evaluation.results_writer import (
     build_centralized_run_name,
     write_centralized_results,
 )
+from models.gbm_bestmodel.iteration_selection import (
+    select_best_iteration,
+    truncate_to_iterations,
+)
 from preprocessing.loader import DATASETS, load_dataset
 from experiments.data_cache import get_preprocessed
 
@@ -197,9 +201,23 @@ def main() -> None:
         model.fit(x_train, y_train)
     train_time = time.time() - t0
 
-    val_scores = model.predict_proba(x_val)[:, 1]
+    # Validation-set iteration selection (Tabel 3.6): keep the boosting prefix
+    # that maximises AUPRC on the central validation set, then truncate to it.
+    # Per-arm adaptive — the no-SMOTE arm otherwise overfits the full 100-iter
+    # budget into saturated probabilities (see iteration_selection module).
+    n_full = int(model.n_iter_)
+    n_iter_selected, val_scores, sel_val_auprc = select_best_iteration(
+        model, x_val, y_val
+    )
+    model = truncate_to_iterations(model, n_iter_selected)
+    print(
+        f"Iteration selection: kept {n_iter_selected}/{n_full} iterations "
+        f"(val AUPRC {sel_val_auprc:.4f})"
+    )
+
     test_scores = model.predict_proba(x_test)[:, 1]
     # Tune the decision threshold on validation (max-F1), apply it to test.
+    # val_scores are already the selected-prefix scores from select_best_iteration.
     threshold, v, t = tuned_metrics(y_val, val_scores, y_test, test_scores)
 
     print(
@@ -241,6 +259,7 @@ def main() -> None:
         data_hash=data_hash,
         threshold=threshold,
         baseline_auprc=baseline_auprc(y_test),
+        n_iter_selected=n_iter_selected,
     )
 
     if wandb_run is not None:

@@ -1960,6 +1960,35 @@ berbasis pohon keputusan tidak dapat dirata-ratakan secara element-wise
 sebagaimana parameter numerik. Implementasi ini mengikuti formulasi yang
 diusulkan oleh #cite(<aljunaid2025>, form: "prose").
 
+*Seleksi Iterasi Berbasis Validation Set untuk GBM.* Setiap pelatihan GBM—baik
+baseline terpusat maupun setiap model client pada skema federated—menjalani
+seleksi iterasi (boosting prefix) pada validation set terpusat: model dilatih
+penuh hingga max_iter = 100, kemudian prefix boosting dengan AUPRC validation
+tertinggi dipertahankan ($k^*$ iterasi, $k^* lt.eq 100$). Mekanisme ini
+menggunakan sinyal yang sama dengan best-model selection—AUPRC pada validation
+set terpusat—namun diterapkan lintas-iterasi alih-alih lintas-client, sehingga
+bersifat adaptif terhadap masing-masing arm SMOTE. Selubung ekivalensi aditif
+boosting menjamin bahwa mempertahankan prefix $k^*$ identik dengan melatih ulang
+model pada max_iter = $k^*$, sehingga tidak ada pelatihan tambahan yang
+diperlukan. Jumlah iterasi terpilih dicatat pada kolom n_iter_selected setiap
+baris hasil.
+
+Justifikasi pemilihan mekanisme ini bersandar pada perbandingan dengan XGBoost.
+Pada arm tanpa SMOTE dengan imbalance ekstrem, budget 100 iterasi penuh membuat
+GBM overfit menjadi probabilitas jenuh (saturated) yang meruntuhkan ranking: pada
+ULB test AUPRC GBM runtuh ke 0,18, sedangkan XGBoost pada data yang identik—dengan
+50 pohon, subsample 0,8, dan eval_metric AUPRC—mencapai 0,84; pola yang sama namun
+lebih ekstrem teramati pada PaySim. Selisih ini merupakan artefak budget boosting,
+bukan temuan imbalance, sebagaimana ditegaskan oleh BAF: di sana GBM (0,161) telah
+setara dengan XGBoost (0,157) tanpa saturasi, dan seleksi iterasi tidak mengubah
+hasilnya. Seleksi berbasis validation set terpusat dipilih alih-alih opsi
+`early_stopping='auto'` bawaan pustaka, karena opsi tersebut memotong 10%
+validation holdout internal—sebuah split kedua tersembunyi di dalam salah satu
+dari enam model yang merusak jaminan komparabilitas lapisan cache/hash bersama—dan
+menurunkan performa arm SMOTE demi memperbaiki arm tanpa SMOTE. Sebaliknya, seleksi
+prefix pada validation set terpusat memakai sinyal yang sudah digunakan skema
+best-model selection dan tidak menambah split baru.
+
 *Accuracy-Weighted FedAvg untuk FFD dan BERT.* Kedua model deep learning, yaitu
 FFD yang berupa 1D Convolutional Neural Network dan BERT yang berupa tabular
 Transformer (FT-Transformer), diagregasi menggunakan varian FedAvg berbobot ganda
@@ -2036,6 +2065,7 @@ dan menghindari potensi bias akibat optimasi hyperparameter yang ekstensif.
       [max_iter (n_estimators)], [100],
       [learning_rate], [0,1],
       [max_depth], [6],
+      [Seleksi iterasi], [Validation-set (prefix pemaksimum AUPRC, $k^* lt.eq 100$)],
 
       table.cell(colspan: 2)[_FFD (1D-CNN)_],
       [Local epochs (E)], [5],
