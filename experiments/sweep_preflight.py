@@ -10,6 +10,7 @@ reads the real hardware; :func:`run_preflight` wires detection to the pure check
 
 from __future__ import annotations
 
+import os
 import shutil
 from typing import Dict, List, Optional, Sequence, Tuple
 
@@ -17,6 +18,110 @@ from experiments import resources as R
 
 GPU_MODELS = ("ffd", "bert_fraud", "fedxgbllr")
 _BYTES_PER_GIB = 1024 ** 3
+
+
+# --------------------------------------------------------------------------- #
+# Memory preflight — estimate per-actor RAM and warn when concurrency × footprint
+# exceeds physical RAM. Motivated by PaySim FedXGBllr OOM: 5 concurrent client
+# actors each materialising an ~890k×250 tree-margin tensor + XGBoost buffers
+# exceeded a 15 GB box, while ULB/BAF (4.5%/16% of PaySim rows) fit.
+# --------------------------------------------------------------------------- #
+def available_ram_bytes() -> int:
+    """Total physical RAM in bytes (psutil if present, else POSIX sysconf).
+
+    Returns ``0`` when it cannot be determined, so callers skip the check rather
+    than warn on a bad estimate."""
+    try:
+        import psutil
+
+        return int(psutil.virtual_memory().total)
+    except Exception:  # noqa: BLE001
+        try:
+            return int(os.sysconf("SC_PAGE_SIZE") * os.sysconf("SC_PHYS_PAGES"))
+        except (ValueError, OSError, AttributeError):
+            return 0
+
+
+def estimate_fl_actor_bytes(
+    model: str,
+    partition_rows: int,
+    n_features: int,
+    client_num: int = 5,
+    n_estimators_client: int = 50,
+) -> int:
+    """Heuristic peak resident bytes for ONE client actor, from its training
+    partition. Deliberately generous — a preflight that under-warns is useless.
+
+    FedXGBllr dominates because ``utils.single_tree_preds_from_each_client``
+    materialises a per-sample tree-margin tensor of width
+    ``client_num * n_estimators_client`` for the whole partition, on top of the
+    XGBoost DMatrix/quantile buffers.
+    """
+    row = 4  # float32
+    base = partition_rows * (n_features + 1) * row  # x-partition + y
+    if model == "fedxgbllr":
+        # Margin tensor (partition_rows × client_num·n_estimators_client) is the
+        # dominant term, held live through CNN autograd plus a DataLoader copy and
+        # alongside XGBoost DMatrix/quantile buffers → ×6. ``partition_rows`` is
+        # the LARGEST client's partition (peak actor), so this catches Dirichlet
+        # skew. Calibrated so the estimate tracks the actual peak at 5 concurrent
+        # actors on the 15 GB box: BAF iid (140k/client) ≈7.7 GiB fits, BAF α=0.5
+        # (391k largest) ≈16 GiB OOMs, PaySim (890k) OOMs; PaySim sequential
+        # (1 actor) ≈8.5 GiB fits. BAF α=1/α=5 (≤262k) stay under (no false alarm).
+        margin = partition_rows * (client_num * n_estimators_client) * row
+        return int(base * 3 + margin * 6)
+    if model == "gbm":
+        return int(base * 6)  # HistGBM histogram/binning buffers
+    if model in ("ffd", "bert_fraud"):
+        return int(base * 4)  # minibatch activations
+    return int(base * 3)  # lr / svm
+
+
+def memory_preflight(
+    *,
+    model: str,
+    max_partition_rows: int,
+    n_features: int,
+    n_concurrent: int,
+    client_num: int = 5,
+    n_estimators_client: int = 50,
+    available_bytes: Optional[int] = None,
+    fixed_overhead_bytes: Optional[int] = None,
+    safety: float = 0.85,
+) -> Tuple[int, int, bool, str]:
+    """Estimate peak RAM for ``n_concurrent`` client actors vs available RAM.
+
+    ``peak = fixed_overhead + n_concurrent × per_actor(max_partition_rows)``.
+    Sizing from the LARGEST client partition (not the mean) is essential under
+    Dirichlet skew: BAF iid completed at concurrency 5 while BAF α=0.5 OOM'd at
+    the same setting because its largest client held 391k of 700k rows. A
+    balanced (iid) partition has ``max == mean``, so this is a strict
+    generalisation. ``fixed_overhead`` covers the Ray object store (a per-run
+    reservation) plus a driver reserve. Returns
+    ``(peak_bytes, available_bytes, over_budget, message)``; ``over_budget`` is
+    ``False`` when RAM cannot be determined (``available_bytes == 0``)."""
+    if available_bytes is None:
+        available_bytes = available_ram_bytes()
+    if fixed_overhead_bytes is None:
+        try:
+            fixed_overhead_bytes = R.object_store_memory() + _BYTES_PER_GIB  # +1 GiB driver
+        except Exception:  # noqa: BLE001
+            fixed_overhead_bytes = 3 * _BYTES_PER_GIB
+    partition_rows = max(1, int(max_partition_rows))
+    per_actor = estimate_fl_actor_bytes(
+        model, partition_rows, n_features, client_num, n_estimators_client
+    )
+    peak = int(fixed_overhead_bytes) + per_actor * max(1, n_concurrent)
+    over = available_bytes > 0 and peak > safety * available_bytes
+    g = _BYTES_PER_GIB
+    msg = (
+        f"est. peak ~{peak / g:.1f} GiB "
+        f"({int(fixed_overhead_bytes) / g:.1f} GiB fixed + "
+        f"{max(1, n_concurrent)} actor(s) × ~{per_actor / g:.1f} GiB) "
+        f"vs {available_bytes / g:.1f} GiB RAM"
+        + ("" if available_bytes else " (RAM unknown — check skipped)")
+    )
+    return peak, available_bytes, over, msg
 
 
 def assert_gpu_capacity(

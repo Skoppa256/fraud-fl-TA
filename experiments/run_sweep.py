@@ -399,6 +399,69 @@ def _artifact_dir(spec: RunSpec) -> Path:
     return PROJECT_ROOT / "results" / "models" / spec.dataset / _child_run_name(spec)
 
 
+# FedXGBllr trees per client (conf/base.yaml n_estimators_client) — used only for
+# the memory-preflight footprint estimate.
+_N_ESTIMATORS_CLIENT = 50
+
+
+def _dataset_train_shape(dataset: str, seed: int) -> Optional[Tuple[int, int]]:
+    """(n_train_rows, n_features) from the preprocessing cache manifest, or None
+    if the cache is absent (the memory preflight is then skipped, not fatal)."""
+    import glob
+    import json
+    pat = str(PROJECT_ROOT / "results" / "cache" / "preprocessing"
+              / f"{dataset}_seed{seed}_*" / "manifest.json")
+    for m in glob.glob(pat):
+        try:
+            d = json.load(open(m))
+            am = d.get("arrays", d.get("arrays_meta", {}))
+            sh = am.get("x_train", {}).get("shape")
+            if sh and len(sh) == 2:
+                return int(sh[0]), int(sh[1])
+        except Exception:  # noqa: BLE001
+            continue
+    return None
+
+
+def _warn_if_memory_tight(spec: RunSpec, gpu_available: bool, gpu_fraction: float) -> None:
+    """Estimate per-cell peak RAM (concurrency × per-actor footprint) and warn
+    loudly when it risks a Ray OOM. Advisory only — never blocks a run."""
+    if spec.condition == "centralized":
+        return
+    shape = _dataset_train_shape(spec.dataset, spec.seed)
+    if shape is None:
+        return
+    _n_rows, n_feat = shape
+    # Size from the LARGEST client partition, not the mean — under Dirichlet the
+    # peak actor holds several× the mean and drives the OOM (BAF α=0.5: 391k of
+    # 700k). Falls back to the mean if partition sizes are unavailable.
+    try:
+        max_partition_rows = max(
+            data_cache.get_partition_sizes(
+                spec.dataset, spec.seed, spec.alpha, spec.condition, NUM_CLIENTS
+            )
+        )
+    except Exception:  # noqa: BLE001
+        max_partition_rows = _n_rows // NUM_CLIENTS
+    res = resources.for_model(spec.model, gpu_available=gpu_available)
+    if float(res["num_gpus"]) > 0.0:
+        # GPU actors serialise by their num_gpus fraction: ~floor(1/fraction).
+        n_concurrent = min(NUM_CLIENTS, max(1, int(1.0 / max(gpu_fraction, 1e-9))))
+    else:
+        cpus = os.cpu_count() or 2
+        n_concurrent = min(NUM_CLIENTS, max(1, cpus // max(1, int(res["num_cpus"]))))
+    _peak, _avail, over, msg = sweep_preflight.memory_preflight(
+        model=spec.model, max_partition_rows=max_partition_rows, n_features=n_feat,
+        n_concurrent=n_concurrent, client_num=NUM_CLIENTS,
+        n_estimators_client=_N_ESTIMATORS_CLIENT,
+    )
+    tag = "WARNING — risk of Ray OOM" if over else "ok"
+    print(f"[mem-preflight] {spec.run_name}: {msg} [{tag}]")
+    if over:
+        print("[mem-preflight] consider --gpu-fraction 1.0 (sequential) for this "
+              "cell, or a box with more RAM.")
+
+
 def _rounds_completed(spec: RunSpec) -> object:
     """Rounds actually run (early stopping ends at different rounds). From the
     child's per-round CSV; 'n/a' for centralized."""
@@ -472,6 +535,20 @@ def execute_run(spec: RunSpec, gpu_available: bool, offline: bool,
                 f"at {artifact_dir} — recording as failure.\n"
             )
 
+    # Defense-in-depth against a run that exits 0 but aggregated zero rounds (e.g.
+    # a swallowed Ray OOM). A federated run reporting rounds_completed==0 trained
+    # no model — treat as failure even if the child returned 0, independent of the
+    # entry point's own zero-round guard.
+    rounds_done = _rounds_completed(spec)
+    if (status == "success" and spec.condition != "centralized"
+            and isinstance(rounds_done, int) and rounds_done == 0):
+        status = "failed_zero_rounds"
+        with open(logf, "a") as fh:
+            fh.write(
+                "\n[runner] ZERO ROUNDS: run exited 0 but aggregated 0 rounds "
+                "(no model trained; likely actor OOM) — recording as failure.\n"
+            )
+
     wall = round(time.time() - t0, 1)
     rec = {
         "run_name": spec.run_name, "dataset": spec.dataset, "model": spec.model,
@@ -480,7 +557,7 @@ def execute_run(spec: RunSpec, gpu_available: bool, offline: bool,
         "status": status, "exit_code": exit_code, "wall_seconds": wall,
         "smote_inoperative": spec.smote_inoperative, "sub6_count": spec.sub6_count,
         "data_hash": data_hash, "partition_hash": partition_hash,
-        "rounds_completed": _rounds_completed(spec),
+        "rounds_completed": rounds_done,
         "aggregation": (
             "n/a (centralized); XGBoost (centralized upper bound)"
             if spec.condition == "centralized" and spec.model == "fedxgbllr"
@@ -697,6 +774,7 @@ def main(argv=None) -> int:
             continue
 
         print(f"[run] {spec.run_name}")
+        _warn_if_memory_tight(spec, gpu_available, gpu_fraction)
         rec = execute_run(spec, gpu_available, args.offline, use_wandb, data_hash, partition_hash)
         _append_master(rec)
         if rec["status"] == "success":

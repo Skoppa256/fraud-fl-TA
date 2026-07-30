@@ -5,8 +5,9 @@ model is going to be evaluated, etc. At the end, this script saves the results.
 """
 
 import functools
+import sys
 import time
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, NoReturn, Optional, Union
 
 import flwr as fl
 import hydra
@@ -130,6 +131,21 @@ def _build_history_state(
         "history": hist_rows,
         "final_test": final_test,
     }
+
+
+def _abort_no_successful_rounds(cfg: DictConfig, reason: str) -> NoReturn:
+    """Fail a run that produced no successfully-aggregated rounds: log the
+    reason, write NO results row / artifact, close wandb as failed, exit non-zero.
+
+    Guards against a zero-round run entering the results table as legitimate data
+    (Bug A) and against a silent Ray OOM masquerading as success (Bug B)."""
+    print(f"[main] RUN FAILED — {reason}. Writing NO results row and exiting non-zero.")
+    try:
+        if bool(OmegaConf.select(cfg, "use_wandb", default=False)):
+            wandb.finish(exit_code=1)
+    except Exception:  # noqa: BLE001 — never mask the failure with a wandb error
+        pass
+    sys.exit(1)
 
 
 @hydra.main(config_path="conf", config_name="base", version_base=None)
@@ -297,25 +313,56 @@ def main(cfg: DictConfig) -> None:
         print(f"[main] client_resources={client_resources} (from sweep_resources.yaml)")
 
         # Start the simulation
-        history = fl.simulation.start_simulation(
-            client_fn=client_fn,
-            server=FlServer(
-                cfg=cfg,
-                client_manager=SimpleClientManager(),
-                early_stopper=early_stopper,
+        # A total client failure (e.g. every actor OOM-killed by Ray) can either
+        # propagate out of start_simulation OR be swallowed, leaving an empty
+        # History. BOTH must become a non-zero-exit / write-nothing failure —
+        # never a NaN results row that looks legitimate. The try/except handles
+        # the propagated case; the rounds_completed==0 guard below handles the
+        # swallowed case.
+        try:
+            history = fl.simulation.start_simulation(
+                client_fn=client_fn,
+                server=FlServer(
+                    cfg=cfg,
+                    client_manager=SimpleClientManager(),
+                    early_stopper=early_stopper,
+                    strategy=strategy,
+                ),
+                num_clients=cfg.clients.client_num,
+                client_resources=client_resources,
+                config=ServerConfig(num_rounds=cfg.run_experiment.num_rounds),
                 strategy=strategy,
-            ),
-            num_clients=cfg.clients.client_num,
-            client_resources=client_resources,
-            config=ServerConfig(num_rounds=cfg.run_experiment.num_rounds),
-            strategy=strategy,
-            ray_init_args={
-                "num_gpus": torch.cuda.device_count(),
-                "object_store_memory": resources.object_store_memory(),
-            },
-        )
+                ray_init_args={
+                    "num_gpus": torch.cuda.device_count(),
+                    "object_store_memory": resources.object_store_memory(),
+                },
+            )
+        except Exception as exc:  # noqa: BLE001 — any sim abort is a run failure
+            _abort_no_successful_rounds(
+                cfg, reason=f"simulation aborted: {type(exc).__name__}: {exc}"
+            )
 
         print(history)
+
+        # Guard FIRST, before ANY results are written (upstream results.csv or the
+        # shared CSV): a run with zero successfully-aggregated rounds produced no
+        # model and no real metrics — writing a NaN row would poison the results
+        # table (and look legitimate if persistence happened to succeed). Fail
+        # loudly, write nothing, exit non-zero. Common cause here: Ray actor OOM.
+        duration_seconds = time.time() - t_start
+        state = _build_history_state(
+            history, num_rounds=int(cfg.run_experiment.num_rounds)
+        )
+        if len(state.get("history") or []) == 0:
+            _abort_no_successful_rounds(
+                cfg,
+                reason=(
+                    f"0/{int(cfg.run_experiment.num_rounds)} rounds aggregated "
+                    "successfully (no central-eval history) — every client likely "
+                    "OOM-killed; check log for ray.exceptions.OutOfMemoryError"
+                ),
+            )
+
         writer = ResultsWriter(cfg)
         print(
             "Best Result",
@@ -327,10 +374,6 @@ def main(cfg: DictConfig) -> None:
         writer.write_res("results.csv")
 
         # Shared structured CSV — same schema as the other models.
-        duration_seconds = time.time() - t_start
-        state = _build_history_state(
-            history, num_rounds=int(cfg.run_experiment.num_rounds)
-        )
         write_fl_results(
             model=CANONICAL_MODEL,
             dataset=str(cfg.dataset.dataset_name),

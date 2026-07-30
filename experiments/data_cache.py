@@ -292,6 +292,38 @@ def get_partition_indices(
     return indices, partition_hash
 
 
+def get_partition_sizes(
+    dataset: str,
+    seed: int,
+    alpha: Optional[float],
+    condition: str,
+    num_clients: int = 5,
+    cache_root: os.PathLike | str = CACHE_ROOT,
+) -> List[int]:
+    """Per-client training-sample counts for an iid/noniid partition.
+
+    Read straight from the partition manifest (``per_client[].n_samples``) — no
+    index arrays loaded — so callers can size a memory estimate from
+    ``max(...)`` cheaply. Under Dirichlet the largest client can hold several×
+    the mean (e.g. BAF α=0.5: 391k of 700k across 5 clients), and that largest
+    partition drives the peak actor footprint. Falls back to computing the
+    partition if the manifest is absent.
+    """
+    scheme, resolved_alpha = _condition_to_scheme(condition, alpha)
+    cfg = partition_config(dataset, seed, resolved_alpha, condition, num_clients)
+    d = _partition_dir(cfg, Path(cache_root))
+    manifest = d / "manifest.json"
+    if manifest.is_file():
+        m = json.loads(manifest.read_text())
+        per_client = m.get("per_client")
+        if per_client:
+            return [int(c["n_samples"]) for c in per_client]
+    indices, _ = get_partition_indices(
+        dataset, seed, alpha, condition, num_clients, cache_root
+    )
+    return [int(len(ix)) for ix in indices]
+
+
 def _save_partition(d: Path, indices: List[np.ndarray], y_train: np.ndarray,
                     cfg: dict, partition_hash: str) -> None:
     tmp = d.with_name(d.name + ".tmp")
