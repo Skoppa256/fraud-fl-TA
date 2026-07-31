@@ -1,0 +1,535 @@
+/home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/ray/_private/parameter.py:4: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools<81.
+  import pkg_resources
+/home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/hydra/_internal/defaults_list.py:251: UserWarning: In 'base': Defaults list is missing `_self_`. See https://hydra.cc/docs/1.2/upgrades/1.0_to_1.1/default_composition_order for more information
+  warnings.warn(msg, UserWarning)
+/home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/wandb/sdk/launch/builder/build.py:11: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools<81.
+  import pkg_resources
+wandb: Currently logged in as: deo250605 (deo250605-sepuluh-nopember-insitute-of-technology). Use `wandb login --relogin` to force relogin
+wandb: wandb version 0.28.0 is available!  To upgrade, please run:
+wandb:  $ pip install wandb --upgrade
+wandb: Tracking run with wandb version 0.15.12
+wandb: Run data is saved locally in /home/justin/fraud-fl-TA/wandb/run-20260709_170537-noomi8rs
+wandb: Run `wandb offline` to turn off syncing.
+wandb: Syncing run fedxgbllr_iid_alpha-_smote_seed42
+wandb: ⭐️ View project at https://wandb.ai/deo250605-sepuluh-nopember-insitute-of-technology/fraud-fl-TA
+wandb: 🚀 View run at https://wandb.ai/deo250605-sepuluh-nopember-insitute-of-technology/fraud-fl-TA/runs/noomi8rs
+WARNING flwr 2026-07-09 17:05:41,116 | app.py:210 | Both server and strategy were provided, ignoring strategy
+dataset:
+  task:
+    task_type: BINARY
+    metric:
+      name: Accuracy
+      fn:
+        _target_: torchmetrics.Accuracy
+        task: binary
+    criterion:
+      _target_: torch.nn.BCELoss
+    xgb:
+      _target_: xgboost.XGBClassifier
+      objective: binary:logistic
+  dataset_name: creditcard
+  train_ratio: 0.7
+  early_stop_patience_rounds: 10
+  oversampling:
+    method: smote
+    k_neighbors: 5
+    sampling_strategy: 0.01
+    base_seed: 42
+  non_iid:
+    enabled: false
+    alpha: 1.0
+clients:
+  n_estimators_client: 50
+  num_rounds: 50
+  client_num: 5
+  num_iterations: 50
+  xgb:
+    max_depth: 6
+  CNN:
+    lr: 0.0005
+wandb:
+  setup:
+    project: fraud-fl-TA
+    mode: online
+  watch:
+    log: all
+    log_freq: 100
+centralized: false
+use_wandb: true
+show_each_client_performance_on_its_local_data: false
+val_ratio: 0.0
+batch_size: whole
+n_estimators_client: ${clients.n_estimators_client}
+task_type: ${dataset.task.task_type}
+client_num: ${clients.client_num}
+random_seed: 42
+XGBoost:
+  _target_: ${dataset.task.xgb._target_}
+  objective: ${dataset.task.xgb.objective}
+  learning_rate: 0.1
+  max_depth: ${clients.xgb.max_depth}
+  n_estimators: ${clients.n_estimators_client}
+  subsample: 0.8
+  colsample_bylevel: 1
+  colsample_bynode: 1
+  colsample_bytree: 1
+  alpha: 5
+  gamma: 5
+  num_parallel_tree: 1
+  min_child_weight: 1
+server:
+  max_workers: None
+  device: cuda
+client_resources:
+  num_cpus: 10
+  num_gpus: 1.0
+strategy:
+  _target_: hfedxgboost.strategy.FedXgbNnAvg
+  _recursive_: true
+  fraction_fit: 1.0
+  fraction_evaluate: 0.0
+  min_fit_clients: 1
+  min_evaluate_clients: 1
+  min_available_clients: ${client_num}
+  accept_failures: false
+run_experiment:
+  num_rounds: 20
+  batch_size: 32
+  fraction_fit: 1.0
+  min_fit_clients: 1
+  fit_config:
+    num_iterations: ${clients.num_iterations}
+
+Dataset Name creditcard
+[creditcard] loading /home/justin/fraud-fl-TA/data/creditcard/creditcard.csv
+[creditcard] loaded 284,807 rows, 31 columns
+
+[creditcard] === data summary ===
+  total rows loaded : 284,807
+  feature count     : 30
+  feature names     : ['Time', 'V1', 'V2', 'V3', 'V4', 'V5', 'V6', 'V7', 'V8', 'V9', 'V10', 'V11', 'V12', 'V13', 'V14', 'V15', 'V16', 'V17', 'V18', 'V19', 'V20', 'V21', 'V22', 'V23', 'V24', 'V25', 'V26', 'V27', 'V28', 'Amount']
+  x_train: (199364, 30)  dtype=float32   |  y_train: (199364,)  dtype=int32
+  x_val  : (42721, 30)  dtype=float32   |  y_val  : (42721,)  dtype=int32
+  x_test : (42722, 30)  dtype=float32   |  y_test : (42722,)  dtype=int32
+  fraud in train: 344 / 199,364  (0.1725%)
+  fraud in val  : 74 / 42,721  (0.1732%)
+  fraud in test : 74 / 42,722  (0.1732%)
+[creditcard] === end summary ===
+
+Feature dimension of the dataset: 30
+Size of the trainset: 199364
+Size of the testset: 42722
+Fraud ratio in train data: 0.0017254870488152324
+Data partitioned across 5 clients and 0.0 of local dataset reserved for validation.
+FL experiment configured for 20 rounds with 5 client in the pool.
+[2026-07-09 17:05:41,116][flwr][WARNING] - Both server and strategy were provided, ignoring strategy
+INFO flwr 2026-07-09 17:05:41,117 | app.py:175 | Starting Flower simulation, config: ServerConfig(num_rounds=20, round_timeout=None)
+[2026-07-09 17:05:41,117][flwr][INFO] - Starting Flower simulation, config: ServerConfig(num_rounds=20, round_timeout=None)
+2026-07-09 17:05:42,768	INFO worker.py:1612 -- Started a local Ray instance. View the dashboard at [1m[32m127.0.0.1:8265 [39m[22m
+INFO flwr 2026-07-09 17:05:43,335 | app.py:210 | Flower VCE: Ray initialized with resources: {'CPU': 20.0, 'node:__internal_head__': 1.0, 'object_store_memory': 4064559513.0, 'memory': 8129119028.0, 'GPU': 1.0, 'node:172.24.108.56': 1.0}
+[2026-07-09 17:05:43,335][flwr][INFO] - Flower VCE: Ray initialized with resources: {'CPU': 20.0, 'node:__internal_head__': 1.0, 'object_store_memory': 4064559513.0, 'memory': 8129119028.0, 'GPU': 1.0, 'node:172.24.108.56': 1.0}
+INFO flwr 2026-07-09 17:05:43,335 | app.py:224 | Flower VCE: Resources for each Virtual Client: {'num_cpus': 10, 'num_gpus': 1.0}
+[2026-07-09 17:05:43,335][flwr][INFO] - Flower VCE: Resources for each Virtual Client: {'num_cpus': 10, 'num_gpus': 1.0}
+INFO flwr 2026-07-09 17:05:43,342 | app.py:270 | Flower VCE: Creating VirtualClientEngineActorPool with 1 actors
+[2026-07-09 17:05:43,342][flwr][INFO] - Flower VCE: Creating VirtualClientEngineActorPool with 1 actors
+INFO flwr 2026-07-09 17:05:43,343 | server.py:236 | Initializing global parameters
+[2026-07-09 17:05:43,343][flwr][INFO] - Initializing global parameters
+INFO flwr 2026-07-09 17:05:43,343 | server.py:350 | Requesting initial parameters from one random client
+[2026-07-09 17:05:43,343][flwr][INFO] - Requesting initial parameters from one random client
+[2m[33m(raylet)[0m /home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/ray/_private/parameter.py:4: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools<81.
+[2m[33m(raylet)[0m   import pkg_resources
+INFO flwr 2026-07-09 17:05:45,620 | server.py:354 | Received initial parameters from one random client
+[2026-07-09 17:05:45,620][flwr][INFO] - Received initial parameters from one random client
+INFO flwr 2026-07-09 17:05:45,620 | server.py:239 | Evaluating initial parameters
+[2026-07-09 17:05:45,620][flwr][INFO] - Evaluating initial parameters
+INFO flwr 2026-07-09 17:05:52,516 | server.py:242 | initial parameters (loss, other metrics): 0.005327741506171022, {'Accuracy': tensor(0.9983), 'test_auprc': tensor(0.5033), 'test_f1': tensor(0.5280), 'test_precision': tensor(0.6471), 'test_recall': tensor(0.4459), 'val_loss': tensor(0.0053), 'val_accuracy': tensor(0.9983), 'val_auprc': tensor(0.4479), 'val_f1': tensor(0.5692), 'val_precision': tensor(0.6607), 'val_recall': tensor(0.5000)}
+{} 0
+Evaluation on the server (val): val_loss=0.0053, val_auprc=0.4479, val_f1=0.5692, val_precision=0.6607, val_recall=0.5000
+Evaluation on the server: test_loss=0.0053, test_,Accuracy,=0.9983, thr=0.1677, auprc=0.5033, f1=0.5280, precision=0.6471, recall=0.4459
+[2026-07-09 17:05:52,516][flwr][INFO] - initial parameters (loss, other metrics): 0.005327741506171022, {'Accuracy': tensor(0.9983), 'test_auprc': tensor(0.5033), 'test_f1': tensor(0.5280), 'test_precision': tensor(0.6471), 'test_recall': tensor(0.4459), 'val_loss': tensor(0.0053), 'val_accuracy': tensor(0.9983), 'val_auprc': tensor(0.4479), 'val_f1': tensor(0.5692), 'val_precision': tensor(0.6607), 'val_recall': tensor(0.5000)}
+INFO flwr 2026-07-09 17:05:52,521 | server.py:252 | FL starting
+[2026-07-09 17:05:52,521][flwr][INFO] - FL starting
+DEBUG flwr 2026-07-09 17:05:52,522 | server.py:129 | fit_round 1: strategy sampled 5 clients (out of 5)
+Configuring round 1
+[2026-07-09 17:05:52,522][flwr][DEBUG] - fit_round 1: strategy sampled 5 clients (out of 5)
+DEBUG flwr 2026-07-09 17:06:01,209 | server.py:147 | fit_round 1 received 5 results and 0 failures
+[2m[36m(DefaultActor pid=1527393)[0m Client 2: only had its own tree
+[2m[36m(DefaultActor pid=1527393)[0m Client 2 : training for 50 iterations/updates
+[2m[36m(DefaultActor pid=1527393)[0m Client 2: training round complete, 1600 update-samples over 50 updates; reporting FedAvg weight N_k=39872 (pre-SMOTE local partition size)
+[2m[36m(DefaultActor pid=1527393)[0m Client 0: only had its own tree
+[2m[36m(DefaultActor pid=1527393)[0m Client 0 : training for 50 iterations/updates
+[2m[36m(DefaultActor pid=1527393)[0m Client 0: training round complete, 1600 update-samples over 50 updates; reporting FedAvg weight N_k=39872 (pre-SMOTE local partition size)
+[2m[36m(DefaultActor pid=1527393)[0m Client 1: only had its own tree
+[2m[36m(DefaultActor pid=1527393)[0m Client 1 : training for 50 iterations/updates
+[2m[36m(DefaultActor pid=1527393)[0m Client 1: training round complete, 1600 update-samples over 50 updates; reporting FedAvg weight N_k=39872 (pre-SMOTE local partition size)
+[2m[36m(DefaultActor pid=1527393)[0m Client 4: only had its own tree
+[2m[36m(DefaultActor pid=1527393)[0m Client 4 : training for 50 iterations/updates
+[2m[36m(DefaultActor pid=1527393)[0m Client 4: training round complete, 1600 update-samples over 50 updates; reporting FedAvg weight N_k=39876 (pre-SMOTE local partition size)
+[2m[36m(DefaultActor pid=1527393)[0m Client 3: only had its own tree
+[2m[36m(DefaultActor pid=1527393)[0m Client 3 : training for 50 iterations/updates
+[2m[36m(DefaultActor pid=1527393)[0m Client 3: training round complete, 1600 update-samples over 50 updates; reporting FedAvg weight N_k=39872 (pre-SMOTE local partition size)
+[2026-07-09 17:06:01,209][flwr][DEBUG] - fit_round 1 received 5 results and 0 failures
+WARNING flwr 2026-07-09 17:06:01,210 | strategy.py:91 | No fit_metrics_aggregation_fn provided
+[2026-07-09 17:06:01,210][flwr][WARNING] - No fit_metrics_aggregation_fn provided
+INFO flwr 2026-07-09 17:06:06,766 | server.py:202 | fit progress: (1, 0.0003764004979936954, {'Accuracy': tensor(0.9983), 'test_auprc': tensor(0.7328), 'test_f1': tensor(0.8120), 'test_precision': tensor(0.9153), 'test_recall': tensor(0.7297), 'val_loss': tensor(0.0004), 'val_accuracy': tensor(0.9983), 'val_auprc': tensor(0.7418), 'val_f1': tensor(0.7681), 'val_precision': tensor(0.8281), 'val_recall': tensor(0.7162)}, 14.24481599900173)
+Server side aggregated 5 trees.
+{} 1
+Evaluation on the server (val): val_loss=0.0004, val_auprc=0.7418, val_f1=0.7681, val_precision=0.8281, val_recall=0.7162
+Evaluation on the server: test_loss=0.0004, test_,Accuracy,=0.9983, thr=0.0039, auprc=0.7328, f1=0.8120, precision=0.9153, recall=0.7297
+[2026-07-09 17:06:06,766][flwr][INFO] - fit progress: (1, 0.0003764004979936954, {'Accuracy': tensor(0.9983), 'test_auprc': tensor(0.7328), 'test_f1': tensor(0.8120), 'test_precision': tensor(0.9153), 'test_recall': tensor(0.7297), 'val_loss': tensor(0.0004), 'val_accuracy': tensor(0.9983), 'val_auprc': tensor(0.7418), 'val_f1': tensor(0.7681), 'val_precision': tensor(0.8281), 'val_recall': tensor(0.7162)}, 14.24481599900173)
+INFO flwr 2026-07-09 17:06:06,770 | server.py:306 | evaluate_round 1: no clients selected, cancel
+New best loss value achieved, loss 0.0003764004979936954 metric value 0.9982678890228271
+[2026-07-09 17:06:06,770][flwr][INFO] - evaluate_round 1: no clients selected, cancel
+DEBUG flwr 2026-07-09 17:06:06,771 | server.py:129 | fit_round 2: strategy sampled 5 clients (out of 5)
+Configuring round 2
+[2026-07-09 17:06:06,771][flwr][DEBUG] - fit_round 2: strategy sampled 5 clients (out of 5)
+DEBUG flwr 2026-07-09 17:06:14,209 | server.py:147 | fit_round 2 received 5 results and 0 failures
+[2m[36m(DefaultActor pid=1527393)[0m Client 4: received 5 trees
+[2m[36m(DefaultActor pid=1527393)[0m Client 4 : training for 50 iterations/updates
+[2m[36m(DefaultActor pid=1527393)[0m Client 4: training round complete, 1600 update-samples over 50 updates; reporting FedAvg weight N_k=39876 (pre-SMOTE local partition size)
+[2m[36m(DefaultActor pid=1527393)[0m Client 3: received 5 trees
+[2m[36m(DefaultActor pid=1527393)[0m Client 3 : training for 50 iterations/updates
+[2m[36m(DefaultActor pid=1527393)[0m Client 3: training round complete, 1600 update-samples over 50 updates; reporting FedAvg weight N_k=39872 (pre-SMOTE local partition size)
+[2m[36m(DefaultActor pid=1527393)[0m Client 0: received 5 trees
+[2m[36m(DefaultActor pid=1527393)[0m Client 0 : training for 50 iterations/updates
+[2m[36m(DefaultActor pid=1527393)[0m Client 0: training round complete, 1600 update-samples over 50 updates; reporting FedAvg weight N_k=39872 (pre-SMOTE local partition size)
+[2m[36m(DefaultActor pid=1527393)[0m Client 2: received 5 trees
+[2m[36m(DefaultActor pid=1527393)[0m Client 2 : training for 50 iterations/updates
+[2m[36m(DefaultActor pid=1527393)[0m Client 2: training round complete, 1600 update-samples over 50 updates; reporting FedAvg weight N_k=39872 (pre-SMOTE local partition size)
+[2m[36m(DefaultActor pid=1527393)[0m Client 1: received 5 trees
+[2m[36m(DefaultActor pid=1527393)[0m Client 1 : training for 50 iterations/updates
+[2m[36m(DefaultActor pid=1527393)[0m Client 1: training round complete, 1600 update-samples over 50 updates; reporting FedAvg weight N_k=39872 (pre-SMOTE local partition size)
+[2026-07-09 17:06:14,209][flwr][DEBUG] - fit_round 2 received 5 results and 0 failures
+INFO flwr 2026-07-09 17:06:19,452 | server.py:202 | fit progress: (2, 0.00038979748973025304, {'Accuracy': tensor(0.9983), 'test_auprc': tensor(0.7725), 'test_f1': tensor(0.8029), 'test_precision': tensor(0.8730), 'test_recall': tensor(0.7432), 'val_loss': tensor(0.0004), 'val_accuracy': tensor(0.9983), 'val_auprc': tensor(0.7438), 'val_f1': tensor(0.7917), 'val_precision': tensor(0.8143), 'val_recall': tensor(0.7703)}, 26.93070725799771)
+Server side aggregated 5 trees.
+{} 2
+Evaluation on the server (val): val_loss=0.0004, val_auprc=0.7438, val_f1=0.7917, val_precision=0.8143, val_recall=0.7703
+Evaluation on the server: test_loss=0.0004, test_,Accuracy,=0.9983, thr=0.0009, auprc=0.7725, f1=0.8029, precision=0.8730, recall=0.7432
+[2026-07-09 17:06:19,452][flwr][INFO] - fit progress: (2, 0.00038979748973025304, {'Accuracy': tensor(0.9983), 'test_auprc': tensor(0.7725), 'test_f1': tensor(0.8029), 'test_precision': tensor(0.8730), 'test_recall': tensor(0.7432), 'val_loss': tensor(0.0004), 'val_accuracy': tensor(0.9983), 'val_auprc': tensor(0.7438), 'val_f1': tensor(0.7917), 'val_precision': tensor(0.8143), 'val_recall': tensor(0.7703)}, 26.93070725799771)
+INFO flwr 2026-07-09 17:06:19,455 | server.py:306 | evaluate_round 2: no clients selected, cancel
+[2026-07-09 17:06:19,455][flwr][INFO] - evaluate_round 2: no clients selected, cancel
+DEBUG flwr 2026-07-09 17:06:19,456 | server.py:129 | fit_round 3: strategy sampled 5 clients (out of 5)
+Configuring round 3
+[2026-07-09 17:06:19,456][flwr][DEBUG] - fit_round 3: strategy sampled 5 clients (out of 5)
+DEBUG flwr 2026-07-09 17:06:26,787 | server.py:147 | fit_round 3 received 5 results and 0 failures
+[2m[36m(DefaultActor pid=1527393)[0m Client 3: received 5 trees
+[2m[36m(DefaultActor pid=1527393)[0m Client 3 : training for 50 iterations/updates
+[2m[36m(DefaultActor pid=1527393)[0m Client 3: training round complete, 1600 update-samples over 50 updates; reporting FedAvg weight N_k=39872 (pre-SMOTE local partition size)
+[2m[36m(DefaultActor pid=1527393)[0m Client 4: received 5 trees
+[2m[36m(DefaultActor pid=1527393)[0m Client 4 : training for 50 iterations/updates
+[2m[36m(DefaultActor pid=1527393)[0m Client 4: training round complete, 1600 update-samples over 50 updates; reporting FedAvg weight N_k=39876 (pre-SMOTE local partition size)
+[2m[36m(DefaultActor pid=1527393)[0m Client 2: received 5 trees
+[2m[36m(DefaultActor pid=1527393)[0m Client 2 : training for 50 iterations/updates
+[2m[36m(DefaultActor pid=1527393)[0m Client 2: training round complete, 1600 update-samples over 50 updates; reporting FedAvg weight N_k=39872 (pre-SMOTE local partition size)
+[2m[36m(DefaultActor pid=1527393)[0m Client 0: received 5 trees
+[2m[36m(DefaultActor pid=1527393)[0m Client 0 : training for 50 iterations/updates
+[2m[36m(DefaultActor pid=1527393)[0m Client 0: training round complete, 1600 update-samples over 50 updates; reporting FedAvg weight N_k=39872 (pre-SMOTE local partition size)
+[2m[36m(DefaultActor pid=1527393)[0m Client 1: received 5 trees
+[2m[36m(DefaultActor pid=1527393)[0m Client 1 : training for 50 iterations/updates
+[2m[36m(DefaultActor pid=1527393)[0m Client 1: training round complete, 1600 update-samples over 50 updates; reporting FedAvg weight N_k=39872 (pre-SMOTE local partition size)
+[2026-07-09 17:06:26,787][flwr][DEBUG] - fit_round 3 received 5 results and 0 failures
+INFO flwr 2026-07-09 17:06:31,880 | server.py:202 | fit progress: (3, 0.00039614617880355974, {'Accuracy': tensor(0.9983), 'test_auprc': tensor(0.7544), 'test_f1': tensor(0.7862), 'test_precision': tensor(0.8028), 'test_recall': tensor(0.7703), 'val_loss': tensor(0.0004), 'val_accuracy': tensor(0.9983), 'val_auprc': tensor(0.7127), 'val_f1': tensor(0.7867), 'val_precision': tensor(0.7763), 'val_recall': tensor(0.7973)}, 39.358702479003114)
+Server side aggregated 5 trees.
+{} 3
+Evaluation on the server (val): val_loss=0.0004, val_auprc=0.7127, val_f1=0.7867, val_precision=0.7763, val_recall=0.7973
+Evaluation on the server: test_loss=0.0004, test_,Accuracy,=0.9983, thr=0.0008, auprc=0.7544, f1=0.7862, precision=0.8028, recall=0.7703
+[2026-07-09 17:06:31,880][flwr][INFO] - fit progress: (3, 0.00039614617880355974, {'Accuracy': tensor(0.9983), 'test_auprc': tensor(0.7544), 'test_f1': tensor(0.7862), 'test_precision': tensor(0.8028), 'test_recall': tensor(0.7703), 'val_loss': tensor(0.0004), 'val_accuracy': tensor(0.9983), 'val_auprc': tensor(0.7127), 'val_f1': tensor(0.7867), 'val_precision': tensor(0.7763), 'val_recall': tensor(0.7973)}, 39.358702479003114)
+INFO flwr 2026-07-09 17:06:31,883 | server.py:306 | evaluate_round 3: no clients selected, cancel
+[2026-07-09 17:06:31,883][flwr][INFO] - evaluate_round 3: no clients selected, cancel
+DEBUG flwr 2026-07-09 17:06:31,884 | server.py:129 | fit_round 4: strategy sampled 5 clients (out of 5)
+Configuring round 4
+[2026-07-09 17:06:31,884][flwr][DEBUG] - fit_round 4: strategy sampled 5 clients (out of 5)
+DEBUG flwr 2026-07-09 17:06:39,310 | server.py:147 | fit_round 4 received 5 results and 0 failures
+[2m[36m(DefaultActor pid=1527393)[0m Client 0: received 5 trees
+[2m[36m(DefaultActor pid=1527393)[0m Client 0 : training for 50 iterations/updates
+[2m[36m(DefaultActor pid=1527393)[0m Client 0: training round complete, 1600 update-samples over 50 updates; reporting FedAvg weight N_k=39872 (pre-SMOTE local partition size)
+[2m[36m(DefaultActor pid=1527393)[0m Client 4: received 5 trees
+[2m[36m(DefaultActor pid=1527393)[0m Client 4 : training for 50 iterations/updates
+[2m[36m(DefaultActor pid=1527393)[0m Client 4: training round complete, 1600 update-samples over 50 updates; reporting FedAvg weight N_k=39876 (pre-SMOTE local partition size)
+[2m[36m(DefaultActor pid=1527393)[0m Client 3: received 5 trees
+[2m[36m(DefaultActor pid=1527393)[0m Client 3 : training for 50 iterations/updates
+[2m[36m(DefaultActor pid=1527393)[0m Client 3: training round complete, 1600 update-samples over 50 updates; reporting FedAvg weight N_k=39872 (pre-SMOTE local partition size)
+[2m[36m(DefaultActor pid=1527393)[0m Client 1: received 5 trees
+[2m[36m(DefaultActor pid=1527393)[0m Client 1 : training for 50 iterations/updates
+[2m[36m(DefaultActor pid=1527393)[0m Client 1: training round complete, 1600 update-samples over 50 updates; reporting FedAvg weight N_k=39872 (pre-SMOTE local partition size)
+[2m[36m(DefaultActor pid=1527393)[0m Client 2: received 5 trees
+[2m[36m(DefaultActor pid=1527393)[0m Client 2 : training for 50 iterations/updates
+[2m[36m(DefaultActor pid=1527393)[0m Client 2: training round complete, 1600 update-samples over 50 updates; reporting FedAvg weight N_k=39872 (pre-SMOTE local partition size)
+[2026-07-09 17:06:39,310][flwr][DEBUG] - fit_round 4 received 5 results and 0 failures
+INFO flwr 2026-07-09 17:06:44,456 | server.py:202 | fit progress: (4, 0.0003770867838590945, {'Accuracy': tensor(0.9983), 'test_auprc': tensor(0.7745), 'test_f1': tensor(0.8209), 'test_precision': tensor(0.9167), 'test_recall': tensor(0.7432), 'val_loss': tensor(0.0004), 'val_accuracy': tensor(0.9983), 'val_auprc': tensor(0.7187), 'val_f1': tensor(0.7801), 'val_precision': tensor(0.8209), 'val_recall': tensor(0.7432)}, 51.93444369500503)
+Server side aggregated 5 trees.
+{} 4
+Evaluation on the server (val): val_loss=0.0004, val_auprc=0.7187, val_f1=0.7801, val_precision=0.8209, val_recall=0.7432
+Evaluation on the server: test_loss=0.0004, test_,Accuracy,=0.9983, thr=0.0016, auprc=0.7745, f1=0.8209, precision=0.9167, recall=0.7432
+[2026-07-09 17:06:44,456][flwr][INFO] - fit progress: (4, 0.0003770867838590945, {'Accuracy': tensor(0.9983), 'test_auprc': tensor(0.7745), 'test_f1': tensor(0.8209), 'test_precision': tensor(0.9167), 'test_recall': tensor(0.7432), 'val_loss': tensor(0.0004), 'val_accuracy': tensor(0.9983), 'val_auprc': tensor(0.7187), 'val_f1': tensor(0.7801), 'val_precision': tensor(0.8209), 'val_recall': tensor(0.7432)}, 51.93444369500503)
+INFO flwr 2026-07-09 17:06:44,458 | server.py:306 | evaluate_round 4: no clients selected, cancel
+[2026-07-09 17:06:44,458][flwr][INFO] - evaluate_round 4: no clients selected, cancel
+DEBUG flwr 2026-07-09 17:06:44,459 | server.py:129 | fit_round 5: strategy sampled 5 clients (out of 5)
+Configuring round 5
+[2026-07-09 17:06:44,459][flwr][DEBUG] - fit_round 5: strategy sampled 5 clients (out of 5)
+DEBUG flwr 2026-07-09 17:06:51,806 | server.py:147 | fit_round 5 received 5 results and 0 failures
+[2m[36m(DefaultActor pid=1527393)[0m Client 2: received 5 trees
+[2m[36m(DefaultActor pid=1527393)[0m Client 2 : training for 50 iterations/updates
+[2m[36m(DefaultActor pid=1527393)[0m Client 2: training round complete, 1600 update-samples over 50 updates; reporting FedAvg weight N_k=39872 (pre-SMOTE local partition size)
+[2m[36m(DefaultActor pid=1527393)[0m Client 1: received 5 trees
+[2m[36m(DefaultActor pid=1527393)[0m Client 1 : training for 50 iterations/updates
+[2m[36m(DefaultActor pid=1527393)[0m Client 1: training round complete, 1600 update-samples over 50 updates; reporting FedAvg weight N_k=39872 (pre-SMOTE local partition size)
+[2m[36m(DefaultActor pid=1527393)[0m Client 3: received 5 trees
+[2m[36m(DefaultActor pid=1527393)[0m Client 3 : training for 50 iterations/updates
+[2m[36m(DefaultActor pid=1527393)[0m Client 3: training round complete, 1600 update-samples over 50 updates; reporting FedAvg weight N_k=39872 (pre-SMOTE local partition size)
+[2m[36m(DefaultActor pid=1527393)[0m Client 0: received 5 trees
+[2m[36m(DefaultActor pid=1527393)[0m Client 0 : training for 50 iterations/updates
+[2m[36m(DefaultActor pid=1527393)[0m Client 0: training round complete, 1600 update-samples over 50 updates; reporting FedAvg weight N_k=39872 (pre-SMOTE local partition size)
+[2m[36m(DefaultActor pid=1527393)[0m Client 4: received 5 trees
+[2m[36m(DefaultActor pid=1527393)[0m Client 4 : training for 50 iterations/updates
+[2m[36m(DefaultActor pid=1527393)[0m Client 4: training round complete, 1600 update-samples over 50 updates; reporting FedAvg weight N_k=39876 (pre-SMOTE local partition size)
+[2026-07-09 17:06:51,806][flwr][DEBUG] - fit_round 5 received 5 results and 0 failures
+INFO flwr 2026-07-09 17:06:56,880 | server.py:202 | fit progress: (5, 0.0003787407347213006, {'Accuracy': tensor(0.9983), 'test_auprc': tensor(0.7550), 'test_f1': tensor(0.8261), 'test_precision': tensor(0.8906), 'test_recall': tensor(0.7703), 'val_loss': tensor(0.0004), 'val_accuracy': tensor(0.9983), 'val_auprc': tensor(0.6614), 'val_f1': tensor(0.7832), 'val_precision': tensor(0.8116), 'val_recall': tensor(0.7568)}, 64.35847229300998)
+Server side aggregated 5 trees.
+{} 5
+Evaluation on the server (val): val_loss=0.0004, val_auprc=0.6614, val_f1=0.7832, val_precision=0.8116, val_recall=0.7568
+Evaluation on the server: test_loss=0.0004, test_,Accuracy,=0.9983, thr=0.0014, auprc=0.7550, f1=0.8261, precision=0.8906, recall=0.7703
+[2026-07-09 17:06:56,880][flwr][INFO] - fit progress: (5, 0.0003787407347213006, {'Accuracy': tensor(0.9983), 'test_auprc': tensor(0.7550), 'test_f1': tensor(0.8261), 'test_precision': tensor(0.8906), 'test_recall': tensor(0.7703), 'val_loss': tensor(0.0004), 'val_accuracy': tensor(0.9983), 'val_auprc': tensor(0.6614), 'val_f1': tensor(0.7832), 'val_precision': tensor(0.8116), 'val_recall': tensor(0.7568)}, 64.35847229300998)
+INFO flwr 2026-07-09 17:06:56,883 | server.py:306 | evaluate_round 5: no clients selected, cancel
+[2026-07-09 17:06:56,883][flwr][INFO] - evaluate_round 5: no clients selected, cancel
+DEBUG flwr 2026-07-09 17:06:56,883 | server.py:129 | fit_round 6: strategy sampled 5 clients (out of 5)
+Configuring round 6
+[2026-07-09 17:06:56,883][flwr][DEBUG] - fit_round 6: strategy sampled 5 clients (out of 5)
+DEBUG flwr 2026-07-09 17:07:04,260 | server.py:147 | fit_round 6 received 5 results and 0 failures
+[2m[36m(DefaultActor pid=1527393)[0m Client 3: received 5 trees
+[2m[36m(DefaultActor pid=1527393)[0m Client 3 : training for 50 iterations/updates
+[2m[36m(DefaultActor pid=1527393)[0m Client 3: training round complete, 1600 update-samples over 50 updates; reporting FedAvg weight N_k=39872 (pre-SMOTE local partition size)
+[2m[36m(DefaultActor pid=1527393)[0m Client 1: received 5 trees
+[2m[36m(DefaultActor pid=1527393)[0m Client 1 : training for 50 iterations/updates
+[2m[36m(DefaultActor pid=1527393)[0m Client 1: training round complete, 1600 update-samples over 50 updates; reporting FedAvg weight N_k=39872 (pre-SMOTE local partition size)
+[2m[36m(DefaultActor pid=1527393)[0m Client 2: received 5 trees
+[2m[36m(DefaultActor pid=1527393)[0m Client 2 : training for 50 iterations/updates
+[2m[36m(DefaultActor pid=1527393)[0m Client 2: training round complete, 1600 update-samples over 50 updates; reporting FedAvg weight N_k=39872 (pre-SMOTE local partition size)
+[2m[36m(DefaultActor pid=1527393)[0m Client 0: received 5 trees
+[2m[36m(DefaultActor pid=1527393)[0m Client 0 : training for 50 iterations/updates
+[2m[36m(DefaultActor pid=1527393)[0m Client 0: training round complete, 1600 update-samples over 50 updates; reporting FedAvg weight N_k=39872 (pre-SMOTE local partition size)
+[2m[36m(DefaultActor pid=1527393)[0m Client 4: received 5 trees
+[2m[36m(DefaultActor pid=1527393)[0m Client 4 : training for 50 iterations/updates
+[2m[36m(DefaultActor pid=1527393)[0m Client 4: training round complete, 1600 update-samples over 50 updates; reporting FedAvg weight N_k=39876 (pre-SMOTE local partition size)
+[2026-07-09 17:07:04,260][flwr][DEBUG] - fit_round 6 received 5 results and 0 failures
+INFO flwr 2026-07-09 17:07:09,327 | server.py:202 | fit progress: (6, 0.0003947906229315469, {'Accuracy': tensor(0.9983), 'test_auprc': tensor(0.7401), 'test_f1': tensor(0.8116), 'test_precision': tensor(0.8750), 'test_recall': tensor(0.7568), 'val_loss': tensor(0.0004), 'val_accuracy': tensor(0.9983), 'val_auprc': tensor(0.7278), 'val_f1': tensor(0.7945), 'val_precision': tensor(0.8056), 'val_recall': tensor(0.7838)}, 76.80585006599722)
+Server side aggregated 5 trees.
+{} 6
+Evaluation on the server (val): val_loss=0.0004, val_auprc=0.7278, val_f1=0.7945, val_precision=0.8056, val_recall=0.7838
+Evaluation on the server: test_loss=0.0004, test_,Accuracy,=0.9983, thr=0.0008, auprc=0.7401, f1=0.8116, precision=0.8750, recall=0.7568
+[2026-07-09 17:07:09,327][flwr][INFO] - fit progress: (6, 0.0003947906229315469, {'Accuracy': tensor(0.9983), 'test_auprc': tensor(0.7401), 'test_f1': tensor(0.8116), 'test_precision': tensor(0.8750), 'test_recall': tensor(0.7568), 'val_loss': tensor(0.0004), 'val_accuracy': tensor(0.9983), 'val_auprc': tensor(0.7278), 'val_f1': tensor(0.7945), 'val_precision': tensor(0.8056), 'val_recall': tensor(0.7838)}, 76.80585006599722)
+INFO flwr 2026-07-09 17:07:09,331 | server.py:306 | evaluate_round 6: no clients selected, cancel
+[2026-07-09 17:07:09,331][flwr][INFO] - evaluate_round 6: no clients selected, cancel
+DEBUG flwr 2026-07-09 17:07:09,331 | server.py:129 | fit_round 7: strategy sampled 5 clients (out of 5)
+Configuring round 7
+[2026-07-09 17:07:09,331][flwr][DEBUG] - fit_round 7: strategy sampled 5 clients (out of 5)
+DEBUG flwr 2026-07-09 17:07:16,655 | server.py:147 | fit_round 7 received 5 results and 0 failures
+[2m[36m(DefaultActor pid=1527393)[0m Client 4: received 5 trees
+[2m[36m(DefaultActor pid=1527393)[0m Client 4 : training for 50 iterations/updates
+[2m[36m(DefaultActor pid=1527393)[0m Client 4: training round complete, 1600 update-samples over 50 updates; reporting FedAvg weight N_k=39876 (pre-SMOTE local partition size)
+[2m[36m(DefaultActor pid=1527393)[0m Client 0: received 5 trees
+[2m[36m(DefaultActor pid=1527393)[0m Client 0 : training for 50 iterations/updates
+[2m[36m(DefaultActor pid=1527393)[0m Client 0: training round complete, 1600 update-samples over 50 updates; reporting FedAvg weight N_k=39872 (pre-SMOTE local partition size)
+[2m[36m(DefaultActor pid=1527393)[0m Client 1: received 5 trees
+[2m[36m(DefaultActor pid=1527393)[0m Client 1 : training for 50 iterations/updates
+[2m[36m(DefaultActor pid=1527393)[0m Client 1: training round complete, 1600 update-samples over 50 updates; reporting FedAvg weight N_k=39872 (pre-SMOTE local partition size)
+[2m[36m(DefaultActor pid=1527393)[0m Client 3: received 5 trees
+[2m[36m(DefaultActor pid=1527393)[0m Client 3 : training for 50 iterations/updates
+[2m[36m(DefaultActor pid=1527393)[0m Client 3: training round complete, 1600 update-samples over 50 updates; reporting FedAvg weight N_k=39872 (pre-SMOTE local partition size)
+[2m[36m(DefaultActor pid=1527393)[0m Client 2: received 5 trees
+[2m[36m(DefaultActor pid=1527393)[0m Client 2 : training for 50 iterations/updates
+[2m[36m(DefaultActor pid=1527393)[0m Client 2: training round complete, 1600 update-samples over 50 updates; reporting FedAvg weight N_k=39872 (pre-SMOTE local partition size)
+[2026-07-09 17:07:16,655][flwr][DEBUG] - fit_round 7 received 5 results and 0 failures
+INFO flwr 2026-07-09 17:07:21,683 | server.py:202 | fit progress: (7, 0.0003830221456745195, {'Accuracy': tensor(0.9983), 'test_auprc': tensor(0.8002), 'test_f1': tensor(0.8060), 'test_precision': tensor(0.9000), 'test_recall': tensor(0.7297), 'val_loss': tensor(0.0004), 'val_accuracy': tensor(0.9983), 'val_auprc': tensor(0.7791), 'val_f1': tensor(0.7943), 'val_precision': tensor(0.8358), 'val_recall': tensor(0.7568)}, 89.16220558500208)
+Server side aggregated 5 trees.
+{} 7
+Evaluation on the server (val): val_loss=0.0004, val_auprc=0.7791, val_f1=0.7943, val_precision=0.8358, val_recall=0.7568
+Evaluation on the server: test_loss=0.0004, test_,Accuracy,=0.9983, thr=0.0012, auprc=0.8002, f1=0.8060, precision=0.9000, recall=0.7297
+[2026-07-09 17:07:21,683][flwr][INFO] - fit progress: (7, 0.0003830221456745195, {'Accuracy': tensor(0.9983), 'test_auprc': tensor(0.8002), 'test_f1': tensor(0.8060), 'test_precision': tensor(0.9000), 'test_recall': tensor(0.7297), 'val_loss': tensor(0.0004), 'val_accuracy': tensor(0.9983), 'val_auprc': tensor(0.7791), 'val_f1': tensor(0.7943), 'val_precision': tensor(0.8358), 'val_recall': tensor(0.7568)}, 89.16220558500208)
+INFO flwr 2026-07-09 17:07:21,686 | server.py:306 | evaluate_round 7: no clients selected, cancel
+[2026-07-09 17:07:21,686][flwr][INFO] - evaluate_round 7: no clients selected, cancel
+DEBUG flwr 2026-07-09 17:07:21,687 | server.py:129 | fit_round 8: strategy sampled 5 clients (out of 5)
+Configuring round 8
+[2026-07-09 17:07:21,687][flwr][DEBUG] - fit_round 8: strategy sampled 5 clients (out of 5)
+DEBUG flwr 2026-07-09 17:07:28,988 | server.py:147 | fit_round 8 received 5 results and 0 failures
+[2m[36m(DefaultActor pid=1527393)[0m Client 4: received 5 trees
+[2m[36m(DefaultActor pid=1527393)[0m Client 4 : training for 50 iterations/updates
+[2m[36m(DefaultActor pid=1527393)[0m Client 4: training round complete, 1600 update-samples over 50 updates; reporting FedAvg weight N_k=39876 (pre-SMOTE local partition size)
+[2m[36m(DefaultActor pid=1527393)[0m Client 0: received 5 trees
+[2m[36m(DefaultActor pid=1527393)[0m Client 0 : training for 50 iterations/updates
+[2m[36m(DefaultActor pid=1527393)[0m Client 0: training round complete, 1600 update-samples over 50 updates; reporting FedAvg weight N_k=39872 (pre-SMOTE local partition size)
+[2m[36m(DefaultActor pid=1527393)[0m Client 2: received 5 trees
+[2m[36m(DefaultActor pid=1527393)[0m Client 2 : training for 50 iterations/updates
+[2m[36m(DefaultActor pid=1527393)[0m Client 2: training round complete, 1600 update-samples over 50 updates; reporting FedAvg weight N_k=39872 (pre-SMOTE local partition size)
+[2m[36m(DefaultActor pid=1527393)[0m Client 3: received 5 trees
+[2m[36m(DefaultActor pid=1527393)[0m Client 3 : training for 50 iterations/updates
+[2m[36m(DefaultActor pid=1527393)[0m Client 3: training round complete, 1600 update-samples over 50 updates; reporting FedAvg weight N_k=39872 (pre-SMOTE local partition size)
+[2m[36m(DefaultActor pid=1527393)[0m Client 1: received 5 trees
+[2m[36m(DefaultActor pid=1527393)[0m Client 1 : training for 50 iterations/updates
+[2m[36m(DefaultActor pid=1527393)[0m Client 1: training round complete, 1600 update-samples over 50 updates; reporting FedAvg weight N_k=39872 (pre-SMOTE local partition size)
+[2026-07-09 17:07:28,988][flwr][DEBUG] - fit_round 8 received 5 results and 0 failures
+INFO flwr 2026-07-09 17:07:34,019 | server.py:202 | fit progress: (8, 0.00039986873272884494, {'Accuracy': tensor(0.9983), 'test_auprc': tensor(0.7964), 'test_f1': tensor(0.7917), 'test_precision': tensor(0.8143), 'test_recall': tensor(0.7703), 'val_loss': tensor(0.0004), 'val_accuracy': tensor(0.9983), 'val_auprc': tensor(0.7644), 'val_f1': tensor(0.7947), 'val_precision': tensor(0.7792), 'val_recall': tensor(0.8108)}, 101.49794213399582)
+Server side aggregated 5 trees.
+{} 8
+Evaluation on the server (val): val_loss=0.0004, val_auprc=0.7644, val_f1=0.7947, val_precision=0.7792, val_recall=0.8108
+Evaluation on the server: test_loss=0.0004, test_,Accuracy,=0.9983, thr=0.0007, auprc=0.7964, f1=0.7917, precision=0.8143, recall=0.7703
+[2026-07-09 17:07:34,019][flwr][INFO] - fit progress: (8, 0.00039986873272884494, {'Accuracy': tensor(0.9983), 'test_auprc': tensor(0.7964), 'test_f1': tensor(0.7917), 'test_precision': tensor(0.8143), 'test_recall': tensor(0.7703), 'val_loss': tensor(0.0004), 'val_accuracy': tensor(0.9983), 'val_auprc': tensor(0.7644), 'val_f1': tensor(0.7947), 'val_precision': tensor(0.7792), 'val_recall': tensor(0.8108)}, 101.49794213399582)
+INFO flwr 2026-07-09 17:07:34,023 | server.py:306 | evaluate_round 8: no clients selected, cancel
+[2026-07-09 17:07:34,023][flwr][INFO] - evaluate_round 8: no clients selected, cancel
+DEBUG flwr 2026-07-09 17:07:34,024 | server.py:129 | fit_round 9: strategy sampled 5 clients (out of 5)
+Configuring round 9
+[2026-07-09 17:07:34,024][flwr][DEBUG] - fit_round 9: strategy sampled 5 clients (out of 5)
+DEBUG flwr 2026-07-09 17:07:41,379 | server.py:147 | fit_round 9 received 5 results and 0 failures
+[2m[36m(DefaultActor pid=1527393)[0m Client 1: received 5 trees
+[2m[36m(DefaultActor pid=1527393)[0m Client 1 : training for 50 iterations/updates
+[2m[36m(DefaultActor pid=1527393)[0m Client 1: training round complete, 1600 update-samples over 50 updates; reporting FedAvg weight N_k=39872 (pre-SMOTE local partition size)
+[2m[36m(DefaultActor pid=1527393)[0m Client 2: received 5 trees
+[2m[36m(DefaultActor pid=1527393)[0m Client 2 : training for 50 iterations/updates
+[2m[36m(DefaultActor pid=1527393)[0m Client 2: training round complete, 1600 update-samples over 50 updates; reporting FedAvg weight N_k=39872 (pre-SMOTE local partition size)
+[2m[36m(DefaultActor pid=1527393)[0m Client 0: received 5 trees
+[2m[36m(DefaultActor pid=1527393)[0m Client 0 : training for 50 iterations/updates
+[2m[36m(DefaultActor pid=1527393)[0m Client 0: training round complete, 1600 update-samples over 50 updates; reporting FedAvg weight N_k=39872 (pre-SMOTE local partition size)
+[2m[36m(DefaultActor pid=1527393)[0m Client 4: received 5 trees
+[2m[36m(DefaultActor pid=1527393)[0m Client 4 : training for 50 iterations/updates
+[2m[36m(DefaultActor pid=1527393)[0m Client 4: training round complete, 1600 update-samples over 50 updates; reporting FedAvg weight N_k=39876 (pre-SMOTE local partition size)
+[2m[36m(DefaultActor pid=1527393)[0m Client 3: received 5 trees
+[2m[36m(DefaultActor pid=1527393)[0m Client 3 : training for 50 iterations/updates
+[2m[36m(DefaultActor pid=1527393)[0m Client 3: training round complete, 1600 update-samples over 50 updates; reporting FedAvg weight N_k=39872 (pre-SMOTE local partition size)
+[2026-07-09 17:07:41,379][flwr][DEBUG] - fit_round 9 received 5 results and 0 failures
+INFO flwr 2026-07-09 17:07:46,692 | server.py:202 | fit progress: (9, 0.0004037862625098461, {'Accuracy': tensor(0.9983), 'test_auprc': tensor(0.7211), 'test_f1': tensor(0.8029), 'test_precision': tensor(0.8730), 'test_recall': tensor(0.7432), 'val_loss': tensor(0.0004), 'val_accuracy': tensor(0.9983), 'val_auprc': tensor(0.7392), 'val_f1': tensor(0.8056), 'val_precision': tensor(0.8286), 'val_recall': tensor(0.7838)}, 114.17049811899778)
+Server side aggregated 5 trees.
+{} 9
+Evaluation on the server (val): val_loss=0.0004, val_auprc=0.7392, val_f1=0.8056, val_precision=0.8286, val_recall=0.7838
+Evaluation on the server: test_loss=0.0004, test_,Accuracy,=0.9983, thr=0.0006, auprc=0.7211, f1=0.8029, precision=0.8730, recall=0.7432
+[2026-07-09 17:07:46,692][flwr][INFO] - fit progress: (9, 0.0004037862625098461, {'Accuracy': tensor(0.9983), 'test_auprc': tensor(0.7211), 'test_f1': tensor(0.8029), 'test_precision': tensor(0.8730), 'test_recall': tensor(0.7432), 'val_loss': tensor(0.0004), 'val_accuracy': tensor(0.9983), 'val_auprc': tensor(0.7392), 'val_f1': tensor(0.8056), 'val_precision': tensor(0.8286), 'val_recall': tensor(0.7838)}, 114.17049811899778)
+INFO flwr 2026-07-09 17:07:46,695 | server.py:306 | evaluate_round 9: no clients selected, cancel
+[2026-07-09 17:07:46,695][flwr][INFO] - evaluate_round 9: no clients selected, cancel
+DEBUG flwr 2026-07-09 17:07:46,696 | server.py:129 | fit_round 10: strategy sampled 5 clients (out of 5)
+Configuring round 10
+[2026-07-09 17:07:46,696][flwr][DEBUG] - fit_round 10: strategy sampled 5 clients (out of 5)
+DEBUG flwr 2026-07-09 17:07:54,093 | server.py:147 | fit_round 10 received 5 results and 0 failures
+[2m[36m(DefaultActor pid=1527393)[0m Client 0: received 5 trees
+[2m[36m(DefaultActor pid=1527393)[0m Client 0 : training for 50 iterations/updates
+[2m[36m(DefaultActor pid=1527393)[0m Client 0: training round complete, 1600 update-samples over 50 updates; reporting FedAvg weight N_k=39872 (pre-SMOTE local partition size)
+[2m[36m(DefaultActor pid=1527393)[0m Client 4: received 5 trees
+[2m[36m(DefaultActor pid=1527393)[0m Client 4 : training for 50 iterations/updates
+[2m[36m(DefaultActor pid=1527393)[0m Client 4: training round complete, 1600 update-samples over 50 updates; reporting FedAvg weight N_k=39876 (pre-SMOTE local partition size)
+[2m[36m(DefaultActor pid=1527393)[0m Client 2: received 5 trees
+[2m[36m(DefaultActor pid=1527393)[0m Client 2 : training for 50 iterations/updates
+[2m[36m(DefaultActor pid=1527393)[0m Client 2: training round complete, 1600 update-samples over 50 updates; reporting FedAvg weight N_k=39872 (pre-SMOTE local partition size)
+[2m[36m(DefaultActor pid=1527393)[0m Client 3: received 5 trees
+[2m[36m(DefaultActor pid=1527393)[0m Client 3 : training for 50 iterations/updates
+[2m[36m(DefaultActor pid=1527393)[0m Client 3: training round complete, 1600 update-samples over 50 updates; reporting FedAvg weight N_k=39872 (pre-SMOTE local partition size)
+[2m[36m(DefaultActor pid=1527393)[0m Client 1: received 5 trees
+[2m[36m(DefaultActor pid=1527393)[0m Client 1 : training for 50 iterations/updates
+[2m[36m(DefaultActor pid=1527393)[0m Client 1: training round complete, 1600 update-samples over 50 updates; reporting FedAvg weight N_k=39872 (pre-SMOTE local partition size)
+[2026-07-09 17:07:54,093][flwr][DEBUG] - fit_round 10 received 5 results and 0 failures
+INFO flwr 2026-07-09 17:07:59,698 | server.py:202 | fit progress: (10, 0.0004388183922918789, {'Accuracy': tensor(0.9983), 'test_auprc': tensor(0.7889), 'test_f1': tensor(0.8235), 'test_precision': tensor(0.9032), 'test_recall': tensor(0.7568), 'val_loss': tensor(0.0004), 'val_accuracy': tensor(0.9983), 'val_auprc': tensor(0.7400), 'val_f1': tensor(0.8028), 'val_precision': tensor(0.8382), 'val_recall': tensor(0.7703)}, 127.17679174600926)
+Server side aggregated 5 trees.
+{} 10
+Evaluation on the server (val): val_loss=0.0004, val_auprc=0.7400, val_f1=0.8028, val_precision=0.8382, val_recall=0.7703
+Evaluation on the server: test_loss=0.0004, test_,Accuracy,=0.9983, thr=0.0003, auprc=0.7889, f1=0.8235, precision=0.9032, recall=0.7568
+[2026-07-09 17:07:59,698][flwr][INFO] - fit progress: (10, 0.0004388183922918789, {'Accuracy': tensor(0.9983), 'test_auprc': tensor(0.7889), 'test_f1': tensor(0.8235), 'test_precision': tensor(0.9032), 'test_recall': tensor(0.7568), 'val_loss': tensor(0.0004), 'val_accuracy': tensor(0.9983), 'val_auprc': tensor(0.7400), 'val_f1': tensor(0.8028), 'val_precision': tensor(0.8382), 'val_recall': tensor(0.7703)}, 127.17679174600926)
+INFO flwr 2026-07-09 17:07:59,701 | server.py:306 | evaluate_round 10: no clients selected, cancel
+[2026-07-09 17:07:59,701][flwr][INFO] - evaluate_round 10: no clients selected, cancel
+DEBUG flwr 2026-07-09 17:07:59,702 | server.py:129 | fit_round 11: strategy sampled 5 clients (out of 5)
+Configuring round 11
+[2026-07-09 17:07:59,702][flwr][DEBUG] - fit_round 11: strategy sampled 5 clients (out of 5)
+DEBUG flwr 2026-07-09 17:08:07,063 | server.py:147 | fit_round 11 received 5 results and 0 failures
+[2m[36m(DefaultActor pid=1527393)[0m Client 3: received 5 trees
+[2m[36m(DefaultActor pid=1527393)[0m Client 3 : training for 50 iterations/updates
+[2m[36m(DefaultActor pid=1527393)[0m Client 3: training round complete, 1600 update-samples over 50 updates; reporting FedAvg weight N_k=39872 (pre-SMOTE local partition size)
+[2m[36m(DefaultActor pid=1527393)[0m Client 4: received 5 trees
+[2m[36m(DefaultActor pid=1527393)[0m Client 4 : training for 50 iterations/updates
+[2m[36m(DefaultActor pid=1527393)[0m Client 4: training round complete, 1600 update-samples over 50 updates; reporting FedAvg weight N_k=39876 (pre-SMOTE local partition size)
+[2m[36m(DefaultActor pid=1527393)[0m Client 1: received 5 trees
+[2m[36m(DefaultActor pid=1527393)[0m Client 1 : training for 50 iterations/updates
+[2m[36m(DefaultActor pid=1527393)[0m Client 1: training round complete, 1600 update-samples over 50 updates; reporting FedAvg weight N_k=39872 (pre-SMOTE local partition size)
+[2m[36m(DefaultActor pid=1527393)[0m Client 2: received 5 trees
+[2m[36m(DefaultActor pid=1527393)[0m Client 2 : training for 50 iterations/updates
+[2m[36m(DefaultActor pid=1527393)[0m Client 2: training round complete, 1600 update-samples over 50 updates; reporting FedAvg weight N_k=39872 (pre-SMOTE local partition size)
+[2m[36m(DefaultActor pid=1527393)[0m Client 0: received 5 trees
+[2m[36m(DefaultActor pid=1527393)[0m Client 0 : training for 50 iterations/updates
+[2m[36m(DefaultActor pid=1527393)[0m Client 0: training round complete, 1600 update-samples over 50 updates; reporting FedAvg weight N_k=39872 (pre-SMOTE local partition size)
+[2026-07-09 17:08:07,063][flwr][DEBUG] - fit_round 11 received 5 results and 0 failures
+INFO flwr 2026-07-09 17:08:12,720 | server.py:202 | fit progress: (11, 0.00038743501666113503, {'Accuracy': tensor(0.9983), 'test_auprc': tensor(0.7601), 'test_f1': tensor(0.8000), 'test_precision': tensor(0.8485), 'test_recall': tensor(0.7568), 'val_loss': tensor(0.0004), 'val_accuracy': tensor(0.9983), 'val_auprc': tensor(0.7423), 'val_f1': tensor(0.7815), 'val_precision': tensor(0.7662), 'val_recall': tensor(0.7973)}, 140.1985597669991)
+Server side aggregated 5 trees.
+{} 11
+Evaluation on the server (val): val_loss=0.0004, val_auprc=0.7423, val_f1=0.7815, val_precision=0.7662, val_recall=0.7973
+Evaluation on the server: test_loss=0.0004, test_,Accuracy,=0.9983, thr=0.0010, auprc=0.7601, f1=0.8000, precision=0.8485, recall=0.7568
+[2026-07-09 17:08:12,720][flwr][INFO] - fit progress: (11, 0.00038743501666113503, {'Accuracy': tensor(0.9983), 'test_auprc': tensor(0.7601), 'test_f1': tensor(0.8000), 'test_precision': tensor(0.8485), 'test_recall': tensor(0.7568), 'val_loss': tensor(0.0004), 'val_accuracy': tensor(0.9983), 'val_auprc': tensor(0.7423), 'val_f1': tensor(0.7815), 'val_precision': tensor(0.7662), 'val_recall': tensor(0.7973)}, 140.1985597669991)
+INFO flwr 2026-07-09 17:08:12,723 | server.py:306 | evaluate_round 11: no clients selected, cancel
+That training is been stopped as the model achieve no progress with loss = 0.0003764004979936954 result = 0.9982678890228271
+[2026-07-09 17:08:12,723][flwr][INFO] - evaluate_round 11: no clients selected, cancel
+INFO flwr 2026-07-09 17:08:12,723 | server.py:274 | FL finished in 140.20174553300603
+[2026-07-09 17:08:12,723][flwr][INFO] - FL finished in 140.20174553300603
+INFO flwr 2026-07-09 17:08:12,723 | app.py:225 | app_fit: losses_distributed []
+[2026-07-09 17:08:12,723][flwr][INFO] - app_fit: losses_distributed []
+INFO flwr 2026-07-09 17:08:12,723 | app.py:226 | app_fit: metrics_distributed_fit {}
+[2026-07-09 17:08:12,723][flwr][INFO] - app_fit: metrics_distributed_fit {}
+INFO flwr 2026-07-09 17:08:12,724 | app.py:227 | app_fit: metrics_distributed {}
+[2026-07-09 17:08:12,724][flwr][INFO] - app_fit: metrics_distributed {}
+INFO flwr 2026-07-09 17:08:12,724 | app.py:228 | app_fit: losses_centralized [(0, 0.005327741506171022), (1, 0.0003764004979936954), (2, 0.00038979748973025304), (3, 0.00039614617880355974), (4, 0.0003770867838590945), (5, 0.0003787407347213006), (6, 0.0003947906229315469), (7, 0.0003830221456745195), (8, 0.00039986873272884494), (9, 0.0004037862625098461), (10, 0.0004388183922918789), (11, 0.00038743501666113503)]
+[2026-07-09 17:08:12,724][flwr][INFO] - app_fit: losses_centralized [(0, 0.005327741506171022), (1, 0.0003764004979936954), (2, 0.00038979748973025304), (3, 0.00039614617880355974), (4, 0.0003770867838590945), (5, 0.0003787407347213006), (6, 0.0003947906229315469), (7, 0.0003830221456745195), (8, 0.00039986873272884494), (9, 0.0004037862625098461), (10, 0.0004388183922918789), (11, 0.00038743501666113503)]
+INFO flwr 2026-07-09 17:08:12,731 | app.py:229 | app_fit: metrics_centralized {'Accuracy': [(0, tensor(0.9983)), (1, tensor(0.9983)), (2, tensor(0.9983)), (3, tensor(0.9983)), (4, tensor(0.9983)), (5, tensor(0.9983)), (6, tensor(0.9983)), (7, tensor(0.9983)), (8, tensor(0.9983)), (9, tensor(0.9983)), (10, tensor(0.9983)), (11, tensor(0.9983))], 'test_auprc': [(0, tensor(0.5033)), (1, tensor(0.7328)), (2, tensor(0.7725)), (3, tensor(0.7544)), (4, tensor(0.7745)), (5, tensor(0.7550)), (6, tensor(0.7401)), (7, tensor(0.8002)), (8, tensor(0.7964)), (9, tensor(0.7211)), (10, tensor(0.7889)), (11, tensor(0.7601))], 'test_f1': [(0, tensor(0.5280)), (1, tensor(0.8120)), (2, tensor(0.8029)), (3, tensor(0.7862)), (4, tensor(0.8209)), (5, tensor(0.8261)), (6, tensor(0.8116)), (7, tensor(0.8060)), (8, tensor(0.7917)), (9, tensor(0.8029)), (10, tensor(0.8235)), (11, tensor(0.8000))], 'test_precision': [(0, tensor(0.6471)), (1, tensor(0.9153)), (2, tensor(0.8730)), (3, tensor(0.8028)), (4, tensor(0.9167)), (5, tensor(0.8906)), (6, tensor(0.8750)), (7, tensor(0.9000)), (8, tensor(0.8143)), (9, tensor(0.8730)), (10, tensor(0.9032)), (11, tensor(0.8485))], 'test_recall': [(0, tensor(0.4459)), (1, tensor(0.7297)), (2, tensor(0.7432)), (3, tensor(0.7703)), (4, tensor(0.7432)), (5, tensor(0.7703)), (6, tensor(0.7568)), (7, tensor(0.7297)), (8, tensor(0.7703)), (9, tensor(0.7432)), (10, tensor(0.7568)), (11, tensor(0.7568))], 'val_loss': [(0, tensor(0.0053)), (1, tensor(0.0004)), (2, tensor(0.0004)), (3, tensor(0.0004)), (4, tensor(0.0004)), (5, tensor(0.0004)), (6, tensor(0.0004)), (7, tensor(0.0004)), (8, tensor(0.0004)), (9, tensor(0.0004)), (10, tensor(0.0004)), (11, tensor(0.0004))], 'val_accuracy': [(0, tensor(0.9983)), (1, tensor(0.9983)), (2, tensor(0.9983)), (3, tensor(0.9983)), (4, tensor(0.9983)), (5, tensor(0.9983)), (6, tensor(0.9983)), (7, tensor(0.9983)), (8, tensor(0.9983)), (9, tensor(0.9983)), (10, tensor(0.9983)), (11, tensor(0.9983))], 'val_auprc': [(0, tensor(0.4479)), (1, tensor(0.7418)), (2, tensor(0.7438)), (3, tensor(0.7127)), (4, tensor(0.7187)), (5, tensor(0.6614)), (6, tensor(0.7278)), (7, tensor(0.7791)), (8, tensor(0.7644)), (9, tensor(0.7392)), (10, tensor(0.7400)), (11, tensor(0.7423))], 'val_f1': [(0, tensor(0.5692)), (1, tensor(0.7681)), (2, tensor(0.7917)), (3, tensor(0.7867)), (4, tensor(0.7801)), (5, tensor(0.7832)), (6, tensor(0.7945)), (7, tensor(0.7943)), (8, tensor(0.7947)), (9, tensor(0.8056)), (10, tensor(0.8028)), (11, tensor(0.7815))], 'val_precision': [(0, tensor(0.6607)), (1, tensor(0.8281)), (2, tensor(0.8143)), (3, tensor(0.7763)), (4, tensor(0.8209)), (5, tensor(0.8116)), (6, tensor(0.8056)), (7, tensor(0.8358)), (8, tensor(0.7792)), (9, tensor(0.8286)), (10, tensor(0.8382)), (11, tensor(0.7662))], 'val_recall': [(0, tensor(0.5000)), (1, tensor(0.7162)), (2, tensor(0.7703)), (3, tensor(0.7973)), (4, tensor(0.7432)), (5, tensor(0.7568)), (6, tensor(0.7838)), (7, tensor(0.7568)), (8, tensor(0.8108)), (9, tensor(0.7838)), (10, tensor(0.7703)), (11, tensor(0.7973))]}
+[2026-07-09 17:08:12,731][flwr][INFO] - app_fit: metrics_centralized {'Accuracy': [(0, tensor(0.9983)), (1, tensor(0.9983)), (2, tensor(0.9983)), (3, tensor(0.9983)), (4, tensor(0.9983)), (5, tensor(0.9983)), (6, tensor(0.9983)), (7, tensor(0.9983)), (8, tensor(0.9983)), (9, tensor(0.9983)), (10, tensor(0.9983)), (11, tensor(0.9983))], 'test_auprc': [(0, tensor(0.5033)), (1, tensor(0.7328)), (2, tensor(0.7725)), (3, tensor(0.7544)), (4, tensor(0.7745)), (5, tensor(0.7550)), (6, tensor(0.7401)), (7, tensor(0.8002)), (8, tensor(0.7964)), (9, tensor(0.7211)), (10, tensor(0.7889)), (11, tensor(0.7601))], 'test_f1': [(0, tensor(0.5280)), (1, tensor(0.8120)), (2, tensor(0.8029)), (3, tensor(0.7862)), (4, tensor(0.8209)), (5, tensor(0.8261)), (6, tensor(0.8116)), (7, tensor(0.8060)), (8, tensor(0.7917)), (9, tensor(0.8029)), (10, tensor(0.8235)), (11, tensor(0.8000))], 'test_precision': [(0, tensor(0.6471)), (1, tensor(0.9153)), (2, tensor(0.8730)), (3, tensor(0.8028)), (4, tensor(0.9167)), (5, tensor(0.8906)), (6, tensor(0.8750)), (7, tensor(0.9000)), (8, tensor(0.8143)), (9, tensor(0.8730)), (10, tensor(0.9032)), (11, tensor(0.8485))], 'test_recall': [(0, tensor(0.4459)), (1, tensor(0.7297)), (2, tensor(0.7432)), (3, tensor(0.7703)), (4, tensor(0.7432)), (5, tensor(0.7703)), (6, tensor(0.7568)), (7, tensor(0.7297)), (8, tensor(0.7703)), (9, tensor(0.7432)), (10, tensor(0.7568)), (11, tensor(0.7568))], 'val_loss': [(0, tensor(0.0053)), (1, tensor(0.0004)), (2, tensor(0.0004)), (3, tensor(0.0004)), (4, tensor(0.0004)), (5, tensor(0.0004)), (6, tensor(0.0004)), (7, tensor(0.0004)), (8, tensor(0.0004)), (9, tensor(0.0004)), (10, tensor(0.0004)), (11, tensor(0.0004))], 'val_accuracy': [(0, tensor(0.9983)), (1, tensor(0.9983)), (2, tensor(0.9983)), (3, tensor(0.9983)), (4, tensor(0.9983)), (5, tensor(0.9983)), (6, tensor(0.9983)), (7, tensor(0.9983)), (8, tensor(0.9983)), (9, tensor(0.9983)), (10, tensor(0.9983)), (11, tensor(0.9983))], 'val_auprc': [(0, tensor(0.4479)), (1, tensor(0.7418)), (2, tensor(0.7438)), (3, tensor(0.7127)), (4, tensor(0.7187)), (5, tensor(0.6614)), (6, tensor(0.7278)), (7, tensor(0.7791)), (8, tensor(0.7644)), (9, tensor(0.7392)), (10, tensor(0.7400)), (11, tensor(0.7423))], 'val_f1': [(0, tensor(0.5692)), (1, tensor(0.7681)), (2, tensor(0.7917)), (3, tensor(0.7867)), (4, tensor(0.7801)), (5, tensor(0.7832)), (6, tensor(0.7945)), (7, tensor(0.7943)), (8, tensor(0.7947)), (9, tensor(0.8056)), (10, tensor(0.8028)), (11, tensor(0.7815))], 'val_precision': [(0, tensor(0.6607)), (1, tensor(0.8281)), (2, tensor(0.8143)), (3, tensor(0.7763)), (4, tensor(0.8209)), (5, tensor(0.8116)), (6, tensor(0.8056)), (7, tensor(0.8358)), (8, tensor(0.7792)), (9, tensor(0.8286)), (10, tensor(0.8382)), (11, tensor(0.7662))], 'val_recall': [(0, tensor(0.5000)), (1, tensor(0.7162)), (2, tensor(0.7703)), (3, tensor(0.7973)), (4, tensor(0.7432)), (5, tensor(0.7568)), (6, tensor(0.7838)), (7, tensor(0.7568)), (8, tensor(0.8108)), (9, tensor(0.7838)), (10, tensor(0.7703)), (11, tensor(0.7973))]}
+wandb: Waiting for W&B process to finish... (success).
+wandb: 
+wandb: Run history:
+wandb:            round ▁▂▂▃▄▄▅▅▆▇▇█
+wandb:  server_accuracy ▁▁▁▁▁▁▁▁▁▁▁▁
+wandb:     server_auprc ▁▆▇▇▇▇▇██▆█▇
+wandb:        server_f1 ▁█▇▇████▇▇█▇
+wandb:      server_loss █▁▁▁▁▁▁▁▁▁▁▁
+wandb: server_precision ▁█▇▅█▇▇█▅▇█▆
+wandb:    server_recall ▁▇▇█▇██▇█▇██
+wandb:     val_accuracy ▁▁▁▁▁▁▁▁▁▁▁▁
+wandb:        val_auprc ▁▇▇▇▇▆▇██▇▇▇
+wandb:           val_f1 ▁▇█▇▇▇█████▇
+wandb:         val_loss █▁▁▁▁▁▁▁▁▁▁▁
+wandb:    val_precision ▁█▇▆▇▇▇█▆██▅
+wandb:       val_recall ▁▆▇█▆▇▇▇█▇▇█
+wandb: 
+wandb: Run summary:
+wandb:       best_round 7
+wandb:   best_val_auprc 0.77908
+wandb: duration_seconds 156.22482
+wandb:            round 11
+wandb:  server_accuracy 0.99827
+wandb:     server_auprc 0.76013
+wandb:        server_f1 0.8
+wandb:      server_loss 0.00039
+wandb: server_precision 0.84848
+wandb:    server_recall 0.75676
+wandb:       test_auprc 0.76013
+wandb:          test_f1 0.8
+wandb:   test_precision 0.84848
+wandb:      test_recall 0.75676
+wandb:     val_accuracy 0.99827
+wandb:        val_auprc 0.74225
+wandb:           val_f1 0.78146
+wandb:         val_loss 0.00039
+wandb:    val_precision 0.76623
+wandb:       val_recall 0.7973
+wandb: 
+wandb: 🚀 View run fedxgbllr_iid_alpha-_smote_seed42 at: https://wandb.ai/deo250605-sepuluh-nopember-insitute-of-technology/fraud-fl-TA/runs/noomi8rs
+wandb: Synced 6 W&B file(s), 0 media file(s), 0 artifact file(s) and 0 other file(s)
+wandb: Find logs at: ./wandb/run-20260709_170537-noomi8rs/logs
+History (loss, centralized):
+	round 0: 0.005327741506171022
+	round 1: 0.0003764004979936954
+	round 2: 0.00038979748973025304
+	round 3: 0.00039614617880355974
+	round 4: 0.0003770867838590945
+	round 5: 0.0003787407347213006
+	round 6: 0.0003947906229315469
+	round 7: 0.0003830221456745195
+	round 8: 0.00039986873272884494
+	round 9: 0.0004037862625098461
+	round 10: 0.0004388183922918789
+	round 11: 0.00038743501666113503
+History (metrics, centralized):
+{'Accuracy': [(0, tensor(0.9983)), (1, tensor(0.9983)), (2, tensor(0.9983)), (3, tensor(0.9983)), (4, tensor(0.9983)), (5, tensor(0.9983)), (6, tensor(0.9983)), (7, tensor(0.9983)), (8, tensor(0.9983)), (9, tensor(0.9983)), (10, tensor(0.9983)), (11, tensor(0.9983))], 'test_auprc': [(0, tensor(0.5033)), (1, tensor(0.7328)), (2, tensor(0.7725)), (3, tensor(0.7544)), (4, tensor(0.7745)), (5, tensor(0.7550)), (6, tensor(0.7401)), (7, tensor(0.8002)), (8, tensor(0.7964)), (9, tensor(0.7211)), (10, tensor(0.7889)), (11, tensor(0.7601))], 'test_f1': [(0, tensor(0.5280)), (1, tensor(0.8120)), (2, tensor(0.8029)), (3, tensor(0.7862)), (4, tensor(0.8209)), (5, tensor(0.8261)), (6, tensor(0.8116)), (7, tensor(0.8060)), (8, tensor(0.7917)), (9, tensor(0.8029)), (10, tensor(0.8235)), (11, tensor(0.8000))], 'test_precision': [(0, tensor(0.6471)), (1, tensor(0.9153)), (2, tensor(0.8730)), (3, tensor(0.8028)), (4, tensor(0.9167)), (5, tensor(0.8906)), (6, tensor(0.8750)), (7, tensor(0.9000)), (8, tensor(0.8143)), (9, tensor(0.8730)), (10, tensor(0.9032)), (11, tensor(0.8485))], 'test_recall': [(0, tensor(0.4459)), (1, tensor(0.7297)), (2, tensor(0.7432)), (3, tensor(0.7703)), (4, tensor(0.7432)), (5, tensor(0.7703)), (6, tensor(0.7568)), (7, tensor(0.7297)), (8, tensor(0.7703)), (9, tensor(0.7432)), (10, tensor(0.7568)), (11, tensor(0.7568))], 'val_loss': [(0, tensor(0.0053)), (1, tensor(0.0004)), (2, tensor(0.0004)), (3, tensor(0.0004)), (4, tensor(0.0004)), (5, tensor(0.0004)), (6, tensor(0.0004)), (7, tensor(0.0004)), (8, tensor(0.0004)), (9, tensor(0.0004)), (10, tensor(0.0004)), (11, tensor(0.0004))], 'val_accuracy': [(0, tensor(0.9983)), (1, tensor(0.9983)), (2, tensor(0.9983)), (3, tensor(0.9983)), (4, tensor(0.9983)), (5, tensor(0.9983)), (6, tensor(0.9983)), (7, tensor(0.9983)), (8, tensor(0.9983)), (9, tensor(0.9983)), (10, tensor(0.9983)), (11, tensor(0.9983))], 'val_auprc': [(0, tensor(0.4479)), (1, tensor(0.7418)), (2, tensor(0.7438)), (3, tensor(0.7127)), (4, tensor(0.7187)), (5, tensor(0.6614)), (6, tensor(0.7278)), (7, tensor(0.7791)), (8, tensor(0.7644)), (9, tensor(0.7392)), (10, tensor(0.7400)), (11, tensor(0.7423))], 'val_f1': [(0, tensor(0.5692)), (1, tensor(0.7681)), (2, tensor(0.7917)), (3, tensor(0.7867)), (4, tensor(0.7801)), (5, tensor(0.7832)), (6, tensor(0.7945)), (7, tensor(0.7943)), (8, tensor(0.7947)), (9, tensor(0.8056)), (10, tensor(0.8028)), (11, tensor(0.7815))], 'val_precision': [(0, tensor(0.6607)), (1, tensor(0.8281)), (2, tensor(0.8143)), (3, tensor(0.7763)), (4, tensor(0.8209)), (5, tensor(0.8116)), (6, tensor(0.8056)), (7, tensor(0.8358)), (8, tensor(0.7792)), (9, tensor(0.8286)), (10, tensor(0.8382)), (11, tensor(0.7662))], 'val_recall': [(0, tensor(0.5000)), (1, tensor(0.7162)), (2, tensor(0.7703)), (3, tensor(0.7973)), (4, tensor(0.7432)), (5, tensor(0.7568)), (6, tensor(0.7838)), (7, tensor(0.7568)), (8, tensor(0.8108)), (9, tensor(0.7838)), (10, tensor(0.7703)), (11, tensor(0.7973))]}
+Best Result 0.9982678890228271 best_res_round 0
+[results] wrote summary CSV → results/logs/creditcard/fedxgbllr/fedxgbllr_iid_alpha-_smote_seed42.csv
+[results] wrote rounds CSV  → results/logs/creditcard/fedxgbllr/fedxgbllr_iid_alpha-_smote_seed42_rounds.csv

@@ -1,0 +1,424 @@
+/home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/ray/_private/parameter.py:4: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools<81.
+  import pkg_resources
+/home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/wandb/sdk/launch/builder/build.py:11: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools<81.
+  import pkg_resources
+wandb: Currently logged in as: deo250605 (deo250605-sepuluh-nopember-insitute-of-technology). Use `wandb login --relogin` to force relogin
+wandb: wandb version 0.28.0 is available!  To upgrade, please run:
+wandb:  $ pip install wandb --upgrade
+wandb: Tracking run with wandb version 0.15.12
+wandb: Run data is saved locally in /home/justin/fraud-fl-TA/wandb/run-20260709_165441-noqsrbl5
+wandb: Run `wandb offline` to turn off syncing.
+wandb: Syncing run bert_fraud_dirichlet_alpha1.0_smote_seed42
+wandb: ⭐️ View project at https://wandb.ai/deo250605-sepuluh-nopember-insitute-of-technology/fraud-fl-TA
+wandb: 🚀 View run at https://wandb.ai/deo250605-sepuluh-nopember-insitute-of-technology/fraud-fl-TA/runs/noqsrbl5
+/home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/torch/nn/modules/transformer.py:392: UserWarning: enable_nested_tensor is True, but self.use_nested_tensor is False because encoder_layer.norm_first was True
+  warnings.warn(
+INFO flwr 2026-07-09 16:54:43,740 | app.py:175 | Starting Flower simulation, config: ServerConfig(num_rounds=20, round_timeout=None)
+2026-07-09 16:54:45,316	INFO worker.py:1612 -- Started a local Ray instance. View the dashboard at [1m[32m127.0.0.1:8265 [39m[22m
+INFO flwr 2026-07-09 16:54:45,889 | app.py:210 | Flower VCE: Ray initialized with resources: {'object_store_memory': 4074110976.0, 'node:__internal_head__': 1.0, 'memory': 8148221952.0, 'GPU': 1.0, 'node:172.24.108.56': 1.0, 'CPU': 20.0}
+INFO flwr 2026-07-09 16:54:45,889 | app.py:224 | Flower VCE: Resources for each Virtual Client: {'num_cpus': 4, 'num_gpus': 0.2}
+INFO flwr 2026-07-09 16:54:45,896 | app.py:270 | Flower VCE: Creating VirtualClientEngineActorPool with 5 actors
+INFO flwr 2026-07-09 16:54:45,897 | server.py:89 | Initializing global parameters
+INFO flwr 2026-07-09 16:54:45,897 | server.py:272 | Using initial parameters provided by strategy
+INFO flwr 2026-07-09 16:54:45,897 | server.py:91 | Evaluating initial parameters
+/home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/torch/nn/modules/transformer.py:392: UserWarning: enable_nested_tensor is True, but self.use_nested_tensor is False because encoder_layer.norm_first was True
+  warnings.warn(
+[2m[33m(raylet)[0m /home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/ray/_private/parameter.py:4: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools<81.
+[2m[33m(raylet)[0m   import pkg_resources
+[2m[33m(raylet)[0m /home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/ray/_private/parameter.py:4: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools<81.
+[2m[33m(raylet)[0m   import pkg_resources
+[2m[33m(raylet)[0m /home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/ray/_private/parameter.py:4: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools<81.
+[2m[33m(raylet)[0m   import pkg_resources
+[2m[33m(raylet)[0m /home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/ray/_private/parameter.py:4: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools<81.
+[2m[33m(raylet)[0m   import pkg_resources
+[2m[33m(raylet)[0m /home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/ray/_private/parameter.py:4: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools<81.
+[2m[33m(raylet)[0m   import pkg_resources
+INFO flwr 2026-07-09 16:54:47,928 | server.py:94 | initial parameters (loss, other metrics): 0.998507053658087, {'val_auprc': 0.0014929463419130343, 'val_f1': 0.005012531328320802, 'val_precision': 0.003076923076923077, 'val_recall': 0.013513513513513514}
+INFO flwr 2026-07-09 16:54:47,928 | server.py:104 | FL starting
+DEBUG flwr 2026-07-09 16:54:47,928 | server.py:222 | fit_round 1: strategy sampled 5 clients (out of 5)
+[2m[36m(DefaultActor pid=1521124)[0m /home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/torch/nn/modules/transformer.py:392: UserWarning: enable_nested_tensor is True, but self.use_nested_tensor is False because encoder_layer.norm_first was True
+[2m[36m(DefaultActor pid=1521124)[0m   warnings.warn(
+DEBUG flwr 2026-07-09 16:55:15,925 | server.py:236 | fit_round 1 received 5 results and 0 failures
+/home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/torch/nn/modules/transformer.py:392: UserWarning: enable_nested_tensor is True, but self.use_nested_tensor is False because encoder_layer.norm_first was True
+  warnings.warn(
+INFO flwr 2026-07-09 16:55:17,565 | server.py:125 | fit progress: (1, 0.3755833857584129, {'val_auprc': 0.6244166142415871, 'val_f1': 0.7516778523489933, 'val_precision': 0.7466666666666667, 'val_recall': 0.7567567567567568}, 29.636616875999607)
+INFO flwr 2026-07-09 16:55:17,565 | server.py:171 | evaluate_round 1: no clients selected, cancel
+DEBUG flwr 2026-07-09 16:55:17,565 | server.py:222 | fit_round 2: strategy sampled 5 clients (out of 5)
+[2m[36m(DefaultActor pid=1521121)[0m /home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/torch/nn/modules/transformer.py:392: UserWarning: enable_nested_tensor is True, but self.use_nested_tensor is False because encoder_layer.norm_first was True[32m [repeated 5x across cluster] (Ray deduplicates logs by default. Set RAY_DEDUP_LOGS=0 to disable log deduplication, or see https://docs.ray.io/en/master/ray-observability/ray-logging.html#log-deduplication for more options.)[0m
+[2m[36m(DefaultActor pid=1521121)[0m   warnings.warn([32m [repeated 5x across cluster][0m
+DEBUG flwr 2026-07-09 16:55:43,500 | server.py:236 | fit_round 2 received 5 results and 0 failures
+/home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/torch/nn/modules/transformer.py:392: UserWarning: enable_nested_tensor is True, but self.use_nested_tensor is False because encoder_layer.norm_first was True
+  warnings.warn(
+INFO flwr 2026-07-09 16:55:44,948 | server.py:125 | fit progress: (2, 0.33997318987445724, {'val_auprc': 0.6600268101255428, 'val_f1': 0.7482993197278912, 'val_precision': 0.7534246575342466, 'val_recall': 0.7432432432432432}, 57.0200916879985)
+INFO flwr 2026-07-09 16:55:44,949 | server.py:171 | evaluate_round 2: no clients selected, cancel
+DEBUG flwr 2026-07-09 16:55:44,949 | server.py:222 | fit_round 3: strategy sampled 5 clients (out of 5)
+[2m[36m(DefaultActor pid=1521121)[0m /home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/torch/nn/modules/transformer.py:392: UserWarning: enable_nested_tensor is True, but self.use_nested_tensor is False because encoder_layer.norm_first was True[32m [repeated 5x across cluster][0m
+[2m[36m(DefaultActor pid=1521121)[0m   warnings.warn([32m [repeated 5x across cluster][0m
+DEBUG flwr 2026-07-09 16:56:14,321 | server.py:236 | fit_round 3 received 5 results and 0 failures
+/home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/torch/nn/modules/transformer.py:392: UserWarning: enable_nested_tensor is True, but self.use_nested_tensor is False because encoder_layer.norm_first was True
+  warnings.warn(
+INFO flwr 2026-07-09 16:56:15,721 | server.py:125 | fit progress: (3, 0.2886706544818394, {'val_auprc': 0.7113293455181606, 'val_f1': 0.7702702702702703, 'val_precision': 0.7702702702702703, 'val_recall': 0.7702702702702703}, 87.79231166400132)
+INFO flwr 2026-07-09 16:56:15,721 | server.py:171 | evaluate_round 3: no clients selected, cancel
+DEBUG flwr 2026-07-09 16:56:15,721 | server.py:222 | fit_round 4: strategy sampled 5 clients (out of 5)
+[2m[36m(DefaultActor pid=1521121)[0m /home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/torch/nn/modules/transformer.py:392: UserWarning: enable_nested_tensor is True, but self.use_nested_tensor is False because encoder_layer.norm_first was True[32m [repeated 5x across cluster][0m
+[2m[36m(DefaultActor pid=1521121)[0m   warnings.warn([32m [repeated 5x across cluster][0m
+DEBUG flwr 2026-07-09 16:56:43,929 | server.py:236 | fit_round 4 received 5 results and 0 failures
+/home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/torch/nn/modules/transformer.py:392: UserWarning: enable_nested_tensor is True, but self.use_nested_tensor is False because encoder_layer.norm_first was True
+  warnings.warn(
+INFO flwr 2026-07-09 16:56:45,355 | server.py:125 | fit progress: (4, 0.262988769218245, {'val_auprc': 0.737011230781755, 'val_f1': 0.7619047619047619, 'val_precision': 0.7671232876712328, 'val_recall': 0.7567567567567568}, 117.42655871600437)
+INFO flwr 2026-07-09 16:56:45,355 | server.py:171 | evaluate_round 4: no clients selected, cancel
+DEBUG flwr 2026-07-09 16:56:45,355 | server.py:222 | fit_round 5: strategy sampled 5 clients (out of 5)
+[2m[36m(DefaultActor pid=1521123)[0m /home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/torch/nn/modules/transformer.py:392: UserWarning: enable_nested_tensor is True, but self.use_nested_tensor is False because encoder_layer.norm_first was True[32m [repeated 5x across cluster][0m
+[2m[36m(DefaultActor pid=1521123)[0m   warnings.warn([32m [repeated 5x across cluster][0m
+DEBUG flwr 2026-07-09 16:57:14,135 | server.py:236 | fit_round 5 received 5 results and 0 failures
+/home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/torch/nn/modules/transformer.py:392: UserWarning: enable_nested_tensor is True, but self.use_nested_tensor is False because encoder_layer.norm_first was True
+  warnings.warn(
+INFO flwr 2026-07-09 16:57:15,524 | server.py:125 | fit progress: (5, 0.2311372096236627, {'val_auprc': 0.7688627903763373, 'val_f1': 0.78125, 'val_precision': 0.9259259259259259, 'val_recall': 0.6756756756756757}, 147.59587619999365)
+INFO flwr 2026-07-09 16:57:15,524 | server.py:171 | evaluate_round 5: no clients selected, cancel
+DEBUG flwr 2026-07-09 16:57:15,524 | server.py:222 | fit_round 6: strategy sampled 5 clients (out of 5)
+[2m[36m(DefaultActor pid=1521121)[0m /home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/torch/nn/modules/transformer.py:392: UserWarning: enable_nested_tensor is True, but self.use_nested_tensor is False because encoder_layer.norm_first was True[32m [repeated 5x across cluster][0m
+[2m[36m(DefaultActor pid=1521121)[0m   warnings.warn([32m [repeated 5x across cluster][0m
+DEBUG flwr 2026-07-09 16:57:41,696 | server.py:236 | fit_round 6 received 5 results and 0 failures
+/home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/torch/nn/modules/transformer.py:392: UserWarning: enable_nested_tensor is True, but self.use_nested_tensor is False because encoder_layer.norm_first was True
+  warnings.warn(
+INFO flwr 2026-07-09 16:57:43,162 | server.py:125 | fit progress: (6, 0.23718763341116667, {'val_auprc': 0.7628123665888333, 'val_f1': 0.7846153846153846, 'val_precision': 0.9107142857142857, 'val_recall': 0.6891891891891891}, 175.23333837499376)
+INFO flwr 2026-07-09 16:57:43,162 | server.py:171 | evaluate_round 6: no clients selected, cancel
+DEBUG flwr 2026-07-09 16:57:43,162 | server.py:222 | fit_round 7: strategy sampled 5 clients (out of 5)
+[2m[36m(DefaultActor pid=1521121)[0m /home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/torch/nn/modules/transformer.py:392: UserWarning: enable_nested_tensor is True, but self.use_nested_tensor is False because encoder_layer.norm_first was True[32m [repeated 5x across cluster][0m
+[2m[36m(DefaultActor pid=1521121)[0m   warnings.warn([32m [repeated 5x across cluster][0m
+DEBUG flwr 2026-07-09 16:58:12,270 | server.py:236 | fit_round 7 received 5 results and 0 failures
+/home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/torch/nn/modules/transformer.py:392: UserWarning: enable_nested_tensor is True, but self.use_nested_tensor is False because encoder_layer.norm_first was True
+  warnings.warn(
+INFO flwr 2026-07-09 16:58:13,780 | server.py:125 | fit progress: (7, 0.25282356838562847, {'val_auprc': 0.7471764316143715, 'val_f1': 0.7611940298507462, 'val_precision': 0.85, 'val_recall': 0.6891891891891891}, 205.85176336100267)
+INFO flwr 2026-07-09 16:58:13,780 | server.py:171 | evaluate_round 7: no clients selected, cancel
+DEBUG flwr 2026-07-09 16:58:13,780 | server.py:222 | fit_round 8: strategy sampled 5 clients (out of 5)
+[2m[36m(DefaultActor pid=1521121)[0m /home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/torch/nn/modules/transformer.py:392: UserWarning: enable_nested_tensor is True, but self.use_nested_tensor is False because encoder_layer.norm_first was True[32m [repeated 5x across cluster][0m
+[2m[36m(DefaultActor pid=1521121)[0m   warnings.warn([32m [repeated 5x across cluster][0m
+DEBUG flwr 2026-07-09 16:58:42,168 | server.py:236 | fit_round 8 received 5 results and 0 failures
+/home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/torch/nn/modules/transformer.py:392: UserWarning: enable_nested_tensor is True, but self.use_nested_tensor is False because encoder_layer.norm_first was True
+  warnings.warn(
+INFO flwr 2026-07-09 16:58:43,593 | server.py:125 | fit progress: (8, 0.25801364683789163, {'val_auprc': 0.7419863531621084, 'val_f1': 0.7671232876712328, 'val_precision': 0.7777777777777778, 'val_recall': 0.7567567567567568}, 235.6647327469982)
+INFO flwr 2026-07-09 16:58:43,593 | server.py:171 | evaluate_round 8: no clients selected, cancel
+DEBUG flwr 2026-07-09 16:58:43,593 | server.py:222 | fit_round 9: strategy sampled 5 clients (out of 5)
+[2m[36m(DefaultActor pid=1521121)[0m /home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/torch/nn/modules/transformer.py:392: UserWarning: enable_nested_tensor is True, but self.use_nested_tensor is False because encoder_layer.norm_first was True[32m [repeated 5x across cluster][0m
+[2m[36m(DefaultActor pid=1521121)[0m   warnings.warn([32m [repeated 5x across cluster][0m
+DEBUG flwr 2026-07-09 16:59:12,019 | server.py:236 | fit_round 9 received 5 results and 0 failures
+/home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/torch/nn/modules/transformer.py:392: UserWarning: enable_nested_tensor is True, but self.use_nested_tensor is False because encoder_layer.norm_first was True
+  warnings.warn(
+INFO flwr 2026-07-09 16:59:13,482 | server.py:125 | fit progress: (9, 0.250547439413221, {'val_auprc': 0.749452560586779, 'val_f1': 0.7580645161290323, 'val_precision': 0.94, 'val_recall': 0.6351351351351351}, 265.5533231640002)
+INFO flwr 2026-07-09 16:59:13,482 | server.py:171 | evaluate_round 9: no clients selected, cancel
+DEBUG flwr 2026-07-09 16:59:13,482 | server.py:222 | fit_round 10: strategy sampled 5 clients (out of 5)
+[2m[36m(DefaultActor pid=1521121)[0m /home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/torch/nn/modules/transformer.py:392: UserWarning: enable_nested_tensor is True, but self.use_nested_tensor is False because encoder_layer.norm_first was True[32m [repeated 5x across cluster][0m
+[2m[36m(DefaultActor pid=1521121)[0m   warnings.warn([32m [repeated 5x across cluster][0m
+DEBUG flwr 2026-07-09 16:59:39,274 | server.py:236 | fit_round 10 received 5 results and 0 failures
+/home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/torch/nn/modules/transformer.py:392: UserWarning: enable_nested_tensor is True, but self.use_nested_tensor is False because encoder_layer.norm_first was True
+  warnings.warn(
+INFO flwr 2026-07-09 16:59:40,938 | server.py:125 | fit progress: (10, 0.239350384550283, {'val_auprc': 0.760649615449717, 'val_f1': 0.7671232876712328, 'val_precision': 0.7777777777777778, 'val_recall': 0.7567567567567568}, 293.00934487399354)
+INFO flwr 2026-07-09 16:59:40,938 | server.py:171 | evaluate_round 10: no clients selected, cancel
+DEBUG flwr 2026-07-09 16:59:40,938 | server.py:222 | fit_round 11: strategy sampled 5 clients (out of 5)
+[2m[36m(DefaultActor pid=1521121)[0m /home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/torch/nn/modules/transformer.py:392: UserWarning: enable_nested_tensor is True, but self.use_nested_tensor is False because encoder_layer.norm_first was True[32m [repeated 5x across cluster][0m
+[2m[36m(DefaultActor pid=1521121)[0m   warnings.warn([32m [repeated 5x across cluster][0m
+DEBUG flwr 2026-07-09 17:00:07,125 | server.py:236 | fit_round 11 received 5 results and 0 failures
+/home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/torch/nn/modules/transformer.py:392: UserWarning: enable_nested_tensor is True, but self.use_nested_tensor is False because encoder_layer.norm_first was True
+  warnings.warn(
+INFO flwr 2026-07-09 17:00:08,592 | server.py:125 | fit progress: (11, 0.25244332113842805, {'val_auprc': 0.747556678861572, 'val_f1': 0.7633587786259542, 'val_precision': 0.8771929824561403, 'val_recall': 0.6756756756756757}, 320.6634124859993)
+INFO flwr 2026-07-09 17:00:08,592 | server.py:171 | evaluate_round 11: no clients selected, cancel
+DEBUG flwr 2026-07-09 17:00:08,592 | server.py:222 | fit_round 12: strategy sampled 5 clients (out of 5)
+[2m[36m(DefaultActor pid=1521121)[0m /home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/torch/nn/modules/transformer.py:392: UserWarning: enable_nested_tensor is True, but self.use_nested_tensor is False because encoder_layer.norm_first was True[32m [repeated 5x across cluster][0m
+[2m[36m(DefaultActor pid=1521121)[0m   warnings.warn([32m [repeated 5x across cluster][0m
+DEBUG flwr 2026-07-09 17:00:34,123 | server.py:236 | fit_round 12 received 5 results and 0 failures
+[run] resolved config: {'model': 'bert_fraud', 'num_clients': 5, 'num_rounds': 20, 'local_epochs': 3, 'batch_size': 64, 'lr': 0.001, 'weight_decay': 0.0001, 'random_seed': 42, 'oversampling': 'smote', 'sampling_strategy': 0.01, 'use_wandb': True, 'wandb_project': 'fraud-fl-TA', 'early_stop_patience': 10, 'num_cpus_per_client': 4, 'num_gpus_per_client': 0.2, 'partition': {'scheme': 'dirichlet', 'alpha': 1.0}, 'bert_params': {'d_model': 64, 'nhead': 4, 'num_layers': 2, 'dim_feedforward': 256, 'dropout': 0.1}, 'dataset': 'creditcard'}
+[run] === bert_fraud | dataset=creditcard scheme=dirichlet alpha=1.0 K=5 R=20 oversampling=smote seed=42 ===
+[creditcard] loading data/creditcard/creditcard.csv
+[creditcard] loaded 284,807 rows, 31 columns
+
+[creditcard] === data summary ===
+  total rows loaded : 284,807
+  feature count     : 30
+  feature names     : ['Time', 'V1', 'V2', 'V3', 'V4', 'V5', 'V6', 'V7', 'V8', 'V9', 'V10', 'V11', 'V12', 'V13', 'V14', 'V15', 'V16', 'V17', 'V18', 'V19', 'V20', 'V21', 'V22', 'V23', 'V24', 'V25', 'V26', 'V27', 'V28', 'Amount']
+  x_train: (199364, 30)  dtype=float32   |  y_train: (199364,)  dtype=int32
+  x_val  : (42721, 30)  dtype=float32   |  y_val  : (42721,)  dtype=int32
+  x_test : (42722, 30)  dtype=float32   |  y_test : (42722,)  dtype=int32
+  fraud in train: 344 / 199,364  (0.1725%)
+  fraud in val  : 74 / 42,721  (0.1732%)
+  fraud in test : 74 / 42,722  (0.1732%)
+[creditcard] === end summary ===
+
+[run] FL starting: 20 rounds, 5 clients (client_resources={'num_cpus': 4, 'num_gpus': 0.2})
+[server] round 0 | thr=0.7220 | val_auprc=0.0015 | val_f1=0.0050 | val_precision=0.0031 | val_recall=0.0135
+[2m[36m(DefaultActor pid=1521121)[0m [smote] client 3: skipping SMOTE — target already met (minority:majority 0.0212 >= target 0.01)
+[bert_fraud] round 1 aggregation weights:
+  client 0: n=17,093 | local_auprc=0.8227 | weight=0.0942
+  client 1: n=31,947 | local_auprc=0.7200 | weight=0.1542
+  client 2: n=87,314 | local_auprc=0.7319 | weight=0.4283
+  client 3: n=11,441 | local_auprc=0.8847 | weight=0.0678
+  client 4: n=53,339 | local_auprc=0.7148 | weight=0.2555
+[server] round 1 | thr=0.0475 | val_auprc=0.6244 | val_f1=0.7517 | val_precision=0.7467 | val_recall=0.7568
+[2m[36m(DefaultActor pid=1521123)[0m [smote] client 3: skipping SMOTE — target already met (minority:majority 0.0212 >= target 0.01)
+[bert_fraud] round 2 aggregation weights:
+  client 0: n=17,093 | local_auprc=0.9147 | weight=0.0908
+  client 1: n=53,339 | local_auprc=0.7885 | weight=0.2442
+  client 2: n=11,441 | local_auprc=0.9159 | weight=0.0608
+  client 3: n=31,947 | local_auprc=0.6938 | weight=0.1287
+  client 4: n=87,314 | local_auprc=0.9379 | weight=0.4755
+[server] round 2 | thr=0.5637 | val_auprc=0.6600 | val_f1=0.7483 | val_precision=0.7534 | val_recall=0.7432
+[2m[36m(DefaultActor pid=1521122)[0m [smote] client 3: skipping SMOTE — target already met (minority:majority 0.0212 >= target 0.01)
+[bert_fraud] round 3 aggregation weights:
+  client 0: n=31,947 | local_auprc=0.8732 | weight=0.1571
+  client 1: n=11,441 | local_auprc=0.9145 | weight=0.0589
+  client 2: n=87,314 | local_auprc=0.9209 | weight=0.4528
+  client 3: n=53,339 | local_auprc=0.8189 | weight=0.2460
+  client 4: n=17,093 | local_auprc=0.8856 | weight=0.0852
+[server] round 3 | thr=0.4040 | val_auprc=0.7113 | val_f1=0.7703 | val_precision=0.7703 | val_recall=0.7703
+[2m[36m(DefaultActor pid=1521120)[0m [smote] client 3: skipping SMOTE — target already met (minority:majority 0.0212 >= target 0.01)
+[bert_fraud] round 4 aggregation weights:
+  client 0: n=87,314 | local_auprc=0.9457 | weight=0.4409
+  client 1: n=11,441 | local_auprc=0.9193 | weight=0.0562
+  client 2: n=17,093 | local_auprc=0.9781 | weight=0.0893
+  client 3: n=31,947 | local_auprc=0.9261 | weight=0.1580
+  client 4: n=53,339 | local_auprc=0.8975 | weight=0.2556
+[server] round 4 | thr=0.6136 | val_auprc=0.7370 | val_f1=0.7619 | val_precision=0.7671 | val_recall=0.7568
+[2m[36m(DefaultActor pid=1521121)[0m [smote] client 3: skipping SMOTE — target already met (minority:majority 0.0212 >= target 0.01)
+[bert_fraud] round 5 aggregation weights:
+  client 0: n=11,441 | local_auprc=0.9319 | weight=0.0574
+  client 1: n=31,947 | local_auprc=0.8683 | weight=0.1493
+  client 2: n=87,314 | local_auprc=0.9030 | weight=0.4243
+  client 3: n=17,093 | local_auprc=0.9691 | weight=0.0891
+  client 4: n=53,339 | local_auprc=0.9753 | weight=0.2799
+[server] round 5 | thr=0.8712 | val_auprc=0.7689 | val_f1=0.7812 | val_precision=0.9259 | val_recall=0.6757
+[2m[36m(DefaultActor pid=1521123)[0m [smote] client 3: skipping SMOTE — target already met (minority:majority 0.0212 >= target 0.01)
+[bert_fraud] round 6 aggregation weights:
+  client 0: n=53,339 | local_auprc=0.9430 | weight=0.2600
+  client 1: n=11,441 | local_auprc=0.9404 | weight=0.0556
+  client 2: n=17,093 | local_auprc=0.9777 | weight=0.0864
+  client 3: n=87,314 | local_auprc=0.9789 | weight=0.4418
+  client 4: n=31,947 | local_auprc=0.9462 | weight=0.1562
+[server] round 6 | thr=0.8898 | val_auprc=0.7628 | val_f1=0.7846 | val_precision=0.9107 | val_recall=0.6892
+[2m[36m(DefaultActor pid=1521122)[0m [smote] client 3: skipping SMOTE — target already met (minority:majority 0.0212 >= target 0.01)
+[bert_fraud] round 7 aggregation weights:
+  client 0: n=17,093 | local_auprc=0.9912 | weight=0.0877
+  client 1: n=31,947 | local_auprc=0.9648 | weight=0.1595
+  client 2: n=87,314 | local_auprc=0.9646 | weight=0.4358
+  client 3: n=53,339 | local_auprc=0.9468 | weight=0.2613
+  client 4: n=11,441 | local_auprc=0.9433 | weight=0.0558
+[server] round 7 | thr=0.8742 | val_auprc=0.7472 | val_f1=0.7612 | val_precision=0.8500 | val_recall=0.6892
+[2m[36m(DefaultActor pid=1521124)[0m [smote] client 3: skipping SMOTE — target already met (minority:majority 0.0212 >= target 0.01)
+[bert_fraud] round 8 aggregation weights:
+  client 0: n=53,339 | local_auprc=0.9595 | weight=0.2646
+  client 1: n=11,441 | local_auprc=0.9427 | weight=0.0558
+  client 2: n=17,093 | local_auprc=1.0000 | weight=0.0884
+  client 3: n=87,314 | local_auprc=0.9562 | weight=0.4316
+  client 4: n=31,947 | local_auprc=0.9665 | weight=0.1596
+[server] round 8 | thr=0.0637 | val_auprc=0.7420 | val_f1=0.7671 | val_precision=0.7778 | val_recall=0.7568
+[2m[36m(DefaultActor pid=1521122)[0m [smote] client 3: skipping SMOTE — target already met (minority:majority 0.0212 >= target 0.01)
+[bert_fraud] round 9 aggregation weights:
+  client 0: n=53,339 | local_auprc=0.9640 | weight=0.2605
+  client 1: n=31,947 | local_auprc=1.0000 | weight=0.1618
+  client 2: n=87,314 | local_auprc=0.9881 | weight=0.4370
+  client 3: n=11,441 | local_auprc=0.9436 | weight=0.0547
+  client 4: n=17,093 | local_auprc=0.9933 | weight=0.0860
+[server] round 9 | thr=0.7464 | val_auprc=0.7495 | val_f1=0.7581 | val_precision=0.9400 | val_recall=0.6351
+[2m[36m(DefaultActor pid=1521123)[0m [smote] client 3: skipping SMOTE — target already met (minority:majority 0.0212 >= target 0.01)
+[bert_fraud] round 10 aggregation weights:
+  client 0: n=53,339 | local_auprc=0.9906 | weight=0.2649
+  client 1: n=31,947 | local_auprc=1.0000 | weight=0.1602
+  client 2: n=17,093 | local_auprc=1.0000 | weight=0.0857
+  client 3: n=11,441 | local_auprc=0.9456 | weight=0.0542
+  client 4: n=87,314 | local_auprc=0.9936 | weight=0.4350
+[server] round 10 | thr=0.2479 | val_auprc=0.7606 | val_f1=0.7671 | val_precision=0.7778 | val_recall=0.7568
+[2m[36m(DefaultActor pid=1521122)[0m [smote] client 3: skipping SMOTE — target already met (minority:majority 0.0212 >= target 0.01)
+[bert_fraud] round 11 aggregation weights:
+  client 0: n=31,947 | local_auprc=0.9874 | weight=0.1588
+  client 1: n=11,441 | local_auprc=0.9482 | weight=0.0546
+  client 2: n=53,339 | local_auprc=1.0000 | weight=0.2686
+  client 3: n=87,314 | local_auprc=0.9824 | weight=0.4319
+  client 4: n=17,093 | local_auprc=1.0000 | weight=0.0861
+[server] round 11 | thr=0.6934 | val_auprc=0.7476 | val_f1=0.7634 | val_precision=0.8772 | val_recall=0.6757
+[2m[36m(DefaultActor pid=1521122)[0m [smote] client 3: skipping SMOTE — target already met (minority:majority 0.0212 >= target 0.01)
+[bert_fraud] round 12 aggregation weights:
+/home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/torch/nn/modules/transformer.py:392: UserWarning: enable_nested_tensor is True, but self.use_nested_tensor is False because encoder_layer.norm_first was True
+  warnings.warn(
+INFO flwr 2026-07-09 17:00:35,542 | server.py:125 | fit progress: (12, 0.2598156410350596, {'val_auprc': 0.7401843589649404, 'val_f1': 0.7716535433070866, 'val_precision': 0.9245283018867925, 'val_recall': 0.6621621621621622}, 347.61385958899336)
+INFO flwr 2026-07-09 17:00:35,542 | server.py:171 | evaluate_round 12: no clients selected, cancel
+DEBUG flwr 2026-07-09 17:00:35,542 | server.py:222 | fit_round 13: strategy sampled 5 clients (out of 5)
+[2m[36m(DefaultActor pid=1521121)[0m /home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/torch/nn/modules/transformer.py:392: UserWarning: enable_nested_tensor is True, but self.use_nested_tensor is False because encoder_layer.norm_first was True[32m [repeated 5x across cluster][0m
+[2m[36m(DefaultActor pid=1521121)[0m   warnings.warn([32m [repeated 5x across cluster][0m
+DEBUG flwr 2026-07-09 17:01:01,243 | server.py:236 | fit_round 13 received 5 results and 0 failures
+/home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/torch/nn/modules/transformer.py:392: UserWarning: enable_nested_tensor is True, but self.use_nested_tensor is False because encoder_layer.norm_first was True
+  warnings.warn(
+INFO flwr 2026-07-09 17:01:02,708 | server.py:125 | fit progress: (13, 0.2619881886420512, {'val_auprc': 0.7380118113579488, 'val_f1': 0.7786259541984732, 'val_precision': 0.8947368421052632, 'val_recall': 0.6891891891891891}, 374.7794966740039)
+INFO flwr 2026-07-09 17:01:02,708 | server.py:171 | evaluate_round 13: no clients selected, cancel
+DEBUG flwr 2026-07-09 17:01:02,708 | server.py:222 | fit_round 14: strategy sampled 5 clients (out of 5)
+[2m[36m(DefaultActor pid=1521120)[0m /home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/torch/nn/modules/transformer.py:392: UserWarning: enable_nested_tensor is True, but self.use_nested_tensor is False because encoder_layer.norm_first was True[32m [repeated 5x across cluster][0m
+[2m[36m(DefaultActor pid=1521120)[0m   warnings.warn([32m [repeated 5x across cluster][0m
+DEBUG flwr 2026-07-09 17:01:28,528 | server.py:236 | fit_round 14 received 5 results and 0 failures
+/home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/torch/nn/modules/transformer.py:392: UserWarning: enable_nested_tensor is True, but self.use_nested_tensor is False because encoder_layer.norm_first was True
+  warnings.warn(
+INFO flwr 2026-07-09 17:01:30,163 | server.py:125 | fit progress: (14, 0.26623443855944484, {'val_auprc': 0.7337655614405552, 'val_f1': 0.7851851851851852, 'val_precision': 0.8688524590163934, 'val_recall': 0.7162162162162162}, 402.23498980999284)
+INFO flwr 2026-07-09 17:01:30,163 | server.py:171 | evaluate_round 14: no clients selected, cancel
+DEBUG flwr 2026-07-09 17:01:30,164 | server.py:222 | fit_round 15: strategy sampled 5 clients (out of 5)
+[2m[36m(DefaultActor pid=1521121)[0m /home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/torch/nn/modules/transformer.py:392: UserWarning: enable_nested_tensor is True, but self.use_nested_tensor is False because encoder_layer.norm_first was True[32m [repeated 5x across cluster][0m
+[2m[36m(DefaultActor pid=1521121)[0m   warnings.warn([32m [repeated 5x across cluster][0m
+DEBUG flwr 2026-07-09 17:01:59,255 | server.py:236 | fit_round 15 received 5 results and 0 failures
+/home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/torch/nn/modules/transformer.py:392: UserWarning: enable_nested_tensor is True, but self.use_nested_tensor is False because encoder_layer.norm_first was True
+  warnings.warn(
+INFO flwr 2026-07-09 17:02:00,681 | server.py:125 | fit progress: (15, 0.26308907221997935, {'val_auprc': 0.7369109277800207, 'val_f1': 0.7777777777777778, 'val_precision': 0.9423076923076923, 'val_recall': 0.6621621621621622}, 432.75278052999056)
+INFO flwr 2026-07-09 17:02:00,681 | server.py:171 | evaluate_round 15: no clients selected, cancel
+DEBUG flwr 2026-07-09 17:02:00,681 | server.py:222 | fit_round 16: strategy sampled 5 clients (out of 5)
+[2m[36m(DefaultActor pid=1521121)[0m /home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/torch/nn/modules/transformer.py:392: UserWarning: enable_nested_tensor is True, but self.use_nested_tensor is False because encoder_layer.norm_first was True[32m [repeated 5x across cluster][0m
+[2m[36m(DefaultActor pid=1521121)[0m   warnings.warn([32m [repeated 5x across cluster][0m
+DEBUG flwr 2026-07-09 17:02:29,192 | server.py:236 | fit_round 16 received 5 results and 0 failures
+/home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/torch/nn/modules/transformer.py:392: UserWarning: enable_nested_tensor is True, but self.use_nested_tensor is False because encoder_layer.norm_first was True
+  warnings.warn(
+INFO flwr 2026-07-09 17:02:30,783 | server.py:125 | fit progress: (16, 0.25351114733738633, {'val_auprc': 0.7464888526626137, 'val_f1': 0.7786259541984732, 'val_precision': 0.8947368421052632, 'val_recall': 0.6891891891891891}, 462.8551033160038)
+INFO flwr 2026-07-09 17:02:30,784 | server.py:171 | evaluate_round 16: no clients selected, cancel
+DEBUG flwr 2026-07-09 17:02:30,784 | server.py:222 | fit_round 17: strategy sampled 5 clients (out of 5)
+[2m[36m(DefaultActor pid=1521121)[0m /home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/torch/nn/modules/transformer.py:392: UserWarning: enable_nested_tensor is True, but self.use_nested_tensor is False because encoder_layer.norm_first was True[32m [repeated 5x across cluster][0m
+[2m[36m(DefaultActor pid=1521121)[0m   warnings.warn([32m [repeated 5x across cluster][0m
+DEBUG flwr 2026-07-09 17:02:59,434 | server.py:236 | fit_round 17 received 5 results and 0 failures
+/home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/torch/nn/modules/transformer.py:392: UserWarning: enable_nested_tensor is True, but self.use_nested_tensor is False because encoder_layer.norm_first was True
+  warnings.warn(
+INFO flwr 2026-07-09 17:03:00,964 | server.py:125 | fit progress: (17, 0.2356515781590076, {'val_auprc': 0.7643484218409924, 'val_f1': 0.8208955223880597, 'val_precision': 0.9166666666666666, 'val_recall': 0.7432432432432432}, 493.0359961889917)
+INFO flwr 2026-07-09 17:03:00,964 | server.py:171 | evaluate_round 17: no clients selected, cancel
+DEBUG flwr 2026-07-09 17:03:00,965 | server.py:222 | fit_round 18: strategy sampled 5 clients (out of 5)
+[2m[36m(DefaultActor pid=1521121)[0m /home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/torch/nn/modules/transformer.py:392: UserWarning: enable_nested_tensor is True, but self.use_nested_tensor is False because encoder_layer.norm_first was True[32m [repeated 5x across cluster][0m
+[2m[36m(DefaultActor pid=1521121)[0m   warnings.warn([32m [repeated 5x across cluster][0m
+DEBUG flwr 2026-07-09 17:03:29,637 | server.py:236 | fit_round 18 received 5 results and 0 failures
+/home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/torch/nn/modules/transformer.py:392: UserWarning: enable_nested_tensor is True, but self.use_nested_tensor is False because encoder_layer.norm_first was True
+  warnings.warn(
+INFO flwr 2026-07-09 17:03:31,124 | server.py:125 | fit progress: (18, 0.25086899242005234, {'val_auprc': 0.7491310075799477, 'val_f1': 0.8208955223880597, 'val_precision': 0.9166666666666666, 'val_recall': 0.7432432432432432}, 523.1960255750018)
+INFO flwr 2026-07-09 17:03:31,124 | server.py:171 | evaluate_round 18: no clients selected, cancel
+DEBUG flwr 2026-07-09 17:03:31,125 | server.py:222 | fit_round 19: strategy sampled 5 clients (out of 5)
+[2m[36m(DefaultActor pid=1521121)[0m /home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/torch/nn/modules/transformer.py:392: UserWarning: enable_nested_tensor is True, but self.use_nested_tensor is False because encoder_layer.norm_first was True[32m [repeated 5x across cluster][0m
+[2m[36m(DefaultActor pid=1521121)[0m   warnings.warn([32m [repeated 5x across cluster][0m
+DEBUG flwr 2026-07-09 17:03:58,733 | server.py:236 | fit_round 19 received 5 results and 0 failures
+/home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/torch/nn/modules/transformer.py:392: UserWarning: enable_nested_tensor is True, but self.use_nested_tensor is False because encoder_layer.norm_first was True
+  warnings.warn(
+INFO flwr 2026-07-09 17:04:00,139 | server.py:125 | fit progress: (19, 0.2420790179641774, {'val_auprc': 0.7579209820358226, 'val_f1': 0.7851851851851852, 'val_precision': 0.8688524590163934, 'val_recall': 0.7162162162162162}, 552.2108554220031)
+INFO flwr 2026-07-09 17:04:00,139 | server.py:171 | evaluate_round 19: no clients selected, cancel
+DEBUG flwr 2026-07-09 17:04:00,139 | server.py:222 | fit_round 20: strategy sampled 5 clients (out of 5)
+[2m[36m(DefaultActor pid=1521121)[0m /home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/torch/nn/modules/transformer.py:392: UserWarning: enable_nested_tensor is True, but self.use_nested_tensor is False because encoder_layer.norm_first was True[32m [repeated 5x across cluster][0m
+[2m[36m(DefaultActor pid=1521121)[0m   warnings.warn([32m [repeated 5x across cluster][0m
+DEBUG flwr 2026-07-09 17:04:28,562 | server.py:236 | fit_round 20 received 5 results and 0 failures
+/home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/torch/nn/modules/transformer.py:392: UserWarning: enable_nested_tensor is True, but self.use_nested_tensor is False because encoder_layer.norm_first was True
+  warnings.warn(
+INFO flwr 2026-07-09 17:04:31,648 | server.py:125 | fit progress: (20, 0.24556954173156553, {'val_auprc': 0.7544304582684345, 'val_f1': 0.7969924812030075, 'val_precision': 0.8983050847457628, 'val_recall': 0.7162162162162162}, 583.7197666059947)
+INFO flwr 2026-07-09 17:04:31,648 | server.py:171 | evaluate_round 20: no clients selected, cancel
+INFO flwr 2026-07-09 17:04:31,648 | server.py:153 | FL finished in 583.7201411330025
+INFO flwr 2026-07-09 17:04:31,649 | app.py:225 | app_fit: losses_distributed []
+INFO flwr 2026-07-09 17:04:31,649 | app.py:226 | app_fit: metrics_distributed_fit {'local_auprc': [(1, 0.7418727067600366), (2, 0.856276259374852), (3, 0.8829037310153917), (4, 0.9310756073366487), (5, 0.9239233689698935), (6, 0.9618941535039318), (7, 0.9609697885904158), (8, 0.9616700778776972), (9, 0.9815108591338833), (10, 0.9916246523071517), (11, 0.987391754070018), (12, 0.9936448564374497), (13, 0.9886098853196781), (14, 0.9857611330367174), (15, 0.9952747048655565), (16, 0.9935009390286548), (17, 0.9929087115292484), (18, 0.9911666966566252), (19, 0.9954207668527262), (20, 0.9892764829663854)], 'client_id': [(1, 1.1997971501586007), (2, 1.1997971501586007), (3, 1.1997971501586007), (4, 1.1997971501586007), (5, 1.1997971501586007), (6, 1.1997971501586007), (7, 1.1997971501586007), (8, 1.1997971501586007), (9, 1.1997971501586007), (10, 1.1997971501586007), (11, 1.1997971501586007), (12, 1.1997971501586007), (13, 1.1997971501586007), (14, 1.1997971501586007), (15, 1.1997971501586007), (16, 1.1997971501586007), (17, 1.1997971501586007), (18, 1.1997971501586007), (19, 1.1997971501586007), (20, 1.1997971501586007)]}
+INFO flwr 2026-07-09 17:04:31,649 | app.py:227 | app_fit: metrics_distributed {}
+INFO flwr 2026-07-09 17:04:31,649 | app.py:228 | app_fit: losses_centralized [(0, 0.998507053658087), (1, 0.3755833857584129), (2, 0.33997318987445724), (3, 0.2886706544818394), (4, 0.262988769218245), (5, 0.2311372096236627), (6, 0.23718763341116667), (7, 0.25282356838562847), (8, 0.25801364683789163), (9, 0.250547439413221), (10, 0.239350384550283), (11, 0.25244332113842805), (12, 0.2598156410350596), (13, 0.2619881886420512), (14, 0.26623443855944484), (15, 0.26308907221997935), (16, 0.25351114733738633), (17, 0.2356515781590076), (18, 0.25086899242005234), (19, 0.2420790179641774), (20, 0.24556954173156553)]
+INFO flwr 2026-07-09 17:04:31,649 | app.py:229 | app_fit: metrics_centralized {'val_auprc': [(0, 0.0014929463419130343), (1, 0.6244166142415871), (2, 0.6600268101255428), (3, 0.7113293455181606), (4, 0.737011230781755), (5, 0.7688627903763373), (6, 0.7628123665888333), (7, 0.7471764316143715), (8, 0.7419863531621084), (9, 0.749452560586779), (10, 0.760649615449717), (11, 0.747556678861572), (12, 0.7401843589649404), (13, 0.7380118113579488), (14, 0.7337655614405552), (15, 0.7369109277800207), (16, 0.7464888526626137), (17, 0.7643484218409924), (18, 0.7491310075799477), (19, 0.7579209820358226), (20, 0.7544304582684345)], 'val_f1': [(0, 0.005012531328320802), (1, 0.7516778523489933), (2, 0.7482993197278912), (3, 0.7702702702702703), (4, 0.7619047619047619), (5, 0.78125), (6, 0.7846153846153846), (7, 0.7611940298507462), (8, 0.7671232876712328), (9, 0.7580645161290323), (10, 0.7671232876712328), (11, 0.7633587786259542), (12, 0.7716535433070866), (13, 0.7786259541984732), (14, 0.7851851851851852), (15, 0.7777777777777778), (16, 0.7786259541984732), (17, 0.8208955223880597), (18, 0.8208955223880597), (19, 0.7851851851851852), (20, 0.7969924812030075)], 'val_precision': [(0, 0.003076923076923077), (1, 0.7466666666666667), (2, 0.7534246575342466), (3, 0.7702702702702703), (4, 0.7671232876712328), (5, 0.9259259259259259), (6, 0.9107142857142857), (7, 0.85), (8, 0.7777777777777778), (9, 0.94), (10, 0.7777777777777778), (11, 0.8771929824561403), (12, 0.9245283018867925), (13, 0.8947368421052632), (14, 0.8688524590163934), (15, 0.9423076923076923), (16, 0.8947368421052632), (17, 0.9166666666666666), (18, 0.9166666666666666), (19, 0.8688524590163934), (20, 0.8983050847457628)], 'val_recall': [(0, 0.013513513513513514), (1, 0.7567567567567568), (2, 0.7432432432432432), (3, 0.7702702702702703), (4, 0.7567567567567568), (5, 0.6756756756756757), (6, 0.6891891891891891), (7, 0.6891891891891891), (8, 0.7567567567567568), (9, 0.6351351351351351), (10, 0.7567567567567568), (11, 0.6756756756756757), (12, 0.6621621621621622), (13, 0.6891891891891891), (14, 0.7162162162162162), (15, 0.6621621621621622), (16, 0.6891891891891891), (17, 0.7432432432432432), (18, 0.7432432432432432), (19, 0.7162162162162162), (20, 0.7162162162162162)]}
+wandb: Waiting for W&B process to finish... (success).
+wandb: 
+wandb: Run history:
+wandb:          round ▁▁▂▂▂▃▃▃▄▄▅▅▅▆▆▆▇▇▇███
+wandb:     test_auprc ▁
+wandb:        test_f1 ▁
+wandb:      test_loss ▁
+wandb: test_precision ▁
+wandb:    test_recall ▁
+wandb:      val_auprc ▁▇▇▇█████████████████
+wandb:         val_f1 ▁▇▇█▇██▇█▇███████████
+wandb:       val_loss █▂▂▂▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb:  val_precision ▁▇▇▇▇██▇▇█▇███▇████▇█
+wandb:     val_recall ▁████▇▇▇█▇█▇▇▇▇▇▇██▇▇
+wandb: 
+wandb: Run summary:
+wandb:       best_round 5
+wandb:   best_val_auprc 0.76886
+wandb: duration_seconds 592.55924
+wandb:            round 20
+wandb:       test_auprc 0.82316
+wandb:          test_f1 0.83212
+wandb:        test_loss 0.17684
+wandb:   test_precision 0.90476
+wandb:      test_recall 0.77027
+wandb:        val_auprc 0.75443
+wandb:           val_f1 0.79699
+wandb:         val_loss 0.24557
+wandb:    val_precision 0.89831
+wandb:       val_recall 0.71622
+wandb: 
+wandb: 🚀 View run bert_fraud_dirichlet_alpha1.0_smote_seed42 at: https://wandb.ai/deo250605-sepuluh-nopember-insitute-of-technology/fraud-fl-TA/runs/noqsrbl5
+wandb: Synced 6 W&B file(s), 0 media file(s), 0 artifact file(s) and 0 other file(s)
+wandb: Find logs at: ./wandb/run-20260709_165441-noqsrbl5/logs
+[2m[36m(DefaultActor pid=1521123)[0m /home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/torch/nn/modules/transformer.py:392: UserWarning: enable_nested_tensor is True, but self.use_nested_tensor is False because encoder_layer.norm_first was True[32m [repeated 4x across cluster][0m
+[2m[36m(DefaultActor pid=1521123)[0m   warnings.warn([32m [repeated 4x across cluster][0m
+  client 0: n=87,314 | local_auprc=0.9923 | weight=0.4335
+  client 1: n=17,093 | local_auprc=1.0000 | weight=0.0855
+  client 2: n=53,339 | local_auprc=1.0000 | weight=0.2669
+  client 3: n=31,947 | local_auprc=1.0000 | weight=0.1599
+  client 4: n=11,441 | local_auprc=0.9467 | weight=0.0542
+[server] round 12 | thr=0.8102 | val_auprc=0.7402 | val_f1=0.7717 | val_precision=0.9245 | val_recall=0.6622
+[2m[36m(DefaultActor pid=1521122)[0m [smote] client 3: skipping SMOTE — target already met (minority:majority 0.0212 >= target 0.01)
+[bert_fraud] round 13 aggregation weights:
+  client 0: n=87,314 | local_auprc=0.9992 | weight=0.4387
+  client 1: n=17,093 | local_auprc=0.9967 | weight=0.0857
+  client 2: n=53,339 | local_auprc=0.9722 | weight=0.2608
+  client 3: n=11,441 | local_auprc=0.9481 | weight=0.0545
+  client 4: n=31,947 | local_auprc=0.9974 | weight=0.1602
+[server] round 13 | thr=0.4597 | val_auprc=0.7380 | val_f1=0.7786 | val_precision=0.8947 | val_recall=0.6892
+[2m[36m(DefaultActor pid=1521122)[0m [smote] client 3: skipping SMOTE — target already met (minority:majority 0.0212 >= target 0.01)
+[bert_fraud] round 14 aggregation weights:
+  client 0: n=11,441 | local_auprc=0.9394 | weight=0.0542
+  client 1: n=31,947 | local_auprc=0.9917 | weight=0.1598
+  client 2: n=53,339 | local_auprc=0.9676 | weight=0.2603
+  client 3: n=87,314 | local_auprc=0.9992 | weight=0.4400
+  client 4: n=17,093 | local_auprc=0.9938 | weight=0.0857
+[server] round 14 | thr=0.3270 | val_auprc=0.7338 | val_f1=0.7852 | val_precision=0.8689 | val_recall=0.7162
+[2m[36m(DefaultActor pid=1521120)[0m [smote] client 3: skipping SMOTE — target already met (minority:majority 0.0212 >= target 0.01)
+[bert_fraud] round 15 aggregation weights:
+  client 0: n=11,441 | local_auprc=0.9475 | weight=0.0542
+  client 1: n=31,947 | local_auprc=1.0000 | weight=0.1596
+  client 2: n=87,314 | local_auprc=1.0000 | weight=0.4362
+  client 3: n=53,339 | local_auprc=0.9980 | weight=0.2659
+  client 4: n=17,093 | local_auprc=0.9857 | weight=0.0842
+[server] round 15 | thr=0.6456 | val_auprc=0.7369 | val_f1=0.7778 | val_precision=0.9423 | val_recall=0.6622
+[server] early-stop signal at round 15: val_auprc unchanged for 10 rounds (best=0.7689 at round 5)
+[2m[36m(DefaultActor pid=1521120)[0m [smote] client 3: skipping SMOTE — target already met (minority:majority 0.0212 >= target 0.01)
+[bert_fraud] round 16 aggregation weights:
+  client 0: n=31,947 | local_auprc=1.0000 | weight=0.1599
+  client 1: n=53,339 | local_auprc=1.0000 | weight=0.2669
+  client 2: n=11,441 | local_auprc=0.9435 | weight=0.0540
+  client 3: n=17,093 | local_auprc=0.9967 | weight=0.0853
+  client 4: n=87,314 | local_auprc=0.9931 | weight=0.4339
+[server] round 16 | thr=0.4725 | val_auprc=0.7465 | val_f1=0.7786 | val_precision=0.8947 | val_recall=0.6892
+[2m[36m(DefaultActor pid=1521123)[0m [smote] client 3: skipping SMOTE — target already met (minority:majority 0.0212 >= target 0.01)
+[bert_fraud] round 17 aggregation weights:
+  client 0: n=87,314 | local_auprc=1.0000 | weight=0.4372
+  client 1: n=31,947 | local_auprc=1.0000 | weight=0.1600
+  client 2: n=11,441 | local_auprc=0.9432 | weight=0.0540
+  client 3: n=17,093 | local_auprc=0.9888 | weight=0.0846
+  client 4: n=53,339 | local_auprc=0.9890 | weight=0.2642
+[server] round 17 | thr=0.0262 | val_auprc=0.7643 | val_f1=0.8209 | val_precision=0.9167 | val_recall=0.7432
+[2m[36m(DefaultActor pid=1521121)[0m [smote] client 3: skipping SMOTE — target already met (minority:majority 0.0212 >= target 0.01)
+[bert_fraud] round 18 aggregation weights:
+  client 0: n=87,314 | local_auprc=0.9975 | weight=0.4369
+  client 1: n=31,947 | local_auprc=1.0000 | weight=0.1602
+  client 2: n=11,441 | local_auprc=0.9431 | weight=0.0541
+  client 3: n=53,339 | local_auprc=0.9840 | weight=0.2633
+  client 4: n=17,093 | local_auprc=0.9967 | weight=0.0855
+[server] round 18 | thr=0.6218 | val_auprc=0.7491 | val_f1=0.8209 | val_precision=0.9167 | val_recall=0.7432
+[2m[36m(DefaultActor pid=1521120)[0m [smote] client 3: skipping SMOTE — target already met (minority:majority 0.0212 >= target 0.01)
+[bert_fraud] round 19 aggregation weights:
+  client 0: n=53,339 | local_auprc=0.9980 | weight=0.2659
+  client 1: n=87,314 | local_auprc=0.9984 | weight=0.4354
+  client 2: n=11,441 | local_auprc=0.9412 | weight=0.0538
+  client 3: n=31,947 | local_auprc=1.0000 | weight=0.1596
+  client 4: n=17,093 | local_auprc=1.0000 | weight=0.0854
+[server] round 19 | thr=0.1915 | val_auprc=0.7579 | val_f1=0.7852 | val_precision=0.8689 | val_recall=0.7162
+[2m[36m(DefaultActor pid=1521121)[0m [smote] client 3: skipping SMOTE — target already met (minority:majority 0.0212 >= target 0.01)
+[bert_fraud] round 20 aggregation weights:
+  client 0: n=53,339 | local_auprc=0.9789 | weight=0.2624
+  client 1: n=11,441 | local_auprc=0.9389 | weight=0.0540
+  client 2: n=17,093 | local_auprc=0.9847 | weight=0.0846
+  client 3: n=87,314 | local_auprc=0.9992 | weight=0.4385
+  client 4: n=31,947 | local_auprc=1.0000 | weight=0.1606
+[server] round 20 | thr=0.2763 | val_auprc=0.7544 | val_f1=0.7970 | val_precision=0.8983 | val_recall=0.7162
+[server] FINAL round 20 | test_auprc=0.8232 | test_f1=0.8321 | test_precision=0.9048 | test_recall=0.7703
+[run] best val_auprc: 0.7689 at round 5
+[run] final test: auprc=0.8232 | f1=0.8321 | precision=0.9048 | recall=0.7703
+[results] wrote summary CSV → results/logs/creditcard/bert_fraud/bert_fraud_dirichlet_alpha1.0_smote_seed42.csv
+[results] wrote rounds CSV  → results/logs/creditcard/bert_fraud/bert_fraud_dirichlet_alpha1.0_smote_seed42_rounds.csv

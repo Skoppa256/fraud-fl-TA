@@ -1,0 +1,91 @@
+/home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/wandb/sdk/launch/builder/build.py:11: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools<81.
+  import pkg_resources
+/home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/wandb/sdk/launch/builder/build.py:11: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools<81.
+  import pkg_resources
+wandb: Currently logged in as: deo250605 (deo250605-sepuluh-nopember-insitute-of-technology). Use `wandb login --relogin` to force relogin
+wandb: - Waiting for wandb.init()...wandb: \ Waiting for wandb.init()...wandb: | Waiting for wandb.init()...wandb: wandb version 0.28.0 is available!  To upgrade, please run:
+wandb:  $ pip install wandb --upgrade
+wandb: Tracking run with wandb version 0.15.12
+wandb: Run data is saved locally in /home/justin/fraud-fl-TA/wandb/run-20260709_161929-nab6sget
+wandb: Run `wandb offline` to turn off syncing.
+wandb: Syncing run centralized_bert_fraud_smote_seed42
+wandb: ⭐️ View project at https://wandb.ai/deo250605-sepuluh-nopember-insitute-of-technology/fraud-fl-TA
+wandb: 🚀 View run at https://wandb.ai/deo250605-sepuluh-nopember-insitute-of-technology/fraud-fl-TA/runs/nab6sget
+/home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/torch/nn/modules/transformer.py:392: UserWarning: enable_nested_tensor is True, but self.use_nested_tensor is False because encoder_layer.norm_first was True
+  warnings.warn(
+Traceback (most recent call last):
+  File "/home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/runpy.py", line 196, in _run_module_as_main
+    return _run_code(code, main_globals, None,
+  File "/home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/runpy.py", line 86, in _run_code
+    exec(code, run_globals)
+  File "/home/justin/fraud-fl-TA/experiments/centralized_baseline/run_bert_fraud.py", line 324, in <module>
+    main()
+  File "/home/justin/fraud-fl-TA/experiments/centralized_baseline/run_bert_fraud.py", line 276, in main
+    write_centralized_results(
+  File "/home/justin/fraud-fl-TA/evaluation/results_writer.py", line 258, in write_centralized_results
+    out_dir = _logs_dir(os.path.join(dataset, subdir))
+  File "/home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/posixpath.py", line 76, in join
+    a = os.fspath(a)
+TypeError: expected str, bytes or os.PathLike object, not TensorDataset
+wandb: Waiting for W&B process to finish... (failed 1). Press Control-C to abort syncing.
+wandb: - 0.003 MB of 0.003 MB uploaded (0.000 MB deduped)wandb: \ 0.008 MB of 0.014 MB uploaded (0.000 MB deduped)wandb: | 0.008 MB of 0.014 MB uploaded (0.000 MB deduped)wandb: / 0.008 MB of 0.014 MB uploaded (0.000 MB deduped)wandb: 
+wandb: Run history:
+wandb:         epoch ▁▁▂▂▂▃▃▄▄▄▅▅▅▆▆▇▇▇██
+wandb:    train_loss █▅▅▄▄▃▃▂▂▂▂▂▁▂▁▁▁▁▁▁
+wandb:     val_auprc ▁█▆▆▇▅▇▅▆▇█▆▇▆▇██▇▇▆
+wandb:        val_f1 ▅██▇▃▂█▂▄▅▇▅▄▂▄▂▇▁▁▄
+wandb: val_precision ▆▇▇▇▃▄▆▂▅▃█▅▇▁▅▆▆▇▇▅
+wandb:    val_recall ▄▆▆▅▆▄▇▇▅█▄▆▃█▅▂▆▁▁▅
+wandb: 
+wandb: Run summary:
+wandb:         epoch 20
+wandb:    train_loss 0.00569
+wandb:     val_auprc 0.72163
+wandb:        val_f1 0.76712
+wandb: val_precision 0.77778
+wandb:    val_recall 0.75676
+wandb: 
+wandb: 🚀 View run centralized_bert_fraud_smote_seed42 at: https://wandb.ai/deo250605-sepuluh-nopember-insitute-of-technology/fraud-fl-TA/runs/nab6sget
+wandb: Synced 6 W&B file(s), 0 media file(s), 0 artifact file(s) and 0 other file(s)
+wandb: Find logs at: ./wandb/run-20260709_161929-nab6sget/logs
+[creditcard] loading data/creditcard/creditcard.csv
+[creditcard] loaded 284,807 rows, 31 columns
+
+[creditcard] === data summary ===
+  total rows loaded : 284,807
+  feature count     : 30
+  feature names     : ['Time', 'V1', 'V2', 'V3', 'V4', 'V5', 'V6', 'V7', 'V8', 'V9', 'V10', 'V11', 'V12', 'V13', 'V14', 'V15', 'V16', 'V17', 'V18', 'V19', 'V20', 'V21', 'V22', 'V23', 'V24', 'V25', 'V26', 'V27', 'V28', 'Amount']
+  x_train: (199364, 30)  dtype=float32   |  y_train: (199364,)  dtype=int32
+  x_val  : (42721, 30)  dtype=float32   |  y_val  : (42721,)  dtype=int32
+  x_test : (42722, 30)  dtype=float32   |  y_test : (42722,)  dtype=int32
+  fraud in train: 344 / 199,364  (0.1725%)
+  fraud in val  : 74 / 42,721  (0.1732%)
+  fraud in test : 74 / 42,722  (0.1732%)
+[creditcard] === end summary ===
+
+=== CENTRALIZED BASELINE — BERT_FRAUD ===
+Dataset: PaySim | x_train: (199364, 30) | fraud ratio: 0.1725%
+Oversampling: SMOTE | sampling_strategy=0.01 | x_train after: (201010, 30) | fraud ratio: 0.99%
+[epoch   1/20] loss=0.0136 | val_auprc=0.5599 | val_f1=0.7692 | val_precision=0.7971 | val_recall=0.7432
+[epoch   2/20] loss=0.0106 | val_auprc=0.7756 | val_f1=0.7862 | val_precision=0.8028 | val_recall=0.7703
+[epoch   3/20] loss=0.0099 | val_auprc=0.7164 | val_f1=0.7862 | val_precision=0.8028 | val_recall=0.7703
+[epoch   4/20] loss=0.0091 | val_auprc=0.7073 | val_f1=0.7832 | val_precision=0.8116 | val_recall=0.7568
+[epoch   5/20] loss=0.0086 | val_auprc=0.7406 | val_f1=0.7600 | val_precision=0.7500 | val_recall=0.7703
+[epoch   6/20] loss=0.0082 | val_auprc=0.6781 | val_f1=0.7534 | val_precision=0.7639 | val_recall=0.7432
+[epoch   7/20] loss=0.0075 | val_auprc=0.7543 | val_f1=0.7838 | val_precision=0.7838 | val_recall=0.7838
+[epoch   8/20] loss=0.0073 | val_auprc=0.6824 | val_f1=0.7532 | val_precision=0.7250 | val_recall=0.7838
+[epoch   9/20] loss=0.0069 | val_auprc=0.7093 | val_f1=0.7671 | val_precision=0.7778 | val_recall=0.7568
+[epoch  10/20] loss=0.0070 | val_auprc=0.7483 | val_f1=0.7712 | val_precision=0.7468 | val_recall=0.7973
+[epoch  11/20] loss=0.0067 | val_auprc=0.7650 | val_f1=0.7801 | val_precision=0.8209 | val_recall=0.7432
+[epoch  12/20] loss=0.0066 | val_auprc=0.7281 | val_f1=0.7703 | val_precision=0.7703 | val_recall=0.7703
+[epoch  13/20] loss=0.0062 | val_auprc=0.7462 | val_f1=0.7660 | val_precision=0.8060 | val_recall=0.7297
+[epoch  14/20] loss=0.0064 | val_auprc=0.7288 | val_f1=0.7516 | val_precision=0.7108 | val_recall=0.7973
+[epoch  15/20] loss=0.0062 | val_auprc=0.7424 | val_f1=0.7619 | val_precision=0.7671 | val_recall=0.7568
+[epoch  16/20] loss=0.0062 | val_auprc=0.7678 | val_f1=0.7518 | val_precision=0.7910 | val_recall=0.7162
+[epoch  17/20] loss=0.0060 | val_auprc=0.7719 | val_f1=0.7808 | val_precision=0.7917 | val_recall=0.7703
+[epoch  18/20] loss=0.0059 | val_auprc=0.7389 | val_f1=0.7482 | val_precision=0.8000 | val_recall=0.7027
+[epoch  19/20] loss=0.0058 | val_auprc=0.7483 | val_f1=0.7482 | val_precision=0.8000 | val_recall=0.7027
+[epoch  20/20] loss=0.0057 | val_auprc=0.7216 | val_f1=0.7671 | val_precision=0.7778 | val_recall=0.7568
+[VAL]  auprc=0.7216 | f1=0.7671 | precision=0.7778 | recall=0.7568
+[TEST] auprc=0.7955 | f1=0.8143 | precision=0.8636 | recall=0.7703
+Training time: 320.94s

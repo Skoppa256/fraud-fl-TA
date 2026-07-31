@@ -1,0 +1,62 @@
+/home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/wandb/sdk/launch/builder/build.py:11: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools<81.
+  import pkg_resources
+/home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/wandb/sdk/launch/builder/build.py:11: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools<81.
+  import pkg_resources
+wandb: Currently logged in as: deo250605 (deo250605-sepuluh-nopember-insitute-of-technology). Use `wandb login --relogin` to force relogin
+wandb: - Waiting for wandb.init()...wandb: \ Waiting for wandb.init()...wandb: wandb version 0.28.0 is available!  To upgrade, please run:
+wandb:  $ pip install wandb --upgrade
+wandb: Tracking run with wandb version 0.15.12
+wandb: Run data is saved locally in /home/justin/fraud-fl-TA/wandb/run-20260709_161654-0otibw8k
+wandb: Run `wandb offline` to turn off syncing.
+wandb: Syncing run centralized_lr_smote_seed42
+wandb: ⭐️ View project at https://wandb.ai/deo250605-sepuluh-nopember-insitute-of-technology/fraud-fl-TA
+wandb: 🚀 View run at https://wandb.ai/deo250605-sepuluh-nopember-insitute-of-technology/fraud-fl-TA/runs/0otibw8k
+wandb: Waiting for W&B process to finish... (success).
+wandb: 
+wandb: Run history:
+wandb:      test_auprc ▁
+wandb:         test_f1 ▁
+wandb:  test_precision ▁
+wandb:     test_recall ▁
+wandb: training_time_s ▁
+wandb:       val_auprc ▁
+wandb:          val_f1 ▁
+wandb:   val_precision ▁
+wandb:      val_recall ▁
+wandb: 
+wandb: Run summary:
+wandb:      test_auprc 0.76726
+wandb:         test_f1 0.77273
+wandb:  test_precision 0.87931
+wandb:     test_recall 0.68919
+wandb: training_time_s 0.63295
+wandb:       val_auprc 0.66428
+wandb:          val_f1 0.76056
+wandb:   val_precision 0.79412
+wandb:      val_recall 0.72973
+wandb: 
+wandb: 🚀 View run centralized_lr_smote_seed42 at: https://wandb.ai/deo250605-sepuluh-nopember-insitute-of-technology/fraud-fl-TA/runs/0otibw8k
+wandb: Synced 6 W&B file(s), 0 media file(s), 0 artifact file(s) and 0 other file(s)
+wandb: Find logs at: ./wandb/run-20260709_161654-0otibw8k/logs
+[creditcard] loading data/creditcard/creditcard.csv
+[creditcard] loaded 284,807 rows, 31 columns
+
+[creditcard] === data summary ===
+  total rows loaded : 284,807
+  feature count     : 30
+  feature names     : ['Time', 'V1', 'V2', 'V3', 'V4', 'V5', 'V6', 'V7', 'V8', 'V9', 'V10', 'V11', 'V12', 'V13', 'V14', 'V15', 'V16', 'V17', 'V18', 'V19', 'V20', 'V21', 'V22', 'V23', 'V24', 'V25', 'V26', 'V27', 'V28', 'Amount']
+  x_train: (199364, 30)  dtype=float32   |  y_train: (199364,)  dtype=int32
+  x_val  : (42721, 30)  dtype=float32   |  y_val  : (42721,)  dtype=int32
+  x_test : (42722, 30)  dtype=float32   |  y_test : (42722,)  dtype=int32
+  fraud in train: 344 / 199,364  (0.1725%)
+  fraud in val  : 74 / 42,721  (0.1732%)
+  fraud in test : 74 / 42,722  (0.1732%)
+[creditcard] === end summary ===
+
+=== CENTRALIZED BASELINE — LR ===
+Dataset: PaySim | x_train: (199364, 30) | fraud ratio: 0.1725%
+Oversampling: SMOTE | sampling_strategy=0.01 | x_train after: (201010, 30) | fraud ratio: 0.99%
+[VAL]  auprc=0.6643 | f1=0.7606 | precision=0.7941 | recall=0.7297
+[TEST] auprc=0.7673 | f1=0.7727 | precision=0.8793 | recall=0.6892
+Training time: 0.63s
+[results] wrote summary CSV → results/logs/creditcard/centralized/centralized_lr_smote_seed42.csv

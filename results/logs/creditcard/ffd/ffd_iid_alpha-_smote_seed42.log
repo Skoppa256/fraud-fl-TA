@@ -1,0 +1,311 @@
+/home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/ray/_private/parameter.py:4: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools<81.
+  import pkg_resources
+/home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/wandb/sdk/launch/builder/build.py:11: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools<81.
+  import pkg_resources
+wandb: Currently logged in as: deo250605 (deo250605-sepuluh-nopember-insitute-of-technology). Use `wandb login --relogin` to force relogin
+wandb: - Waiting for wandb.init()...wandb: \ Waiting for wandb.init()...wandb: wandb version 0.28.0 is available!  To upgrade, please run:
+wandb:  $ pip install wandb --upgrade
+wandb: Tracking run with wandb version 0.15.12
+wandb: Run data is saved locally in /home/justin/fraud-fl-TA/wandb/run-20260709_163130-5djq2li4
+wandb: Run `wandb offline` to turn off syncing.
+wandb: Syncing run ffd_iid_alpha-_smote_seed42
+wandb: ⭐️ View project at https://wandb.ai/deo250605-sepuluh-nopember-insitute-of-technology/fraud-fl-TA
+wandb: 🚀 View run at https://wandb.ai/deo250605-sepuluh-nopember-insitute-of-technology/fraud-fl-TA/runs/5djq2li4
+INFO flwr 2026-07-09 16:31:33,805 | app.py:175 | Starting Flower simulation, config: ServerConfig(num_rounds=20, round_timeout=None)
+2026-07-09 16:31:35,360	INFO worker.py:1612 -- Started a local Ray instance. View the dashboard at [1m[32m127.0.0.1:8265 [39m[22m
+INFO flwr 2026-07-09 16:31:35,934 | app.py:210 | Flower VCE: Ray initialized with resources: {'node:__internal_head__': 1.0, 'object_store_memory': 4064774553.0, 'CPU': 20.0, 'GPU': 1.0, 'node:172.24.108.56': 1.0, 'memory': 8129549108.0}
+INFO flwr 2026-07-09 16:31:35,935 | app.py:224 | Flower VCE: Resources for each Virtual Client: {'num_cpus': 4, 'num_gpus': 1.0}
+INFO flwr 2026-07-09 16:31:35,941 | app.py:270 | Flower VCE: Creating VirtualClientEngineActorPool with 1 actors
+INFO flwr 2026-07-09 16:31:35,942 | server.py:89 | Initializing global parameters
+INFO flwr 2026-07-09 16:31:35,942 | server.py:272 | Using initial parameters provided by strategy
+INFO flwr 2026-07-09 16:31:35,942 | server.py:91 | Evaluating initial parameters
+[2m[33m(raylet)[0m /home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/ray/_private/parameter.py:4: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools<81.
+[2m[33m(raylet)[0m   import pkg_resources
+INFO flwr 2026-07-09 16:31:36,209 | server.py:94 | initial parameters (loss, other metrics): 0.99723689685578, {'val_auprc': 0.002763103144220034, 'val_f1': 0.038834951456310676, 'val_precision': 0.06896551724137931, 'val_recall': 0.02702702702702703}
+INFO flwr 2026-07-09 16:31:36,209 | server.py:104 | FL starting
+DEBUG flwr 2026-07-09 16:31:36,210 | server.py:222 | fit_round 1: strategy sampled 5 clients (out of 5)
+[2m[36m(DefaultActor pid=1504267)[0m /home/justin/fraud-fl-TA/models/ffd/model.py:101: UserWarning: The given NumPy array is not writable, and PyTorch does not support non-writable tensors. This means writing to this tensor will result in undefined behavior. You may want to copy the array to protect its data or make it writable before converting it to a tensor. This type of warning will be suppressed for the rest of this program. (Triggered internally at /pytorch/torch/csrc/utils/tensor_numpy.cpp:203.)
+[2m[36m(DefaultActor pid=1504267)[0m   xb = torch.from_numpy(x_all[start : start + batch_size]).to(self.device)
+DEBUG flwr 2026-07-09 16:32:00,093 | server.py:236 | fit_round 1 received 5 results and 0 failures
+INFO flwr 2026-07-09 16:32:00,139 | server.py:125 | fit progress: (1, 0.3765621909722412, {'val_auprc': 0.6234378090277588, 'val_f1': 0.75177304964539, 'val_precision': 0.7910447761194029, 'val_recall': 0.7162162162162162}, 23.92972194000322)
+INFO flwr 2026-07-09 16:32:00,140 | server.py:171 | evaluate_round 1: no clients selected, cancel
+DEBUG flwr 2026-07-09 16:32:00,140 | server.py:222 | fit_round 2: strategy sampled 5 clients (out of 5)
+DEBUG flwr 2026-07-09 16:32:23,925 | server.py:236 | fit_round 2 received 5 results and 0 failures
+INFO flwr 2026-07-09 16:32:23,972 | server.py:125 | fit progress: (2, 0.36814172461317074, {'val_auprc': 0.6318582753868293, 'val_f1': 0.7605633802816901, 'val_precision': 0.7941176470588235, 'val_recall': 0.7297297297297297}, 47.76195505200303)
+INFO flwr 2026-07-09 16:32:23,972 | server.py:171 | evaluate_round 2: no clients selected, cancel
+DEBUG flwr 2026-07-09 16:32:23,972 | server.py:222 | fit_round 3: strategy sampled 5 clients (out of 5)
+DEBUG flwr 2026-07-09 16:32:47,952 | server.py:236 | fit_round 3 received 5 results and 0 failures
+INFO flwr 2026-07-09 16:32:47,996 | server.py:125 | fit progress: (3, 0.3616836638887231, {'val_auprc': 0.6383163361112769, 'val_f1': 0.7483870967741936, 'val_precision': 0.7160493827160493, 'val_recall': 0.7837837837837838}, 71.78592080100498)
+INFO flwr 2026-07-09 16:32:47,996 | server.py:171 | evaluate_round 3: no clients selected, cancel
+DEBUG flwr 2026-07-09 16:32:47,996 | server.py:222 | fit_round 4: strategy sampled 5 clients (out of 5)
+DEBUG flwr 2026-07-09 16:33:12,720 | server.py:236 | fit_round 4 received 5 results and 0 failures
+INFO flwr 2026-07-09 16:33:12,762 | server.py:125 | fit progress: (4, 0.3569661979923443, {'val_auprc': 0.6430338020076557, 'val_f1': 0.7516778523489933, 'val_precision': 0.7466666666666667, 'val_recall': 0.7567567567567568}, 96.55275141600578)
+INFO flwr 2026-07-09 16:33:12,763 | server.py:171 | evaluate_round 4: no clients selected, cancel
+DEBUG flwr 2026-07-09 16:33:12,763 | server.py:222 | fit_round 5: strategy sampled 5 clients (out of 5)
+DEBUG flwr 2026-07-09 16:33:33,401 | server.py:236 | fit_round 5 received 5 results and 0 failures
+INFO flwr 2026-07-09 16:33:33,448 | server.py:125 | fit progress: (5, 0.35124670474428643, {'val_auprc': 0.6487532952557136, 'val_f1': 0.75, 'val_precision': 0.7714285714285715, 'val_recall': 0.7297297297297297}, 117.23857009600033)
+INFO flwr 2026-07-09 16:33:33,448 | server.py:171 | evaluate_round 5: no clients selected, cancel
+DEBUG flwr 2026-07-09 16:33:33,449 | server.py:222 | fit_round 6: strategy sampled 5 clients (out of 5)
+DEBUG flwr 2026-07-09 16:33:54,319 | server.py:236 | fit_round 6 received 5 results and 0 failures
+INFO flwr 2026-07-09 16:33:54,363 | server.py:125 | fit progress: (6, 0.34473848719231615, {'val_auprc': 0.6552615128076839, 'val_f1': 0.7605633802816901, 'val_precision': 0.7941176470588235, 'val_recall': 0.7297297297297297}, 138.15375172000495)
+INFO flwr 2026-07-09 16:33:54,364 | server.py:171 | evaluate_round 6: no clients selected, cancel
+DEBUG flwr 2026-07-09 16:33:54,364 | server.py:222 | fit_round 7: strategy sampled 5 clients (out of 5)
+DEBUG flwr 2026-07-09 16:34:18,619 | server.py:236 | fit_round 7 received 5 results and 0 failures
+INFO flwr 2026-07-09 16:34:18,669 | server.py:125 | fit progress: (7, 0.3395289301785718, {'val_auprc': 0.6604710698214282, 'val_f1': 0.7659574468085106, 'val_precision': 0.8059701492537313, 'val_recall': 0.7297297297297297}, 162.45973696500005)
+INFO flwr 2026-07-09 16:34:18,670 | server.py:171 | evaluate_round 7: no clients selected, cancel
+DEBUG flwr 2026-07-09 16:34:18,670 | server.py:222 | fit_round 8: strategy sampled 5 clients (out of 5)
+DEBUG flwr 2026-07-09 16:34:42,517 | server.py:236 | fit_round 8 received 5 results and 0 failures
+INFO flwr 2026-07-09 16:34:42,563 | server.py:125 | fit progress: (8, 0.3344086955396468, {'val_auprc': 0.6655913044603532, 'val_f1': 0.7659574468085106, 'val_precision': 0.8059701492537313, 'val_recall': 0.7297297297297297}, 186.35310830200615)
+INFO flwr 2026-07-09 16:34:42,563 | server.py:171 | evaluate_round 8: no clients selected, cancel
+DEBUG flwr 2026-07-09 16:34:42,563 | server.py:222 | fit_round 9: strategy sampled 5 clients (out of 5)
+DEBUG flwr 2026-07-09 16:35:06,952 | server.py:236 | fit_round 9 received 5 results and 0 failures
+INFO flwr 2026-07-09 16:35:06,996 | server.py:125 | fit progress: (9, 0.32981230261414063, {'val_auprc': 0.6701876973858594, 'val_f1': 0.7659574468085106, 'val_precision': 0.8059701492537313, 'val_recall': 0.7297297297297297}, 210.78643745399313)
+INFO flwr 2026-07-09 16:35:06,996 | server.py:171 | evaluate_round 9: no clients selected, cancel
+DEBUG flwr 2026-07-09 16:35:06,996 | server.py:222 | fit_round 10: strategy sampled 5 clients (out of 5)
+DEBUG flwr 2026-07-09 16:35:27,878 | server.py:236 | fit_round 10 received 5 results and 0 failures
+INFO flwr 2026-07-09 16:35:27,919 | server.py:125 | fit progress: (10, 0.32338139342526406, {'val_auprc': 0.6766186065747359, 'val_f1': 0.7659574468085106, 'val_precision': 0.8059701492537313, 'val_recall': 0.7297297297297297}, 231.70921449300658)
+INFO flwr 2026-07-09 16:35:27,919 | server.py:171 | evaluate_round 10: no clients selected, cancel
+DEBUG flwr 2026-07-09 16:35:27,919 | server.py:222 | fit_round 11: strategy sampled 5 clients (out of 5)
+DEBUG flwr 2026-07-09 16:35:46,963 | server.py:236 | fit_round 11 received 5 results and 0 failures
+INFO flwr 2026-07-09 16:35:47,008 | server.py:125 | fit progress: (11, 0.31885875981174405, {'val_auprc': 0.681141240188256, 'val_f1': 0.7659574468085106, 'val_precision': 0.8059701492537313, 'val_recall': 0.7297297297297297}, 250.79876527500164)
+INFO flwr 2026-07-09 16:35:47,009 | server.py:171 | evaluate_round 11: no clients selected, cancel
+DEBUG flwr 2026-07-09 16:35:47,009 | server.py:222 | fit_round 12: strategy sampled 5 clients (out of 5)
+DEBUG flwr 2026-07-09 16:36:06,242 | server.py:236 | fit_round 12 received 5 results and 0 failures
+INFO flwr 2026-07-09 16:36:06,290 | server.py:125 | fit progress: (12, 0.3123451065189601, {'val_auprc': 0.6876548934810399, 'val_f1': 0.7692307692307693, 'val_precision': 0.7971014492753623, 'val_recall': 0.7432432432432432}, 270.0800143899978)
+INFO flwr 2026-07-09 16:36:06,290 | server.py:171 | evaluate_round 12: no clients selected, cancel
+DEBUG flwr 2026-07-09 16:36:06,290 | server.py:222 | fit_round 13: strategy sampled 5 clients (out of 5)
+DEBUG flwr 2026-07-09 16:36:25,445 | server.py:236 | fit_round 13 received 5 results and 0 failures
+INFO flwr 2026-07-09 16:36:25,488 | server.py:125 | fit progress: (13, 0.30574600853501765, {'val_auprc': 0.6942539914649823, 'val_f1': 0.7746478873239436, 'val_precision': 0.8088235294117647, 'val_recall': 0.7432432432432432}, 289.2782592129952)
+INFO flwr 2026-07-09 16:36:25,488 | server.py:171 | evaluate_round 13: no clients selected, cancel
+DEBUG flwr 2026-07-09 16:36:25,488 | server.py:222 | fit_round 14: strategy sampled 5 clients (out of 5)
+DEBUG flwr 2026-07-09 16:36:44,694 | server.py:236 | fit_round 14 received 5 results and 0 failures
+INFO flwr 2026-07-09 16:36:44,739 | server.py:125 | fit progress: (14, 0.3015485672784237, {'val_auprc': 0.6984514327215763, 'val_f1': 0.7746478873239436, 'val_precision': 0.8088235294117647, 'val_recall': 0.7432432432432432}, 308.52911531999416)
+INFO flwr 2026-07-09 16:36:44,739 | server.py:171 | evaluate_round 14: no clients selected, cancel
+DEBUG flwr 2026-07-09 16:36:44,739 | server.py:222 | fit_round 15: strategy sampled 5 clients (out of 5)
+DEBUG flwr 2026-07-09 16:37:03,978 | server.py:236 | fit_round 15 received 5 results and 0 failures
+INFO flwr 2026-07-09 16:37:04,024 | server.py:125 | fit progress: (15, 0.29925353385879616, {'val_auprc': 0.7007464661412038, 'val_f1': 0.7746478873239436, 'val_precision': 0.8088235294117647, 'val_recall': 0.7432432432432432}, 327.81435468299605)
+INFO flwr 2026-07-09 16:37:04,024 | server.py:171 | evaluate_round 15: no clients selected, cancel
+DEBUG flwr 2026-07-09 16:37:04,024 | server.py:222 | fit_round 16: strategy sampled 5 clients (out of 5)
+DEBUG flwr 2026-07-09 16:37:23,842 | server.py:236 | fit_round 16 received 5 results and 0 failures
+[run] resolved config: {'model': 'ffd', 'num_clients': 5, 'num_rounds': 20, 'local_epochs': 5, 'batch_size': 80, 'lr': 0.01, 'random_seed': 42, 'oversampling': 'smote', 'sampling_strategy': 0.01, 'use_wandb': True, 'wandb_project': 'fraud-fl-TA', 'early_stop_patience': 10, 'num_cpus_per_client': 4, 'num_gpus_per_client': 1.0, 'partition': {'scheme': 'iid', 'alpha': None}, 'dataset': 'creditcard'}
+[run] === ffd | dataset=creditcard scheme=iid alpha=None K=5 R=20 oversampling=smote seed=42 ===
+[creditcard] loading data/creditcard/creditcard.csv
+[creditcard] loaded 284,807 rows, 31 columns
+
+[creditcard] === data summary ===
+  total rows loaded : 284,807
+  feature count     : 30
+  feature names     : ['Time', 'V1', 'V2', 'V3', 'V4', 'V5', 'V6', 'V7', 'V8', 'V9', 'V10', 'V11', 'V12', 'V13', 'V14', 'V15', 'V16', 'V17', 'V18', 'V19', 'V20', 'V21', 'V22', 'V23', 'V24', 'V25', 'V26', 'V27', 'V28', 'Amount']
+  x_train: (199364, 30)  dtype=float32   |  y_train: (199364,)  dtype=int32
+  x_val  : (42721, 30)  dtype=float32   |  y_val  : (42721,)  dtype=int32
+  x_test : (42722, 30)  dtype=float32   |  y_test : (42722,)  dtype=int32
+  fraud in train: 344 / 199,364  (0.1725%)
+  fraud in val  : 74 / 42,721  (0.1732%)
+  fraud in test : 74 / 42,722  (0.1732%)
+[creditcard] === end summary ===
+
+[run] FL starting: 20 rounds, 5 clients (client_resources={'num_cpus': 4, 'num_gpus': 1.0})
+[server] round 0 | thr=0.5314 | val_auprc=0.0028 | val_f1=0.0388 | val_precision=0.0690 | val_recall=0.0270
+[FFD] round 1 aggregation weights:
+  client 0: n=40,213 | local_auprc=0.6839 | weight=0.1801
+  client 1: n=40,207 | local_auprc=0.7425 | weight=0.1955
+  client 2: n=40,195 | local_auprc=0.7650 | weight=0.2014
+  client 3: n=40,210 | local_auprc=0.7740 | weight=0.2038
+  client 4: n=40,183 | local_auprc=0.8324 | weight=0.2191
+[server] round 1 | thr=0.6490 | val_auprc=0.6234 | val_f1=0.7518 | val_precision=0.7910 | val_recall=0.7162
+[FFD] round 2 aggregation weights:
+  client 0: n=40,207 | local_auprc=0.7603 | weight=0.1963
+  client 1: n=40,210 | local_auprc=0.7887 | weight=0.2036
+  client 2: n=40,213 | local_auprc=0.7065 | weight=0.1824
+  client 3: n=40,195 | local_auprc=0.7859 | weight=0.2029
+  client 4: n=40,183 | local_auprc=0.8322 | weight=0.2147
+[server] round 2 | thr=0.7636 | val_auprc=0.6319 | val_f1=0.7606 | val_precision=0.7941 | val_recall=0.7297
+[FFD] round 3 aggregation weights:
+  client 0: n=40,213 | local_auprc=0.7089 | weight=0.1821
+  client 1: n=40,210 | local_auprc=0.7944 | weight=0.2041
+  client 2: n=40,207 | local_auprc=0.7629 | weight=0.1960
+  client 3: n=40,195 | local_auprc=0.7920 | weight=0.2034
+  client 4: n=40,183 | local_auprc=0.8351 | weight=0.2144
+[server] round 3 | thr=0.4631 | val_auprc=0.6383 | val_f1=0.7484 | val_precision=0.7160 | val_recall=0.7838
+[FFD] round 4 aggregation weights:
+  client 0: n=40,213 | local_auprc=0.7099 | weight=0.1813
+  client 1: n=40,207 | local_auprc=0.7684 | weight=0.1962
+  client 2: n=40,210 | local_auprc=0.7969 | weight=0.2035
+  client 3: n=40,195 | local_auprc=0.8038 | weight=0.2052
+  client 4: n=40,183 | local_auprc=0.8381 | weight=0.2139
+[server] round 4 | thr=0.6701 | val_auprc=0.6430 | val_f1=0.7517 | val_precision=0.7467 | val_recall=0.7568
+[FFD] round 5 aggregation weights:
+  client 0: n=40,207 | local_auprc=0.7700 | weight=0.1957
+  client 1: n=40,213 | local_auprc=0.7136 | weight=0.1814
+  client 2: n=40,210 | local_auprc=0.7944 | weight=0.2019
+  client 3: n=40,183 | local_auprc=0.8410 | weight=0.2136
+  client 4: n=40,195 | local_auprc=0.8159 | weight=0.2073
+[server] round 5 | thr=0.7852 | val_auprc=0.6488 | val_f1=0.7500 | val_precision=0.7714 | val_recall=0.7297
+[FFD] round 6 aggregation weights:
+  client 0: n=40,195 | local_auprc=0.8229 | weight=0.2082
+  client 1: n=40,213 | local_auprc=0.7176 | weight=0.1816
+  client 2: n=40,210 | local_auprc=0.7965 | weight=0.2016
+  client 3: n=40,183 | local_auprc=0.8429 | weight=0.2132
+  client 4: n=40,207 | local_auprc=0.7723 | weight=0.1954
+[server] round 6 | thr=0.7916 | val_auprc=0.6553 | val_f1=0.7606 | val_precision=0.7941 | val_recall=0.7297
+[FFD] round 7 aggregation weights:
+  client 0: n=40,207 | local_auprc=0.7782 | weight=0.1960
+  client 1: n=40,210 | local_auprc=0.7989 | weight=0.2012
+  client 2: n=40,183 | local_auprc=0.8453 | weight=0.2127
+  client 3: n=40,195 | local_auprc=0.8301 | weight=0.2090
+  client 4: n=40,213 | local_auprc=0.7191 | weight=0.1811
+[server] round 7 | thr=0.7955 | val_auprc=0.6605 | val_f1=0.7660 | val_precision=0.8060 | val_recall=0.7297
+[FFD] round 8 aggregation weights:
+  client 0: n=40,183 | local_auprc=0.8481 | weight=0.2125
+  client 1: n=40,210 | local_auprc=0.8014 | weight=0.2010
+  client 2: n=40,195 | local_auprc=0.8362 | weight=0.2096
+  client 3: n=40,213 | local_auprc=0.7224 | weight=0.1812
+  client 4: n=40,207 | local_auprc=0.7804 | weight=0.1957
+[server] round 8 | thr=0.8006 | val_auprc=0.6656 | val_f1=0.7660 | val_precision=0.8060 | val_recall=0.7297
+[FFD] round 9 aggregation weights:
+  client 0: n=40,207 | local_auprc=0.7835 | weight=0.1957
+  client 1: n=40,195 | local_auprc=0.8408 | weight=0.2100
+  client 2: n=40,213 | local_auprc=0.7283 | weight=0.1820
+  client 3: n=40,183 | local_auprc=0.8497 | weight=0.2122
+  client 4: n=40,210 | local_auprc=0.8011 | weight=0.2002
+[server] round 9 | thr=0.8055 | val_auprc=0.6702 | val_f1=0.7660 | val_precision=0.8060 | val_recall=0.7297
+[FFD] round 10 aggregation weights:
+  client 0: n=40,213 | local_auprc=0.7308 | weight=0.1819
+  client 1: n=40,210 | local_auprc=0.8055 | weight=0.2005
+  client 2: n=40,207 | local_auprc=0.7871 | weight=0.1959
+  client 3: n=40,183 | local_auprc=0.8521 | weight=0.2120
+  client 4: n=40,195 | local_auprc=0.8427 | weight=0.2097
+[server] round 10 | thr=0.8117 | val_auprc=0.6766 | val_f1=0.7660 | val_precision=0.8060 | val_recall=0.7297
+[FFD] round 11 aggregation weights:
+  client 0: n=40,183 | local_auprc=0.8559 | weight=0.2118
+  client 1: n=40,213 | local_auprc=0.7359 | weight=0.1823
+  client 2: n=40,207 | local_auprc=0.7904 | weight=0.1957
+  client 3: n=40,195 | local_auprc=0.8474 | weight=0.2098
+  client 4: n=40,210 | local_auprc=0.8093 | weight=0.2004
+[server] round 11 | thr=0.8042 | val_auprc=0.6811 | val_f1=0.7660 | val_precision=0.8060 | val_recall=0.7297
+[FFD] round 12 aggregation weights:
+  client 0: n=40,195 | local_auprc=0.8506 | weight=0.2099
+  client 1: n=40,210 | local_auprc=0.8132 | weight=0.2007
+  client 2: n=40,213 | local_auprc=0.7376 | weight=0.1821
+  client 3: n=40,207 | local_auprc=0.7921 | weight=0.1955
+  client 4: n=40,183 | local_auprc=0.8590 | weight=0.2119
+[server] round 12 | thr=0.7089 | val_auprc=0.6877 | val_f1=0.7692 | val_precision=0.7971 | val_recall=0.7432
+[FFD] round 13 aggregation weights:
+  client 0: n=40,207 | local_auprc=0.7966 | weight=0.1958
+  client 1: n=40,195 | local_auprc=0.8562 | weight=0.2103
+  client 2: n=40,183 | local_auprc=0.8600 | weight=0.2112
+  client 3: n=40,213 | local_auprc=0.7415 | weight=0.1822
+  client 4: n=40,210 | local_auprc=0.8156 | weight=0.2004
+[server] round 13 | thr=0.7350 | val_auprc=0.6943 | val_f1=0.7746 | val_precision=0.8088 | val_recall=0.7432
+[FFD] round 14 aggregation weights:
+  client 0: n=40,210 | local_auprc=0.8192 | weight=0.2007
+  client 1: n=40,195 | local_auprc=0.8598 | weight=0.2106
+  client 2: n=40,213 | local_auprc=0.7433 | weight=0.1822
+  client 3: n=40,207 | local_auprc=0.7997 | weight=0.1959
+  client 4: n=40,183 | local_auprc=0.8599 | weight=0.2106
+[server] round 14 | thr=0.7610 | val_auprc=0.6985 | val_f1=0.7746 | val_precision=0.8088 | val_recall=0.7432
+[FFD] round 15 aggregation weights:
+  client 0: n=40,213 | local_auprc=0.7463 | weight=0.1820
+  client 1: n=40,210 | local_auprc=0.8254 | weight=0.2013
+  client 2: n=40,183 | local_auprc=0.8627 | weight=0.2103
+  client 3: n=40,195 | local_auprc=0.8624 | weight=0.2103
+  client 4: n=40,207 | local_auprc=0.8042 | weight=0.1961
+[server] round 15 | thr=0.7747 | val_auprc=0.7007 | val_f1=0.7746 | val_precision=0.8088 | val_recall=0.7432
+[FFD] round 16 aggregation weights:
+  client 0: n=40,213 | local_auprc=0.7493 | weight=0.1821
+  client 1: n=40,195 | local_auprc=0.8654 | weight=0.2102
+INFO flwr 2026-07-09 16:37:23,884 | server.py:125 | fit progress: (16, 0.29978007478645163, {'val_auprc': 0.7002199252135484, 'val_f1': 0.7746478873239436, 'val_precision': 0.8088235294117647, 'val_recall': 0.7432432432432432}, 347.6743906149932)
+INFO flwr 2026-07-09 16:37:23,884 | server.py:171 | evaluate_round 16: no clients selected, cancel
+DEBUG flwr 2026-07-09 16:37:23,884 | server.py:222 | fit_round 17: strategy sampled 5 clients (out of 5)
+DEBUG flwr 2026-07-09 16:37:43,078 | server.py:236 | fit_round 17 received 5 results and 0 failures
+INFO flwr 2026-07-09 16:37:43,119 | server.py:125 | fit progress: (17, 0.2938997400708294, {'val_auprc': 0.7061002599291706, 'val_f1': 0.7755102040816326, 'val_precision': 0.7808219178082192, 'val_recall': 0.7702702702702703}, 366.9096764059941)
+INFO flwr 2026-07-09 16:37:43,120 | server.py:171 | evaluate_round 17: no clients selected, cancel
+DEBUG flwr 2026-07-09 16:37:43,120 | server.py:222 | fit_round 18: strategy sampled 5 clients (out of 5)
+DEBUG flwr 2026-07-09 16:38:06,269 | server.py:236 | fit_round 18 received 5 results and 0 failures
+INFO flwr 2026-07-09 16:38:06,316 | server.py:125 | fit progress: (18, 0.2928768163787957, {'val_auprc': 0.7071231836212043, 'val_f1': 0.7755102040816326, 'val_precision': 0.7808219178082192, 'val_recall': 0.7702702702702703}, 390.10620185099833)
+INFO flwr 2026-07-09 16:38:06,316 | server.py:171 | evaluate_round 18: no clients selected, cancel
+DEBUG flwr 2026-07-09 16:38:06,316 | server.py:222 | fit_round 19: strategy sampled 5 clients (out of 5)
+DEBUG flwr 2026-07-09 16:38:30,529 | server.py:236 | fit_round 19 received 5 results and 0 failures
+INFO flwr 2026-07-09 16:38:30,577 | server.py:125 | fit progress: (19, 0.2885200308840432, {'val_auprc': 0.7114799691159568, 'val_f1': 0.7808219178082192, 'val_precision': 0.7916666666666666, 'val_recall': 0.7702702702702703}, 414.3675191240036)
+INFO flwr 2026-07-09 16:38:30,577 | server.py:171 | evaluate_round 19: no clients selected, cancel
+DEBUG flwr 2026-07-09 16:38:30,578 | server.py:222 | fit_round 20: strategy sampled 5 clients (out of 5)
+DEBUG flwr 2026-07-09 16:38:55,023 | server.py:236 | fit_round 20 received 5 results and 0 failures
+INFO flwr 2026-07-09 16:38:55,103 | server.py:125 | fit progress: (20, 0.2828597960226287, {'val_auprc': 0.7171402039773713, 'val_f1': 0.7808219178082192, 'val_precision': 0.7916666666666666, 'val_recall': 0.7702702702702703}, 438.89305091100687)
+INFO flwr 2026-07-09 16:38:55,103 | server.py:171 | evaluate_round 20: no clients selected, cancel
+INFO flwr 2026-07-09 16:38:55,103 | server.py:153 | FL finished in 438.89344221800275
+INFO flwr 2026-07-09 16:38:55,103 | app.py:225 | app_fit: losses_distributed []
+INFO flwr 2026-07-09 16:38:55,104 | app.py:226 | app_fit: metrics_distributed_fit {'local_auprc': [(1, 0.7595372243236747), (2, 0.7747076273601214), (3, 0.7786672054123799), (4, 0.7834116417700108), (5, 0.7869612073309791), (6, 0.7904574873299124), (7, 0.7943141440934378), (8, 0.7976956659790951), (9, 0.80066138653577), (10, 0.8036408190294626), (11, 0.807736548602822), (12, 0.8104961992430993), (13, 0.8139696812379095), (14, 0.8163711189435813), (15, 0.8202150796590963), (16, 0.823297602930764), (17, 0.8266762473094716), (18, 0.8296071374294032), (19, 0.8345982194940224), (20, 0.838967406934558)], 'client_id': [(1, 2.0000895486746795), (2, 2.0000895486746795), (3, 2.0000895486746795), (4, 2.0000895486746795), (5, 2.0000895486746795), (6, 2.0000895486746795), (7, 2.0000895486746795), (8, 2.0000895486746795), (9, 2.0000895486746795), (10, 2.0000895486746795), (11, 2.0000895486746795), (12, 2.0000895486746795), (13, 2.0000895486746795), (14, 2.0000895486746795), (15, 2.0000895486746795), (16, 2.0000895486746795), (17, 2.0000895486746795), (18, 2.0000895486746795), (19, 2.0000895486746795), (20, 2.0000895486746795)]}
+INFO flwr 2026-07-09 16:38:55,104 | app.py:227 | app_fit: metrics_distributed {}
+INFO flwr 2026-07-09 16:38:55,104 | app.py:228 | app_fit: losses_centralized [(0, 0.99723689685578), (1, 0.3765621909722412), (2, 0.36814172461317074), (3, 0.3616836638887231), (4, 0.3569661979923443), (5, 0.35124670474428643), (6, 0.34473848719231615), (7, 0.3395289301785718), (8, 0.3344086955396468), (9, 0.32981230261414063), (10, 0.32338139342526406), (11, 0.31885875981174405), (12, 0.3123451065189601), (13, 0.30574600853501765), (14, 0.3015485672784237), (15, 0.29925353385879616), (16, 0.29978007478645163), (17, 0.2938997400708294), (18, 0.2928768163787957), (19, 0.2885200308840432), (20, 0.2828597960226287)]
+INFO flwr 2026-07-09 16:38:55,104 | app.py:229 | app_fit: metrics_centralized {'val_auprc': [(0, 0.002763103144220034), (1, 0.6234378090277588), (2, 0.6318582753868293), (3, 0.6383163361112769), (4, 0.6430338020076557), (5, 0.6487532952557136), (6, 0.6552615128076839), (7, 0.6604710698214282), (8, 0.6655913044603532), (9, 0.6701876973858594), (10, 0.6766186065747359), (11, 0.681141240188256), (12, 0.6876548934810399), (13, 0.6942539914649823), (14, 0.6984514327215763), (15, 0.7007464661412038), (16, 0.7002199252135484), (17, 0.7061002599291706), (18, 0.7071231836212043), (19, 0.7114799691159568), (20, 0.7171402039773713)], 'val_f1': [(0, 0.038834951456310676), (1, 0.75177304964539), (2, 0.7605633802816901), (3, 0.7483870967741936), (4, 0.7516778523489933), (5, 0.75), (6, 0.7605633802816901), (7, 0.7659574468085106), (8, 0.7659574468085106), (9, 0.7659574468085106), (10, 0.7659574468085106), (11, 0.7659574468085106), (12, 0.7692307692307693), (13, 0.7746478873239436), (14, 0.7746478873239436), (15, 0.7746478873239436), (16, 0.7746478873239436), (17, 0.7755102040816326), (18, 0.7755102040816326), (19, 0.7808219178082192), (20, 0.7808219178082192)], 'val_precision': [(0, 0.06896551724137931), (1, 0.7910447761194029), (2, 0.7941176470588235), (3, 0.7160493827160493), (4, 0.7466666666666667), (5, 0.7714285714285715), (6, 0.7941176470588235), (7, 0.8059701492537313), (8, 0.8059701492537313), (9, 0.8059701492537313), (10, 0.8059701492537313), (11, 0.8059701492537313), (12, 0.7971014492753623), (13, 0.8088235294117647), (14, 0.8088235294117647), (15, 0.8088235294117647), (16, 0.8088235294117647), (17, 0.7808219178082192), (18, 0.7808219178082192), (19, 0.7916666666666666), (20, 0.7916666666666666)], 'val_recall': [(0, 0.02702702702702703), (1, 0.7162162162162162), (2, 0.7297297297297297), (3, 0.7837837837837838), (4, 0.7567567567567568), (5, 0.7297297297297297), (6, 0.7297297297297297), (7, 0.7297297297297297), (8, 0.7297297297297297), (9, 0.7297297297297297), (10, 0.7297297297297297), (11, 0.7297297297297297), (12, 0.7432432432432432), (13, 0.7432432432432432), (14, 0.7432432432432432), (15, 0.7432432432432432), (16, 0.7432432432432432), (17, 0.7702702702702703), (18, 0.7702702702702703), (19, 0.7702702702702703), (20, 0.7702702702702703)]}
+wandb: Waiting for W&B process to finish... (success).
+wandb: 
+wandb: Run history:
+wandb:          round ▁▁▂▂▂▃▃▃▄▄▅▅▅▆▆▆▇▇▇███
+wandb:     test_auprc ▁
+wandb:        test_f1 ▁
+wandb:      test_loss ▁
+wandb: test_precision ▁
+wandb:    test_recall ▁
+wandb:      val_auprc ▁▇▇▇▇▇▇▇▇████████████
+wandb:         val_f1 ▁████████████████████
+wandb:       val_loss █▂▂▂▂▂▂▂▂▁▁▁▁▁▁▁▁▁▁▁▁
+wandb:  val_precision ▁██▇▇████████████████
+wandb:     val_recall ▁▇▇██▇▇▇▇▇▇▇█████████
+wandb: 
+wandb: Run summary:
+wandb:       best_round 20
+wandb:   best_val_auprc 0.71714
+wandb: duration_seconds 446.68112
+wandb:            round 20
+wandb:       test_auprc 0.80142
+wandb:          test_f1 0.83453
+wandb:        test_loss 0.19858
+wandb:   test_precision 0.89231
+wandb:      test_recall 0.78378
+wandb:        val_auprc 0.71714
+wandb:           val_f1 0.78082
+wandb:         val_loss 0.28286
+wandb:    val_precision 0.79167
+wandb:       val_recall 0.77027
+wandb: 
+wandb: 🚀 View run ffd_iid_alpha-_smote_seed42 at: https://wandb.ai/deo250605-sepuluh-nopember-insitute-of-technology/fraud-fl-TA/runs/5djq2li4
+wandb: Synced 6 W&B file(s), 0 media file(s), 0 artifact file(s) and 0 other file(s)
+wandb: Find logs at: ./wandb/run-20260709_163130-5djq2li4/logs
+  client 2: n=40,210 | local_auprc=0.8289 | weight=0.2014
+  client 3: n=40,183 | local_auprc=0.8643 | weight=0.2099
+  client 4: n=40,207 | local_auprc=0.8087 | weight=0.1965
+[server] round 16 | thr=0.7704 | val_auprc=0.7002 | val_f1=0.7746 | val_precision=0.8088 | val_recall=0.7432
+[FFD] round 17 aggregation weights:
+  client 0: n=40,210 | local_auprc=0.8313 | weight=0.2012
+  client 1: n=40,183 | local_auprc=0.8688 | weight=0.2101
+  client 2: n=40,213 | local_auprc=0.7530 | weight=0.1822
+  client 3: n=40,207 | local_auprc=0.8102 | weight=0.1960
+  client 4: n=40,195 | local_auprc=0.8701 | weight=0.2105
+[server] round 17 | thr=0.5835 | val_auprc=0.7061 | val_f1=0.7755 | val_precision=0.7808 | val_recall=0.7703
+[FFD] round 18 aggregation weights:
+  client 0: n=40,210 | local_auprc=0.8338 | weight=0.2011
+  client 1: n=40,213 | local_auprc=0.7564 | weight=0.1824
+  client 2: n=40,207 | local_auprc=0.8120 | weight=0.1958
+  client 3: n=40,195 | local_auprc=0.8734 | weight=0.2105
+  client 4: n=40,183 | local_auprc=0.8725 | weight=0.2102
+[server] round 18 | thr=0.5915 | val_auprc=0.7071 | val_f1=0.7755 | val_precision=0.7808 | val_recall=0.7703
+[FFD] round 19 aggregation weights:
+  client 0: n=40,207 | local_auprc=0.8174 | weight=0.1959
+  client 1: n=40,210 | local_auprc=0.8421 | weight=0.2018
+  client 2: n=40,213 | local_auprc=0.7595 | weight=0.1821
+  client 3: n=40,183 | local_auprc=0.8772 | weight=0.2101
+  client 4: n=40,195 | local_auprc=0.8768 | weight=0.2101
+[server] round 19 | thr=0.6019 | val_auprc=0.7115 | val_f1=0.7808 | val_precision=0.7917 | val_recall=0.7703
+[FFD] round 20 aggregation weights:
+  client 0: n=40,210 | local_auprc=0.8438 | weight=0.2012
+  client 1: n=40,213 | local_auprc=0.7687 | weight=0.1833
+  client 2: n=40,183 | local_auprc=0.8813 | weight=0.2100
+  client 3: n=40,207 | local_auprc=0.8215 | weight=0.1959
+  client 4: n=40,195 | local_auprc=0.8796 | weight=0.2097
+[server] round 20 | thr=0.6129 | val_auprc=0.7171 | val_f1=0.7808 | val_precision=0.7917 | val_recall=0.7703
+[server] FINAL round 20 | test_auprc=0.8014 | test_f1=0.8345 | test_precision=0.8923 | test_recall=0.7838
+[run] best val_auprc: 0.7171 at round 20
+[run] final test: auprc=0.8014 | f1=0.8345 | precision=0.8923 | recall=0.7838
+[results] wrote summary CSV → results/logs/creditcard/ffd/ffd_iid_alpha-_smote_seed42.csv
+[results] wrote rounds CSV  → results/logs/creditcard/ffd/ffd_iid_alpha-_smote_seed42_rounds.csv
