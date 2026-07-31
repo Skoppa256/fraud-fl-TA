@@ -1810,9 +1810,9 @@ Untuk memeriksa secara langsung apakah sintesis pada regime sampel minoritas kec
 menghasilkan penambahan informasi yang berarti, dilakukan diagnostik geometri pada
 client dengan sampel fraud paling sedikit, yaitu client BAF dengan seed 42,
 partisi Dirichlet $alpha = 0.5$, yang hanya memuat 21 sampel fraud riil di antara
-391.355 baris. SMOTE dijalankan persis seperti pada pelatihan (sampling_strategy
-= 0,01, k_neighbors = 5), lalu titik sintetis dibandingkan dengan seed nyata pada
-proyeksi PCA dan t-SNE (@fig-3-4-smote-geometry).
+391.355 baris. SMOTE dijalankan persis seperti pada pelatihan
+(`sampling_strategy = 0,01`, `k_neighbors = 5`), lalu titik sintetis dibandingkan
+dengan seed nyata pada proyeksi PCA dan t-SNE (@fig-3-4-smote-geometry).
 
 #figure(
   image("resources/fig-3-4-smote-geometry-baf.png", width: 100%),
@@ -2184,9 +2184,393 @@ Explainable Federated Learning.
 
 = HASIL DAN PEMBAHASAN
 
-// TODO: BAB 4 belum ada di Proposal TA v2.1. Isi dengan hasil eksperimen,
-// analisis performa (AUPRC/F1/Precision/Recall), studi ablasi SMOTE, dan
-// analisis stabilitas SHAP (Spearman & Jaccard) setelah eksperimen selesai.
+== Ringkasan Pelaksanaan Eksperimen
+
+Matriks eksperimen penuh mencakup 108 sel (3 dataset × 6 model × 3 kondisi ×
+2 arm SMOTE, ditambah pengecualian struktural). Dari jumlah tersebut, 12 sel
+dilewati sebagai *no-op* SMOTE dan 96 sel dieksekusi. Pelewatan terjadi karena
+prevalensi dasar BAF (≈1,10%) telah melampaui target rasio 1:100 (0,01): pada
+kondisi `centralized` dan `iid`, setiap client sudah memenuhi target sehingga
+SMOTE tidak menyala dan kedua arm menjadi identik. Sensus per-client
+mengonfirmasi hal ini — 15 dari 15 instansi client BAF pada skema IID melewati
+SMOTE melalui `target_met`. Akibatnya arm SMOTE untuk BAF hanya bermakna pada
+kondisi Dirichlet, tempat sebagian client kekurangan fraud.
+
+Seluruh 96 sel terverifikasi: setiap proses anak memancarkan `data_hash` dan
+`partition_hash` yang cocok dengan cache data dan partisi bersama, tanpa satu pun
+sel yang gagal-verifikasi dan tanpa artefak yang hilang. Kecocokan hash ini
+menjadi dasar klaim komparabilitas yang dirumuskan pada Subbab Perancangan Sistem:
+setiap model dibandingkan atas data dan partisi yang identik secara *byte*.
+
+Terdapat dua kualifikasi penting terhadap hasil ini. *Pertama, eksperimen
+dijalankan pada satu seed (42).* Perancangan modul evaluasi mengantisipasi tiga
+seed dengan pelaporan rerata ± simpangan baku, namun hanya seed 42 yang
+dieksekusi. Konsekuensinya, seluruh angka pada bab ini merupakan estimasi titik
+tanpa ukuran variansi; secara khusus, variansi akibat pengacakan partisi
+Dirichlet tidak terkuantifikasi, sehingga selisih kecil antar sel tidak dapat
+diklaim signifikan. *Kedua*, karena AUPRC memiliki batas bawah yang setara dengan
+prevalensi kelas positif, perbandingan lintas dataset atas angka AUPRC mentah
+menyesatkan. Baseline acak (AUPRC = prevalensi) berbeda tajam antar dataset:
+PaySim 0,00129, ULB 0,00173, dan BAF 0,01103 @saito2015. Seluruh pembahasan pada
+bab ini merujuk pada baseline masing-masing dataset.
+
+Terakhir, label `xgb` yang muncul pada tabel merupakan FedXGBllr yang dijalankan
+pada kondisi `centralized`. Dengan $K = 1$ tidak ada agregasi tree-ensemble maupun
+tahap *learnable learning rates*, sehingga model tereduksi menjadi XGBoost biasa
+tanpa kepala CNN. Sel ini dilaporkan sebagai "XGBoost (batas atas terpusat)"
+dengan `aggregation = n/a (centralized)`, dan bukan model ketujuh — penelitian ini
+tetap mengevaluasi enam model sebagaimana dijanjikan.
+
+== Perbandingan Performa Antar Paradigma Agregasi (RQ1)
+
+@tab-4-auprc-ulb, @tab-4-auprc-baf, dan @tab-4-auprc-paysim menyajikan AUPRC test
+per model untuk tiap dataset, dipilah menurut kondisi partisi dan arm SMOTE.
+Ambang klasifikasi untuk seluruh metrik bergantung-ambang di bab ini disetel per
+arm pada validation set terpusat dengan kebijakan `val_f1_tuned`.
+
+#figure(
+  kind: table,
+  text(size: 8pt)[
+    #table(
+      columns: (auto, auto, auto, auto, auto, auto, auto),
+      align: (left, right, right, right, right, right, right),
+      table.header(
+        table.cell(rowspan: 2)[*Model*],
+        table.cell(colspan: 2)[*Centralized*],
+        table.cell(colspan: 2)[*Dirichlet $alpha=0,5$*],
+        table.cell(colspan: 2)[*IID*],
+        [none], [SMOTE], [none], [SMOTE], [none], [SMOTE],
+      ),
+      [LR], [0,750], [0,767], [0,757], [0,772], [0,758], [0,768],
+      [SVM], [0,784], [0,789], [0,743], [0,742], [0,741], [0,734],
+      [GBM], [0,761], [0,833], [0,726], [0,827], [0,698], [0,811],
+      [FFD], [0,788], [0,794], [0,814], [0,825], [0,802], [0,809],
+      [BERT], [0,774], [0,796], [0,779], [0,804], [0,818], [0,823],
+      [FedXGBllr], [—], [—], [0,724], [0,805], [0,712], [0,806],
+      [XGBoost], [0,838], [0,831], [—], [—], [—], [—],
+    )
+  ],
+  caption: [AUPRC test pada ULB (creditcard), baseline acak 0,00173. Baris
+  XGBoost adalah FedXGBllr terpusat (batas atas); sel "—" tidak berlaku secara
+  struktural.],
+) <tab-4-auprc-ulb>
+
+#figure(
+  kind: table,
+  text(size: 8pt)[
+    #table(
+      columns: (auto, auto, auto, auto, auto),
+      align: (left, right, right, right, right),
+      table.header(
+        [*Model*], [*Centralized (none)*], [*Dirichlet none*],
+        [*Dirichlet SMOTE*], [*IID (none)*],
+      ),
+      [LR], [0,144], [0,139], [0,097], [0,144],
+      [SVM], [0,144], [0,119], [0,081], [0,085],
+      [GBM], [0,161], [0,162], [0,162], [0,137],
+      [FFD], [0,159], [0,157], [0,045], [0,158],
+      [BERT], [0,169], [0,167], [0,045], [0,167],
+      [FedXGBllr], [—], [0,151], [0,137], [0,141],
+      [XGBoost], [0,157], [—], [—], [—],
+    )
+  ],
+  caption: [AUPRC test pada BAF, baseline acak 0,01103. Hanya arm yang operatif
+  ditampilkan: SMOTE pada BAF hanya bermakna di bawah Dirichlet (di bawah
+  centralized dan IID kedua arm identik).],
+) <tab-4-auprc-baf>
+
+#figure(
+  kind: table,
+  text(size: 8pt)[
+    #table(
+      columns: (auto, auto, auto, auto, auto, auto, auto),
+      align: (left, right, right, right, right, right, right),
+      table.header(
+        table.cell(rowspan: 2)[*Model*],
+        table.cell(colspan: 2)[*Centralized*],
+        table.cell(colspan: 2)[*Dirichlet $alpha=0,5$*],
+        table.cell(colspan: 2)[*IID*],
+        [none], [SMOTE], [none], [SMOTE], [none], [SMOTE],
+      ),
+      [LR], [0,603], [0,624], [0,601], [0,595], [0,612], [0,656],
+      [SVM], [0,605], [0,596], [0,577], [0,572], [0,311], [0,632],
+      [GBM], [0,996], [0,997], [0,996], [0,996], [0,995], [0,996],
+      [FFD], [0,745], [0,825], [0,647], [0,678], [0,756], [0,839],
+      [BERT], [0,830], [0,938], [0,660], [0,641], [0,858], [0,916],
+      [FedXGBllr], [—], [—], [0,996], [0,995], [0,996], [0,996],
+      [XGBoost], [0,985], [0,985], [—], [—], [—], [—],
+    )
+  ],
+  caption: [AUPRC test pada PaySim, baseline acak 0,00129.],
+) <tab-4-auprc-paysim>
+
+*Federated versus centralized.* Besaran penalti federasi bergantung pada
+dataset dan keluarga model. Pada ULB dan PaySim, model tree (GBM, FedXGBllr)
+nyaris tidak kehilangan performa antara kondisi terpusat dan federated —
+FedXGBllr PaySim tetap ≈0,996 pada seluruh kondisi, dan GBM ULB bahkan naik dari
+IID ke centralized pada arm SMOTE. Sebaliknya, model deep (FFD, BERT)
+memperlihatkan penurunan yang jelas di bawah Dirichlet: BERT PaySim turun dari
+0,858 (IID) menjadi 0,660 (Dirichlet) pada arm no-SMOTE. Penalti federasi karena
+itu bukan besaran tunggal, melainkan interaksi antara heterogenitas partisi dan
+kerentanan keluarga model.
+
+*Kesukaran dataset ternormalisasi baseline.* Dinyatakan sebagai kelipatan
+baseline, AUPRC terbaik tiap dataset adalah BAF ≈15×, ULB ≈484×, dan PaySim
+≈773×. BAF secara intrinsik jauh lebih sukar; angka 0,16 pada BAF bukan kegagalan
+model, melainkan cerminan bahwa sinyal fraud pada BAF secara nyata lebih lemah
+relatif terhadap baseline yang sudah tinggi.
+
+*Saturasi model tree pada PaySim.* GBM dan FedXGBllr sama-sama mencapai ≈0,996
+pada setiap kondisi, dan XGBoost terpusat 0,985. Fitur inkonsistensi keseimbangan
+saldo yang direkayasa pada praproses (`errorBalanceOrig`, `errorBalanceDest`)
+kemungkinan membuat PaySim nyaris terpisah secara linear bagi model tree,
+sehingga hampir tidak tersisa ruang bagi efek partisi untuk terlihat. Saturasi
+ini perlu dicatat sebagai batas interpretasi: pada PaySim, model tree tidak
+membedakan paradigma agregasi karena masalahnya terlalu mudah bagi mereka.
+
+*Asimetri anggaran putaran.* FedXGBllr dijalankan 50 global rounds mengikuti
+baseline `hfedxgboost` Flower, berbeda dari 20 rounds untuk kelima model lainnya;
+hal ini telah didokumentasikan pada Subbab Implementasi Perancangan Sistem
+(@tab-3-6). Karena tahap CNN menerapkan early stopping pada validation set
+terpusat, anggaran ini berperan sebagai batas atas: membatasi setiap run
+FedXGBllr pada nilai terbaiknya dalam 20 putaran pertama mengubah AUPRC validasi
+paling banyak sebesar 2,1%, dan sebesar 0,0% pada sembilan dari sebelas run FL
+FedXGBllr. Asimetri anggaran karenanya tidak memengaruhi komparabilitas antar
+paradigma secara material.
+
+== Pengaruh Non-IID dan SMOTE (RQ2)
+
+=== Efek Agregat SMOTE
+
+Efek SMOTE tidak seragam; ia bergantung pada apakah oversampling bersifat moderat
+dan universal ataukah ekstrem dan terkonsentrasi. Pada ULB dan PaySim, prevalensi
+lokal setiap client berada di bawah target 1:100, sehingga seluruh client
+mengalami oversampling moderat — multiplier sintesis rerata ≈7× pada kedua dataset
+— dan SMOTE cenderung membantu. Pada BAF, hanya client yang kekurangan fraud
+akibat partisi Dirichlet yang jatuh di bawah target, sehingga SMOTE menyala secara
+selektif dengan multiplier hingga ×185 tepat pada partisi yang paling
+terdegenerasi.
+
+Generalisasinya: *oversampling moderat pada seluruh client cenderung membantu,
+sedangkan oversampling ekstrem pada segelintir client yang kelaparan-minoritas
+meracuni agregat global.* Regime mana yang terjadi ditentukan oleh partisi, bukan
+oleh dataset atau model secara terpisah.
+
+=== BAF Non-IID: Efek SMOTE per Paradigma Agregasi
+
+@tab-4-baf-smote menyajikan efek SMOTE pada BAF Dirichlet $alpha = 0,5$ — dataset,
+partisi, seed, dan client teracuni yang sama — dipilah menurut paradigma agregasi.
+Terlihat urutan monoton: paradigma yang mengonsultasikan data yang tidak dapat
+dimanipulasi client memiliki ketahanan tertinggi.
+
+#figure(
+  kind: table,
+  text(size: 9pt)[
+    #table(
+      columns: (auto, auto, auto, auto, auto),
+      align: (left, left, right, right, right),
+      table.header([*Paradigma agregasi*], [*Model*], [*no-SMOTE*],
+        [*SMOTE*], [*$Delta$*]),
+      [Best-model selection], [GBM], [0,162], [0,162], [0,0%],
+      [Tree ensemble aggregation], [FedXGBllr], [0,151], [0,137], [−9,3%],
+      [FedAvg], [LR], [0,139], [0,097], [−30,5%],
+      [FedAvg], [SVM], [0,119], [0,081], [−31,9%],
+      [Accuracy-weighted FedAvg], [FFD], [0,157], [0,045], [−71,0%],
+      [Accuracy-weighted FedAvg], [BERT], [0,167], [0,045], [−73,2%],
+    )
+  ],
+  caption: [Efek SMOTE terhadap AUPRC test pada BAF Dirichlet $alpha = 0,5$,
+  seed 42, per paradigma agregasi. Kondisi identik pada seluruh baris; yang
+  berbeda hanya aturan agregasi.],
+) <tab-4-baf-smote>
+
+=== Mekanisme: Geometri Sintetis dan Inversi Bobot
+
+Argumen mekanistik disusun dalam empat langkah.
+
+*Langkah 1 — partisi.* Di bawah $alpha = 0,5$ (seed 42), satu client
+(client 1, $n = 391.355$) hanya memiliki 21 kasus fraud nyata. Log SMOTE
+per-client pada partisi tersebut menampilkan kelima regime sekaligus:
+
+```
+client 0: n=115.636, 4.976 fraud nyata, rasio 0,045 -> dilewati (target terpenuhi)
+client 1: n=391.355,     21 fraud nyata, rasio 0,000 -> 3.892 sintetis (x185,3)
+client 2: n=  5.988, 1.617 fraud nyata, rasio 0,370 -> dilewati (target terpenuhi)
+client 3: n= 27.783,     50 fraud nyata, rasio 0,002 ->   227 sintetis (x4,5)
+client 4: n=159.238,  1.056 fraud nyata, rasio 0,007 ->   525 sintetis (x0,5)
+```
+
+*Langkah 2 — geometri.* @fig-3-4-smote-geometry dan @tab-smote-geometry pada
+Subbab Perancangan Class Imbalance Handling mengukur geometri sintesis pada client
+terburuk tersebut: 3.892 titik sintetis menempati hanya 82 dari 210 segmen k-NN
+yang mungkin, dengan residual on-segment mendekati nol (2,6e−7), dan 16,03% titik
+sintetis lebih dekat ke sampel *mayoritas* nyata daripada ke sampel minoritas
+nyata mana pun. Kelas minoritas pada partisi itu berbentuk *wireframe*, bukan awan.
+Fenomena ini konsisten dengan konsep kelangkaan absolut versus relatif
+@weiss2004rarity, degradasi SMOTE pada dimensi tinggi @blagus2013smote, dan
+pembangkitan di wilayah mayoritas @elreedy2024smote.
+
+*Langkah 3 — inversi bobot.* @fig-4-1-wireframe memplot bobot agregasi client
+wireframe versus putaran untuk FFD dan BERT pada kedua arm, dengan garis acuan
+pada 0,2 (bobot proporsional untuk $K = 5$). Panel FFD paling jelas: pada arm
+no-SMOTE bobot tertahan datar di ≈0,018 selama 20 putaran, sedangkan pada arm
+SMOTE bobot menanjak monoton dari 0,131 menuju dataran 0,845 pada putaran ke-9.
+BERT mencapai 0,852 pada arm SMOTE tetapi berosilasi (maksimum 0,209) tanpa pernah
+mengambil alih pada arm no-SMOTE.
+
+#figure(
+  image("resources/fig-4-1-wireframe-weights.png", width: 100%),
+  caption: [Bobot agregasi client wireframe (BAF Dirichlet $alpha = 0,5$, seed 42)
+  versus putaran, untuk FFD (kiri) dan BERT (kanan) pada kedua arm. Garis titik
+  pada 0,2 menandai bobot proporsional untuk $K = 5$. Pada arm SMOTE bobot
+  menanjak hingga dataran ≈0,85; pada arm no-SMOTE bobot tetap rendah.],
+) <fig-4-1-wireframe>
+
+Penyebabnya adalah metrik lokal yang menjadi bobot. Pada arm SMOTE, AUPRC lokal
+client itu memanjat hingga 1,000 (FFD, putaran akhir) sementara arm no-SMOTE hanya
+membaca 0,004. Client tersebut menilai dirinya pada partisi yang 99,5% kelas
+minoritasnya diinterpolasi dari 21 titik yang baru saja ia paskan — penilaian-diri
+sempurna atas geometri sintetisnya sendiri.
+
+*Langkah 4 — konsekuensi.* AUPRC validasi global menurun seiring client itu
+mengambil alih. Pada BERT arm SMOTE, trajektori validasi turun dari 0,108 pada
+putaran awal menjadi 0,043 pada putaran akhir, sedangkan arm no-SMOTE konvergen
+di ≈0,167. Pola yang sama muncul pada FFD (arm SMOTE berakhir di 0,046, no-SMOTE
+di 0,157).
+
+Mekanisme ini dapat dinyatakan dalam satu kalimat yang menjadi tesis subbab:
+
+#quote(block: true)[
+  Ketahanan sebuah paradigma agregasi ditentukan oleh apakah aturan agregasi
+  mengonsultasikan data yang tidak dapat dirusak oleh client.
+]
+
+- *Best-model selection* mengevaluasi kandidat pada validation set *terpusat* —
+  client teracuni tidak pernah terpilih ($Delta = 0%$).
+- *Tree ensemble aggregation* menerima pohon dari setiap client namun mempelajari
+  bobot per-pohon pada validation set *terpusat*, sehingga pohon yang memaskan
+  wireframe diberi bobot rendah ($Delta = -9,3%$).
+- *FedAvg* membobot semata-mata menurut ukuran partisi, sehingga client teracuni
+  hanya menerima porsi proporsionalnya ($Delta approx -31%$).
+- *Accuracy-weighted FedAvg* membobot menurut metrik lokal *yang dilaporkan
+  sendiri*, yang oleh wireframe digelembungkan hingga 1,000 ($Delta approx -72%$).
+
+Perlu dicatat bahwa FFD adalah 1D-CNN dan BERT adalah FT-Transformer — arsitektur
+berbeda, trajektori sama pada partisi yang sama. Mekanisme ini karena itu milik
+aturan agregasi, bukan bias induktif satu model tertentu.
+
+=== Prediksi Pra-registrasi: Yang Terbukti dan Yang Terbantah
+
+Prediksi dicatat pada 27 Juli 2026, sebelum hasil grid-penuh tersedia, agar
+analisis oversampling dapat dibaca terhadap prediksi yang dibuat di muka, bukan
+dirasionalisasi setelah fakta.
+
+*Terbukti — urutan keluarga model.* Mengikuti #cite(<elor2022smote>, form:
+"prose"), diprediksikan bahwa balancing membantu classifier lemah tetapi tidak
+classifier kuat, dengan model deep paling terekspos. Teramati: model deep
+−71%/−73%, model parametrik −31%/−32%, model tree 0%/−9%. Urutannya persis
+sebagaimana diprediksi.
+
+*Terbantah — prediksi utama.* Prediksi utama menyatakan SMOTE tidak akan
+memperbaiki AUPRC di mana pun. Pada ULB, SMOTE justru memperbaiki hampir setiap
+model (GBM +0,095, FedXGBllr +0,087 rerata antar kondisi). Prediksi ini terbantah,
+namun mekanisme yang teridentifikasi di atas — regime moderat-universal versus
+ekstrem-terkonsentrasi — menjelaskan mengapa, dan merupakan jawaban yang lebih
+kuat daripada prediksi itu sendiri: sebuah prediksi tercatat yang terbantah dengan
+mekanisme yang ditemukan lebih bernilai daripada tebakan yang kebetulan benar.
+
+*Tidak terwujud — pergeseran kalibrasi.* Prediksi sekunder mengantisipasi F1 dan
+Recall naik di bawah SMOTE meski AUPRC tidak, sebagai tanda pergeseran kalibrasi.
+Pola ini tidak terwujud karena penyetelan ambang per-arm pada validation set
+terpusat (`threshold_policy = val_f1_tuned`) justru menetralkan artefak tersebut;
+sebuah keputusan perancangan mencegah konfound yang diantisipasi prediksi.
+
+*Terbantah — sel paling terdegenerasi.* Prediksi menempatkan ULB $alpha = 0,5$
+sebagai sel paling terdegenerasi. Sensus minoritas menunjukkan minimum
+`n_minority` = 2 justru pada *PaySim* $alpha = 0,5$ (dua client di bawah lantai
+SMOTE = 6), sedangkan pada ULB dan BAF tidak ada client di bawah lantai tersebut
+pada seed 42.
+
+== Diskriminasi versus Kalibrasi
+
+Termotivasi oleh #cite(<goorbergh2022harm>, form: "prose") yang menemukan bahwa
+koreksi imbalance tidak memperbaiki diskriminasi namun menghasilkan overestimasi
+probabilitas sistematis, penelitian ini melaporkan metrik kalibrasi berdampingan
+dengan diskriminasi. @tab-4-kalibrasi menyajikan rerata per-model. Mengikuti
+konvensi Van Calster, *calibration intercept* < 0 menandakan overestimasi dan
+*slope* < 1 menandakan probabilitas terlalu ekstrem (over-confident), sedangkan
+slope > 1 menandakan probabilitas terlalu terkompresi.
+
+#figure(
+  kind: table,
+  text(size: 9pt)[
+    #table(
+      columns: (auto, auto, auto, auto),
+      align: (left, right, right, right),
+      table.header([*Model*], [*Brier*], [*Intercept (in-the-large)*],
+        [*Slope*]),
+      [LR], [0,0032], [+0,485], [1,027],
+      [SVM], [NA], [NA], [NA],
+      [GBM], [0,0031], [−2,899], [0,963],
+      [FFD], [0,0030], [+0,792], [0,967],
+      [BERT], [0,0030], [+1,332], [0,860],
+      [FedXGBllr], [0,0041], [+3,108], [14,797],
+      [XGBoost], [0,0022], [−0,650], [1,287],
+    )
+  ],
+  caption: [Rerata metrik kalibrasi per model atas seluruh sel. Nilai FedXGBllr
+  adalah rerata dengan dua sel NA; SVM NA di seluruh sel.],
+) <tab-4-kalibrasi>
+
+*GBM over-dispersed pada regime terkompresi.* Pada ULB no-SMOTE, tempat seleksi
+iterasi memilih prefix pendek ($k^* = 1$, satu pohon), kalibrasi menunjukkan slope
+≈0,45 dengan intercept sangat negatif (−6 hingga −9): probabilitas terlalu ekstrem
+sekaligus overestimasi sistematis, di samping diskriminasi yang memadai
+(AUPRC 0,70–0,76). Seleksi iterasi pada validation set terpusat memperbaiki
+dispersi ini dibanding anggaran 100-iterasi penuh, sehingga rerata slope GBM
+mendekati ideal (0,963).
+
+*FedXGBllr under-dispersed.* Slope FedXGBllr membentang dari ≈0,92 (ULB no-SMOTE)
+hingga ≈35 (PaySim IID): probabilitas terkompresi mendekati nol, urutan
+terpelihara namun magnitudonya tak bermakna. Tingkat kompresi bervariasi dengan
+`rounds_completed` (13–37 putaran antar sel), sehingga perbandingan kalibrasi
+antar-kondisi untuk model ini terkonfound oleh early stopping dan harus dibaca
+dengan hati-hati.
+
+*PaySim Non-IID FedXGBllr: kalibrasi takterdefinisi.* Ambang tersetel pada
+1,9e−09 dan transformasi logit menjadi jenuh sehingga regresi rekalibrasi tidak
+dapat dipaskan; penjaga *degenerate-predictor* dengan tepat mengembalikan NA
+alih-alih nilai palsu. Precision 0,995 dan recall 0,994 mengonfirmasi diskriminasi
+nyaris sempurna dengan probabilitas yang tak dapat ditafsirkan. Ini adalah penjaga
+yang bekerja, bukan data yang hilang.
+
+*SVM: NA di seluruh sel.* Loss hinge menghasilkan margin fungsi keputusan, bukan
+probabilitas; tidak ada sigmoid yang dipaksakan untuk memanufaktur satu, sehingga
+metrik kalibrasi dilaporkan NA.
+
+Diskriminasi dan kalibrasi karena itu berpisah lintas keluarga model — sebuah
+model dapat mengurutkan dengan baik namun mengeluarkan probabilitas yang tak
+tepercaya, dan sebaliknya. Inilah alasan Subbab Metrik Evaluasi menambahkan
+metrik kalibrasi di samping metrik diskriminasi.
+
+Sebagai catatan lintas-bab, seleksi iterasi GBM pada validation set terpusat
+(@tab-3-6) bersifat adaptif per-sel. Efeknya paling tegas pada ULB no-SMOTE:
+validation set memilih prefix sangat pendek ($k^* = 1$, satu pohon) sehingga
+menghindari keruntuhan saturasi, dan AUPRC ULB no-SMOTE bernilai 0,70–0,76
+alih-alih ≈0,18 yang dihasilkan anggaran 100-iterasi tanpa seleksi. Pada arm SMOTE
+ULB prefix yang dipilih jauh lebih panjang ($k^* = 81$–$100$). Pada PaySim, $k^*$
+bervariasi (12–99) tanpa memengaruhi hasil karena model tree tetap tersaturasi
+≈0,996, sedangkan pada BAF $k^*$ tetap tinggi (61–96) sehingga praktis tak
+terpengaruh.
+
+== Interpretabilitas Model (RQ3)
+
+// TODO (RQ3): Analisis SHAP belum diimplementasikan. Analisis dijalankan terhadap
+// model global akhir yang telah dibekukan (frozen) dan dipersistensi oleh sweep
+// ini, mengikuti rancangan pada Subbab Perancangan Modul Evaluasi: komputasi SHAP
+// per-client terhadap model global akhir, diagregasi sebagai mean importance
+// beserta Spearman rank correlation dan Jaccard@5 antar pasangan client. Isi
+// setelah implementasi SHAP selesai; jangan menuliskan hasil SHAP spekulatif.
 
 // ---------------------------------------------------------------------------
 // BAB 5 — PENUTUP  (stub)
