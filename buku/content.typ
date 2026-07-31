@@ -2338,6 +2338,115 @@ paling banyak sebesar 2,1%, dan sebesar 0,0% pada sembilan dari sebelas run FL
 FedXGBllr. Asimetri anggaran karenanya tidak memengaruhi komparabilitas antar
 paradigma secara material.
 
+=== Analisis Separabilitas Kelas
+
+Salah satu pengamatan RQ1 tampak paradoks: BAF memiliki prevalensi fraud 8,5×
+lebih tinggi daripada ULB (1,10% berbanding 0,172%), namun hanya mencapai ≈15×
+baseline sementara ULB mencapai ≈484×. Bila ketidakseimbangan kelas adalah faktor
+kesukaran yang dominan, urutan ini seharusnya terbalik. Hipotesisnya adalah bahwa
+*separabilitas kelas, bukan ketidakseimbangan*, yang mengendalikan perbedaan
+tersebut — kelas minoritas BAF jauh lebih menyatu (overlap) dengan kelas mayoritas
+daripada kelas minoritas ULB. Analisis berikut menguji hipotesis itu secara
+kuantitatif dan bersifat read-only atas data terpraproses yang telah di-cache;
+tidak ada model yang dilatih.
+
+Bukti utamanya adalah tipologi contoh minoritas mengikuti
+#cite(<napierala2016types>, form: "prose"): setiap contoh fraud pada data latih
+diklasifikasikan menurut komposisi lima tetangga terdekatnya (k = 5, Euclidean
+pada fitur terskala) menjadi *safe* (4–5 tetangga minoritas), *borderline* (2–3),
+*rare* (1), atau *outlier* (0). @fig-typology dan @tab-typology menyajikan
+hasilnya.
+
+#figure(
+  image("resources/fig-4-2-minority-typology.png", width: 92%),
+  caption: [Distribusi tipe contoh minoritas (k = 5 tetangga terdekat) per dataset.
+  Kelas minoritas BAF hampir seluruhnya *rare* dan *outlier*, sedangkan ULB
+  didominasi *safe*.],
+) <fig-typology>
+
+#figure(
+  kind: table,
+  text(size: 9pt)[
+    #table(
+      columns: (auto, auto, auto, auto, auto, auto, auto),
+      align: (left, right, right, right, right, right, right),
+      table.header([*Dataset*], [*dim*], [*safe*], [*borderline*], [*rare*],
+        [*outlier*], [*rare+outlier*]),
+      [ULB], [30], [71,5%], [9,9%], [2,3%], [16,3%], [*18,6%*],
+      [BAF], [55], [0,3%], [6,6%], [19,3%], [73,8%], [*93,1%*],
+      [PaySim], [13], [57,6%], [10,7%], [7,8%], [24,0%], [*31,8%*],
+    )
+  ],
+  caption: [Tipologi contoh minoritas (Napierala dan Stefanowski, 2016) pada data
+  latih. ULB/BAF memakai seluruh data latih sebagai referensi tetangga; PaySim
+  memakai subsampel uniform yang mempertahankan prevalensi (n = 500.000, seed 42).],
+) <tab-typology>
+
+Kelas minoritas BAF adalah 93,1% *rare* + *outlier* — 73,8% di antaranya *outlier*
+murni tanpa satu pun tetangga minoritas — sedangkan kelas minoritas ULB adalah
+81,4% *safe* + *borderline*. Mengikuti #cite(<napierala2016types>, form: "prose"),
+kelas minoritas yang didominasi contoh *rare* dan *outlier* tidak dapat dipelajari
+secara andal berapa pun banyaknya contoh semacam itu, karena contoh-contoh
+tersebut tidak membawa struktur lokal yang dapat digeneralisasi oleh classifier.
+Ini adalah pembedaan kelangkaan absolut versus relatif @weiss2004rarity: BAF
+memiliki lebih banyak fraud namun fraud tersebut tersebar di wilayah mayoritas.
+
+Ukuran kompleksity klasik #cite(<lorena2019complexity>, form: "prose") menguatkan
+gambaran yang sama (@tab-complexity). N3 (galat leave-one-out 1-NN) dan N1 (fraksi
+titik pada batas kelas melalui minimum spanning tree) BAF jauh lebih tinggi
+daripada ULB; F1 memakai konvensi terbalik Lorena sehingga nilai lebih tinggi
+berarti lebih sukar. Koefisien overlap dari proyeksi LDA satu-dimensi — arah yang
+secara konstruksi memaksimalkan separabilitas linear, sehingga menjadi batas atas
+separabilitas — juga jauh lebih besar pada BAF (0,422) daripada ULB (0,169).
+Secara univariat, fitur tunggal terkuat ULB mencapai AUC 0,956, sedangkan BAF
+hanya 0,705; lima fitur teratas BAF bermakna semantik (`credit_risk_score`,
+`housing_status`, `device_os`, `customer_age`) sementara ULB berupa komponen PCA
+anonim (V14, V4). Batas empiris pada @tab-complexity — XGBoost terpusat tanpa SMOTE
+dari @tab-4-auprc-baf dan padanannya — mengukur langit-langit separabilitas dengan
+model, pipeline, dan hyperparameter identik tanpa federasi maupun oversampling:
+ULB ≈484×, PaySim ≈764×, BAF hanya ≈14×.
+
+#figure(
+  kind: table,
+  text(size: 9pt)[
+    #table(
+      columns: (auto, auto, auto, auto, auto, auto, auto),
+      align: (left, right, right, right, right, right, right),
+      table.header([*Dataset*], [*N1*], [*N2*], [*N3*], [*F1*],
+        [*overlap LDA*], [*batas XGBoost*]),
+      [ULB], [0,128], [0,274], [0,073], [0,274], [0,169], [≈484×],
+      [BAF], [0,422], [0,901], [0,295], [0,704], [0,422], [≈14×],
+      [PaySim], [0,076], [0,082], [0,046], [0,659], [0,356], [≈764×],
+    )
+  ],
+  caption: [Ukuran kompleksitas (N1, N2, N3, F1 konvensi terbalik — tinggi = sukar),
+  koefisien overlap LDA-1D, dan batas empiris XGBoost. N1–F1 dihitung pada subsampel
+  seimbang-kelas (seluruh minoritas hingga 3.000 + mayoritas seukuran, seed 42)
+  untuk memisahkan overlap dari ketidakseimbangan.],
+) <tab-complexity>
+
+*Batasan — dimensionalitas dan tipe fitur.* Ketiga dataset berbeda dimensi dan
+tipe fitur (PaySim 13, ULB 30 komponen PCA, BAF 55 dengan 26 kolom one-hot
+kategorikal), sehingga jarak Euclidean bermakna berbeda dan seluruh ukuran
+berbasis jarak (tipologi, N1–N3) terekspos terhadap hal ini; kolom one-hot secara
+khusus menggelembungkan jarak antar-record yang berbeda kategori pada BAF. Untuk
+mengendalikannya, tipologi dan N3 dihitung ulang pada subset berdimensi-sepadan —
+13 fitur teratas menurut AUC univariat tiap dataset. Urutan bertahan: fraksi
+*rare* + *outlier* BAF tetap 93,9% (dari 93,1%) dan N3 tetap 0,313 (dari 0,295),
+sedangkan ULB tetap 17,7% dan 0,068. Kesimpulan karenanya bersandar pada ukuran
+yang paling tahan terhadap perbedaan dimensi — tipologi pada dimensi sepadan, N3,
+dan batas XGBoost yang bersifat agnostik-dimensi — bukan pada N2 atau F1 semata.
+
+Singkatnya, ketidakseimbangan kelas dan kesukaran kelas adalah dua hal berbeda.
+BAF memiliki 8,5× prevalensi fraud ULB namun hanya sekitar 1/30 lift-nya; tipologi
+minoritas menunjukkan sebabnya — kelas minoritas BAF nyaris seluruhnya *rare* dan
+*outlier*, tanpa manifold lokal untuk digeneralisasi. Temuan ini juga menautkan
+kembali ke patologi SMOTE BAF Non-IID pada Subbab berikutnya: kelas minoritas yang
+didominasi *rare* dan *outlier* justru merupakan regime tempat interpolasi SMOTE
+menghasilkan titik sintetis tak-representatif, karena tidak ada manifold minoritas
+lokal untuk diinterpolasi — persis fenomena *wireframe* yang dibahas pada
+@fig-3-4-smote-geometry.
+
 == Pengaruh Non-IID dan SMOTE (RQ2)
 
 === Efek Agregat SMOTE
