@@ -1627,9 +1627,13 @@ fraud secara representatif.
 
 Komputasi SHAP dilakukan menggunakan tiga varian explainer yang dipilih
 berdasarkan karakteristik masing-masing model. Varian TreeSHAP oleh
-#cite(<lundberg2019treeshap>, form: "prose") diaplikasikan pada GBM dan FedXGBllr
-karena efisiensi komputasinya yang bersifat polinomial pada model berbasis pohon
-serta kemampuannya menghasilkan exact Shapley values untuk struktur ensemble.
+#cite(<lundberg2019treeshap>, form: "prose") diaplikasikan pada GBM karena
+efisiensi komputasinya yang bersifat polinomial pada model berbasis pohon serta
+kemampuannya menghasilkan exact Shapley values untuk struktur ensemble. FedXGBllr,
+meskipun berbasis pohon, tidak dapat memakai dekomposisi TreeSHAP per-pohon karena
+kepala CNN agregatornya tidak linear terhadap keluaran pohon; model tersebut
+dijelaskan secara model-agnostik dengan KernelSHAP (lihat Subbab Implementasi
+Modul Evaluasi).
 Varian LinearSHAP diaplikasikan pada Logistic Regression karena memberikan exact
 Shapley values untuk model linear dengan biaya komputasi rendah. Varian
 KernelSHAP diaplikasikan pada Support Vector Machine sebagai pendekatan
@@ -2139,16 +2143,29 @@ menjaga kepatuhan terhadap prinsip privasi Federated Learning. Pembatasan ini
 telah dibahas pada Subbab Batasan Masalah sebagai salah satu batasan validitas
 eksternal penelitian.
 
-Implementasi explainer mengikuti pemetaan yang telah ditetapkan pada Subbab
-Perancangan Modul Evaluasi. TreeSHAP diaplikasikan pada GBM dan FedXGBllr melalui
-antarmuka TreeExplainer dari pustaka SHAP. Untuk FedXGBllr, komputasi dilakukan
-pada aggregated tree ensemble hasil tahap pertama, dengan kontribusi setiap pohon
-dibobot oleh learnable learning rates yang dipelajari oleh komponen 1D CNN pada
-tahap kedua. LinearSHAP diaplikasikan pada Logistic Regression melalui
-LinearExplainer, dan KernelSHAP diaplikasikan pada SVM linear melalui
-KernelExplainer. Khusus untuk KernelSHAP, jumlah evaluasi fungsi dibatasi pada
-nilai default pustaka untuk menjaga efisiensi komputasi mengingat kompleksitasnya
-yang bersifat eksponensial terhadap jumlah fitur.
+Implementasi explainer mengikuti pemetaan pada Subbab Perancangan Modul Evaluasi,
+dengan satu koreksi terhadap rancangan awal FedXGBllr. TreeSHAP diaplikasikan pada
+GBM melalui TreeExplainer dengan mode `tree_path_dependent`, pada model hasil
+seleksi iterasi (prefix $k^*$ pohon) — yakni persis model yang dijelaskan oleh
+metriknya.
+
+Rancangan awal menjelaskan FedXGBllr melalui dekomposisi TreeSHAP per-pohon yang
+dibobot oleh learnable learning rates, dengan asumsi $phi_j (f) = sum_t w_t dot
+phi_j (h_t)$. Dekomposisi tersebut hanya eksak menurut aksioma linearitas Shapley
+apabila kepala agregator linear terhadap keluaran pohon. Arsitektur kepala CNN
+FedXGBllr adalah `conv1d → flatten → ReLU → Linear → Sigmoid`; keberadaan ReLU
+(dan Sigmoid pada tahap akhir) membuat luaran tidak linear terhadap keluaran
+pohon, sehingga syarat linearitas tidak terpenuhi dan dekomposisi per-pohon tidak
+berlaku. FedXGBllr karenanya dijelaskan secara model-agnostik dengan KernelSHAP
+atas fitur asli, dengan memperlakukan komposisi tree-ensemble dan CNN sebagai satu
+fungsi tunggal; koreksi ini tidak bergantung pada hasil SHAP dan berlaku semata
+karena arsitektur model.
+
+LinearSHAP diaplikasikan pada Logistic Regression melalui LinearExplainer, dan
+KernelSHAP diaplikasikan pada SVM linear melalui KernelExplainer. Khusus untuk
+KernelSHAP, jumlah evaluasi fungsi dibatasi pada nilai default pustaka untuk
+menjaga efisiensi komputasi mengingat kompleksitasnya yang bersifat eksponensial
+terhadap jumlah fitur.
 
 Komputasi feature importance dijalankan secara independen pada setiap client
 setelah model global akhir tersedia. Setiap client menghitung SHAP values untuk
