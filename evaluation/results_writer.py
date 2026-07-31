@@ -33,7 +33,10 @@ SUMMARY_COLUMNS: Sequence[str] = (
     "alpha",
     "oversampling",
     "random_seed",
-    "num_rounds",
+    # Configured FL round budget (was "num_rounds"): 20 for LR/SVM/GBM/FFD/BERT,
+    # 50 for FedXGBllr (Flower hfedxgboost baseline). Pairs with rounds_completed.
+    # "n/a" for centralized. Renamed for an unambiguous completed-vs-configured pair.
+    "rounds_configured",
     "num_clients",
     "best_round",
     "best_val_auprc",
@@ -57,7 +60,10 @@ SUMMARY_COLUMNS: Sequence[str] = (
     # actually consumed, emitted by the child itself.
     "data_hash",
     "partition_hash",
-    # Interpretation context (Part 4).
+    # Interpretation context (Part 4). rounds_completed = federated FIT rounds
+    # actually executed, EXCLUDING the round-0 initial evaluation — defined
+    # consistently across all models so the column means the same thing for LR
+    # (20) and FedXGBllr (its early-stopped count). Pairs with rounds_configured.
     "rounds_completed",
     # GBM validation-set iteration selection: boosting-prefix length kept
     # (max-AUPRC on central val). "n/a" for every non-GBM model. See
@@ -130,6 +136,15 @@ def _write_csv(
             writer.writerow({c: row.get(c, "") for c in columns})
 
 
+def _round_ge_one(entry: Dict[str, Any]) -> bool:
+    """True if a history entry is a fit round (round >= 1), i.e. not the round-0
+    initial evaluation. Non-numeric/missing round → treated as a fit round."""
+    try:
+        return int(entry.get("round", 1)) >= 1
+    except (TypeError, ValueError):
+        return True
+
+
 def _best_val_metrics(
     history: List[Dict[str, Any]], best_round: int
 ) -> Dict[str, Any]:
@@ -175,12 +190,16 @@ def write_fl_results(
     partition_hash: str = "",
     threshold_policy: str = "val_f1_tuned",
     threshold: object = "",
-    rounds_completed: object = "",
     n_clients_below_smote_floor: object = "",
     baseline_auprc: object = "",
     n_iter_selected: object = "n/a",
 ) -> Dict[str, str]:
     """Write summary and per-round CSVs for a federated learning run.
+
+    ``rounds_completed`` is DERIVED here (not passed) as the number of federated
+    fit rounds with ``round >= 1`` — the round-0 initial evaluation is excluded so
+    the column is consistent across models. The per-round CSV likewise contains
+    only fit rounds (1..N).
 
     Parameters
     ----------
@@ -217,6 +236,12 @@ def write_fl_results(
     best_val = _best_val_metrics(history, best_round)
     final_test = final_test or {}
 
+    # Fit rounds only (exclude the round-0 initial evaluation), used for both the
+    # rounds_completed count and the per-round CSV so they agree with each other
+    # and with the runner's row-count.
+    fit_history = [h for h in history if _round_ge_one(h)]
+    rounds_completed = len(fit_history)
+
     summary = {
         "dataset": dataset,
         "model": model,
@@ -224,7 +249,7 @@ def write_fl_results(
         "alpha": "" if alpha is None else alpha,
         "oversampling": oversampling,
         "random_seed": int(seed),
-        "num_rounds": int(num_rounds),
+        "rounds_configured": int(num_rounds),
         "num_clients": int(num_clients),
         "best_round": "" if best_round in (None, -1) else int(best_round),
         "best_val_auprc": (
@@ -258,7 +283,7 @@ def write_fl_results(
     _write_csv(summary_path, SUMMARY_COLUMNS, [summary])
 
     round_rows: List[Dict[str, Any]] = []
-    for entry in history:
+    for entry in fit_history:
         try:
             r = int(entry.get("round", 0))
         except (TypeError, ValueError):
@@ -304,8 +329,9 @@ def write_centralized_results(
     """Write a single-row summary CSV for a centralized baseline.
 
     The schema matches the FL summary so a single collector can ingest both.
-    Val metrics are duplicated into ``best_val_*`` columns and FL-only fields
-    (``best_round``, ``num_rounds``) are left blank.
+    Val metrics are duplicated into ``best_val_*`` columns; FL-only fields
+    (``best_round``) are left blank and ``rounds_configured``/``rounds_completed``
+    are ``n/a`` (centralized training has no federated rounds).
 
     ``val_metrics`` / ``test_metrics`` keys are read as ``val_auprc``,
     ``val_f1``, ``val_precision``, ``val_recall`` (and ``test_*`` likewise).
@@ -320,7 +346,7 @@ def write_centralized_results(
         "alpha": "",
         "oversampling": oversampling,
         "random_seed": int(seed),
-        "num_rounds": "",
+        "rounds_configured": "n/a",
         "num_clients": 1,
         "best_round": "",
         "best_val_auprc": val_metrics.get("val_auprc", ""),

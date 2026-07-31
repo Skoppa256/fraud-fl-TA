@@ -2013,6 +2013,20 @@ ukuran kernel dan stride yang disesuaikan terhadap jumlah pohon per-client.
 Komponen CNN ini dilatih secara federated menggunakan skema FedAvg standar selama
 $R$ putaran komunikasi.
 
+*Anggaran putaran yang asimetris untuk FedXGBllr.* FedXGBllr menggunakan 50 global
+rounds mengikuti konfigurasi baseline hfedxgboost Flower, berbeda dari 20 rounds
+untuk kelima model lainnya. Karena tahap CNN menerapkan early stopping pada
+validation set terpusat, anggaran ini berperan sebagai batas atas dan bukan biaya
+tetap: model global akhir adalah model dengan AUPRC validasi terbaik, bukan model
+pada putaran ke-50. Membatasi setiap run FedXGBllr pada nilai terbaiknya dalam 20
+putaran pertama mengubah AUPRC validasi paling banyak sebesar 2,2% dan sebesar
+0,0% pada lima dari delapan run, sehingga asimetri anggaran putaran tidak
+memengaruhi komparabilitas antar paradigma secara material. Agar interpretasi
+tetap konsisten, setiap baris hasil mencatat `rounds_configured` (anggaran, yaitu
+20 atau 50) berdampingan dengan `rounds_completed`, yakni jumlah putaran fit
+federated yang benar-benar dieksekusi (di luar evaluasi awal pada putaran ke-0),
+sehingga kolom tersebut bermakna sama untuk seluruh model.
+
 Pada seluruh paradigma agregasi yang diimplementasikan, validation set terpusat
 berperan sebagai sumber sinyal evaluasi global pada setiap putaran komunikasi.
 Pada paradigma FedAvg untuk LR dan SVM, validation set digunakan untuk memantau
@@ -2045,7 +2059,7 @@ dan menghindari potensi bias akibat optimasi hyperparameter yang ekstensif.
       table.header([*Parameter*], [*Nilai*]),
       table.cell(colspan: 2)[_Umum (seluruh model)_],
       [Jumlah client (K)], [5],
-      [Global rounds (R)], [20],
+      [Global rounds (R)], [20 (50 untuk FedXGBllr, mengikuti baseline hfedxgboost Flower)],
       [Dirichlet $alpha$], [{0,5 ; 1,0 ; 5,0}],
       [Random seed], [42],
       [SMOTE: k_neighbors], [5],

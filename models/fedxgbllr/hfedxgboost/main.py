@@ -390,7 +390,6 @@ def main(cfg: DictConfig) -> None:
             duration_seconds=duration_seconds,
             data_hash=data_hash,
             partition_hash=partition_hash,
-            rounds_completed=len(state.get("history") or []),
             n_clients_below_smote_floor=n_below_floor,
             baseline_auprc=baseline_auprc(y_test),
         )

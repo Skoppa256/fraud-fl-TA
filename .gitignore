@@ -118,3 +118,7 @@ desktop.ini
 
 buku/thesis.pdf
 buku/Proposal TA v2.1.pdf
+# FedXGBllr upstream ResultsWriter output — written at run time (cwd-relative),
+# not source. Tracking it blocked `git pull` on a dirty working tree.
+models/fedxgbllr/results.csv
+models/fedxgbllr/results_centralized.csv

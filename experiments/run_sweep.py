@@ -557,7 +557,7 @@ def execute_run(spec: RunSpec, gpu_available: bool, offline: bool,
         "status": status, "exit_code": exit_code, "wall_seconds": wall,
         "smote_inoperative": spec.smote_inoperative, "sub6_count": spec.sub6_count,
         "data_hash": data_hash, "partition_hash": partition_hash,
-        "rounds_completed": rounds_done,
+        "rounds_completed": rounds_done, "rounds_configured": _rounds_configured(spec),
         "aggregation": (
             "n/a (centralized); XGBoost (centralized upper bound)"
             if spec.condition == "centralized" and spec.model == "fedxgbllr"
@@ -578,10 +578,23 @@ _AGG = {
     "fedxgbllr": "tree-ensemble+CNN-FedAvg",
 }
 
+# Configured FL round budget per model: FedXGBllr follows the Flower hfedxgboost
+# baseline at 50, the other five run 20. Centralized has no rounds.
+_ROUNDS_CONFIGURED = {"fedxgbllr": 50}
+_DEFAULT_FL_ROUNDS = 20
+
+
+def _rounds_configured(spec: RunSpec) -> object:
+    if spec.condition == "centralized":
+        return "n/a"
+    return _ROUNDS_CONFIGURED.get(spec.model, _DEFAULT_FL_ROUNDS)
+
+
 _MASTER_COLUMNS = [
     "run_name", "dataset", "model", "smote_arm", "condition", "alpha", "seed",
     "status", "exit_code", "wall_seconds", "smote_inoperative", "sub6_count",
-    "data_hash", "partition_hash", "rounds_completed", "aggregation", "log",
+    "data_hash", "partition_hash", "rounds_completed", "rounds_configured",
+    "aggregation", "log",
 ]
 
 
@@ -761,7 +774,8 @@ def main(argv=None) -> int:
                 "status": "skipped_inoperative", "exit_code": "", "wall_seconds": 0,
                 "smote_inoperative": True, "sub6_count": spec.sub6_count,
                 "data_hash": data_hash, "partition_hash": partition_hash,
-                "rounds_completed": "n/a", "aggregation": "", "log": "",
+                "rounds_completed": "n/a", "rounds_configured": _rounds_configured(spec),
+                "aggregation": "", "log": "",
             })
             skipped += 1
             continue
