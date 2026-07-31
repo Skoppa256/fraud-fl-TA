@@ -49,6 +49,23 @@ def _logit(p):
     return np.log(p / (1 - p))
 
 
+def _base_scalar(ev):
+    """Robust expected_value → scalar. Binary HistGBM/TreeExplainer may return a
+    scalar, a size-1, or a size-2 array (shap issue #3432); take the last entry."""
+    return float(np.atleast_1d(np.asarray(ev, dtype=float))[-1])
+
+
+def _sv_2d(sv, n):
+    """Robust shap_values → (n, features). Handles list-of-arrays and a trailing
+    output axis (n, features, n_outputs) by taking the positive/last output."""
+    if isinstance(sv, list):
+        sv = sv[-1]
+    sv = np.asarray(sv)
+    if sv.ndim == 3:
+        sv = sv[..., -1]
+    return sv.reshape(n, -1)
+
+
 def detect_model(run_name: str):
     s = run_name[len("centralized_"):] if run_name.startswith("centralized_") else run_name
     for tok in KNOWN:
@@ -207,10 +224,8 @@ def probe_gbm(art):
     xte = np.asarray(data["x_test"], np.float32)
     ex = shap.TreeExplainer(model)  # tree_path_dependent default for HistGBM
     Xs = xte[:N_RECON]
-    sv = ex.shap_values(Xs)
-    sv = sv[1] if isinstance(sv, list) else sv
-    base = ex.expected_value
-    base = base[1] if hasattr(base, "__len__") else base
+    sv = _sv_2d(ex.shap_values(Xs), len(Xs))
+    base = _base_scalar(ex.expected_value)
     # local accuracy on TreeExplainer raw output (margin/log-odds)
     raw = model.decision_function(Xs) if hasattr(model, "decision_function") else _logit(model.predict_proba(Xs)[:, 1])
     recon = sv.sum(axis=1) + base
@@ -237,10 +252,8 @@ def probe_svm(art):
         print(f"    LinearExplainer(model) rejected ({type(exc).__name__}); using (coef_, intercept_) form")
         ex = shap.LinearExplainer((model.coef_[0], float(model.intercept_[0])), bg)
     Xs = xte[:N_RECON]
-    sv = ex.shap_values(Xs)
-    sv = sv[1] if isinstance(sv, list) else sv
-    base = ex.expected_value
-    base = base[1] if hasattr(base, "__len__") else base
+    sv = _sv_2d(ex.shap_values(Xs), len(Xs))
+    base = _base_scalar(ex.expected_value)
     margin = model.decision_function(Xs)  # explained quantity = margin
     err = float(np.abs(margin - (sv.sum(axis=1) + base)).max())
     print(f"    LinearExplainer OK (coef_/intercept_ suffice): True")
@@ -259,8 +272,11 @@ def probe_torch(art, model_cls_name):
         from models.ffd.model import FFDModel as Cls
     else:
         from models.bert_fraud.model import BertFraudModel as Cls
+    # Force the whole model (params AND registered buffers — BERT's feature_weights,
+    # feature_biases, cls_token) onto CPU so it matches the CPU probe inputs, even
+    # if the ctor defaulted to CUDA on the box.
     model = mp.load_torch(Cls, art["dir"], device="cpu")
-    model.eval()
+    model = model.cpu().eval()
 
     class LogOdds(nn.Module):
         def __init__(self, m): super().__init__(); self.m = m
@@ -268,7 +284,7 @@ def probe_torch(art, model_cls_name):
             z = self.m(x)                      # (B,2) logits
             return (z[:, 1] - z[:, 0]).reshape(-1, 1)   # log-odds(fraud)
 
-    wrap = LogOdds(model)
+    wrap = LogOdds(model).cpu().eval()
     data, _ = load_cache(art["dataset"])
     xtr = np.asarray(data["x_train"], np.float32)
     xte = np.asarray(data["x_test"], np.float32)
@@ -277,16 +293,15 @@ def probe_torch(art, model_cls_name):
     Xs = torch.from_numpy(xte[:N_RECON])
     fx = wrap(Xs).detach().numpy().reshape(-1)
 
-    used, err = None, None
+    used, err, dt = None, None, None
     for name, ctor in [("DeepExplainer", lambda: shap.DeepExplainer(wrap, bg)),
                        ("GradientExplainer", lambda: shap.GradientExplainer(wrap, bg))]:
         try:
             ex = ctor()
-            sv = ex.shap_values(Xs)
-            sv = sv[0] if isinstance(sv, list) else sv
-            sv = np.asarray(sv).reshape(N_RECON, -1)
-            ev = getattr(ex, "expected_value", 0.0)
-            ev = float(np.asarray(ev).reshape(-1)[0]) if np.asarray(ev).size else 0.0
+            t0 = time.time()
+            sv = _sv_2d(ex.shap_values(Xs), N_RECON)
+            dt = time.time() - t0
+            ev = _base_scalar(getattr(ex, "expected_value", 0.0))
             recon = sv.sum(axis=1) + ev
             err = float(np.abs(fx - recon).max())
             used = name
@@ -294,38 +309,44 @@ def probe_torch(art, model_cls_name):
         except Exception as exc:  # noqa: BLE001
             print(f"    {name} failed: {type(exc).__name__}: {str(exc)[:120]}")
     if used is None:
-        print("    both Deep/Gradient failed -> KernelSHAP fallback required (not timed here)")
+        print("    both Deep/Gradient failed -> KernelSHAP fallback required")
         return
     verdict = "PASS" if (used == "DeepExplainer" and err <= DEEP_TOL) else \
               ("APPROX (Gradient — local accuracy not guaranteed)" if used == "GradientExplainer" else "FAIL")
     print(f"    explainer used: {used} | tolerance (abs, log-odds) = {DEEP_TOL}")
     print(f"    local-accuracy max|Σφ+φ0 − f(x)| = {err:.2e}  => {verdict}")
+    print(f"    timing: ~{dt / N_RECON * N_EXPLAIN_TARGET:6.1f}s / {N_EXPLAIN_TARGET} ({used})")
 
 
 # --------------------------------------------------------------------------- #
-def probe_timing(gbm_model, svm_model, fx_predict, ffd_bert_arts):
+def probe_timing(gbm_pair, svm_pair, fx_predict):
+    """Each ``*_pair`` is ``(model, art)`` — background/explain data loaded from
+    the artifact's OWN dataset (feature counts differ across datasets)."""
     print(f"\n[5] Timing estimate for {N_EXPLAIN_TARGET} explanation samples")
-    import shap, torch
-    import torch.nn as nn
-    from evaluation import model_persistence as mp
+    import shap
 
     def scale(t_small):
         return t_small / N_TIME * N_EXPLAIN_TARGET
 
     # GBM TreeExplainer
-    if gbm_model is not None:
-        d, _ = load_cache("creditcard")
+    if gbm_pair and gbm_pair[0] is not None:
+        gbm_model, gbm_art = gbm_pair
+        d, _ = load_cache(gbm_art["dataset"])
         X = np.asarray(d["x_test"], np.float32)[:N_TIME]
         ex = shap.TreeExplainer(gbm_model)
         t = time.time(); ex.shap_values(X); dt = time.time() - t
-        print(f"    GBM   (TreeExplainer)   : ~{scale(dt):6.1f}s / {N_EXPLAIN_TARGET}")
+        print(f"    GBM   (TreeExplainer, {gbm_art['dataset']}) : ~{scale(dt):6.1f}s / {N_EXPLAIN_TARGET}")
     # SVM LinearExplainer
-    if svm_model is not None:
-        d, _ = load_cache("creditcard")
+    if svm_pair and svm_pair[0] is not None:
+        svm_model, svm_art = svm_pair
+        d, _ = load_cache(svm_art["dataset"])
         X = np.asarray(d["x_test"], np.float32)
-        ex = shap.LinearExplainer(svm_model, X[:N_BACKGROUND])
+        try:
+            ex = shap.LinearExplainer(svm_model, X[:N_BACKGROUND])
+        except Exception:  # noqa: BLE001
+            ex = shap.LinearExplainer((svm_model.coef_[0], float(svm_model.intercept_[0])), X[:N_BACKGROUND])
         t = time.time(); ex.shap_values(X[:N_TIME]); dt = time.time() - t
-        print(f"    SVM   (LinearExplainer) : ~{scale(dt):6.1f}s / {N_EXPLAIN_TARGET}")
+        print(f"    SVM   (LinearExplainer, {svm_art['dataset']}) : ~{scale(dt):6.1f}s / {N_EXPLAIN_TARGET}")
     # FedXGBllr KernelSHAP on composed feature->log-odds (the chosen black box)
     if fx_predict is not None:
         fx_ds, fx_xte, _ = fx_predict
@@ -387,7 +408,7 @@ def main():
             print(f"    [{name}] PROBE ERROR:\n" + textwrap_indent(traceback.format_exc()))
 
     try:
-        probe_timing(gbm_model, svm_model, fx_bundle, [ffd, bert])
+        probe_timing((gbm_model, gbm), (svm_model, svm), fx_bundle)
     except Exception:  # noqa: BLE001
         print("    [timing] ERROR:\n" + textwrap_indent(traceback.format_exc()))
 

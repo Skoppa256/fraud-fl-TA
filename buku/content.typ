@@ -2571,6 +2571,18 @@ terpengaruh.
 // per-client terhadap model global akhir, diagregasi sebagai mean importance
 // beserta Spearman rank correlation dan Jaccard@5 antar pasangan client. Isi
 // setelah implementasi SHAP selesai; jangan menuliskan hasil SHAP spekulatif.
+//
+// CATATAN untuk penulisan §4.5 (dari Stage-0 SHAP): artefak GBM ULB no-SMOTE
+// adalah satu pohon berkedalaman-6 (k* = 1, dipilih pada validation set — lihat
+// §4.4). Itu memang model yang dijelaskan oleh metriknya, tetapi SHAP atas ensemble
+// satu-pohon menghasilkan atribusi yang nyaris trivial; sertakan satu kalimat agar
+// terbaca sebagai konsekuensi seleksi iterasi, bukan bug.
+//
+// Koreksi §3.4.5 (disepakati, dikerjakan pada Stage 1): dekomposisi TreeSHAP
+// per-pohon berbobot learned-learning-rates tidak dapat dipenuhi arsitektur karena
+// ada ReLU antara conv dan FC (serta Sigmoid di kepala); FedXGBllr karenanya
+// dijelaskan secara model-agnostik (KernelSHAP atas fitur asli), dan SVM memakai
+// LinearExplainer (margin), bukan KernelSHAP.
 
 // ---------------------------------------------------------------------------
 // BAB 5 — PENUTUP  (stub)
