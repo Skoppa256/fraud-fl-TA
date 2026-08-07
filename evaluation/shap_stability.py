@@ -29,18 +29,32 @@ def _pairs(n: int):
 
 
 def spearman_stability(importances: Sequence[np.ndarray]) -> float:
-    """Mean pairwise Spearman rank correlation across client importance vectors."""
-    from scipy.stats import spearmanr
+    """Mean pairwise Spearman rank correlation across client importance vectors.
+
+    Returns ``nan`` (NEVER 0.0) when any pair's correlation is undefined. ``spearmanr``
+    returns nan for a constant/degenerate importance vector — e.g. when attributions
+    collapse to near-zero ties (FedXGBllr on PaySim, whose predicted probabilities are
+    compressed to ~1e-9). An undefined correlation and a zero correlation mean OPPOSITE
+    things: 0.0 says "clients disagree completely"; nan says "the ranking is degenerate
+    and rank correlation is not defined". Coercing nan to 0.0 silently reports a
+    degenerate cell as maximal disagreement — so we propagate it instead. Use
+    :func:`near_zero_fraction` / :func:`degenerate_clients` to explain the nan.
+    """
+    import warnings
+
+    from scipy.stats import ConstantInputWarning, spearmanr
 
     imp = [np.asarray(v, dtype=float) for v in importances]
     pr = _pairs(len(imp))
     if not pr:
         return float("nan")
     vals = []
-    for i, j in pr:
-        rho = spearmanr(imp[i], imp[j]).correlation
-        vals.append(0.0 if rho is None or np.isnan(rho) else float(rho))
-    return float(np.mean(vals))
+    with warnings.catch_warnings():  # a constant input IS the nan we handle below
+        warnings.simplefilter("ignore", ConstantInputWarning)
+        for i, j in pr:
+            rho = spearmanr(imp[i], imp[j]).correlation
+            vals.append(float("nan") if rho is None else float(rho))
+    return float(np.mean(vals))  # any nan pair -> nan cell (propagated, not coerced)
 
 
 def _topk_set(v: np.ndarray, k: int):
@@ -83,3 +97,38 @@ def kuncheva_index(importances: Sequence[np.ndarray], d: int, k: int = 5) -> flo
 def mean_importance(importances: Sequence[np.ndarray]) -> np.ndarray:
     """Consensus importance = elementwise mean over client importance vectors."""
     return np.mean(np.vstack([np.asarray(v, dtype=float) for v in importances]), axis=0)
+
+
+def near_zero_fraction(importances: Sequence[np.ndarray], eps: float = 1e-9) -> List[float]:
+    """Per-client fraction of features whose mean|SHAP| is <= ``eps`` (absolute).
+
+    A fraction near 1.0 means the model attributes almost nothing to any feature —
+    e.g. FedXGBllr on PaySim, whose predicted probabilities compress to ~1e-9 so the
+    attributions collapse. Report this so §4.5 can state whether the attributions are
+    meaningful at all rather than reading a degenerate cell as a stability value.
+    """
+    return [float(np.mean(np.abs(np.asarray(v, float)) <= eps)) for v in importances]
+
+
+def is_degenerate(v: np.ndarray, atol: float = 1e-12, rtol: float = 1e-9) -> bool:
+    """True if an importance vector carries no usable ranking signal.
+
+    Two degenerate cases, both of which make stability metrics meaningless:
+      * all-(near-)zero — ``max|v| <= atol`` (KernelSHAP underflowed to nothing);
+      * constant magnitude — ``ptp(|v|) <= rtol * max|v|`` (no feature outranks another).
+    On such a vector ``spearmanr`` returns nan, and ``argsort`` of the ties yields an
+    index-order top-k identical across clients — faking Jaccard = Kuncheva = 1.0. Any
+    metric emitted for a degenerate cell is an artifact, so callers must report the
+    cell as undefined instead.
+    """
+    v = np.abs(np.asarray(v, float))
+    m = float(v.max()) if v.size else 0.0
+    if m <= atol:
+        return True
+    return float(np.ptp(v)) <= rtol * m
+
+
+def degenerate_clients(importances: Sequence[np.ndarray],
+                       atol: float = 1e-12, rtol: float = 1e-9) -> List[int]:
+    """Indices of clients whose importance vector is degenerate (see :func:`is_degenerate`)."""
+    return [i for i, v in enumerate(importances) if is_degenerate(v, atol, rtol)]

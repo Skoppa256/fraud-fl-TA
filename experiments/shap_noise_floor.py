@@ -6,15 +6,16 @@ rather than model behaviour. Writes nothing under results/; prints a report.
 
     python experiments/shap_noise_floor.py
 
-For the two models where KernelSHAP has no exact reference (FedXGBllr and BERT),
-on one BAF-dirichlet client each: run KernelSHAP TWICE with different random seeds
-at nsamples ∈ {100, 500, 1000}; report Spearman and Jaccard@5 between the two
-feature-importance vectors. Decision rule: adopt the smallest nsamples where the
-two runs agree at Spearman > 0.95.
+For every KernelSHAP-explained model (FedXGBllr, BERT, and FFD), on one BAF-dirichlet
+client each: run KernelSHAP TWICE with different random seeds at nsamples ∈ {100, 500,
+1000}; report Spearman and Jaccard@5 between the two feature-importance vectors.
+Decision rule: adopt the smallest nsamples where the runs agree at Spearman > 0.95.
+FFD's floor is measured directly (not borrowed from FedXGBllr) so each model's cells
+are judged against its own architecture's floor.
 
 Also runs the FFD cross-check: DeepSHAP (which passed local accuracy 1.37e-06) vs
-KernelSHAP on the same client — Spearman + mean|Δ| — as evidence KernelSHAP is
-converging where no exact reference exists.
+KernelSHAP on the same client — Spearman + mean|Δ| — as an additional
+approximation-bound diagnostic where no exact reference exists.
 
 Background = 100 local post-SMOTE samples from one client (summarised to 10 kmeans
 centroids for the explainer, matching the probe's cost model). Explanation data =
@@ -215,8 +216,13 @@ def main():
         import hashlib
         return hashlib.sha256((d / "manifest.json").read_bytes()).hexdigest()[:16]
 
+    # Self-agreement floor for every KernelSHAP-explained model, incl. FFD (measured
+    # directly rather than borrowing FedXGBllr's, so §4.5 need not cite a floor from
+    # a different architecture). The DeepSHAP↔KernelSHAP cross-check below is retained
+    # as an additional approximation-bound diagnostic for FFD.
     for name, dir_, loader in [("FedXGBllr", fx_dir, lambda: load_fedxgbllr_f(fx_dir)),
-                               ("BERT", bert_dir, lambda: load_torch_f(bert_dir, "bert")[0])]:
+                               ("BERT", bert_dir, lambda: load_torch_f(bert_dir, "bert")[0]),
+                               ("FFD", ffd_dir, lambda: load_torch_f(ffd_dir, "ffd")[0])]:
         if not (dir_ / "manifest.json").is_file():
             print(f"[{name}] no artifact — skipped"); continue
         print(f"### {name} noise floor (manifest {manifest(dir_)})")
@@ -250,8 +256,10 @@ def main():
             print(f"    DeepSHAP cross-check failed: {type(e).__name__}: {str(e)[:100]}")
 
     print("\n" + "=" * 72)
-    print("Decision rule: adopt smallest nsamples with Spearman > 0.95 on BOTH "
-          "FedXGBllr and BERT. If 1000 fails, report floor as a stability limitation.")
+    print("Decision rule: adopt smallest nsamples with Spearman > 0.95 on ALL of "
+          "FedXGBllr, BERT, and FFD. Each model's floor is per-model; report FFD's "
+          "measured floor (not FedXGBllr's) for FFD cells. If 1000 fails, report "
+          "floor as a stability limitation.")
     print("No artifact or results file was modified.")
     print("=" * 72)
     return 0

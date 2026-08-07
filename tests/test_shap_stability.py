@@ -16,6 +16,7 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")
 
 from evaluation.shap_stability import (  # noqa: E402
     jaccard_at_k, kuncheva_index, spearman_stability, kuncheva_pair, mean_importance,
+    near_zero_fraction, is_degenerate, degenerate_clients,
 )
 
 
@@ -62,6 +63,40 @@ def test_mean_importance_shape():
     imp = _random_importances(5, 30, 0)
     m = mean_importance(imp)
     assert m.shape == (30,)
+
+
+def test_spearman_propagates_nan_never_zero():
+    """A constant/all-zero importance vector -> Spearman nan, NOT a coerced 0.0.
+
+    Regression for the PaySim FedXGBllr cells: nan (undefined) and 0.0 (complete
+    disagreement) mean opposite things and must never be conflated.
+    """
+    allzero = [np.zeros(13) for _ in range(5)]
+    assert np.isnan(spearman_stability(allzero))          # not 0.0
+    const = [np.full(13, 3.0) for _ in range(5)]
+    assert np.isnan(spearman_stability(const))
+    # one degenerate client is enough to make the mean undefined
+    mixed = [np.arange(13.0), np.arange(13.0), np.zeros(13),
+             np.arange(13.0), np.arange(13.0)]
+    assert np.isnan(spearman_stability(mixed))
+
+
+def test_degenerate_detection():
+    """is_degenerate / degenerate_clients flag all-zero and constant vectors."""
+    assert is_degenerate(np.zeros(13))
+    assert is_degenerate(np.full(13, 7.0))
+    assert is_degenerate(np.full(13, 1e-15))              # underflowed to ~nothing
+    assert not is_degenerate(np.arange(13.0))
+    imps = [np.arange(13.0), np.zeros(13), np.full(13, 2.0), np.arange(13.0), np.arange(13.0)]
+    assert degenerate_clients(imps) == [1, 2]
+    assert not degenerate_clients([np.arange(13.0)] * 5)
+
+
+def test_near_zero_fraction():
+    v = np.array([0.0, 0.0, 0.0, 1.0, 2.0])                # 3/5 zero
+    assert abs(near_zero_fraction([v])[0] - 0.6) < 1e-9
+    assert near_zero_fraction([np.zeros(10)])[0] == 1.0    # all-zero cell
+    assert near_zero_fraction([np.arange(1.0, 11.0)])[0] == 0.0
 
 
 if __name__ == "__main__":

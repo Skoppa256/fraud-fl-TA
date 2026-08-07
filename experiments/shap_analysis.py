@@ -9,8 +9,9 @@ Never touches results/logs/, results/clean_summary.csv, or results/sweep/.
 
 Per cell (dataset, model, condition, arm) with a persisted artifact:
   * Explainer mapping (measured, Stage 0): LR/SVM -> LinearSHAP (SVM on the margin);
-    GBM/XGB -> TreeSHAP (tree_path_dependent); FFD/BERT/FedXGBllr -> KernelSHAP
-    (nsamples=500, the noise-floor value).
+    GBM/XGB -> TreeSHAP (interventional, per-client background — NOT tree_path_dependent,
+    which is background-free and makes tree stability trivially 1.0); FFD/BERT/FedXGBllr
+    -> KernelSHAP (nsamples=500, the noise-floor value).
   * Each client explains the SHARED 500-sample central-test subset using its OWN
     background (100 local post-SMOTE samples -> 10 k-means centroids — the exact
     treatment the noise floor was measured under, so the floor transfers).
@@ -47,18 +48,46 @@ N_BG = 100
 KMEANS_K = 10
 N_EXPLAIN = 500
 NUM_CLIENTS = 5
-LOGIT_EPS = 1e-6
 OUT = PROJECT_ROOT / "results" / "shap"
+# model names are the artifact tokens returned by detect_model() (KNOWN) — note
+# BERT's artifact name is "bert_fraud", not "bert".
 EXPLAINER = {"lr": "linear", "svm": "linear", "gbm": "tree", "xgb": "tree",
-             "ffd": "kernel", "bert": "kernel", "fedxgbllr": "kernel"}
+             "ffd": "kernel", "bert_fraud": "kernel", "fedxgbllr": "kernel"}
 CHEAP = {"lr", "svm", "gbm", "xgb"}
 EXPENSIVE_DATASET_ORDER = ["baf", "creditcard", "paysim"]
 KNOWN = ["bert_fraud", "fedxgbllr", "gbm", "ffd", "svm", "lr", "xgb"]
 
+# Measured KernelSHAP self-agreement floors (noise-floor probe, nsamples=500, on one
+# BAF-dirichlet client): the smallest cross-seed Spearman KernelSHAP reaches against
+# ITSELF. A production cross-client Spearman at or below a model's floor is within
+# estimator sampling noise and CANNOT be read as model instability. Each floor is
+# per-model and measured for that architecture (shap_noise_floor.py). The floor was
+# measured at N_EXPLAIN=250 while production uses 500, so each value is a LOWER BOUND.
+# Deterministic LinearSHAP has no sampling noise -> no floor ("n/a"); tree models now
+# use interventional KernelSHAP-style sampling but are exact per-background, so their
+# cross-client variation is real and they also carry no sampling floor ("n/a").
+#   TODO(box): replace ffd's interim value below with its OWN measured floor once
+#   shap_noise_floor.py reports it (it is now measured directly, not borrowed).
+NOISE_FLOOR = {"fedxgbllr": 0.9730, "bert_fraud": 0.9972, "ffd": 0.9730}  # ffd interim
+SUMMARY_COLS = ["dataset", "model", "condition", "arm", "explainer", "n_clients",
+                "manifest_sha256", "data_hash", "partition_hash",
+                "spearman", "jaccard_at5", "kuncheva",
+                "noise_floor", "below_floor", "top_feature", "stability_note"]
 
-def _logit(p):
-    p = np.clip(np.asarray(p, np.float64), LOGIT_EPS, 1 - LOGIT_EPS)
-    return np.log(p / (1 - p))
+
+def annotate_floor(row):
+    """Fill noise_floor + below_floor on a summary row from its model and spearman.
+    Idempotent: safe to re-apply to rows loaded from an existing shap_summary.csv."""
+    floor = NOISE_FLOOR.get(row.get("model"))
+    if floor is None:
+        row["noise_floor"], row["below_floor"] = "n/a", "n/a"
+        return row
+    row["noise_floor"] = floor
+    try:
+        row["below_floor"] = float(row.get("spearman")) <= floor
+    except (TypeError, ValueError):
+        row["below_floor"] = "n/a"
+    return row
 
 
 def _sv2d(sv, n):
@@ -196,6 +225,14 @@ def _fedxgbllr_fn(art):
                             "run_experiment": {"batch_size": 512}})
     trees, cnn = mp.load_fedxgbllr(XGBClassifier, CNN, (cfg,), art["dir"])
     cnn = cnn.cpu().eval(); tl = [(t, i) for i, t in enumerate(trees)]
+    # Explain on the LOG-ODDS scale by exposing the CNN's pre-Sigmoid activation
+    # (layer_direct output) directly. The head is conv1d->flatten->ReLU->Linear->
+    # Sigmoid; final_layer is the Sigmoid. Do NOT explain the probability and then
+    # apply logit(): on PaySim the probabilities compress to ~1e-9, which underflows
+    # the logit clip floor so every prediction saturates to a constant -> KernelSHAP
+    # returns all-zero attributions. The pre-Sigmoid activation is the exact,
+    # unclipped log-odds and matches how BERT/FFD are explained (raw pre-activation).
+    cnn.final_layer = torch.nn.Identity()
 
     def f(X):
         X = np.asarray(X, np.float32)
@@ -206,7 +243,7 @@ def _fedxgbllr_fn(art):
         with torch.no_grad():
             for xb, _ in loader:
                 out.append(cnn(xb).numpy().reshape(-1))
-        return _logit(np.concatenate(out))
+        return np.concatenate(out)  # pre-Sigmoid log-odds, unclipped
     return f
 
 
@@ -214,7 +251,7 @@ def _torch_logodds_fn(art):
     import torch
     import torch.nn as nn
     from evaluation import model_persistence as mp
-    if art["model"] == "bert":
+    if art["model"] == "bert_fraud":
         from models.bert_fraud.model import BertFraudModel as Cls
     else:
         from models.ffd.model import FFDModel as Cls
@@ -238,11 +275,14 @@ def client_importance(obj, kind, bg, X):
         ex = shap.LinearExplainer(obj, bg)
         sv = _sv2d(ex.shap_values(X), len(X))
     elif kind == "tree":
-        # tree_path_dependent is background-free: for a shared global model the
-        # per-client importance is identical, so tree-model cross-client stability
-        # is trivially 1.0 by construction (recorded as a caveat in §4.5).
-        ex = shap.TreeExplainer(obj, feature_perturbation="tree_path_dependent")
-        sv = _sv2d(ex.shap_values(X), len(X))
+        # interventional (background-dependent) so per-client backgrounds yield GENUINE
+        # cross-client variation. tree_path_dependent is background-free -> identical
+        # across clients -> tree-model stability trivially 1.0 by construction, which
+        # would exclude tree models from RQ3. Interventional assumes feature
+        # independence — the SAME assumption already documented for LinearSHAP/KernelSHAP
+        # (§3.3.5), so no new caveat class. model_output stays "raw" (log-odds margin).
+        ex = shap.TreeExplainer(obj, data=bg, feature_perturbation="interventional")
+        sv = _sv2d(ex.shap_values(X, check_additivity=False), len(X))
     else:  # kernel
         np.random.seed(SEED)
         ex = shap.KernelExplainer(obj, shap.kmeans(bg, KMEANS_K))
@@ -263,20 +303,32 @@ def process_cell(art, rng, summary_rows):
     for bi, bg in enumerate(bgs):
         t = time.time()
         imps.append(client_importance(obj, kind, bg, X))
-        if kind == "kernel":
-            print(f"      client {bi}: {time.time()-t:.0f}s")
-        if kind == "tree":  # identical across clients — compute once, replicate
-            imps = [imps[0]] * len(bgs); break
+        if kind in ("kernel", "tree"):  # tree now interventional -> per-client, timed
+            print(f"      client {bi}: {time.time()-t:.1f}s")
 
     imps = [np.asarray(v, float) for v in imps]
     mean_imp = ST.mean_importance(imps)
     n_cli = len(imps)
-    if n_cli >= 2:
+    # Degenerate-output guard: if any client's importance vector is all-zero/constant
+    # (e.g. KernelSHAP underflowed to nothing), NO stability metric is meaningful —
+    # Jaccard/Kuncheva would fake a 1.0 off identical tie-breaking. Report undefined
+    # (nan) for all three with a reason, never a fabricated agreement value.
+    degen = ST.degenerate_clients(imps)
+    nzf = ST.near_zero_fraction(imps)
+    reason = None
+    if n_cli < 2:
+        spear = jac = kun = float("nan")
+        reason = "fewer than 2 clients"
+    elif degen:
+        spear = jac = kun = float("nan")
+        reason = (f"degenerate attributions: clients {degen} have all-zero/constant "
+                  f"importance (no ranking signal); stability undefined")
+    else:
         spear = ST.spearman_stability(imps)
         jac = ST.jaccard_at_k(imps, k=5)
         kun = ST.kuncheva_index(imps, d=d, k=5)
-    else:
-        spear = jac = kun = float("nan")
+        if spear != spear:  # nan despite non-degenerate check -> partial ties
+            reason = "Spearman undefined (spearmanr returned nan; tied ranks)"
 
     cell_dir = OUT / art["dataset"] / art["model"] / f"{art['condition']}_{art['arm']}"
     cell_dir.mkdir(parents=True, exist_ok=True)
@@ -293,17 +345,29 @@ def process_cell(art, rng, summary_rows):
     order = np.argsort(mean_imp)[::-1]
     (cell_dir / "aggregated.json").write_text(json.dumps(
         {**prov, "top10_features": [[fnames[i], float(mean_imp[i])] for i in order[:10]]}, indent=2))
+    # nan -> JSON null (json.dumps writes NaN otherwise, which is invalid JSON)
+    def _j(x):
+        return None if isinstance(x, float) and x != x else x
     (cell_dir / "stability.json").write_text(json.dumps(
-        {**prov, "spearman": spear, "jaccard_at5": jac, "kuncheva": kun}, indent=2))
+        {**prov, "spearman": _j(spear), "jaccard_at5": _j(jac), "kuncheva": _j(kun),
+         "degenerate": bool(degen), "degenerate_clients": degen,
+         "near_zero_fraction_per_client": [round(v, 4) for v in nzf],
+         "undefined_reason": reason}, indent=2))
 
-    summary_rows.append({**{k: prov[k] for k in ("dataset", "model", "condition", "arm",
-                          "explainer", "n_clients", "manifest_sha256", "data_hash", "partition_hash")},
-                         "spearman": round(spear, 4) if spear == spear else "n/a",
-                         "jaccard_at5": round(jac, 4) if jac == jac else "n/a",
-                         "kuncheva": round(kun, 4) if kun == kun else "n/a",
-                         "top_feature": fnames[order[0]]})
+    def _c(x):  # CSV: "undefined" for nan, never a coerced 0.0
+        return "undefined" if isinstance(x, float) and x != x else round(x, 4)
+    row = {**{k: prov[k] for k in ("dataset", "model", "condition", "arm",
+              "explainer", "n_clients", "manifest_sha256", "data_hash", "partition_hash")},
+           "spearman": _c(spear), "jaccard_at5": _c(jac), "kuncheva": _c(kun),
+           "top_feature": fnames[order[0]], "stability_note": reason or ""}
+    annotate_floor(row)  # noise_floor + below_floor from model & spearman
+    summary_rows.append(row)
+    sp_s = f"{spear:.4f}" if spear == spear else "undefined"
     print(f"    [{art['dataset']}/{art['model']}/{art['condition']}_{art['arm']}] "
-          f"clients={n_cli} spearman={spear:.4f} kuncheva={kun:.4f} jac5={jac:.2f} top={fnames[order[0]]}")
+          f"clients={n_cli} spearman={sp_s} kuncheva={_c(kun)} jac5={_c(jac)} "
+          f"floor={row['noise_floor']} below={row['below_floor']} "
+          f"maxnzf={max(nzf):.2f} top={fnames[order[0]]}"
+          + (f"  [{reason}]" if reason else ""))
 
 
 def main(argv=None):
@@ -348,7 +412,6 @@ def main(argv=None):
             print("\n".join("        " + ln for ln in traceback.format_exc().splitlines()))
 
     if summary_rows:
-        cols = list(summary_rows[0].keys())
         p = OUT / "shap_summary.csv"
         # append-safe: merge with any existing rows (idempotent by cell key)
         existing = {}
@@ -357,8 +420,13 @@ def main(argv=None):
                 existing[(r["dataset"], r["model"], r["condition"], r["arm"])] = r
         for r in summary_rows:
             existing[(r["dataset"], r["model"], r["condition"], r["arm"])] = r
+        # re-annotate every row (old CSVs may predate the floor columns) so
+        # noise_floor/below_floor are consistent across the whole file.
+        for r in existing.values():
+            r.setdefault("stability_note", "")
+            annotate_floor(r)
         with open(p, "w", newline="") as f:
-            w = csv.DictWriter(f, fieldnames=cols, extrasaction="ignore")
+            w = csv.DictWriter(f, fieldnames=SUMMARY_COLS, extrasaction="ignore")
             w.writeheader()
             for r in existing.values():
                 w.writerow(r)

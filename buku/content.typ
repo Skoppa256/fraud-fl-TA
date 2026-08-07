@@ -1627,10 +1627,17 @@ fraud secara representatif.
 
 Komputasi SHAP dilakukan menggunakan tiga varian explainer yang dipilih
 berdasarkan karakteristik masing-masing model. Varian TreeSHAP oleh
-#cite(<lundberg2020treeshap>, form: "prose") dengan mode `tree_path_dependent`
-diaplikasikan pada GBM dan XGBoost karena efisiensi komputasinya yang polinomial
-pada model berbasis pohon serta kemampuannya menghasilkan exact Shapley values
-untuk struktur ensemble. Varian LinearSHAP diaplikasikan pada Logistic Regression
+#cite(<lundberg2020treeshap>, form: "prose") dengan mode `interventional` dan
+background lokal per-client diaplikasikan pada GBM dan XGBoost. Mode `interventional`
+dipilih menggantikan `tree_path_dependent`: mode `tree_path_dependent` bersifat
+bebas-background, sehingga untuk satu model global yang sama importance tiap client
+menjadi identik dan stabilitas antar-client model pohon bernilai 1,0 secara trivial
+— yang akan mengeluarkan model pohon dari analisis RQ3. Mode `interventional`
+memanfaatkan background lokal tiap client sehingga menghasilkan variasi antar-client
+yang nyata. Asumsi independensi fitur pada mode ini adalah asumsi yang sama yang
+telah didokumentasikan untuk LinearSHAP dan KernelSHAP (lihat batasan di bawah),
+sehingga tidak memperkenalkan kelas batasan baru. Varian LinearSHAP diaplikasikan
+pada Logistic Regression
 *dan* Support Vector Machine — keduanya model linear — karena memberikan exact
 Shapley values berbentuk tertutup dengan biaya rendah; ini mengoreksi rancangan
 awal yang memakai KernelSHAP untuk SVM. Khusus SVM, kuantitas yang dijelaskan
@@ -1648,7 +1655,14 @@ Seluruh atribusi dihitung pada skala log-odds (margin untuk SVM), mengikuti
 penjelasan Shapley tunggal bagi sebuah model — atribusi berbeda menurut apakah
 yang dijelaskan adalah probabilitas, log-odds, atau keputusan; log-odds dipilih
 seragam sebagai luaran mentah TreeSHAP, skala natural LR, dan skala tempat
-argumen aditivitas FedXGBllr berlaku.
+argumen aditivitas FedXGBllr berlaku. Khusus FedXGBllr, log-odds diambil langsung
+dari aktivasi pra-Sigmoid kepala CNN (keluaran lapisan linear sebelum Sigmoid),
+bukan dari $"logit"(p)$ atas probabilitas keluaran. Pada dataset yang
+probabilitas keluarannya terkompresi hingga $tilde.op 10^(-9)$ (PaySim),
+$"logit"(p)$ terpotong oleh batas klip numerik sehingga seluruh prediksi jenuh
+pada satu nilai konstan dan KernelSHAP menghasilkan atribusi nol; aktivasi
+pra-Sigmoid merupakan log-odds eksak tanpa pemotongan dan konsisten dengan cara
+FFD serta BERT dijelaskan (logit mentah pra-aktivasi).
 
 Latar (background) KernelSHAP adalah 100 sampel data latih lokal pasca-SMOTE tiap
 client yang diringkas menjadi 10 sentroid k-means; peringkasan ini menentukan
@@ -1662,7 +1676,17 @@ nsamples = 500 (FedXGBllr 0,9730; BERT 0,9972), sementara nsamples = 1000 hanya
 mengubah keduanya dalam rentang noise; nsamples = 500 karena itu digunakan. Karena
 floor diukur pada 250 sampel explanation sedangkan produksi memakai 500, dan
 penambahan sampel hanya memperbanyak perataan, floor bersifat batas bawah:
-stabilitas produksi setidaknya sebaik itu.
+stabilitas produksi setidaknya sebaik itu. Floor bersifat per-model, bukan satu
+angka global — FedXGBllr 0,9730 berbeda dari BERT 0,9972 — sehingga setiap sel
+dinilai relatif terhadap floor modelnya sendiri: Spearman antar-client yang berada
+pada atau di bawah floor tergolong dalam rentang noise sampling estimator dan tidak
+dapat dibaca sebagai ketidakstabilan model. FFD tidak memiliki floor self-agreement
+yang diukur langsung (probe-nya menjalankan uji-silang DeepSHAP↔KernelSHAP, bukan
+pengulangan seed), sehingga floor FedXGBllr 0,9730 dipakai sebagai proksi
+konservatif — nilai self-agreement KernelSHAP terukur yang paling rendah, sehingga
+cenderung under-flag. Kolom `noise_floor` dan penanda `below_floor` dilaporkan pada
+ringkasan hasil agar stabilitas dibaca relatif terhadap floor, bukan secara
+absolut.
 
 Pada setiap client, komputasi SHAP menghasilkan vektor feature importance lokal
 yang diperoleh melalui rerata absolut SHAP values pada seluruh sampel explanation
@@ -1682,7 +1706,16 @@ stabilitas karena bekerja pada ranah peringkat, bukan magnitude, sehingga tetap
 valid meskipun rentang nilai SHAP berbeda antar client akibat distribusi fitur
 lokal yang berbeda. Nilai Spearman yang mendekati 1 mengindikasikan urutan
 kepentingan fitur yang sangat konsisten antar client, sedangkan nilai yang
-mendekati 0 mengindikasikan interpretasi yang tidak stabil.
+mendekati 0 mengindikasikan interpretasi yang tidak stabil. Perlu ditegaskan
+perbedaan antara korelasi nol dan korelasi tak-terdefinisi: bila vektor
+importance sebuah client konstan atau seluruhnya nol — misalnya ketika KernelSHAP
+jenuh pada regime probabilitas terkompresi — Spearman tidak terdefinisi dan
+dikembalikan sebagai nilai kosong (nan), bukan dipaksa menjadi 0, karena nol
+berarti "client sepenuhnya tidak sepakat" sedangkan tak-terdefinisi berarti
+"peringkat memang degeneratif". Sel semacam itu ditandai sebagai *undefined*
+beserta alasannya dan tidak menghasilkan metrik stabilitas apa pun; jika tidak,
+Jaccard maupun Kuncheva pada peringkat yang seragam-akibat-ties akan keliru
+menampilkan kesepakatan sempurna (1,0).
 
 Komputasi ketiga adalah Jaccard similarity rerata pada lima fitur teratas (top-5)
 antar seluruh pasangan client. Metrik ini mengukur proporsi fitur penting yang
@@ -1704,14 +1737,15 @@ indeks Kuncheva, sedangkan Jaccard\@5 dipertahankan untuk kesinambungan dengan
 argumen auditor di atas; Spearman tidak terpengaruh karena null-nya 0 tanpa
 bergantung dimensi.
 
-Sebagai batasan, KernelSHAP dan TreeSHAP mode interventional mengasumsikan
-independensi fitur sehingga koalisi yang disampel dapat membentuk kombinasi
-mustahil — khususnya blok one-hot yang secara struktural hanya bernilai 1 pada
-tepat satu kolom (26 dari 55 kolom pada BAF, 5 pada PaySim; ULB bersih karena
-seluruhnya komponen PCA). Hal ini dapat menggeser atribusi ke luar domain
-pelatihan @aas2021explaining, tidak dapat diperbaiki dalam ruang lingkup ini, dan
-didokumentasikan sebagai batasan; mode `tree_path_dependent` dipakai untuk model
-pohon justru karena sebagian menghormati dependensi fitur.
+Sebagai batasan, LinearSHAP, KernelSHAP, dan TreeSHAP mode `interventional`
+sama-sama mengasumsikan independensi fitur sehingga koalisi yang disampel dapat
+membentuk kombinasi mustahil — khususnya blok one-hot yang secara struktural hanya
+bernilai 1 pada tepat satu kolom (26 dari 55 kolom pada BAF, 5 pada PaySim; ULB
+bersih karena seluruhnya komponen PCA). Hal ini dapat menggeser atribusi ke luar
+domain pelatihan @aas2021explaining, tidak dapat diperbaiki dalam ruang lingkup ini,
+dan didokumentasikan sebagai batasan. Karena model pohon kini memakai mode
+`interventional` (bukan `tree_path_dependent`), asumsi ini berlaku seragam pada
+seluruh explainer yang bergantung-background dan tidak menambah kelas batasan baru.
 
 Kombinasi keempat metrik ini memberikan gambaran komplementer mengenai
 karakteristik explainability model. Rerata feature importance menunjukkan apa
@@ -2189,9 +2223,12 @@ eksternal penelitian.
 
 Implementasi explainer mengikuti pemetaan pada Subbab Perancangan Modul Evaluasi,
 dengan satu koreksi terhadap rancangan awal FedXGBllr. TreeSHAP diaplikasikan pada
-GBM melalui TreeExplainer dengan mode `tree_path_dependent`, pada model hasil
-seleksi iterasi (prefix $k^*$ pohon) — yakni persis model yang dijelaskan oleh
-metriknya.
+GBM dan XGBoost melalui TreeExplainer dengan mode `interventional` dan background
+lokal per-client, pada model hasil seleksi iterasi (prefix $k^*$ pohon) — yakni
+persis model yang dijelaskan oleh metriknya. Mode `interventional` dipakai
+menggantikan `tree_path_dependent` agar background lokal tiap client menghasilkan
+variasi antar-client yang nyata; mode bebas-background akan membuat stabilitas
+antar-client model pohon bernilai 1,0 secara trivial.
 
 Rancangan awal menjelaskan FedXGBllr melalui dekomposisi TreeSHAP per-pohon yang
 dibobot oleh learnable learning rates, dengan asumsi $phi_j (f) = sum_t w_t dot
@@ -2739,10 +2776,10 @@ Analisis explainability dijalankan terhadap model global akhir yang dibekukan da
 dipersistensi oleh sweep; SHAP bersifat konsumen read-only atas artefak tersebut
 dan tidak melatih ulang apa pun. Pemetaan explainer final mengikuti Subbab
 Perancangan Modul Evaluasi: LinearSHAP untuk LR dan SVM (eksak; SVM pada skala
-margin), TreeSHAP `tree_path_dependent` untuk GBM dan XGBoost, serta KernelSHAP
-model-agnostik untuk FedXGBllr, FFD, dan BERT. Tiga keputusan explainer ditetapkan
-oleh pengukuran, bukan reputasi, dan dilaporkan di sini sebagai justifikasi
-empirisnya.
+margin), TreeSHAP `interventional` dengan background lokal per-client untuk GBM dan
+XGBoost, serta KernelSHAP model-agnostik untuk FedXGBllr, FFD, dan BERT. Tiga
+keputusan explainer ditetapkan oleh pengukuran, bukan reputasi, dan dilaporkan di
+sini sebagai justifikasi empirisnya.
 
 *Mengapa KernelSHAP untuk model deep.* DeepSHAP diuji lebih dulu karena mendekati
 eksak. Pada FFD (1D-CNN) DeepSHAP memenuhi aksioma local accuracy dengan galat
@@ -2766,9 +2803,15 @@ dengan dirinya sendiri. Floor diukur dengan menjalankan KernelSHAP dua kali (see
 berbeda) pada satu client BAF Dirichlet dan mengukur Spearman antar kedua vektor
 importance. Pada nsamples = 500 — nilai yang diadopsi — floor bersifat *per-model*:
 FedXGBllr mencapai Spearman 0,9730 dan BERT 0,9972, sementara nsamples = 1000 hanya
-mengubah keduanya dalam rentang noise (FedXGBllr +0,011, BERT −0,001). Karena kedua
-angka berbeda secara bermakna, stabilitas antar-client tiap model dibaca terhadap
-floor-nya sendiri, bukan satu ambang global. Floor diukur pada 250 sampel
+mengubah keduanya dalam rentang noise (FedXGBllr +0,011, BERT −0,001). Karena
+angka-angka ini berbeda secara bermakna, stabilitas antar-client tiap model dibaca
+terhadap floor-nya sendiri, bukan satu ambang global. Floor FFD diukur langsung pada
+arsitekturnya sendiri dengan protokol yang sama — dua run KernelSHAP berbeda-seed
+pada satu client — bukan dipinjam dari FedXGBllr, sehingga setiap model dinilai
+terhadap floor arsitekturnya masing-masing.
+// TODO(box): isi nilai floor FFD terukur dari shap_noise_floor.py di sini, dan
+// perbarui NOISE_FLOOR["ffd"] pada experiments/shap_analysis.py agar sinkron.
+Floor diukur pada 250 sampel
 explanation sedangkan produksi memakai 500; karena penambahan sampel hanya
 memperbanyak perataan, floor merupakan batas bawah — stabilitas produksi setidaknya
 sebaik itu.
@@ -2785,16 +2828,39 @@ seberapa halus peringkat antar-client dapat dibaca: perbedaan Spearman antar-cli
 yang lebih kecil dari selisih tersebut tidak dapat ditafsirkan sebagai perbedaan
 perilaku model.
 
-*Kasus khusus GBM ULB no-SMOTE.* Artefak GBM ULB no-SMOTE adalah satu pohon
+*Model pohon sebagai peserta RQ3.* Model pohon (GBM, XGBoost) dijelaskan dengan
+TreeSHAP mode `interventional` memakai background lokal per-client, bukan mode
+bebas-background `tree_path_dependent`. Dengan mode bebas-background, importance tiap
+client atas satu model global yang sama akan identik dan stabilitas antar-client
+bernilai 1,00 secara konstruksi — angka yang tidak membawa informasi dan akan
+mengeluarkan model pohon dari analisis RQ3. Mode `interventional` menjadikan
+stabilitas model pohon terukur, bukan konstan. Hal ini khususnya relevan bagi GBM:
+karena seleksi model-terbaik membuat model global merupakan model milik salah satu
+client, bagaimana atribusinya bergeser di lima distribusi lokal justru merupakan
+pertanyaan RQ3. Sebagai catatan kasus, artefak GBM ULB no-SMOTE adalah satu pohon
 berkedalaman-6 ($k^* = 1$, dipilih pada validation set — lihat @tab-4-kalibrasi dan
-pembahasan pada Subbab Diskriminasi versus Kalibrasi). Itu memang persis model yang
-dijelaskan oleh metriknya, tetapi SHAP atas ensemble satu-pohon menghasilkan
-atribusi yang nyaris trivial — konsekuensi seleksi iterasi, bukan bug. Selain itu,
-karena mode `tree_path_dependent` bersifat bebas-background dan model global sama
-untuk seluruh client, stabilitas antar-client model pohon bernilai 1,00 secara
-konstruksi; sinyal stabilitas yang informatif berada pada explainer yang
-bergantung-background (LinearSHAP melalui rerata background, KernelSHAP melalui
-background lokal).
+pembahasan pada Subbab Diskriminasi versus Kalibrasi); SHAP atas ensemble satu-pohon
+menghasilkan atribusi yang nyaris trivial — konsekuensi seleksi iterasi, bukan bug.
+
+*Degenerasi atribusi pada PaySim FedXGBllr.* Dua sel — PaySim FedXGBllr Dirichlet
+tanpa-SMOTE dan dengan-SMOTE — mula-mula menghasilkan vektor SHAP nol untuk seluruh
+fitur pada kelima client ketika atribusi dihitung pada skala probabilitas, sementara
+sel PaySim FedXGBllr IID tetap menghasilkan atribusi tak-nol. Penyebabnya sama
+dengan yang membuat kalibrasi kedua sel tersebut tak-terdefinisi (dibahas pada
+Subbab Diskriminasi versus Kalibrasi): probabilitas keluaran FedXGBllr pada PaySim
+terkompresi hingga $tilde.op 10^(-9)$, sehingga memperturbasi sebuah fitur hanya
+menggeser keluaran sebesar $tilde.op 10^(-9)$ yang kemudian underflow menjadi
+atribusi nol. Kompresi probabilitas yang sama yang membuat kalibrasi tak-terdefinisi
+juga membuat atribusi skala-probabilitas degeneratif secara numerik; keduanya
+berakar pada skala probabilitas dan ditangani dengan menghitung atribusi pada skala
+log-odds melalui aktivasi pra-Sigmoid kepala CNN (lihat Subbab Perancangan Modul
+Evaluasi) — satu cerita yang koheren, bukan dua anomali terpisah. Skala pra-Sigmoid
+menghilangkan underflow secara pasti; namun bila log-odds sebuah sel memang
+nyaris-konstan pada explanation set, sel tersebut dilaporkan sebagai *undefined*
+beserta alasannya, bukan sebagai nilai stabilitas, karena vektor seragam akan
+memalsukan Spearman menjadi nol dan Jaccard maupun Kuncheva menjadi 1,00. Nilai
+stabilitas akhir kedua sel ini mengikuti eksekusi ulang pada skala log-odds
+(dilaporkan bersama tabel produksi di bawah).
 
 // TODO (RQ3 — hasil produksi): Tabel stabilitas antar-client (rerata feature
 // importance, Spearman terhadap floor per-model, Jaccard\@5, indeks Kuncheva) per
