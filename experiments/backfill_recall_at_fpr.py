@@ -63,6 +63,20 @@ BEST_VAL_COL = "best_val_recall_at_fpr"
 # READ-ONLY scoring: reload one artifact and return (val_scores, test_scores).
 # Mirrors exactly how each model was scored during the run.
 # --------------------------------------------------------------------------- #
+def _xgb_force_cpu(estimator) -> None:
+    """Pin an XGBoost estimator's booster to CPU so predicting on CPU arrays does
+    not trip the "booster on cuda:0, data on cpu" fallback. Best-effort across
+    xgboost versions; the AUPRC guard still validates the output either way."""
+    try:
+        estimator.set_params(device="cpu")
+    except Exception:  # noqa: BLE001 — older xgboost has no `device` param
+        pass
+    try:
+        estimator.get_booster().set_param({"device": "cpu"})
+    except Exception:  # noqa: BLE001
+        pass
+
+
 def score_artifact(art, data):
     """Return ``(val_scores | None, test_scores)`` for a reloaded frozen model.
 
@@ -76,6 +90,11 @@ def score_artifact(art, data):
 
     if model in ("lr", "gbm", "xgb"):
         m = mp.load_sklearn(art["dir"])
+        if model == "xgb":
+            # The booster may have been trained on GPU (device=cuda:0); predicting
+            # on CPU arrays otherwise triggers XGBoost's "mismatched devices"
+            # fallback (correct, but noisy). Pin it to CPU to match the data.
+            _xgb_force_cpu(m)
         return m.predict_proba(xva)[:, 1], m.predict_proba(xte)[:, 1]
 
     if model == "svm":
@@ -83,15 +102,30 @@ def score_artifact(art, data):
         return m.decision_function(xva), m.decision_function(xte)
 
     if model in ("ffd", "bert_fraud"):
+        import torch
         if model == "ffd":
             from models.ffd.model import FFDModel as Cls
         else:
             from models.bert_fraud.model import BertFraudModel as Cls
         m = mp.load_torch(Cls, art["dir"], device="cpu")
+        # Port of the shap_stage0_probe device fix. load_torch reconstructs the
+        # module with its DEFAULT device (cuda when the box has a GPU) and merely
+        # copies weights in, so after reload params/buffers sit on CUDA. Two moves
+        # are needed to score on CPU arrays without a device clash:
+        #   1. .cpu() moves params AND registered buffers to CPU — this is what
+        #      fixes BERT (feature_weights / feature_biases / cls_token) reporting
+        #      mixed devices.
+        #   2. reset self.device — the cached attribute predict_proba uses to place
+        #      the INPUT tensor (`x.to(self.device)`). Without it inputs go to CUDA
+        #      while weights are on CPU — FFD's "data on CUDA, weights on CPU".
         m = m.cpu().eval()
+        m.device = torch.device("cpu")
         return m.predict_proba(xva)[:, 1], m.predict_proba(xte)[:, 1]
 
     if model == "fedxgbllr":
+        # Reuses the probe's verified CPU loader. Its per-client XGBoost boosters
+        # may emit the same benign device-mismatch fallback as centralized xgb;
+        # it does not affect output (the AUPRC guard validates every row).
         predict_proba, _ = probe.load_fedxgbllr_composed(art)
         return predict_proba(xva), predict_proba(xte)
 

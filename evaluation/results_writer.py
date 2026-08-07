@@ -54,6 +54,9 @@ SUMMARY_COLUMNS: Sequence[str] = (
     # Recall@5%FPR on the central test set, plus the operating point it was read
     # at: the score cut-off (test_threshold_at_fpr) and the FPR actually achieved
     # there (test_actual_fpr, typically just under 0.05). See recall_at_fpr.
+    # test_threshold_at_fpr is on the model's own score scale — a probability for
+    # LR/GBM/FFD/BERT/FedXGBllr, a decision_function MARGIN for SVM (see the
+    # `threshold` note below); large negative SVM values are expected.
     "test_recall_at_fpr",
     "test_threshold_at_fpr",
     "test_actual_fpr",
@@ -64,6 +67,13 @@ SUMMARY_COLUMNS: Sequence[str] = (
     "test_cal_intercept",
     "test_cal_slope",
     # Threshold policy (Decision 2): tuned per arm on the central validation set.
+    # IMPORTANT: `threshold` is expressed on each model's OWN score scale — a
+    # probability in [0, 1] for LR/GBM/FFD/BERT/FedXGBllr, but a signed
+    # `decision_function` MARGIN for SVM (hinge, no probability). So an SVM
+    # threshold of e.g. -128.08 (creditcard) or -49.14 (BAF) is a normal
+    # large-magnitude margin, NOT a bug, and is not comparable to a
+    # probability-scale threshold such as GBM's ~0.0014. Same scale caveat
+    # applies to `test_threshold_at_fpr` below.
     "threshold_policy",
     "threshold",
     # Comparability proof (Part 3): hashes of the data/partition the model
