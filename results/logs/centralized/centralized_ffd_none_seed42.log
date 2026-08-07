@@ -1,0 +1,86 @@
+/home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/wandb/sdk/launch/builder/build.py:11: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools<81.
+  import pkg_resources
+/home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/wandb/sdk/launch/builder/build.py:11: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools<81.
+  import pkg_resources
+wandb: Currently logged in as: deo250605 (deo250605-sepuluh-nopember-insitute-of-technology). Use `wandb login --relogin` to force relogin
+wandb: wandb version 0.27.0 is available!  To upgrade, please run:
+wandb:  $ pip install wandb --upgrade
+wandb: Tracking run with wandb version 0.15.12
+wandb: Run data is saved locally in /home/justin/fraud-fl-TA/wandb/run-20260603_140937-yunqtz4k
+wandb: Run `wandb offline` to turn off syncing.
+wandb: Syncing run centralized_ffd_none_seed42
+wandb: ⭐️ View project at https://wandb.ai/deo250605-sepuluh-nopember-insitute-of-technology/hfedxgboost-paysim
+wandb: 🚀 View run at https://wandb.ai/deo250605-sepuluh-nopember-insitute-of-technology/hfedxgboost-paysim/runs/yunqtz4k
+wandb: Waiting for W&B process to finish... (success).
+wandb: - 0.003 MB of 0.003 MB uploaded (0.000 MB deduped)wandb: \ 0.013 MB of 0.013 MB uploaded (0.000 MB deduped)wandb: | 0.013 MB of 0.013 MB uploaded (0.000 MB deduped)wandb: 
+wandb: Run history:
+wandb:           epoch ▁▁▂▂▂▃▃▄▄▄▅▅▅▆▆▇▇▇██
+wandb:      test_auprc ▁
+wandb:         test_f1 ▁
+wandb:  test_precision ▁
+wandb:     test_recall ▁
+wandb:      train_loss █▄▃▃▂▂▂▂▂▁▁▁▁▁▁▁▁▁▁▁
+wandb: training_time_s ▁
+wandb:       val_auprc ▁▄▄▅▆▆▆▇▇▇▇▇█████████
+wandb:          val_f1 ▁▄▅▆▆▇▇▇▇█▇██████████
+wandb:   val_precision █▇▄▂▃▁▃▁▂▂▃▃▂▃▃▂▅▂▂▃▃
+wandb:      val_recall ▁▄▅▆▆▆▆▇▇▇▇▇████▇████
+wandb: 
+wandb: Run summary:
+wandb:           epoch 20
+wandb:      test_auprc 0.74546
+wandb:         test_f1 0.73377
+wandb:  test_precision 0.96556
+wandb:     test_recall 0.59172
+wandb:      train_loss 0.0026
+wandb: training_time_s 2100.16917
+wandb:       val_auprc 0.76885
+wandb:          val_f1 0.75317
+wandb:   val_precision 0.94377
+wandb:      val_recall 0.62662
+wandb: 
+wandb: 🚀 View run centralized_ffd_none_seed42 at: https://wandb.ai/deo250605-sepuluh-nopember-insitute-of-technology/hfedxgboost-paysim/runs/yunqtz4k
+wandb: Synced 6 W&B file(s), 0 media file(s), 0 artifact file(s) and 0 other file(s)
+wandb: Find logs at: ./wandb/run-20260603_140937-yunqtz4k/logs
+[paysim] loading data/paysim/paysim.csv
+[paysim] loaded 6,362,620 rows, 11 columns
+
+[paysim] === data summary ===
+  total rows loaded : 6,362,620
+  feature count     : 13
+  feature names     : ['step', 'amount', 'oldbalanceOrg', 'newbalanceOrig', 'oldbalanceDest', 'newbalanceDest', 'errorBalanceOrig', 'errorBalanceDest', 'type_CASH_IN', 'type_CASH_OUT', 'type_DEBIT', 'type_PAYMENT', 'type_TRANSFER']
+  x_train: (4453834, 13)  dtype=float32   |  y_train: (4453834,)  dtype=int32
+  x_val  : (954393, 13)  dtype=float32   |  y_val  : (954393,)  dtype=int32
+  x_test : (954393, 13)  dtype=float32   |  y_test : (954393,)  dtype=int32
+  fraud in train: 5,749 / 4,453,834  (0.1291%)
+  fraud in val  : 1,232 / 954,393  (0.1291%)
+  fraud in test : 1,232 / 954,393  (0.1291%)
+[paysim] === end summary ===
+
+=== CENTRALIZED BASELINE — FFD ===
+Dataset: PaySim | x_train: (4453834, 13) | fraud ratio: 0.1291%
+Oversampling: none | x_train: (4453834, 13) | oversampling disabled
+[epoch   1/20] loss=0.0087 | val_auprc=0.4255 | val_f1=0.3701 | val_precision=0.9964 | val_recall=0.2273
+[epoch   2/20] loss=0.0054 | val_auprc=0.5506 | val_f1=0.5506 | val_precision=0.9833 | val_recall=0.3823
+[epoch   3/20] loss=0.0045 | val_auprc=0.5951 | val_f1=0.6180 | val_precision=0.9542 | val_recall=0.4570
+[epoch   4/20] loss=0.0041 | val_auprc=0.6265 | val_f1=0.6458 | val_precision=0.9312 | val_recall=0.4943
+[epoch   5/20] loss=0.0038 | val_auprc=0.6543 | val_f1=0.6585 | val_precision=0.9467 | val_recall=0.5049
+[epoch   6/20] loss=0.0035 | val_auprc=0.6761 | val_f1=0.6897 | val_precision=0.9213 | val_recall=0.5511
+[epoch   7/20] loss=0.0034 | val_auprc=0.6939 | val_f1=0.6904 | val_precision=0.9450 | val_recall=0.5438
+[epoch   8/20] loss=0.0032 | val_auprc=0.7103 | val_f1=0.7155 | val_precision=0.9265 | val_recall=0.5828
+[epoch   9/20] loss=0.0031 | val_auprc=0.7185 | val_f1=0.7207 | val_precision=0.9295 | val_recall=0.5885
+[epoch  10/20] loss=0.0030 | val_auprc=0.7279 | val_f1=0.7310 | val_precision=0.9298 | val_recall=0.6023
+[epoch  11/20] loss=0.0029 | val_auprc=0.7331 | val_f1=0.7284 | val_precision=0.9409 | val_recall=0.5942
+[epoch  12/20] loss=0.0029 | val_auprc=0.7398 | val_f1=0.7337 | val_precision=0.9404 | val_recall=0.6015
+[epoch  13/20] loss=0.0028 | val_auprc=0.7461 | val_f1=0.7462 | val_precision=0.9276 | val_recall=0.6242
+[epoch  14/20] loss=0.0028 | val_auprc=0.7485 | val_f1=0.7418 | val_precision=0.9413 | val_recall=0.6120
+[epoch  15/20] loss=0.0027 | val_auprc=0.7524 | val_f1=0.7444 | val_precision=0.9383 | val_recall=0.6169
+[epoch  16/20] loss=0.0027 | val_auprc=0.7552 | val_f1=0.7489 | val_precision=0.9323 | val_recall=0.6258
+[epoch  17/20] loss=0.0027 | val_auprc=0.7545 | val_f1=0.7326 | val_precision=0.9593 | val_recall=0.5925
+[epoch  18/20] loss=0.0026 | val_auprc=0.7643 | val_f1=0.7582 | val_precision=0.9272 | val_recall=0.6412
+[epoch  19/20] loss=0.0026 | val_auprc=0.7635 | val_f1=0.7563 | val_precision=0.9301 | val_recall=0.6372
+[epoch  20/20] loss=0.0026 | val_auprc=0.7688 | val_f1=0.7532 | val_precision=0.9438 | val_recall=0.6266
+[VAL]  auprc=0.7688 | f1=0.7532 | precision=0.9438 | recall=0.6266
+[TEST] auprc=0.7455 | f1=0.7338 | precision=0.9656 | recall=0.5917
+Training time: 2100.17s
+[results] wrote summary CSV → results/logs/centralized/centralized_ffd_none_seed42.csv

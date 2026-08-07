@@ -1,0 +1,12 @@
+/home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/ray/_private/parameter.py:4: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools<81.
+  import pkg_resources
+/home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/hydra/_internal/defaults_list.py:251: UserWarning: In 'base': Defaults list is missing `_self_`. See https://hydra.cc/docs/1.2/upgrades/1.0_to_1.1/default_composition_order for more information
+  warnings.warn(msg, UserWarning)
+In 'base': Could not find 'wandb/default'
+
+Config search path:
+	provider=hydra, path=pkg://hydra.conf
+	provider=main, path=file:///home/justin/fraud-fl-TA/models/fedxgbllr/hfedxgboost/conf
+	provider=schema, path=structured://
+
+Set the environment variable HYDRA_FULL_ERROR=1 for a complete stack trace.

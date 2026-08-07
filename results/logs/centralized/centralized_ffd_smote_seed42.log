@@ -1,0 +1,86 @@
+/home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/wandb/sdk/launch/builder/build.py:11: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools<81.
+  import pkg_resources
+/home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/wandb/sdk/launch/builder/build.py:11: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools<81.
+  import pkg_resources
+wandb: Currently logged in as: deo250605 (deo250605-sepuluh-nopember-insitute-of-technology). Use `wandb login --relogin` to force relogin
+wandb: wandb version 0.27.0 is available!  To upgrade, please run:
+wandb:  $ pip install wandb --upgrade
+wandb: Tracking run with wandb version 0.15.12
+wandb: Run data is saved locally in /home/justin/fraud-fl-TA/wandb/run-20260603_114431-z50zqvwo
+wandb: Run `wandb offline` to turn off syncing.
+wandb: Syncing run centralized_ffd_smote_seed42
+wandb: ⭐️ View project at https://wandb.ai/deo250605-sepuluh-nopember-insitute-of-technology/hfedxgboost-paysim
+wandb: 🚀 View run at https://wandb.ai/deo250605-sepuluh-nopember-insitute-of-technology/hfedxgboost-paysim/runs/z50zqvwo
+wandb: Waiting for W&B process to finish... (success).
+wandb: 
+wandb: Run history:
+wandb:           epoch ▁▁▂▂▂▃▃▄▄▄▅▅▅▆▆▇▇▇██
+wandb:      test_auprc ▁
+wandb:         test_f1 ▁
+wandb:  test_precision ▁
+wandb:     test_recall ▁
+wandb:      train_loss █▄▃▃▃▂▂▂▂▂▂▂▁▁▁▁▁▁▁▁
+wandb: training_time_s ▁
+wandb:       val_auprc ▄▁▅▇▅▆▅▆█▇▇▇█▇█▇███▆▆
+wandb:          val_f1 ▁█▃▂▂▁▁▂▃▂▂▃▂▁▂▂▃▂▃▃▃
+wandb:   val_precision ▁█▂▁▁▁▁▂▂▂▂▂▁▁▂▂▂▂▂▂▂
+wandb:      val_recall █▁▇█████▇██▇█████████
+wandb: 
+wandb: Run summary:
+wandb:           epoch 20
+wandb:      test_auprc 0.86241
+wandb:         test_f1 0.21376
+wandb:  test_precision 0.1201
+wandb:     test_recall 0.97078
+wandb:      train_loss 0.02619
+wandb: training_time_s 4123.92105
+wandb:       val_auprc 0.87217
+wandb:          val_f1 0.21621
+wandb:   val_precision 0.12147
+wandb:      val_recall 0.98214
+wandb: 
+wandb: 🚀 View run centralized_ffd_smote_seed42 at: https://wandb.ai/deo250605-sepuluh-nopember-insitute-of-technology/hfedxgboost-paysim/runs/z50zqvwo
+wandb: Synced 6 W&B file(s), 0 media file(s), 0 artifact file(s) and 0 other file(s)
+wandb: Find logs at: ./wandb/run-20260603_114431-z50zqvwo/logs
+[paysim] loading data/paysim/paysim.csv
+[paysim] loaded 6,362,620 rows, 11 columns
+
+[paysim] === data summary ===
+  total rows loaded : 6,362,620
+  feature count     : 13
+  feature names     : ['step', 'amount', 'oldbalanceOrg', 'newbalanceOrig', 'oldbalanceDest', 'newbalanceDest', 'errorBalanceOrig', 'errorBalanceDest', 'type_CASH_IN', 'type_CASH_OUT', 'type_DEBIT', 'type_PAYMENT', 'type_TRANSFER']
+  x_train: (4453834, 13)  dtype=float32   |  y_train: (4453834,)  dtype=int32
+  x_val  : (954393, 13)  dtype=float32   |  y_val  : (954393,)  dtype=int32
+  x_test : (954393, 13)  dtype=float32   |  y_test : (954393,)  dtype=int32
+  fraud in train: 5,749 / 4,453,834  (0.1291%)
+  fraud in val  : 1,232 / 954,393  (0.1291%)
+  fraud in test : 1,232 / 954,393  (0.1291%)
+[paysim] === end summary ===
+
+=== CENTRALIZED BASELINE — FFD ===
+Dataset: PaySim | x_train: (4453834, 13) | fraud ratio: 0.1291%
+Oversampling: SMOTE | x_train after: (8896170, 13) | fraud ratio: 50.00%
+[epoch   1/20] loss=0.0950 | val_auprc=0.8202 | val_f1=0.0733 | val_precision=0.0381 | val_recall=0.9773
+[epoch   2/20] loss=0.0590 | val_auprc=0.7733 | val_f1=0.7640 | val_precision=0.8560 | val_recall=0.6899
+[epoch   3/20] loss=0.0503 | val_auprc=0.8414 | val_f1=0.2295 | val_precision=0.1304 | val_recall=0.9570
+[epoch   4/20] loss=0.0461 | val_auprc=0.8761 | val_f1=0.1330 | val_precision=0.0713 | val_recall=0.9789
+[epoch   5/20] loss=0.0426 | val_auprc=0.8566 | val_f1=0.1022 | val_precision=0.0539 | val_recall=0.9838
+[epoch   6/20] loss=0.0401 | val_auprc=0.8753 | val_f1=0.0877 | val_precision=0.0459 | val_recall=0.9870
+[epoch   7/20] loss=0.0380 | val_auprc=0.8448 | val_f1=0.0403 | val_precision=0.0206 | val_recall=0.9911
+[epoch   8/20] loss=0.0360 | val_auprc=0.8616 | val_f1=0.1918 | val_precision=0.1064 | val_recall=0.9716
+[epoch   9/20] loss=0.0347 | val_auprc=0.8952 | val_f1=0.2310 | val_precision=0.1312 | val_recall=0.9667
+[epoch  10/20] loss=0.0334 | val_auprc=0.8869 | val_f1=0.1654 | val_precision=0.0904 | val_recall=0.9773
+[epoch  11/20] loss=0.0321 | val_auprc=0.8890 | val_f1=0.1812 | val_precision=0.0998 | val_recall=0.9773
+[epoch  12/20] loss=0.0312 | val_auprc=0.8929 | val_f1=0.2638 | val_precision=0.1527 | val_recall=0.9667
+[epoch  13/20] loss=0.0303 | val_auprc=0.8942 | val_f1=0.1279 | val_precision=0.0684 | val_recall=0.9854
+[epoch  14/20] loss=0.0300 | val_auprc=0.8893 | val_f1=0.0744 | val_precision=0.0386 | val_recall=0.9903
+[epoch  15/20] loss=0.0290 | val_auprc=0.8991 | val_f1=0.1492 | val_precision=0.0807 | val_recall=0.9846
+[epoch  16/20] loss=0.0284 | val_auprc=0.8921 | val_f1=0.1570 | val_precision=0.0853 | val_recall=0.9813
+[epoch  17/20] loss=0.0277 | val_auprc=0.8960 | val_f1=0.2621 | val_precision=0.1515 | val_recall=0.9700
+[epoch  18/20] loss=0.0271 | val_auprc=0.8971 | val_f1=0.1672 | val_precision=0.0913 | val_recall=0.9846
+[epoch  19/20] loss=0.0268 | val_auprc=0.9034 | val_f1=0.2258 | val_precision=0.1277 | val_recall=0.9781
+[epoch  20/20] loss=0.0262 | val_auprc=0.8722 | val_f1=0.2162 | val_precision=0.1215 | val_recall=0.9821
+[VAL]  auprc=0.8722 | f1=0.2162 | precision=0.1215 | recall=0.9821
+[TEST] auprc=0.8624 | f1=0.2138 | precision=0.1201 | recall=0.9708
+Training time: 4123.92s
+[results] wrote summary CSV → results/logs/centralized/centralized_ffd_smote_seed42.csv

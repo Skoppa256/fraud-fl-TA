@@ -1,0 +1,62 @@
+/home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/wandb/sdk/launch/builder/build.py:11: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools<81.
+  import pkg_resources
+/home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/wandb/sdk/launch/builder/build.py:11: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools<81.
+  import pkg_resources
+wandb: Currently logged in as: deo250605 (deo250605-sepuluh-nopember-insitute-of-technology). Use `wandb login --relogin` to force relogin
+wandb: wandb version 0.27.0 is available!  To upgrade, please run:
+wandb:  $ pip install wandb --upgrade
+wandb: Tracking run with wandb version 0.15.12
+wandb: Run data is saved locally in /home/justin/fraud-fl-TA/wandb/run-20260603_125712-b17sjiry
+wandb: Run `wandb offline` to turn off syncing.
+wandb: Syncing run centralized_xgb_adasyn_seed42
+wandb: ⭐️ View project at https://wandb.ai/deo250605-sepuluh-nopember-insitute-of-technology/hfedxgboost-paysim
+wandb: 🚀 View run at https://wandb.ai/deo250605-sepuluh-nopember-insitute-of-technology/hfedxgboost-paysim/runs/b17sjiry
+wandb: Waiting for W&B process to finish... (success).
+wandb: 
+wandb: Run history:
+wandb:      test_auprc ▁
+wandb:         test_f1 ▁
+wandb:  test_precision ▁
+wandb:     test_recall ▁
+wandb: training_time_s ▁
+wandb:       val_auprc ▁
+wandb:          val_f1 ▁
+wandb:   val_precision ▁
+wandb:      val_recall ▁
+wandb: 
+wandb: Run summary:
+wandb:      test_auprc 0.95264
+wandb:         test_f1 0.64868
+wandb:  test_precision 0.48116
+wandb:     test_recall 0.99513
+wandb: training_time_s 21.33576
+wandb:       val_auprc 0.95859
+wandb:          val_f1 0.64666
+wandb:   val_precision 0.47857
+wandb:      val_recall 0.99675
+wandb: 
+wandb: 🚀 View run centralized_xgb_adasyn_seed42 at: https://wandb.ai/deo250605-sepuluh-nopember-insitute-of-technology/hfedxgboost-paysim/runs/b17sjiry
+wandb: Synced 6 W&B file(s), 0 media file(s), 0 artifact file(s) and 0 other file(s)
+wandb: Find logs at: ./wandb/run-20260603_125712-b17sjiry/logs
+[paysim] loading data/paysim/paysim.csv
+[paysim] loaded 6,362,620 rows, 11 columns
+
+[paysim] === data summary ===
+  total rows loaded : 6,362,620
+  feature count     : 13
+  feature names     : ['step', 'amount', 'oldbalanceOrg', 'newbalanceOrig', 'oldbalanceDest', 'newbalanceDest', 'errorBalanceOrig', 'errorBalanceDest', 'type_CASH_IN', 'type_CASH_OUT', 'type_DEBIT', 'type_PAYMENT', 'type_TRANSFER']
+  x_train: (4453834, 13)  dtype=float32   |  y_train: (4453834,)  dtype=int32
+  x_val  : (954393, 13)  dtype=float32   |  y_val  : (954393,)  dtype=int32
+  x_test : (954393, 13)  dtype=float32   |  y_test : (954393,)  dtype=int32
+  fraud in train: 5,749 / 4,453,834  (0.1291%)
+  fraud in val  : 1,232 / 954,393  (0.1291%)
+  fraud in test : 1,232 / 954,393  (0.1291%)
+[paysim] === end summary ===
+
+=== CENTRALIZED BASELINE — XGB ===
+Dataset: PaySim | x_train: (4453834, 13) | fraud ratio: 0.1291%
+Oversampling: ADASYN | x_train after: (8895972, 13) | fraud ratio: 50.00%
+[VAL]  auprc=0.9586 | f1=0.6467 | precision=0.4786 | recall=0.9968
+[TEST] auprc=0.9526 | f1=0.6487 | precision=0.4812 | recall=0.9951
+Training time: 21.34s
+[results] wrote summary CSV → results/logs/centralized/centralized_xgb_adasyn_seed42.csv

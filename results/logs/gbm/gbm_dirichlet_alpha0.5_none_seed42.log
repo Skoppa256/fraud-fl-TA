@@ -1,0 +1,189 @@
+/home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/ray/_private/parameter.py:4: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools<81.
+  import pkg_resources
+/home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/wandb/sdk/launch/builder/build.py:11: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools<81.
+  import pkg_resources
+wandb: Currently logged in as: deo250605 (deo250605-sepuluh-nopember-insitute-of-technology). Use `wandb login --relogin` to force relogin
+wandb: wandb version 0.27.0 is available!  To upgrade, please run:
+wandb:  $ pip install wandb --upgrade
+wandb: Tracking run with wandb version 0.15.12
+wandb: Run data is saved locally in /home/justin/fraud-fl-TA/wandb/run-20260603_150924-66c61p4y
+wandb: Run `wandb offline` to turn off syncing.
+wandb: Syncing run gbm_dirichlet_alpha0.5_none_seed42
+wandb: ⭐️ View project at https://wandb.ai/deo250605-sepuluh-nopember-insitute-of-technology/hfedxgboost-paysim
+wandb: 🚀 View run at https://wandb.ai/deo250605-sepuluh-nopember-insitute-of-technology/hfedxgboost-paysim/runs/66c61p4y
+INFO flwr 2026-06-03 15:09:26,764 | app.py:175 | Starting Flower simulation, config: ServerConfig(num_rounds=10, round_timeout=None)
+2026-06-03 15:09:28,441	INFO worker.py:1621 -- Started a local Ray instance.
+INFO flwr 2026-06-03 15:09:28,993 | app.py:210 | Flower VCE: Ray initialized with resources: {'node:172.24.108.56': 1.0, 'CPU': 20.0, 'memory': 7422694196.0, 'object_store_memory': 3711347097.0, 'node:__internal_head__': 1.0}
+INFO flwr 2026-06-03 15:09:28,993 | app.py:224 | Flower VCE: Resources for each Virtual Client: {'num_cpus': 1, 'num_gpus': 0}
+INFO flwr 2026-06-03 15:09:29,003 | app.py:270 | Flower VCE: Creating VirtualClientEngineActorPool with 20 actors
+INFO flwr 2026-06-03 15:09:29,004 | server.py:89 | Initializing global parameters
+INFO flwr 2026-06-03 15:09:29,004 | server.py:272 | Using initial parameters provided by strategy
+INFO flwr 2026-06-03 15:09:29,004 | server.py:91 | Evaluating initial parameters
+INFO flwr 2026-06-03 15:09:29,004 | server.py:104 | FL starting
+DEBUG flwr 2026-06-03 15:09:29,004 | server.py:222 | fit_round 1: strategy sampled 5 clients (out of 5)
+[2m[33m(raylet)[0m /home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/ray/_private/parameter.py:4: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools<81.
+[2m[33m(raylet)[0m   import pkg_resources
+[2m[33m(raylet)[0m /home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/ray/_private/parameter.py:4: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools<81.
+[2m[33m(raylet)[0m   import pkg_resources
+[2m[33m(raylet)[0m /home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/ray/_private/parameter.py:4: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools<81.
+[2m[33m(raylet)[0m   import pkg_resources
+[2m[33m(raylet)[0m /home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/ray/_private/parameter.py:4: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools<81.
+[2m[33m(raylet)[0m   import pkg_resources
+[2m[33m(raylet)[0m /home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/ray/_private/parameter.py:4: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools<81.
+[2m[33m(raylet)[0m   import pkg_resources
+[2m[33m(raylet)[0m /home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/ray/_private/parameter.py:4: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools<81.
+[2m[33m(raylet)[0m   import pkg_resources
+[2m[33m(raylet)[0m /home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/ray/_private/parameter.py:4: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools<81.
+[2m[33m(raylet)[0m   import pkg_resources
+[2m[33m(raylet)[0m /home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/ray/_private/parameter.py:4: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools<81.
+[2m[33m(raylet)[0m   import pkg_resources
+[2m[33m(raylet)[0m /home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/ray/_private/parameter.py:4: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools<81.
+[2m[33m(raylet)[0m   import pkg_resources
+[2m[33m(raylet)[0m /home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/ray/_private/parameter.py:4: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools<81.
+[2m[33m(raylet)[0m   import pkg_resources
+[2m[33m(raylet)[0m /home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/ray/_private/parameter.py:4: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools<81.
+[2m[33m(raylet)[0m   import pkg_resources
+[2m[33m(raylet)[0m /home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/ray/_private/parameter.py:4: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools<81.
+[2m[33m(raylet)[0m   import pkg_resources
+[2m[33m(raylet)[0m /home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/ray/_private/parameter.py:4: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools<81.
+[2m[33m(raylet)[0m   import pkg_resources
+[2m[33m(raylet)[0m /home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/ray/_private/parameter.py:4: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools<81.
+[2m[33m(raylet)[0m   import pkg_resources
+[2m[33m(raylet)[0m /home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/ray/_private/parameter.py:4: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools<81.
+[2m[33m(raylet)[0m   import pkg_resources
+[2m[33m(raylet)[0m /home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/ray/_private/parameter.py:4: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools<81.
+[2m[33m(raylet)[0m   import pkg_resources
+[2m[33m(raylet)[0m /home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/ray/_private/parameter.py:4: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools<81.
+[2m[33m(raylet)[0m   import pkg_resources
+[2m[33m(raylet)[0m /home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/ray/_private/parameter.py:4: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools<81.
+[2m[33m(raylet)[0m   import pkg_resources
+[2m[33m(raylet)[0m /home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/ray/_private/parameter.py:4: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools<81.
+[2m[33m(raylet)[0m   import pkg_resources
+[2m[33m(raylet)[0m /home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/ray/_private/parameter.py:4: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools<81.
+[2m[33m(raylet)[0m   import pkg_resources
+DEBUG flwr 2026-06-03 15:09:45,048 | server.py:236 | fit_round 1 received 5 results and 0 failures
+INFO flwr 2026-06-03 15:09:48,553 | server.py:171 | evaluate_round 1: no clients selected, cancel
+DEBUG flwr 2026-06-03 15:09:48,554 | server.py:222 | fit_round 2: strategy sampled 5 clients (out of 5)
+DEBUG flwr 2026-06-03 15:10:02,928 | server.py:236 | fit_round 2 received 5 results and 0 failures
+INFO flwr 2026-06-03 15:10:06,329 | server.py:171 | evaluate_round 2: no clients selected, cancel
+DEBUG flwr 2026-06-03 15:10:06,329 | server.py:222 | fit_round 3: strategy sampled 5 clients (out of 5)
+DEBUG flwr 2026-06-03 15:10:21,090 | server.py:236 | fit_round 3 received 5 results and 0 failures
+INFO flwr 2026-06-03 15:10:24,552 | server.py:171 | evaluate_round 3: no clients selected, cancel
+DEBUG flwr 2026-06-03 15:10:24,553 | server.py:222 | fit_round 4: strategy sampled 5 clients (out of 5)
+DEBUG flwr 2026-06-03 15:10:39,187 | server.py:236 | fit_round 4 received 5 results and 0 failures
+INFO flwr 2026-06-03 15:10:42,656 | server.py:171 | evaluate_round 4: no clients selected, cancel
+DEBUG flwr 2026-06-03 15:10:42,656 | server.py:222 | fit_round 5: strategy sampled 5 clients (out of 5)
+DEBUG flwr 2026-06-03 15:10:57,326 | server.py:236 | fit_round 5 received 5 results and 0 failures
+INFO flwr 2026-06-03 15:11:00,869 | server.py:171 | evaluate_round 5: no clients selected, cancel
+DEBUG flwr 2026-06-03 15:11:00,869 | server.py:222 | fit_round 6: strategy sampled 5 clients (out of 5)
+DEBUG flwr 2026-06-03 15:11:15,423 | server.py:236 | fit_round 6 received 5 results and 0 failures
+INFO flwr 2026-06-03 15:11:19,007 | server.py:171 | evaluate_round 6: no clients selected, cancel
+DEBUG flwr 2026-06-03 15:11:19,007 | server.py:222 | fit_round 7: strategy sampled 5 clients (out of 5)
+DEBUG flwr 2026-06-03 15:11:33,490 | server.py:236 | fit_round 7 received 5 results and 0 failures
+INFO flwr 2026-06-03 15:11:36,970 | server.py:171 | evaluate_round 7: no clients selected, cancel
+DEBUG flwr 2026-06-03 15:11:36,970 | server.py:222 | fit_round 8: strategy sampled 5 clients (out of 5)
+DEBUG flwr 2026-06-03 15:11:51,484 | server.py:236 | fit_round 8 received 5 results and 0 failures
+INFO flwr 2026-06-03 15:11:54,965 | server.py:171 | evaluate_round 8: no clients selected, cancel
+DEBUG flwr 2026-06-03 15:11:54,966 | server.py:222 | fit_round 9: strategy sampled 5 clients (out of 5)
+DEBUG flwr 2026-06-03 15:12:09,539 | server.py:236 | fit_round 9 received 5 results and 0 failures
+INFO flwr 2026-06-03 15:12:13,091 | server.py:171 | evaluate_round 9: no clients selected, cancel
+DEBUG flwr 2026-06-03 15:12:13,091 | server.py:222 | fit_round 10: strategy sampled 5 clients (out of 5)
+DEBUG flwr 2026-06-03 15:12:27,661 | server.py:236 | fit_round 10 received 5 results and 0 failures
+INFO flwr 2026-06-03 15:12:32,171 | server.py:171 | evaluate_round 10: no clients selected, cancel
+INFO flwr 2026-06-03 15:12:32,171 | server.py:153 | FL finished in 183.1667186319828
+INFO flwr 2026-06-03 15:12:32,171 | app.py:225 | app_fit: losses_distributed []
+INFO flwr 2026-06-03 15:12:32,172 | app.py:226 | app_fit: metrics_distributed_fit {'selected_client_id': [(1, 0.0), (2, 0.0), (3, 0.0), (4, 0.0), (5, 0.0), (6, 0.0), (7, 0.0), (8, 0.0), (9, 0.0), (10, 0.0)], 'val_auprc': [(1, 0.9980040224819954), (2, 0.9980040224819954), (3, 0.9980040224819954), (4, 0.9980040224819954), (5, 0.9980040224819954), (6, 0.9980040224819954), (7, 0.9980040224819954), (8, 0.9980040224819954), (9, 0.9980040224819954), (10, 0.9980040224819954)], 'val_f1': [(1, 0.9979683055668428), (2, 0.9979683055668428), (3, 0.9979683055668428), (4, 0.9979683055668428), (5, 0.9979683055668428), (6, 0.9979683055668428), (7, 0.9979683055668428), (8, 0.9979683055668428), (9, 0.9979683055668428), (10, 0.9979683055668428)], 'val_precision': [(1, 0.9991863303498779), (2, 0.9991863303498779), (3, 0.9991863303498779), (4, 0.9991863303498779), (5, 0.9991863303498779), (6, 0.9991863303498779), (7, 0.9991863303498779), (8, 0.9991863303498779), (9, 0.9991863303498779), (10, 0.9991863303498779)], 'val_recall': [(1, 0.9967532467532467), (2, 0.9967532467532467), (3, 0.9967532467532467), (4, 0.9967532467532467), (5, 0.9967532467532467), (6, 0.9967532467532467), (7, 0.9967532467532467), (8, 0.9967532467532467), (9, 0.9967532467532467), (10, 0.9967532467532467)]}
+INFO flwr 2026-06-03 15:12:32,172 | app.py:227 | app_fit: metrics_distributed {}
+INFO flwr 2026-06-03 15:12:32,172 | app.py:228 | app_fit: losses_centralized []
+INFO flwr 2026-06-03 15:12:32,172 | app.py:229 | app_fit: metrics_centralized {}
+wandb: Waiting for W&B process to finish... (success).
+wandb: 
+wandb: Run history:
+wandb: best_client_id ▁▁▁▁▁▁▁▁▁▁
+wandb: client_0_auprc ▁▁▁▁▁▁▁▁▁▁
+wandb: client_1_auprc ▁▁▁▁▁▁▁▁▁▁
+wandb: client_2_auprc ▁▁▁▁▁▁▁▁▁▁
+wandb: client_3_auprc ▁▁▁▁▁▁▁▁▁▁
+wandb: client_4_auprc ▁▁▁▁▁▁▁▁▁▁
+wandb:          round ▁▂▃▃▄▅▆▆▇██
+wandb:     test_auprc ▁
+wandb:        test_f1 ▁
+wandb:      test_loss ▁
+wandb: test_precision ▁
+wandb:    test_recall ▁
+wandb:      val_auprc ▁▁▁▁▁▁▁▁▁▁
+wandb:         val_f1 ▁▁▁▁▁▁▁▁▁▁
+wandb:       val_loss ▁▁▁▁▁▁▁▁▁▁
+wandb:  val_precision ▁▁▁▁▁▁▁▁▁▁
+wandb:     val_recall ▁▁▁▁▁▁▁▁▁▁
+wandb: 
+wandb: Run summary:
+wandb:   best_client_id 0
+wandb:       best_round 1
+wandb:   best_val_auprc 0.998
+wandb:   client_0_auprc 0.998
+wandb:   client_1_auprc 0.8562
+wandb:   client_2_auprc 0.00129
+wandb:   client_3_auprc 0.99767
+wandb:   client_4_auprc 0.00129
+wandb: duration_seconds 198.98402
+wandb:            round 10
+wandb:       test_auprc 0.9965
+wandb:          test_f1 0.99716
+wandb:        test_loss 0.0035
+wandb:   test_precision 0.99837
+wandb:      test_recall 0.99594
+wandb:        val_auprc 0.998
+wandb:           val_f1 0.99797
+wandb:         val_loss 0.002
+wandb:    val_precision 0.99919
+wandb:       val_recall 0.99675
+wandb: 
+wandb: 🚀 View run gbm_dirichlet_alpha0.5_none_seed42 at: https://wandb.ai/deo250605-sepuluh-nopember-insitute-of-technology/hfedxgboost-paysim/runs/66c61p4y
+wandb: Synced 6 W&B file(s), 0 media file(s), 0 artifact file(s) and 0 other file(s)
+wandb: Find logs at: ./wandb/run-20260603_150924-66c61p4y/logs
+[run] resolved config: {'model': 'gbm_bestmodel', 'num_clients': 5, 'num_rounds': 10, 'random_seed': 42, 'oversampling': 'none', 'smote_k_neighbors': 5, 'smote_sampling_strategy': 'auto', 'use_wandb': True, 'wandb_project': 'hfedxgboost-paysim', 'early_stop_patience': 10, 'partition': {'scheme': 'dirichlet', 'alpha': 0.5}, 'gbm_params': {'max_iter': 100, 'learning_rate': 0.1, 'max_depth': 6}}
+[run] === gbm | scheme=dirichlet alpha=0.5 K=5 R=10 oversampling=none seed=42 ===
+[paysim] loading data/paysim/paysim.csv
+[paysim] loaded 6,362,620 rows, 11 columns
+
+[paysim] === data summary ===
+  total rows loaded : 6,362,620
+  feature count     : 13
+  feature names     : ['step', 'amount', 'oldbalanceOrg', 'newbalanceOrig', 'oldbalanceDest', 'newbalanceDest', 'errorBalanceOrig', 'errorBalanceDest', 'type_CASH_IN', 'type_CASH_OUT', 'type_DEBIT', 'type_PAYMENT', 'type_TRANSFER']
+  x_train: (4453834, 13)  dtype=float32   |  y_train: (4453834,)  dtype=int32
+  x_val  : (954393, 13)  dtype=float32   |  y_val  : (954393,)  dtype=int32
+  x_test : (954393, 13)  dtype=float32   |  y_test : (954393,)  dtype=int32
+  fraud in train: 5,749 / 4,453,834  (0.1291%)
+  fraud in val  : 1,232 / 954,393  (0.1291%)
+  fraud in test : 1,232 / 954,393  (0.1291%)
+[paysim] === end summary ===
+
+
+[smote] === per-client SMOTE summary ===
+  cid |    n_before |     n_after |  fraud_before |  fraud_after | ratio_after | applied
+----------------------------------------------------------------------------------------
+    0 |     315,461 |     315,461 |         2,931 |        2,931 |     0.9291% |   False
+    1 |       3,340 |       3,340 |         2,089 |        2,089 |    62.5449% |   False
+    2 |   1,670,751 |   1,670,751 |             4 |            4 |     0.0002% |   False
+    3 |     283,301 |     283,301 |           723 |          723 |     0.2552% |   False
+    4 |   2,180,981 |   2,180,981 |             2 |            2 |     0.0001% |   False
+[smote] === end summary ===
+
+[run] FL starting: 10 rounds, 5 clients
+[server] round 1 | client_0_auprc=0.9980 | client_1_auprc=0.8562 | client_2_auprc=0.0013 | client_3_auprc=0.9977 | client_4_auprc=0.0013 | selected_client=0 | val_auprc=0.9980 | val_f1=0.9980 | val_precision=0.9992 | val_recall=0.9968
+[server] round 2 | client_0_auprc=0.9980 | client_1_auprc=0.8562 | client_2_auprc=0.0013 | client_3_auprc=0.9977 | client_4_auprc=0.0013 | selected_client=0 | val_auprc=0.9980 | val_f1=0.9980 | val_precision=0.9992 | val_recall=0.9968
+[server] round 3 | client_0_auprc=0.9980 | client_1_auprc=0.8562 | client_2_auprc=0.0013 | client_3_auprc=0.9977 | client_4_auprc=0.0013 | selected_client=0 | val_auprc=0.9980 | val_f1=0.9980 | val_precision=0.9992 | val_recall=0.9968
+[server] round 4 | client_0_auprc=0.9980 | client_1_auprc=0.8562 | client_2_auprc=0.0013 | client_3_auprc=0.9977 | client_4_auprc=0.0013 | selected_client=0 | val_auprc=0.9980 | val_f1=0.9980 | val_precision=0.9992 | val_recall=0.9968
+[server] round 5 | client_0_auprc=0.9980 | client_1_auprc=0.8562 | client_2_auprc=0.0013 | client_3_auprc=0.9977 | client_4_auprc=0.0013 | selected_client=0 | val_auprc=0.9980 | val_f1=0.9980 | val_precision=0.9992 | val_recall=0.9968
+[server] round 6 | client_0_auprc=0.9980 | client_1_auprc=0.8562 | client_2_auprc=0.0013 | client_3_auprc=0.9977 | client_4_auprc=0.0013 | selected_client=0 | val_auprc=0.9980 | val_f1=0.9980 | val_precision=0.9992 | val_recall=0.9968
+[server] round 7 | client_0_auprc=0.9980 | client_1_auprc=0.8562 | client_2_auprc=0.0013 | client_3_auprc=0.9977 | client_4_auprc=0.0013 | selected_client=0 | val_auprc=0.9980 | val_f1=0.9980 | val_precision=0.9992 | val_recall=0.9968
+[server] round 8 | client_0_auprc=0.9980 | client_1_auprc=0.8562 | client_2_auprc=0.0013 | client_3_auprc=0.9977 | client_4_auprc=0.0013 | selected_client=0 | val_auprc=0.9980 | val_f1=0.9980 | val_precision=0.9992 | val_recall=0.9968
+[server] round 9 | client_0_auprc=0.9980 | client_1_auprc=0.8562 | client_2_auprc=0.0013 | client_3_auprc=0.9977 | client_4_auprc=0.0013 | selected_client=0 | val_auprc=0.9980 | val_f1=0.9980 | val_precision=0.9992 | val_recall=0.9968
+[server] round 10 | client_0_auprc=0.9980 | client_1_auprc=0.8562 | client_2_auprc=0.0013 | client_3_auprc=0.9977 | client_4_auprc=0.0013 | selected_client=0 | val_auprc=0.9980 | val_f1=0.9980 | val_precision=0.9992 | val_recall=0.9968
+[server] FINAL round 10 | test_auprc=0.9965 | test_f1=0.9972 | test_precision=0.9984 | test_recall=0.9959
+[run] best val_auprc: 0.9980 at round 1 (selected client 0)
+[run] final test: auprc=0.9965 | f1=0.9972 | precision=0.9984 | recall=0.9959
+[run] selection trace: r1:c0 r2:c0 r3:c0 r4:c0 r5:c0 r6:c0 r7:c0 r8:c0 r9:c0 r10:c0
+[results] wrote summary CSV → results/logs/gbm/gbm_dirichlet_alpha0.5_none_seed42.csv
+[results] wrote rounds CSV  → results/logs/gbm/gbm_dirichlet_alpha0.5_none_seed42_rounds.csv

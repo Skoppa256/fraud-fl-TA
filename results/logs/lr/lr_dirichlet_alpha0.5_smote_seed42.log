@@ -1,0 +1,241 @@
+/home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/ray/_private/parameter.py:4: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools<81.
+  import pkg_resources
+/home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/wandb/sdk/launch/builder/build.py:11: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools<81.
+  import pkg_resources
+wandb: Currently logged in as: deo250605 (deo250605-sepuluh-nopember-insitute-of-technology). Use `wandb login --relogin` to force relogin
+wandb: wandb version 0.27.0 is available!  To upgrade, please run:
+wandb:  $ pip install wandb --upgrade
+wandb: Tracking run with wandb version 0.15.12
+wandb: Run data is saved locally in /home/justin/fraud-fl-TA/wandb/run-20260603_162836-chvrgm8t
+wandb: Run `wandb offline` to turn off syncing.
+wandb: Syncing run lr_dirichlet_alpha0.5_smote_seed42
+wandb: ⭐️ View project at https://wandb.ai/deo250605-sepuluh-nopember-insitute-of-technology/hfedxgboost-paysim
+wandb: 🚀 View run at https://wandb.ai/deo250605-sepuluh-nopember-insitute-of-technology/hfedxgboost-paysim/runs/chvrgm8t
+INFO flwr 2026-06-03 16:28:39,809 | app.py:175 | Starting Flower simulation, config: ServerConfig(num_rounds=20, round_timeout=None)
+2026-06-03 16:28:41,565	INFO worker.py:1621 -- Started a local Ray instance.
+INFO flwr 2026-06-03 16:28:42,155 | app.py:210 | Flower VCE: Ray initialized with resources: {'node:172.24.108.56': 1.0, 'CPU': 20.0, 'memory': 7739621376.0, 'object_store_memory': 3869810688.0, 'node:__internal_head__': 1.0}
+INFO flwr 2026-06-03 16:28:42,156 | app.py:224 | Flower VCE: Resources for each Virtual Client: {'num_cpus': 1, 'num_gpus': 0}
+INFO flwr 2026-06-03 16:28:42,166 | app.py:270 | Flower VCE: Creating VirtualClientEngineActorPool with 20 actors
+INFO flwr 2026-06-03 16:28:42,167 | server.py:89 | Initializing global parameters
+INFO flwr 2026-06-03 16:28:42,167 | server.py:272 | Using initial parameters provided by strategy
+INFO flwr 2026-06-03 16:28:42,168 | server.py:91 | Evaluating initial parameters
+[2m[33m(raylet)[0m /home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/ray/_private/parameter.py:4: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools<81.
+[2m[33m(raylet)[0m   import pkg_resources
+[2m[33m(raylet)[0m /home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/ray/_private/parameter.py:4: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools<81.
+[2m[33m(raylet)[0m   import pkg_resources
+[2m[33m(raylet)[0m /home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/ray/_private/parameter.py:4: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools<81.
+[2m[33m(raylet)[0m   import pkg_resources
+[2m[33m(raylet)[0m /home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/ray/_private/parameter.py:4: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools<81.
+[2m[33m(raylet)[0m   import pkg_resources
+[2m[33m(raylet)[0m /home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/ray/_private/parameter.py:4: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools<81.
+[2m[33m(raylet)[0m   import pkg_resources
+[2m[33m(raylet)[0m /home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/ray/_private/parameter.py:4: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools<81.
+[2m[33m(raylet)[0m   import pkg_resources
+[2m[33m(raylet)[0m /home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/ray/_private/parameter.py:4: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools<81.
+[2m[33m(raylet)[0m   import pkg_resources
+[2m[33m(raylet)[0m /home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/ray/_private/parameter.py:4: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools<81.
+[2m[33m(raylet)[0m   import pkg_resources
+[2m[33m(raylet)[0m /home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/ray/_private/parameter.py:4: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools<81.
+[2m[33m(raylet)[0m   import pkg_resources
+[2m[33m(raylet)[0m /home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/ray/_private/parameter.py:4: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools<81.
+[2m[33m(raylet)[0m   import pkg_resources
+[2m[33m(raylet)[0m /home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/ray/_private/parameter.py:4: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools<81.
+[2m[33m(raylet)[0m   import pkg_resources
+[2m[33m(raylet)[0m /home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/ray/_private/parameter.py:4: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools<81.
+[2m[33m(raylet)[0m   import pkg_resources
+[2m[33m(raylet)[0m /home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/ray/_private/parameter.py:4: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools<81.
+[2m[33m(raylet)[0m   import pkg_resources
+[2m[33m(raylet)[0m /home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/ray/_private/parameter.py:4: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools<81.
+[2m[33m(raylet)[0m   import pkg_resources
+[2m[33m(raylet)[0m /home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/ray/_private/parameter.py:4: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools<81.
+[2m[33m(raylet)[0m   import pkg_resources
+[2m[33m(raylet)[0m /home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/ray/_private/parameter.py:4: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools<81.
+[2m[33m(raylet)[0m   import pkg_resources
+[2m[33m(raylet)[0m /home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/ray/_private/parameter.py:4: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools<81.
+[2m[33m(raylet)[0m   import pkg_resources
+[2m[33m(raylet)[0m /home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/ray/_private/parameter.py:4: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools<81.
+[2m[33m(raylet)[0m   import pkg_resources
+[2m[33m(raylet)[0m /home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/ray/_private/parameter.py:4: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools<81.
+[2m[33m(raylet)[0m   import pkg_resources
+[2m[33m(raylet)[0m /home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/ray/_private/parameter.py:4: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools<81.
+[2m[33m(raylet)[0m   import pkg_resources
+INFO flwr 2026-06-03 16:28:42,940 | server.py:94 | initial parameters (loss, other metrics): 0.9987091271625002, {'val_auprc': 0.001290872837499856, 'val_f1': 0.0, 'val_precision': 0.0, 'val_recall': 0.0}
+INFO flwr 2026-06-03 16:28:42,941 | server.py:104 | FL starting
+DEBUG flwr 2026-06-03 16:28:42,941 | server.py:222 | fit_round 1: strategy sampled 5 clients (out of 5)
+DEBUG flwr 2026-06-03 16:28:45,424 | server.py:236 | fit_round 1 received 5 results and 0 failures
+INFO flwr 2026-06-03 16:28:45,948 | server.py:125 | fit progress: (1, 0.3933270535141188, {'val_auprc': 0.6066729464858812, 'val_f1': 0.38780804150453957, 'val_precision': 0.964516129032258, 'val_recall': 0.24269480519480519}, 3.0073899049311876)
+INFO flwr 2026-06-03 16:28:45,948 | server.py:171 | evaluate_round 1: no clients selected, cancel
+DEBUG flwr 2026-06-03 16:28:45,949 | server.py:222 | fit_round 2: strategy sampled 5 clients (out of 5)
+DEBUG flwr 2026-06-03 16:28:47,167 | server.py:236 | fit_round 2 received 5 results and 0 failures
+INFO flwr 2026-06-03 16:28:47,688 | server.py:125 | fit progress: (2, 0.4017584925455525, {'val_auprc': 0.5982415074544475, 'val_f1': 0.5326400924321202, 'val_precision': 0.9238476953907816, 'val_recall': 0.3741883116883117}, 4.74700564192608)
+INFO flwr 2026-06-03 16:28:47,688 | server.py:171 | evaluate_round 2: no clients selected, cancel
+DEBUG flwr 2026-06-03 16:28:47,688 | server.py:222 | fit_round 3: strategy sampled 5 clients (out of 5)
+DEBUG flwr 2026-06-03 16:28:49,596 | server.py:236 | fit_round 3 received 5 results and 0 failures
+INFO flwr 2026-06-03 16:28:50,158 | server.py:125 | fit progress: (3, 0.40435639272833435, {'val_auprc': 0.5956436072716657, 'val_f1': 0.5973190348525469, 'val_precision': 0.8799368088467614, 'val_recall': 0.45211038961038963}, 7.217233367962763)
+INFO flwr 2026-06-03 16:28:50,158 | server.py:171 | evaluate_round 3: no clients selected, cancel
+DEBUG flwr 2026-06-03 16:28:50,158 | server.py:222 | fit_round 4: strategy sampled 5 clients (out of 5)
+DEBUG flwr 2026-06-03 16:28:51,323 | server.py:236 | fit_round 4 received 5 results and 0 failures
+INFO flwr 2026-06-03 16:28:51,837 | server.py:125 | fit progress: (4, 0.402063071716959, {'val_auprc': 0.597936928283041, 'val_f1': 0.607568688439606, 'val_precision': 0.8407460545193687, 'val_recall': 0.47564935064935066}, 8.896740505006164)
+INFO flwr 2026-06-03 16:28:51,838 | server.py:171 | evaluate_round 4: no clients selected, cancel
+DEBUG flwr 2026-06-03 16:28:51,838 | server.py:222 | fit_round 5: strategy sampled 5 clients (out of 5)
+DEBUG flwr 2026-06-03 16:28:53,074 | server.py:236 | fit_round 5 received 5 results and 0 failures
+INFO flwr 2026-06-03 16:28:53,595 | server.py:125 | fit progress: (5, 0.39919861651739474, {'val_auprc': 0.6008013834826053, 'val_f1': 0.6018368449486764, 'val_precision': 0.8998384491114702, 'val_recall': 0.45211038961038963}, 10.65395720093511)
+INFO flwr 2026-06-03 16:28:53,595 | server.py:171 | evaluate_round 5: no clients selected, cancel
+DEBUG flwr 2026-06-03 16:28:53,595 | server.py:222 | fit_round 6: strategy sampled 5 clients (out of 5)
+DEBUG flwr 2026-06-03 16:28:54,833 | server.py:236 | fit_round 6 received 5 results and 0 failures
+INFO flwr 2026-06-03 16:28:55,390 | server.py:125 | fit progress: (6, 0.4016202758616739, {'val_auprc': 0.5983797241383261, 'val_f1': 0.6114583333333333, 'val_precision': 0.8531976744186046, 'val_recall': 0.476461038961039}, 12.449526607058942)
+INFO flwr 2026-06-03 16:28:55,390 | server.py:171 | evaluate_round 6: no clients selected, cancel
+DEBUG flwr 2026-06-03 16:28:55,391 | server.py:222 | fit_round 7: strategy sampled 5 clients (out of 5)
+DEBUG flwr 2026-06-03 16:28:56,648 | server.py:236 | fit_round 7 received 5 results and 0 failures
+INFO flwr 2026-06-03 16:28:57,218 | server.py:125 | fit progress: (7, 0.40392501137596404, {'val_auprc': 0.596074988624036, 'val_f1': 0.6187050359712231, 'val_precision': 0.8431372549019608, 'val_recall': 0.48863636363636365}, 14.277800922980532)
+INFO flwr 2026-06-03 16:28:57,219 | server.py:171 | evaluate_round 7: no clients selected, cancel
+DEBUG flwr 2026-06-03 16:28:57,219 | server.py:222 | fit_round 8: strategy sampled 5 clients (out of 5)
+DEBUG flwr 2026-06-03 16:28:59,042 | server.py:236 | fit_round 8 received 5 results and 0 failures
+INFO flwr 2026-06-03 16:28:59,604 | server.py:125 | fit progress: (8, 0.40527107232144, {'val_auprc': 0.59472892767856, 'val_f1': 0.6200204290091931, 'val_precision': 0.8360881542699724, 'val_recall': 0.4926948051948052}, 16.663638422032818)
+INFO flwr 2026-06-03 16:28:59,604 | server.py:171 | evaluate_round 8: no clients selected, cancel
+DEBUG flwr 2026-06-03 16:28:59,605 | server.py:222 | fit_round 9: strategy sampled 5 clients (out of 5)
+DEBUG flwr 2026-06-03 16:29:01,434 | server.py:236 | fit_round 9 received 5 results and 0 failures
+INFO flwr 2026-06-03 16:29:01,987 | server.py:125 | fit progress: (9, 0.4069741692680491, {'val_auprc': 0.5930258307319509, 'val_f1': 0.6218144750254841, 'val_precision': 0.8356164383561644, 'val_recall': 0.49512987012987014}, 19.046859439928085)
+INFO flwr 2026-06-03 16:29:01,988 | server.py:171 | evaluate_round 9: no clients selected, cancel
+DEBUG flwr 2026-06-03 16:29:01,988 | server.py:222 | fit_round 10: strategy sampled 5 clients (out of 5)
+DEBUG flwr 2026-06-03 16:29:03,342 | server.py:236 | fit_round 10 received 5 results and 0 failures
+INFO flwr 2026-06-03 16:29:03,860 | server.py:125 | fit progress: (10, 0.40762674980364466, {'val_auprc': 0.5923732501963553, 'val_f1': 0.6199898528665652, 'val_precision': 0.8267929634641408, 'val_recall': 0.49594155844155846}, 20.91978158801794)
+INFO flwr 2026-06-03 16:29:03,861 | server.py:171 | evaluate_round 10: no clients selected, cancel
+DEBUG flwr 2026-06-03 16:29:03,861 | server.py:222 | fit_round 11: strategy sampled 5 clients (out of 5)
+DEBUG flwr 2026-06-03 16:29:05,196 | server.py:236 | fit_round 11 received 5 results and 0 failures
+INFO flwr 2026-06-03 16:29:05,740 | server.py:125 | fit progress: (11, 0.40755713135130966, {'val_auprc': 0.5924428686486903, 'val_f1': 0.6210739614994935, 'val_precision': 0.8261455525606469, 'val_recall': 0.49756493506493504}, 22.799827784998342)
+INFO flwr 2026-06-03 16:29:05,741 | server.py:171 | evaluate_round 11: no clients selected, cancel
+DEBUG flwr 2026-06-03 16:29:05,741 | server.py:222 | fit_round 12: strategy sampled 5 clients (out of 5)
+DEBUG flwr 2026-06-03 16:29:07,052 | server.py:236 | fit_round 12 received 5 results and 0 failures
+INFO flwr 2026-06-03 16:29:07,699 | server.py:125 | fit progress: (12, 0.4073178092098232, {'val_auprc': 0.5926821907901768, 'val_f1': 0.6210739614994935, 'val_precision': 0.8261455525606469, 'val_recall': 0.49756493506493504}, 24.758593546925113)
+INFO flwr 2026-06-03 16:29:07,699 | server.py:171 | evaluate_round 12: no clients selected, cancel
+DEBUG flwr 2026-06-03 16:29:07,700 | server.py:222 | fit_round 13: strategy sampled 5 clients (out of 5)
+DEBUG flwr 2026-06-03 16:29:09,037 | server.py:236 | fit_round 13 received 5 results and 0 failures
+INFO flwr 2026-06-03 16:29:09,739 | server.py:125 | fit progress: (13, 0.4071480389402282, {'val_auprc': 0.5928519610597718, 'val_f1': 0.6207594936708861, 'val_precision': 0.8250336473755047, 'val_recall': 0.49756493506493504}, 26.798861674033105)
+INFO flwr 2026-06-03 16:29:09,740 | server.py:171 | evaluate_round 13: no clients selected, cancel
+DEBUG flwr 2026-06-03 16:29:09,740 | server.py:222 | fit_round 14: strategy sampled 5 clients (out of 5)
+DEBUG flwr 2026-06-03 16:29:11,136 | server.py:236 | fit_round 14 received 5 results and 0 failures
+INFO flwr 2026-06-03 16:29:11,650 | server.py:125 | fit progress: (14, 0.4069837916959924, {'val_auprc': 0.5930162083040076, 'val_f1': 0.6210739614994935, 'val_precision': 0.8261455525606469, 'val_recall': 0.49756493506493504}, 28.70913031301461)
+INFO flwr 2026-06-03 16:29:11,650 | server.py:171 | evaluate_round 14: no clients selected, cancel
+DEBUG flwr 2026-06-03 16:29:11,650 | server.py:222 | fit_round 15: strategy sampled 5 clients (out of 5)
+DEBUG flwr 2026-06-03 16:29:13,020 | server.py:236 | fit_round 15 received 5 results and 0 failures
+INFO flwr 2026-06-03 16:29:13,530 | server.py:125 | fit progress: (15, 0.40681764826077593, {'val_auprc': 0.5931823517392241, 'val_f1': 0.6210739614994935, 'val_precision': 0.8261455525606469, 'val_recall': 0.49756493506493504}, 30.589281234890223)
+INFO flwr 2026-06-03 16:29:13,530 | server.py:171 | evaluate_round 15: no clients selected, cancel
+DEBUG flwr 2026-06-03 16:29:13,530 | server.py:222 | fit_round 16: strategy sampled 5 clients (out of 5)
+DEBUG flwr 2026-06-03 16:29:14,924 | server.py:236 | fit_round 16 received 5 results and 0 failures
+INFO flwr 2026-06-03 16:29:15,690 | server.py:125 | fit progress: (16, 0.4067350738982147, {'val_auprc': 0.5932649261017853, 'val_f1': 0.6217038539553753, 'val_precision': 0.8283783783783784, 'val_recall': 0.49756493506493504}, 32.749679354950786)
+INFO flwr 2026-06-03 16:29:15,691 | server.py:171 | evaluate_round 16: no clients selected, cancel
+DEBUG flwr 2026-06-03 16:29:15,691 | server.py:222 | fit_round 17: strategy sampled 5 clients (out of 5)
+DEBUG flwr 2026-06-03 16:29:17,008 | server.py:236 | fit_round 17 received 5 results and 0 failures
+INFO flwr 2026-06-03 16:29:17,563 | server.py:125 | fit progress: (17, 0.4066519366248872, {'val_auprc': 0.5933480633751128, 'val_f1': 0.6217038539553753, 'val_precision': 0.8283783783783784, 'val_recall': 0.49756493506493504}, 34.622616099892184)
+INFO flwr 2026-06-03 16:29:17,563 | server.py:171 | evaluate_round 17: no clients selected, cancel
+DEBUG flwr 2026-06-03 16:29:17,564 | server.py:222 | fit_round 18: strategy sampled 5 clients (out of 5)
+DEBUG flwr 2026-06-03 16:29:18,965 | server.py:236 | fit_round 18 received 5 results and 0 failures
+INFO flwr 2026-06-03 16:29:19,482 | server.py:125 | fit progress: (18, 0.40650146233087703, {'val_auprc': 0.593498537669123, 'val_f1': 0.6223350253807106, 'val_precision': 0.8306233062330624, 'val_recall': 0.49756493506493504}, 36.54168836795725)
+INFO flwr 2026-06-03 16:29:19,483 | server.py:171 | evaluate_round 18: no clients selected, cancel
+DEBUG flwr 2026-06-03 16:29:19,483 | server.py:222 | fit_round 19: strategy sampled 5 clients (out of 5)
+DEBUG flwr 2026-06-03 16:29:20,904 | server.py:236 | fit_round 19 received 5 results and 0 failures
+INFO flwr 2026-06-03 16:29:21,432 | server.py:125 | fit progress: (19, 0.40631604298435886, {'val_auprc': 0.5936839570156411, 'val_f1': 0.6223350253807106, 'val_precision': 0.8306233062330624, 'val_recall': 0.49756493506493504}, 38.49144010292366)
+INFO flwr 2026-06-03 16:29:21,432 | server.py:171 | evaluate_round 19: no clients selected, cancel
+DEBUG flwr 2026-06-03 16:29:21,432 | server.py:222 | fit_round 20: strategy sampled 5 clients (out of 5)
+DEBUG flwr 2026-06-03 16:29:22,950 | server.py:236 | fit_round 20 received 5 results and 0 failures
+INFO flwr 2026-06-03 16:29:24,085 | server.py:125 | fit progress: (20, 0.4061751633594437, {'val_auprc': 0.5938248366405563, 'val_f1': 0.6226510919248349, 'val_precision': 0.8317503392130258, 'val_recall': 0.49756493506493504}, 41.14467255491763)
+INFO flwr 2026-06-03 16:29:24,086 | server.py:171 | evaluate_round 20: no clients selected, cancel
+INFO flwr 2026-06-03 16:29:24,086 | server.py:153 | FL finished in 41.14500118792057
+INFO flwr 2026-06-03 16:29:24,086 | app.py:225 | app_fit: losses_distributed []
+INFO flwr 2026-06-03 16:29:24,086 | app.py:226 | app_fit: metrics_distributed_fit {'client_id': [(1, 2.7278494433155256), (2, 2.7278494433155256), (3, 2.7278494433155256), (4, 2.7278494433155256), (5, 2.7278494433155256), (6, 2.7278494433155256), (7, 2.7278494433155256), (8, 2.7278494433155256), (9, 2.7278494433155256), (10, 2.7278494433155256), (11, 2.7278494433155256), (12, 2.7278494433155256), (13, 2.7278494433155256), (14, 2.7278494433155256), (15, 2.7278494433155256), (16, 2.7278494433155256), (17, 2.7278494433155256), (18, 2.7278494433155256), (19, 2.7278494433155256), (20, 2.7278494433155256)], 'local_auprc': [(1, 0.23475353976999105), (2, 0.4706989839812876), (3, 0.4677621956474103), (4, 0.46954287449833493), (5, 0.4739531172118924), (6, 0.4721271524052709), (7, 0.4720720005195041), (8, 0.4720080678547347), (9, 0.47191081763022585), (10, 0.4711687553608986), (11, 0.4719033196400498), (12, 0.47272764874494283), (13, 0.47271423514193905), (14, 0.472735754306228), (15, 0.4727835909691995), (16, 0.4728114411958601), (17, 0.47280262765743253), (18, 0.4728398509365541), (19, 0.4728290551867709), (20, 0.47283461130684934)]}
+INFO flwr 2026-06-03 16:29:24,086 | app.py:227 | app_fit: metrics_distributed {}
+INFO flwr 2026-06-03 16:29:24,086 | app.py:228 | app_fit: losses_centralized [(0, 0.9987091271625002), (1, 0.3933270535141188), (2, 0.4017584925455525), (3, 0.40435639272833435), (4, 0.402063071716959), (5, 0.39919861651739474), (6, 0.4016202758616739), (7, 0.40392501137596404), (8, 0.40527107232144), (9, 0.4069741692680491), (10, 0.40762674980364466), (11, 0.40755713135130966), (12, 0.4073178092098232), (13, 0.4071480389402282), (14, 0.4069837916959924), (15, 0.40681764826077593), (16, 0.4067350738982147), (17, 0.4066519366248872), (18, 0.40650146233087703), (19, 0.40631604298435886), (20, 0.4061751633594437)]
+INFO flwr 2026-06-03 16:29:24,086 | app.py:229 | app_fit: metrics_centralized {'val_auprc': [(0, 0.001290872837499856), (1, 0.6066729464858812), (2, 0.5982415074544475), (3, 0.5956436072716657), (4, 0.597936928283041), (5, 0.6008013834826053), (6, 0.5983797241383261), (7, 0.596074988624036), (8, 0.59472892767856), (9, 0.5930258307319509), (10, 0.5923732501963553), (11, 0.5924428686486903), (12, 0.5926821907901768), (13, 0.5928519610597718), (14, 0.5930162083040076), (15, 0.5931823517392241), (16, 0.5932649261017853), (17, 0.5933480633751128), (18, 0.593498537669123), (19, 0.5936839570156411), (20, 0.5938248366405563)], 'val_f1': [(0, 0.0), (1, 0.38780804150453957), (2, 0.5326400924321202), (3, 0.5973190348525469), (4, 0.607568688439606), (5, 0.6018368449486764), (6, 0.6114583333333333), (7, 0.6187050359712231), (8, 0.6200204290091931), (9, 0.6218144750254841), (10, 0.6199898528665652), (11, 0.6210739614994935), (12, 0.6210739614994935), (13, 0.6207594936708861), (14, 0.6210739614994935), (15, 0.6210739614994935), (16, 0.6217038539553753), (17, 0.6217038539553753), (18, 0.6223350253807106), (19, 0.6223350253807106), (20, 0.6226510919248349)], 'val_precision': [(0, 0.0), (1, 0.964516129032258), (2, 0.9238476953907816), (3, 0.8799368088467614), (4, 0.8407460545193687), (5, 0.8998384491114702), (6, 0.8531976744186046), (7, 0.8431372549019608), (8, 0.8360881542699724), (9, 0.8356164383561644), (10, 0.8267929634641408), (11, 0.8261455525606469), (12, 0.8261455525606469), (13, 0.8250336473755047), (14, 0.8261455525606469), (15, 0.8261455525606469), (16, 0.8283783783783784), (17, 0.8283783783783784), (18, 0.8306233062330624), (19, 0.8306233062330624), (20, 0.8317503392130258)], 'val_recall': [(0, 0.0), (1, 0.24269480519480519), (2, 0.3741883116883117), (3, 0.45211038961038963), (4, 0.47564935064935066), (5, 0.45211038961038963), (6, 0.476461038961039), (7, 0.48863636363636365), (8, 0.4926948051948052), (9, 0.49512987012987014), (10, 0.49594155844155846), (11, 0.49756493506493504), (12, 0.49756493506493504), (13, 0.49756493506493504), (14, 0.49756493506493504), (15, 0.49756493506493504), (16, 0.49756493506493504), (17, 0.49756493506493504), (18, 0.49756493506493504), (19, 0.49756493506493504), (20, 0.49756493506493504)]}
+wandb: Waiting for W&B process to finish... (success).
+wandb: 
+wandb: Run history:
+wandb:          round ▁▁▂▂▂▃▃▃▄▄▅▅▅▆▆▆▇▇▇███
+wandb:     test_auprc ▁
+wandb:        test_f1 ▁
+wandb:      test_loss ▁
+wandb: test_precision ▁
+wandb:    test_recall ▁
+wandb:      val_auprc ▁████████████████████
+wandb:         val_f1 ▁▅▇██████████████████
+wandb:       val_loss █▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb:  val_precision ▁██▇▇█▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇
+wandb:     val_recall ▁▄▆▇█▇███████████████
+wandb: 
+wandb: Run summary:
+wandb:       best_round 1
+wandb:   best_val_auprc 0.60667
+wandb: duration_seconds 62.08158
+wandb:            round 20
+wandb:       test_auprc 0.57556
+wandb:          test_f1 0.60395
+wandb:        test_loss 0.42444
+wandb:   test_precision 0.8396
+wandb:      test_recall 0.47159
+wandb:        val_auprc 0.59382
+wandb:           val_f1 0.62265
+wandb:         val_loss 0.40618
+wandb:    val_precision 0.83175
+wandb:       val_recall 0.49756
+wandb: 
+wandb: 🚀 View run lr_dirichlet_alpha0.5_smote_seed42 at: https://wandb.ai/deo250605-sepuluh-nopember-insitute-of-technology/hfedxgboost-paysim/runs/chvrgm8t
+wandb: Synced 6 W&B file(s), 0 media file(s), 0 artifact file(s) and 0 other file(s)
+wandb: Find logs at: ./wandb/run-20260603_162836-chvrgm8t/logs
+[run] resolved config: {'model': 'fedavg_lr', 'num_clients': 5, 'num_rounds': 20, 'local_epochs': 1, 'random_seed': 42, 'oversampling': 'smote', 'smote_k_neighbors': 5, 'smote_sampling_strategy': 'auto', 'use_wandb': True, 'wandb_project': 'hfedxgboost-paysim', 'early_stop_patience': 10, 'partition': {'scheme': 'dirichlet', 'alpha': 0.5}, 'lr_params': {'C': 1.0, 'max_iter': 1000, 'warm_start': True}}
+[run] === lr | scheme=dirichlet alpha=0.5 K=5 R=20 oversampling=smote seed=42 ===
+[paysim] loading data/paysim/paysim.csv
+[paysim] loaded 6,362,620 rows, 11 columns
+
+[paysim] === data summary ===
+  total rows loaded : 6,362,620
+  feature count     : 13
+  feature names     : ['step', 'amount', 'oldbalanceOrg', 'newbalanceOrig', 'oldbalanceDest', 'newbalanceDest', 'errorBalanceOrig', 'errorBalanceDest', 'type_CASH_IN', 'type_CASH_OUT', 'type_DEBIT', 'type_PAYMENT', 'type_TRANSFER']
+  x_train: (4453834, 13)  dtype=float32   |  y_train: (4453834,)  dtype=int32
+  x_val  : (954393, 13)  dtype=float32   |  y_val  : (954393,)  dtype=int32
+  x_test : (954393, 13)  dtype=float32   |  y_test : (954393,)  dtype=int32
+  fraud in train: 5,749 / 4,453,834  (0.1291%)
+  fraud in val  : 1,232 / 954,393  (0.1291%)
+  fraud in test : 1,232 / 954,393  (0.1291%)
+[paysim] === end summary ===
+
+[smote] WARN client 2: skipping SMOTE — insufficient fraud samples (have 4, need >= 6 = k_neighbors+1)
+[smote] WARN client 4: skipping SMOTE — insufficient fraud samples (have 2, need >= 6 = k_neighbors+1)
+
+[smote] === per-client SMOTE summary ===
+  cid |    n_before |     n_after |  fraud_before |  fraud_after | ratio_after | applied
+----------------------------------------------------------------------------------------
+    0 |     315,461 |     625,060 |         2,931 |      312,530 |    50.0000% |    True
+    1 |       3,340 |       4,178 |         2,089 |        2,089 |    50.0000% |    True
+    2 |   1,670,751 |   1,670,751 |             4 |            4 |     0.0002% |   False
+    3 |     283,301 |     565,156 |           723 |      282,578 |    50.0000% |    True
+    4 |   2,180,981 |   2,180,981 |             2 |            2 |     0.0001% |   False
+[smote] === end summary ===
+
+[run] FL starting: 20 rounds, 5 clients
+[server] round 0 | val_auprc=0.0013 | val_f1=0.0000 | val_precision=0.0000 | val_recall=0.0000
+[server] round 1 | val_auprc=0.6067 | val_f1=0.3878 | val_precision=0.9645 | val_recall=0.2427
+[server] round 2 | val_auprc=0.5982 | val_f1=0.5326 | val_precision=0.9238 | val_recall=0.3742
+[server] round 3 | val_auprc=0.5956 | val_f1=0.5973 | val_precision=0.8799 | val_recall=0.4521
+[server] round 4 | val_auprc=0.5979 | val_f1=0.6076 | val_precision=0.8407 | val_recall=0.4756
+[server] round 5 | val_auprc=0.6008 | val_f1=0.6018 | val_precision=0.8998 | val_recall=0.4521
+[server] round 6 | val_auprc=0.5984 | val_f1=0.6115 | val_precision=0.8532 | val_recall=0.4765
+[server] round 7 | val_auprc=0.5961 | val_f1=0.6187 | val_precision=0.8431 | val_recall=0.4886
+[server] round 8 | val_auprc=0.5947 | val_f1=0.6200 | val_precision=0.8361 | val_recall=0.4927
+[server] round 9 | val_auprc=0.5930 | val_f1=0.6218 | val_precision=0.8356 | val_recall=0.4951
+[server] round 10 | val_auprc=0.5924 | val_f1=0.6200 | val_precision=0.8268 | val_recall=0.4959
+[server] round 11 | val_auprc=0.5924 | val_f1=0.6211 | val_precision=0.8261 | val_recall=0.4976
+[server] early-stop signal at round 11: val_auprc unchanged for 10 rounds (best=0.6067 at round 1)
+[server] round 12 | val_auprc=0.5927 | val_f1=0.6211 | val_precision=0.8261 | val_recall=0.4976
+[server] round 13 | val_auprc=0.5929 | val_f1=0.6208 | val_precision=0.8250 | val_recall=0.4976
+[server] round 14 | val_auprc=0.5930 | val_f1=0.6211 | val_precision=0.8261 | val_recall=0.4976
+[server] round 15 | val_auprc=0.5932 | val_f1=0.6211 | val_precision=0.8261 | val_recall=0.4976
+[server] round 16 | val_auprc=0.5933 | val_f1=0.6217 | val_precision=0.8284 | val_recall=0.4976
+[server] round 17 | val_auprc=0.5933 | val_f1=0.6217 | val_precision=0.8284 | val_recall=0.4976
+[server] round 18 | val_auprc=0.5935 | val_f1=0.6223 | val_precision=0.8306 | val_recall=0.4976
+[server] round 19 | val_auprc=0.5937 | val_f1=0.6223 | val_precision=0.8306 | val_recall=0.4976
+[server] round 20 | val_auprc=0.5938 | val_f1=0.6227 | val_precision=0.8318 | val_recall=0.4976
+[server] FINAL round 20 | test_auprc=0.5756 | test_f1=0.6040 | test_precision=0.8396 | test_recall=0.4716
+[run] best val_auprc: 0.6067 at round 1
+[run] final test: auprc=0.5756 | f1=0.6040 | precision=0.8396 | recall=0.4716
+[results] wrote summary CSV → results/logs/lr/lr_dirichlet_alpha0.5_smote_seed42.csv
+[results] wrote rounds CSV  → results/logs/lr/lr_dirichlet_alpha0.5_smote_seed42_rounds.csv

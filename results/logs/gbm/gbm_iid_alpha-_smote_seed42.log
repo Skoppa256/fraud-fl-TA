@@ -1,0 +1,1165 @@
+/home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/ray/_private/parameter.py:4: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools<81.
+  import pkg_resources
+/home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/wandb/sdk/launch/builder/build.py:11: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools<81.
+  import pkg_resources
+wandb: Currently logged in as: deo250605 (deo250605-sepuluh-nopember-insitute-of-technology). Use `wandb login --relogin` to force relogin
+wandb: wandb version 0.27.0 is available!  To upgrade, please run:
+wandb:  $ pip install wandb --upgrade
+wandb: Tracking run with wandb version 0.15.12
+wandb: Run data is saved locally in /home/justin/fraud-fl-TA/wandb/run-20260603_145112-3pfpjkzr
+wandb: Run `wandb offline` to turn off syncing.
+wandb: Syncing run gbm_iid_alpha-_smote_seed42
+wandb: ⭐️ View project at https://wandb.ai/deo250605-sepuluh-nopember-insitute-of-technology/hfedxgboost-paysim
+wandb: 🚀 View run at https://wandb.ai/deo250605-sepuluh-nopember-insitute-of-technology/hfedxgboost-paysim/runs/3pfpjkzr
+INFO flwr 2026-06-03 14:51:14,547 | app.py:175 | Starting Flower simulation, config: ServerConfig(num_rounds=10, round_timeout=None)
+2026-06-03 14:51:16,298	INFO worker.py:1621 -- Started a local Ray instance.
+INFO flwr 2026-06-03 14:51:16,927 | app.py:210 | Flower VCE: Ray initialized with resources: {'node:172.24.108.56': 1.0, 'node:__internal_head__': 1.0, 'CPU': 20.0, 'memory': 3958849536.0, 'object_store_memory': 1979424768.0}
+INFO flwr 2026-06-03 14:51:16,927 | app.py:224 | Flower VCE: Resources for each Virtual Client: {'num_cpus': 1, 'num_gpus': 0}
+INFO flwr 2026-06-03 14:51:16,939 | app.py:270 | Flower VCE: Creating VirtualClientEngineActorPool with 20 actors
+INFO flwr 2026-06-03 14:51:16,939 | server.py:89 | Initializing global parameters
+INFO flwr 2026-06-03 14:51:16,940 | server.py:272 | Using initial parameters provided by strategy
+INFO flwr 2026-06-03 14:51:16,940 | server.py:91 | Evaluating initial parameters
+INFO flwr 2026-06-03 14:51:16,940 | server.py:104 | FL starting
+DEBUG flwr 2026-06-03 14:51:16,940 | server.py:222 | fit_round 1: strategy sampled 5 clients (out of 5)
+[2m[33m(raylet)[0m /home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/ray/_private/parameter.py:4: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools<81.
+[2m[33m(raylet)[0m   import pkg_resources
+[2m[33m(raylet)[0m /home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/ray/_private/parameter.py:4: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools<81.
+[2m[33m(raylet)[0m   import pkg_resources
+[2m[33m(raylet)[0m /home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/ray/_private/parameter.py:4: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools<81.
+[2m[33m(raylet)[0m   import pkg_resources
+[2m[33m(raylet)[0m /home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/ray/_private/parameter.py:4: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools<81.
+[2m[33m(raylet)[0m   import pkg_resources
+[2m[33m(raylet)[0m /home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/ray/_private/parameter.py:4: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools<81.
+[2m[33m(raylet)[0m   import pkg_resources
+[2m[33m(raylet)[0m /home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/ray/_private/parameter.py:4: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools<81.
+[2m[33m(raylet)[0m   import pkg_resources
+[2m[33m(raylet)[0m /home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/ray/_private/parameter.py:4: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools<81.
+[2m[33m(raylet)[0m   import pkg_resources
+[2m[33m(raylet)[0m /home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/ray/_private/parameter.py:4: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools<81.
+[2m[33m(raylet)[0m   import pkg_resources
+[2m[33m(raylet)[0m /home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/ray/_private/parameter.py:4: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools<81.
+[2m[33m(raylet)[0m   import pkg_resources
+[2m[33m(raylet)[0m /home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/ray/_private/parameter.py:4: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools<81.
+[2m[33m(raylet)[0m   import pkg_resources
+[2m[33m(raylet)[0m /home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/ray/_private/parameter.py:4: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools<81.
+[2m[33m(raylet)[0m   import pkg_resources
+[2m[33m(raylet)[0m /home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/ray/_private/parameter.py:4: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools<81.
+[2m[33m(raylet)[0m   import pkg_resources
+[2m[33m(raylet)[0m /home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/ray/_private/parameter.py:4: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools<81.
+[2m[33m(raylet)[0m   import pkg_resources
+[2m[33m(raylet)[0m /home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/ray/_private/parameter.py:4: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools<81.
+[2m[33m(raylet)[0m   import pkg_resources
+[2m[33m(raylet)[0m /home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/ray/_private/parameter.py:4: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools<81.
+[2m[33m(raylet)[0m   import pkg_resources
+[2m[33m(raylet)[0m /home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/ray/_private/parameter.py:4: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools<81.
+[2m[33m(raylet)[0m   import pkg_resources
+[2m[33m(raylet)[0m /home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/ray/_private/parameter.py:4: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools<81.
+[2m[33m(raylet)[0m   import pkg_resources
+[2m[33m(raylet)[0m /home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/ray/_private/parameter.py:4: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools<81.
+[2m[33m(raylet)[0m   import pkg_resources
+[2m[33m(raylet)[0m /home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/ray/_private/parameter.py:4: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools<81.
+[2m[33m(raylet)[0m   import pkg_resources
+[2m[33m(raylet)[0m /home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/ray/_private/parameter.py:4: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools<81.
+[2m[33m(raylet)[0m   import pkg_resources
+[2m[33m(raylet)[0m /home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/ray/_private/parameter.py:4: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools<81.
+[2m[33m(raylet)[0m   import pkg_resources
+[2m[33m(raylet)[0m /home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/ray/_private/parameter.py:4: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools<81.
+[2m[33m(raylet)[0m   import pkg_resources
+ERROR flwr 2026-06-03 14:51:22,198 | ray_client_proxy.py:147 | Traceback (most recent call last):
+  File "/home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/flwr/simulation/ray_transport/ray_client_proxy.py", line 140, in _submit_job
+    res = self.actor_pool.get_client_result(self.cid, timeout)
+  File "/home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/flwr/simulation/ray_transport/ray_actor.py", line 402, in get_client_result
+    return self._fetch_future_result(cid)
+  File "/home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/flwr/simulation/ray_transport/ray_actor.py", line 288, in _fetch_future_result
+    res_cid, res = ray.get(future)  # type: (str, ClientRes)
+  File "/home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/ray/_private/auto_init_hook.py", line 24, in auto_init_wrapper
+    return fn(*args, **kwargs)
+  File "/home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/ray/_private/client_mode_hook.py", line 103, in wrapper
+    return func(*args, **kwargs)
+  File "/home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/ray/_private/worker.py", line 2526, in get
+    raise value
+ray.exceptions.OutOfMemoryError: Task was killed due to the node running low on memory.
+Memory on the node (IP: 172.24.108.56, ID: df4b44ae2678b4f48702f56bc522108076c1eda25fcb4586f01bdc84) where the task (actor ID: 98ac71a7dee61995f4ca0b4001000000, name=DefaultActor.__init__, pid=3645332, memory used=0.38GB) was running was 14.79GB / 15.49GB (0.954823), which exceeds the memory usage threshold of 0.95. Ray killed this worker (ID: 1936cf16e623e476577ebd8f1cdfdfd568e370ad3da5158c0fe34d61) because it was the most recently scheduled task; to see more information about memory usage on this node, use `ray logs raylet.out -ip 172.24.108.56`. To see the logs of the worker, use `ray logs worker-1936cf16e623e476577ebd8f1cdfdfd568e370ad3da5158c0fe34d61*out -ip 172.24.108.56. Top 10 memory users:
+PID	MEM(GB)	COMMAND
+3641041	1.90	python -m models.gbm_bestmodel.run --scheme iid --num_rounds 10 --num_clients 5 --oversampling smote...
+3500030	0.40	/home/justin/.vscode-server/cli/servers/Stable-8761a5560cfd65fdd19ce7e2bd18dab5c0a4d84e/server/node ...
+3645335	0.39	ray::DefaultActor.run
+3645336	0.38	ray::DefaultActor.run
+3645332	0.38	ray::DefaultActor.run
+3645331	0.31	ray::DefaultActor.run
+3645330	0.29	ray::DefaultActor.run
+3639236	0.18	claude
+3644330	0.09	/home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/ray/core/src/ray/gcs/gcs_serve...
+3644783	0.08	/home/justin/miniconda3/envs/fraud-fl-TA/bin/python -u /home/justin/miniconda3/envs/fraud-fl-TA/lib/...
+Refer to the documentation on how to address the out of memory issue: https://docs.ray.io/en/latest/ray-core/scheduling/ray-oom-prevention.html. Consider provisioning more memory on this node or reducing task parallelism by requesting more CPUs per task. Set max_restarts and max_task_retries to enable retry when the task crashes due to OOM. To adjust the kill threshold, set the environment variable `RAY_memory_usage_threshold` when starting Ray. To disable worker killing, set the environment variable `RAY_memory_monitor_refresh_ms` to zero.
+
+ERROR flwr 2026-06-03 14:51:22,199 | ray_client_proxy.py:148 | Task was killed due to the node running low on memory.
+Memory on the node (IP: 172.24.108.56, ID: df4b44ae2678b4f48702f56bc522108076c1eda25fcb4586f01bdc84) where the task (actor ID: 98ac71a7dee61995f4ca0b4001000000, name=DefaultActor.__init__, pid=3645332, memory used=0.38GB) was running was 14.79GB / 15.49GB (0.954823), which exceeds the memory usage threshold of 0.95. Ray killed this worker (ID: 1936cf16e623e476577ebd8f1cdfdfd568e370ad3da5158c0fe34d61) because it was the most recently scheduled task; to see more information about memory usage on this node, use `ray logs raylet.out -ip 172.24.108.56`. To see the logs of the worker, use `ray logs worker-1936cf16e623e476577ebd8f1cdfdfd568e370ad3da5158c0fe34d61*out -ip 172.24.108.56. Top 10 memory users:
+PID	MEM(GB)	COMMAND
+3641041	1.90	python -m models.gbm_bestmodel.run --scheme iid --num_rounds 10 --num_clients 5 --oversampling smote...
+3500030	0.40	/home/justin/.vscode-server/cli/servers/Stable-8761a5560cfd65fdd19ce7e2bd18dab5c0a4d84e/server/node ...
+3645335	0.39	ray::DefaultActor.run
+3645336	0.38	ray::DefaultActor.run
+3645332	0.38	ray::DefaultActor.run
+3645331	0.31	ray::DefaultActor.run
+3645330	0.29	ray::DefaultActor.run
+3639236	0.18	claude
+3644330	0.09	/home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/ray/core/src/ray/gcs/gcs_serve...
+3644783	0.08	/home/justin/miniconda3/envs/fraud-fl-TA/bin/python -u /home/justin/miniconda3/envs/fraud-fl-TA/lib/...
+Refer to the documentation on how to address the out of memory issue: https://docs.ray.io/en/latest/ray-core/scheduling/ray-oom-prevention.html. Consider provisioning more memory on this node or reducing task parallelism by requesting more CPUs per task. Set max_restarts and max_task_retries to enable retry when the task crashes due to OOM. To adjust the kill threshold, set the environment variable `RAY_memory_usage_threshold` when starting Ray. To disable worker killing, set the environment variable `RAY_memory_monitor_refresh_ms` to zero.
+DEBUG flwr 2026-06-03 14:51:39,463 | server.py:236 | fit_round 1 received 4 results and 1 failures
+INFO flwr 2026-06-03 14:51:42,962 | server.py:171 | evaluate_round 1: no clients selected, cancel
+DEBUG flwr 2026-06-03 14:51:42,963 | server.py:222 | fit_round 2: strategy sampled 5 clients (out of 5)
+ERROR flwr 2026-06-03 14:51:45,410 | ray_client_proxy.py:147 | Traceback (most recent call last):
+  File "/home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/flwr/simulation/ray_transport/ray_client_proxy.py", line 140, in _submit_job
+    res = self.actor_pool.get_client_result(self.cid, timeout)
+  File "/home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/flwr/simulation/ray_transport/ray_actor.py", line 402, in get_client_result
+    return self._fetch_future_result(cid)
+  File "/home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/flwr/simulation/ray_transport/ray_actor.py", line 288, in _fetch_future_result
+    res_cid, res = ray.get(future)  # type: (str, ClientRes)
+  File "/home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/ray/_private/auto_init_hook.py", line 24, in auto_init_wrapper
+    return fn(*args, **kwargs)
+  File "/home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/ray/_private/client_mode_hook.py", line 103, in wrapper
+    return func(*args, **kwargs)
+  File "/home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/ray/_private/worker.py", line 2526, in get
+    raise value
+ray.exceptions.OutOfMemoryError: Task was killed due to the node running low on memory.
+Memory on the node (IP: 172.24.108.56, ID: df4b44ae2678b4f48702f56bc522108076c1eda25fcb4586f01bdc84) where the task (actor ID: 98ac71a7dee61995f4ca0b4001000000, name=DefaultActor.__init__, pid=3645332, memory used=0.38GB) was running was 14.79GB / 15.49GB (0.954823), which exceeds the memory usage threshold of 0.95. Ray killed this worker (ID: 1936cf16e623e476577ebd8f1cdfdfd568e370ad3da5158c0fe34d61) because it was the most recently scheduled task; to see more information about memory usage on this node, use `ray logs raylet.out -ip 172.24.108.56`. To see the logs of the worker, use `ray logs worker-1936cf16e623e476577ebd8f1cdfdfd568e370ad3da5158c0fe34d61*out -ip 172.24.108.56. Top 10 memory users:
+PID	MEM(GB)	COMMAND
+3641041	1.90	python -m models.gbm_bestmodel.run --scheme iid --num_rounds 10 --num_clients 5 --oversampling smote...
+3500030	0.40	/home/justin/.vscode-server/cli/servers/Stable-8761a5560cfd65fdd19ce7e2bd18dab5c0a4d84e/server/node ...
+3645335	0.39	ray::DefaultActor.run
+3645336	0.38	ray::DefaultActor.run
+3645332	0.38	ray::DefaultActor.run
+3645331	0.31	ray::DefaultActor.run
+3645330	0.29	ray::DefaultActor.run
+3639236	0.18	claude
+3644330	0.09	/home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/ray/core/src/ray/gcs/gcs_serve...
+3644783	0.08	/home/justin/miniconda3/envs/fraud-fl-TA/bin/python -u /home/justin/miniconda3/envs/fraud-fl-TA/lib/...
+Refer to the documentation on how to address the out of memory issue: https://docs.ray.io/en/latest/ray-core/scheduling/ray-oom-prevention.html. Consider provisioning more memory on this node or reducing task parallelism by requesting more CPUs per task. Set max_restarts and max_task_retries to enable retry when the task crashes due to OOM. To adjust the kill threshold, set the environment variable `RAY_memory_usage_threshold` when starting Ray. To disable worker killing, set the environment variable `RAY_memory_monitor_refresh_ms` to zero.
+
+ERROR flwr 2026-06-03 14:51:45,411 | ray_client_proxy.py:148 | Task was killed due to the node running low on memory.
+Memory on the node (IP: 172.24.108.56, ID: df4b44ae2678b4f48702f56bc522108076c1eda25fcb4586f01bdc84) where the task (actor ID: 98ac71a7dee61995f4ca0b4001000000, name=DefaultActor.__init__, pid=3645332, memory used=0.38GB) was running was 14.79GB / 15.49GB (0.954823), which exceeds the memory usage threshold of 0.95. Ray killed this worker (ID: 1936cf16e623e476577ebd8f1cdfdfd568e370ad3da5158c0fe34d61) because it was the most recently scheduled task; to see more information about memory usage on this node, use `ray logs raylet.out -ip 172.24.108.56`. To see the logs of the worker, use `ray logs worker-1936cf16e623e476577ebd8f1cdfdfd568e370ad3da5158c0fe34d61*out -ip 172.24.108.56. Top 10 memory users:
+PID	MEM(GB)	COMMAND
+3641041	1.90	python -m models.gbm_bestmodel.run --scheme iid --num_rounds 10 --num_clients 5 --oversampling smote...
+3500030	0.40	/home/justin/.vscode-server/cli/servers/Stable-8761a5560cfd65fdd19ce7e2bd18dab5c0a4d84e/server/node ...
+3645335	0.39	ray::DefaultActor.run
+3645336	0.38	ray::DefaultActor.run
+3645332	0.38	ray::DefaultActor.run
+3645331	0.31	ray::DefaultActor.run
+3645330	0.29	ray::DefaultActor.run
+3639236	0.18	claude
+3644330	0.09	/home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/ray/core/src/ray/gcs/gcs_serve...
+3644783	0.08	/home/justin/miniconda3/envs/fraud-fl-TA/bin/python -u /home/justin/miniconda3/envs/fraud-fl-TA/lib/...
+Refer to the documentation on how to address the out of memory issue: https://docs.ray.io/en/latest/ray-core/scheduling/ray-oom-prevention.html. Consider provisioning more memory on this node or reducing task parallelism by requesting more CPUs per task. Set max_restarts and max_task_retries to enable retry when the task crashes due to OOM. To adjust the kill threshold, set the environment variable `RAY_memory_usage_threshold` when starting Ray. To disable worker killing, set the environment variable `RAY_memory_monitor_refresh_ms` to zero.
+DEBUG flwr 2026-06-03 14:52:02,654 | server.py:236 | fit_round 2 received 4 results and 1 failures
+INFO flwr 2026-06-03 14:52:05,995 | server.py:171 | evaluate_round 2: no clients selected, cancel
+DEBUG flwr 2026-06-03 14:52:05,996 | server.py:222 | fit_round 3: strategy sampled 5 clients (out of 5)
+ERROR flwr 2026-06-03 14:52:08,579 | ray_client_proxy.py:147 | Traceback (most recent call last):
+  File "/home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/flwr/simulation/ray_transport/ray_client_proxy.py", line 140, in _submit_job
+    res = self.actor_pool.get_client_result(self.cid, timeout)
+  File "/home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/flwr/simulation/ray_transport/ray_actor.py", line 402, in get_client_result
+    return self._fetch_future_result(cid)
+  File "/home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/flwr/simulation/ray_transport/ray_actor.py", line 288, in _fetch_future_result
+    res_cid, res = ray.get(future)  # type: (str, ClientRes)
+  File "/home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/ray/_private/auto_init_hook.py", line 24, in auto_init_wrapper
+    return fn(*args, **kwargs)
+  File "/home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/ray/_private/client_mode_hook.py", line 103, in wrapper
+    return func(*args, **kwargs)
+  File "/home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/ray/_private/worker.py", line 2526, in get
+    raise value
+ray.exceptions.OutOfMemoryError: Task was killed due to the node running low on memory.
+Memory on the node (IP: 172.24.108.56, ID: df4b44ae2678b4f48702f56bc522108076c1eda25fcb4586f01bdc84) where the task (actor ID: 98ac71a7dee61995f4ca0b4001000000, name=DefaultActor.__init__, pid=3645332, memory used=0.38GB) was running was 14.79GB / 15.49GB (0.954823), which exceeds the memory usage threshold of 0.95. Ray killed this worker (ID: 1936cf16e623e476577ebd8f1cdfdfd568e370ad3da5158c0fe34d61) because it was the most recently scheduled task; to see more information about memory usage on this node, use `ray logs raylet.out -ip 172.24.108.56`. To see the logs of the worker, use `ray logs worker-1936cf16e623e476577ebd8f1cdfdfd568e370ad3da5158c0fe34d61*out -ip 172.24.108.56. Top 10 memory users:
+PID	MEM(GB)	COMMAND
+3641041	1.90	python -m models.gbm_bestmodel.run --scheme iid --num_rounds 10 --num_clients 5 --oversampling smote...
+3500030	0.40	/home/justin/.vscode-server/cli/servers/Stable-8761a5560cfd65fdd19ce7e2bd18dab5c0a4d84e/server/node ...
+3645335	0.39	ray::DefaultActor.run
+3645336	0.38	ray::DefaultActor.run
+3645332	0.38	ray::DefaultActor.run
+3645331	0.31	ray::DefaultActor.run
+3645330	0.29	ray::DefaultActor.run
+3639236	0.18	claude
+3644330	0.09	/home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/ray/core/src/ray/gcs/gcs_serve...
+3644783	0.08	/home/justin/miniconda3/envs/fraud-fl-TA/bin/python -u /home/justin/miniconda3/envs/fraud-fl-TA/lib/...
+Refer to the documentation on how to address the out of memory issue: https://docs.ray.io/en/latest/ray-core/scheduling/ray-oom-prevention.html. Consider provisioning more memory on this node or reducing task parallelism by requesting more CPUs per task. Set max_restarts and max_task_retries to enable retry when the task crashes due to OOM. To adjust the kill threshold, set the environment variable `RAY_memory_usage_threshold` when starting Ray. To disable worker killing, set the environment variable `RAY_memory_monitor_refresh_ms` to zero.
+
+ERROR flwr 2026-06-03 14:52:08,580 | ray_client_proxy.py:148 | Task was killed due to the node running low on memory.
+Memory on the node (IP: 172.24.108.56, ID: df4b44ae2678b4f48702f56bc522108076c1eda25fcb4586f01bdc84) where the task (actor ID: 98ac71a7dee61995f4ca0b4001000000, name=DefaultActor.__init__, pid=3645332, memory used=0.38GB) was running was 14.79GB / 15.49GB (0.954823), which exceeds the memory usage threshold of 0.95. Ray killed this worker (ID: 1936cf16e623e476577ebd8f1cdfdfd568e370ad3da5158c0fe34d61) because it was the most recently scheduled task; to see more information about memory usage on this node, use `ray logs raylet.out -ip 172.24.108.56`. To see the logs of the worker, use `ray logs worker-1936cf16e623e476577ebd8f1cdfdfd568e370ad3da5158c0fe34d61*out -ip 172.24.108.56. Top 10 memory users:
+PID	MEM(GB)	COMMAND
+3641041	1.90	python -m models.gbm_bestmodel.run --scheme iid --num_rounds 10 --num_clients 5 --oversampling smote...
+3500030	0.40	/home/justin/.vscode-server/cli/servers/Stable-8761a5560cfd65fdd19ce7e2bd18dab5c0a4d84e/server/node ...
+3645335	0.39	ray::DefaultActor.run
+3645336	0.38	ray::DefaultActor.run
+3645332	0.38	ray::DefaultActor.run
+3645331	0.31	ray::DefaultActor.run
+3645330	0.29	ray::DefaultActor.run
+3639236	0.18	claude
+3644330	0.09	/home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/ray/core/src/ray/gcs/gcs_serve...
+3644783	0.08	/home/justin/miniconda3/envs/fraud-fl-TA/bin/python -u /home/justin/miniconda3/envs/fraud-fl-TA/lib/...
+Refer to the documentation on how to address the out of memory issue: https://docs.ray.io/en/latest/ray-core/scheduling/ray-oom-prevention.html. Consider provisioning more memory on this node or reducing task parallelism by requesting more CPUs per task. Set max_restarts and max_task_retries to enable retry when the task crashes due to OOM. To adjust the kill threshold, set the environment variable `RAY_memory_usage_threshold` when starting Ray. To disable worker killing, set the environment variable `RAY_memory_monitor_refresh_ms` to zero.
+ERROR flwr 2026-06-03 14:52:08,633 | ray_client_proxy.py:147 | Traceback (most recent call last):
+  File "/home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/flwr/simulation/ray_transport/ray_client_proxy.py", line 140, in _submit_job
+    res = self.actor_pool.get_client_result(self.cid, timeout)
+  File "/home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/flwr/simulation/ray_transport/ray_actor.py", line 402, in get_client_result
+    return self._fetch_future_result(cid)
+  File "/home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/flwr/simulation/ray_transport/ray_actor.py", line 288, in _fetch_future_result
+    res_cid, res = ray.get(future)  # type: (str, ClientRes)
+  File "/home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/ray/_private/auto_init_hook.py", line 24, in auto_init_wrapper
+    return fn(*args, **kwargs)
+  File "/home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/ray/_private/client_mode_hook.py", line 103, in wrapper
+    return func(*args, **kwargs)
+  File "/home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/ray/_private/worker.py", line 2526, in get
+    raise value
+ray.exceptions.OutOfMemoryError: Task was killed due to the node running low on memory.
+Memory on the node (IP: 172.24.108.56, ID: df4b44ae2678b4f48702f56bc522108076c1eda25fcb4586f01bdc84) where the task (actor ID: d1b26e9af1b9d566fbc169d901000000, name=DefaultActor.__init__, pid=3645330, memory used=0.28GB) was running was 14.85GB / 15.49GB (0.958819), which exceeds the memory usage threshold of 0.95. Ray killed this worker (ID: d21751cec7519bca97b0e717bb25381f28a158a3a041664874ad45cf) because it was the most recently scheduled task; to see more information about memory usage on this node, use `ray logs raylet.out -ip 172.24.108.56`. To see the logs of the worker, use `ray logs worker-d21751cec7519bca97b0e717bb25381f28a158a3a041664874ad45cf*out -ip 172.24.108.56. Top 10 memory users:
+PID	MEM(GB)	COMMAND
+3641041	1.78	python -m models.gbm_bestmodel.run --scheme iid --num_rounds 10 --num_clients 5 --oversampling smote...
+3645336	0.49	ray::DefaultActor.run
+3646018	0.41	ray::IDLE_SpillWorker
+3645335	0.40	ray::DefaultActor.run
+3645331	0.39	ray::DefaultActor.run
+3500030	0.37	/home/justin/.vscode-server/cli/servers/Stable-8761a5560cfd65fdd19ce7e2bd18dab5c0a4d84e/server/node ...
+3645330	0.28	ray::DefaultActor.run
+3652087	0.21	claude
+3644783	0.06	/home/justin/miniconda3/envs/fraud-fl-TA/bin/python -u /home/justin/miniconda3/envs/fraud-fl-TA/lib/...
+3508245	0.06	/home/justin/.vscode-server/cli/servers/Stable-8761a5560cfd65fdd19ce7e2bd18dab5c0a4d84e/server/node ...
+Refer to the documentation on how to address the out of memory issue: https://docs.ray.io/en/latest/ray-core/scheduling/ray-oom-prevention.html. Consider provisioning more memory on this node or reducing task parallelism by requesting more CPUs per task. Set max_restarts and max_task_retries to enable retry when the task crashes due to OOM. To adjust the kill threshold, set the environment variable `RAY_memory_usage_threshold` when starting Ray. To disable worker killing, set the environment variable `RAY_memory_monitor_refresh_ms` to zero.
+
+ERROR flwr 2026-06-03 14:52:08,633 | ray_client_proxy.py:148 | Task was killed due to the node running low on memory.
+Memory on the node (IP: 172.24.108.56, ID: df4b44ae2678b4f48702f56bc522108076c1eda25fcb4586f01bdc84) where the task (actor ID: d1b26e9af1b9d566fbc169d901000000, name=DefaultActor.__init__, pid=3645330, memory used=0.28GB) was running was 14.85GB / 15.49GB (0.958819), which exceeds the memory usage threshold of 0.95. Ray killed this worker (ID: d21751cec7519bca97b0e717bb25381f28a158a3a041664874ad45cf) because it was the most recently scheduled task; to see more information about memory usage on this node, use `ray logs raylet.out -ip 172.24.108.56`. To see the logs of the worker, use `ray logs worker-d21751cec7519bca97b0e717bb25381f28a158a3a041664874ad45cf*out -ip 172.24.108.56. Top 10 memory users:
+PID	MEM(GB)	COMMAND
+3641041	1.78	python -m models.gbm_bestmodel.run --scheme iid --num_rounds 10 --num_clients 5 --oversampling smote...
+3645336	0.49	ray::DefaultActor.run
+3646018	0.41	ray::IDLE_SpillWorker
+3645335	0.40	ray::DefaultActor.run
+3645331	0.39	ray::DefaultActor.run
+3500030	0.37	/home/justin/.vscode-server/cli/servers/Stable-8761a5560cfd65fdd19ce7e2bd18dab5c0a4d84e/server/node ...
+3645330	0.28	ray::DefaultActor.run
+3652087	0.21	claude
+3644783	0.06	/home/justin/miniconda3/envs/fraud-fl-TA/bin/python -u /home/justin/miniconda3/envs/fraud-fl-TA/lib/...
+3508245	0.06	/home/justin/.vscode-server/cli/servers/Stable-8761a5560cfd65fdd19ce7e2bd18dab5c0a4d84e/server/node ...
+Refer to the documentation on how to address the out of memory issue: https://docs.ray.io/en/latest/ray-core/scheduling/ray-oom-prevention.html. Consider provisioning more memory on this node or reducing task parallelism by requesting more CPUs per task. Set max_restarts and max_task_retries to enable retry when the task crashes due to OOM. To adjust the kill threshold, set the environment variable `RAY_memory_usage_threshold` when starting Ray. To disable worker killing, set the environment variable `RAY_memory_monitor_refresh_ms` to zero.
+[2m[33m(raylet)[0m [2026-06-03 14:52:16,199 E 3644733 3644733] (raylet) node_manager.cc:3084: 3 Workers (tasks / actors) killed due to memory pressure (OOM), 0 Workers crashed due to other reasons at node (ID: df4b44ae2678b4f48702f56bc522108076c1eda25fcb4586f01bdc84, IP: 172.24.108.56) over the last time period. To see more information about the Workers killed on this node, use `ray logs raylet.out -ip 172.24.108.56`
+[2m[33m(raylet)[0m 
+[2m[33m(raylet)[0m Refer to the documentation on how to address the out of memory issue: https://docs.ray.io/en/latest/ray-core/scheduling/ray-oom-prevention.html. Consider provisioning more memory on this node or reducing task parallelism by requesting more CPUs per task. To adjust the kill threshold, set the environment variable `RAY_memory_usage_threshold` when starting Ray. To disable worker killing, set the environment variable `RAY_memory_monitor_refresh_ms` to zero.
+DEBUG flwr 2026-06-03 14:52:22,977 | server.py:236 | fit_round 3 received 3 results and 2 failures
+INFO flwr 2026-06-03 14:52:25,624 | server.py:171 | evaluate_round 3: no clients selected, cancel
+DEBUG flwr 2026-06-03 14:52:25,624 | server.py:222 | fit_round 4: strategy sampled 5 clients (out of 5)
+ERROR flwr 2026-06-03 14:52:28,110 | ray_client_proxy.py:147 | Traceback (most recent call last):
+  File "/home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/flwr/simulation/ray_transport/ray_client_proxy.py", line 140, in _submit_job
+    res = self.actor_pool.get_client_result(self.cid, timeout)
+  File "/home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/flwr/simulation/ray_transport/ray_actor.py", line 402, in get_client_result
+    return self._fetch_future_result(cid)
+  File "/home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/flwr/simulation/ray_transport/ray_actor.py", line 288, in _fetch_future_result
+    res_cid, res = ray.get(future)  # type: (str, ClientRes)
+  File "/home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/ray/_private/auto_init_hook.py", line 24, in auto_init_wrapper
+    return fn(*args, **kwargs)
+  File "/home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/ray/_private/client_mode_hook.py", line 103, in wrapper
+    return func(*args, **kwargs)
+  File "/home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/ray/_private/worker.py", line 2526, in get
+    raise value
+ray.exceptions.OutOfMemoryError: Task was killed due to the node running low on memory.
+Memory on the node (IP: 172.24.108.56, ID: df4b44ae2678b4f48702f56bc522108076c1eda25fcb4586f01bdc84) where the task (actor ID: d1b26e9af1b9d566fbc169d901000000, name=DefaultActor.__init__, pid=3645330, memory used=0.28GB) was running was 14.85GB / 15.49GB (0.958819), which exceeds the memory usage threshold of 0.95. Ray killed this worker (ID: d21751cec7519bca97b0e717bb25381f28a158a3a041664874ad45cf) because it was the most recently scheduled task; to see more information about memory usage on this node, use `ray logs raylet.out -ip 172.24.108.56`. To see the logs of the worker, use `ray logs worker-d21751cec7519bca97b0e717bb25381f28a158a3a041664874ad45cf*out -ip 172.24.108.56. Top 10 memory users:
+PID	MEM(GB)	COMMAND
+3641041	1.78	python -m models.gbm_bestmodel.run --scheme iid --num_rounds 10 --num_clients 5 --oversampling smote...
+3645336	0.49	ray::DefaultActor.run
+3646018	0.41	ray::IDLE_SpillWorker
+3645335	0.40	ray::DefaultActor.run
+3645331	0.39	ray::DefaultActor.run
+3500030	0.37	/home/justin/.vscode-server/cli/servers/Stable-8761a5560cfd65fdd19ce7e2bd18dab5c0a4d84e/server/node ...
+3645330	0.28	ray::DefaultActor.run
+3652087	0.21	claude
+3644783	0.06	/home/justin/miniconda3/envs/fraud-fl-TA/bin/python -u /home/justin/miniconda3/envs/fraud-fl-TA/lib/...
+3508245	0.06	/home/justin/.vscode-server/cli/servers/Stable-8761a5560cfd65fdd19ce7e2bd18dab5c0a4d84e/server/node ...
+Refer to the documentation on how to address the out of memory issue: https://docs.ray.io/en/latest/ray-core/scheduling/ray-oom-prevention.html. Consider provisioning more memory on this node or reducing task parallelism by requesting more CPUs per task. Set max_restarts and max_task_retries to enable retry when the task crashes due to OOM. To adjust the kill threshold, set the environment variable `RAY_memory_usage_threshold` when starting Ray. To disable worker killing, set the environment variable `RAY_memory_monitor_refresh_ms` to zero.
+
+ERROR flwr 2026-06-03 14:52:28,110 | ray_client_proxy.py:147 | Traceback (most recent call last):
+  File "/home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/flwr/simulation/ray_transport/ray_client_proxy.py", line 140, in _submit_job
+    res = self.actor_pool.get_client_result(self.cid, timeout)
+  File "/home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/flwr/simulation/ray_transport/ray_actor.py", line 402, in get_client_result
+    return self._fetch_future_result(cid)
+  File "/home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/flwr/simulation/ray_transport/ray_actor.py", line 288, in _fetch_future_result
+    res_cid, res = ray.get(future)  # type: (str, ClientRes)
+  File "/home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/ray/_private/auto_init_hook.py", line 24, in auto_init_wrapper
+    return fn(*args, **kwargs)
+  File "/home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/ray/_private/client_mode_hook.py", line 103, in wrapper
+    return func(*args, **kwargs)
+  File "/home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/ray/_private/worker.py", line 2526, in get
+    raise value
+ray.exceptions.OutOfMemoryError: Task was killed due to the node running low on memory.
+Memory on the node (IP: 172.24.108.56, ID: df4b44ae2678b4f48702f56bc522108076c1eda25fcb4586f01bdc84) where the task (actor ID: 98ac71a7dee61995f4ca0b4001000000, name=DefaultActor.__init__, pid=3645332, memory used=0.38GB) was running was 14.79GB / 15.49GB (0.954823), which exceeds the memory usage threshold of 0.95. Ray killed this worker (ID: 1936cf16e623e476577ebd8f1cdfdfd568e370ad3da5158c0fe34d61) because it was the most recently scheduled task; to see more information about memory usage on this node, use `ray logs raylet.out -ip 172.24.108.56`. To see the logs of the worker, use `ray logs worker-1936cf16e623e476577ebd8f1cdfdfd568e370ad3da5158c0fe34d61*out -ip 172.24.108.56. Top 10 memory users:
+PID	MEM(GB)	COMMAND
+3641041	1.90	python -m models.gbm_bestmodel.run --scheme iid --num_rounds 10 --num_clients 5 --oversampling smote...
+3500030	0.40	/home/justin/.vscode-server/cli/servers/Stable-8761a5560cfd65fdd19ce7e2bd18dab5c0a4d84e/server/node ...
+3645335	0.39	ray::DefaultActor.run
+3645336	0.38	ray::DefaultActor.run
+3645332	0.38	ray::DefaultActor.run
+3645331	0.31	ray::DefaultActor.run
+3645330	0.29	ray::DefaultActor.run
+3639236	0.18	claude
+3644330	0.09	/home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/ray/core/src/ray/gcs/gcs_serve...
+3644783	0.08	/home/justin/miniconda3/envs/fraud-fl-TA/bin/python -u /home/justin/miniconda3/envs/fraud-fl-TA/lib/...
+Refer to the documentation on how to address the out of memory issue: https://docs.ray.io/en/latest/ray-core/scheduling/ray-oom-prevention.html. Consider provisioning more memory on this node or reducing task parallelism by requesting more CPUs per task. Set max_restarts and max_task_retries to enable retry when the task crashes due to OOM. To adjust the kill threshold, set the environment variable `RAY_memory_usage_threshold` when starting Ray. To disable worker killing, set the environment variable `RAY_memory_monitor_refresh_ms` to zero.
+
+ERROR flwr 2026-06-03 14:52:28,111 | ray_client_proxy.py:148 | Task was killed due to the node running low on memory.
+Memory on the node (IP: 172.24.108.56, ID: df4b44ae2678b4f48702f56bc522108076c1eda25fcb4586f01bdc84) where the task (actor ID: d1b26e9af1b9d566fbc169d901000000, name=DefaultActor.__init__, pid=3645330, memory used=0.28GB) was running was 14.85GB / 15.49GB (0.958819), which exceeds the memory usage threshold of 0.95. Ray killed this worker (ID: d21751cec7519bca97b0e717bb25381f28a158a3a041664874ad45cf) because it was the most recently scheduled task; to see more information about memory usage on this node, use `ray logs raylet.out -ip 172.24.108.56`. To see the logs of the worker, use `ray logs worker-d21751cec7519bca97b0e717bb25381f28a158a3a041664874ad45cf*out -ip 172.24.108.56. Top 10 memory users:
+PID	MEM(GB)	COMMAND
+3641041	1.78	python -m models.gbm_bestmodel.run --scheme iid --num_rounds 10 --num_clients 5 --oversampling smote...
+3645336	0.49	ray::DefaultActor.run
+3646018	0.41	ray::IDLE_SpillWorker
+3645335	0.40	ray::DefaultActor.run
+3645331	0.39	ray::DefaultActor.run
+3500030	0.37	/home/justin/.vscode-server/cli/servers/Stable-8761a5560cfd65fdd19ce7e2bd18dab5c0a4d84e/server/node ...
+3645330	0.28	ray::DefaultActor.run
+3652087	0.21	claude
+3644783	0.06	/home/justin/miniconda3/envs/fraud-fl-TA/bin/python -u /home/justin/miniconda3/envs/fraud-fl-TA/lib/...
+3508245	0.06	/home/justin/.vscode-server/cli/servers/Stable-8761a5560cfd65fdd19ce7e2bd18dab5c0a4d84e/server/node ...
+Refer to the documentation on how to address the out of memory issue: https://docs.ray.io/en/latest/ray-core/scheduling/ray-oom-prevention.html. Consider provisioning more memory on this node or reducing task parallelism by requesting more CPUs per task. Set max_restarts and max_task_retries to enable retry when the task crashes due to OOM. To adjust the kill threshold, set the environment variable `RAY_memory_usage_threshold` when starting Ray. To disable worker killing, set the environment variable `RAY_memory_monitor_refresh_ms` to zero.
+ERROR flwr 2026-06-03 14:52:28,111 | ray_client_proxy.py:148 | Task was killed due to the node running low on memory.
+Memory on the node (IP: 172.24.108.56, ID: df4b44ae2678b4f48702f56bc522108076c1eda25fcb4586f01bdc84) where the task (actor ID: 98ac71a7dee61995f4ca0b4001000000, name=DefaultActor.__init__, pid=3645332, memory used=0.38GB) was running was 14.79GB / 15.49GB (0.954823), which exceeds the memory usage threshold of 0.95. Ray killed this worker (ID: 1936cf16e623e476577ebd8f1cdfdfd568e370ad3da5158c0fe34d61) because it was the most recently scheduled task; to see more information about memory usage on this node, use `ray logs raylet.out -ip 172.24.108.56`. To see the logs of the worker, use `ray logs worker-1936cf16e623e476577ebd8f1cdfdfd568e370ad3da5158c0fe34d61*out -ip 172.24.108.56. Top 10 memory users:
+PID	MEM(GB)	COMMAND
+3641041	1.90	python -m models.gbm_bestmodel.run --scheme iid --num_rounds 10 --num_clients 5 --oversampling smote...
+3500030	0.40	/home/justin/.vscode-server/cli/servers/Stable-8761a5560cfd65fdd19ce7e2bd18dab5c0a4d84e/server/node ...
+3645335	0.39	ray::DefaultActor.run
+3645336	0.38	ray::DefaultActor.run
+3645332	0.38	ray::DefaultActor.run
+3645331	0.31	ray::DefaultActor.run
+3645330	0.29	ray::DefaultActor.run
+3639236	0.18	claude
+3644330	0.09	/home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/ray/core/src/ray/gcs/gcs_serve...
+3644783	0.08	/home/justin/miniconda3/envs/fraud-fl-TA/bin/python -u /home/justin/miniconda3/envs/fraud-fl-TA/lib/...
+Refer to the documentation on how to address the out of memory issue: https://docs.ray.io/en/latest/ray-core/scheduling/ray-oom-prevention.html. Consider provisioning more memory on this node or reducing task parallelism by requesting more CPUs per task. Set max_restarts and max_task_retries to enable retry when the task crashes due to OOM. To adjust the kill threshold, set the environment variable `RAY_memory_usage_threshold` when starting Ray. To disable worker killing, set the environment variable `RAY_memory_monitor_refresh_ms` to zero.
+DEBUG flwr 2026-06-03 14:52:42,576 | server.py:236 | fit_round 4 received 3 results and 2 failures
+INFO flwr 2026-06-03 14:52:45,205 | server.py:171 | evaluate_round 4: no clients selected, cancel
+DEBUG flwr 2026-06-03 14:52:45,206 | server.py:222 | fit_round 5: strategy sampled 5 clients (out of 5)
+ERROR flwr 2026-06-03 14:52:47,621 | ray_client_proxy.py:147 | Traceback (most recent call last):
+  File "/home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/flwr/simulation/ray_transport/ray_client_proxy.py", line 140, in _submit_job
+    res = self.actor_pool.get_client_result(self.cid, timeout)
+  File "/home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/flwr/simulation/ray_transport/ray_actor.py", line 402, in get_client_result
+    return self._fetch_future_result(cid)
+  File "/home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/flwr/simulation/ray_transport/ray_actor.py", line 288, in _fetch_future_result
+    res_cid, res = ray.get(future)  # type: (str, ClientRes)
+  File "/home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/ray/_private/auto_init_hook.py", line 24, in auto_init_wrapper
+    return fn(*args, **kwargs)
+  File "/home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/ray/_private/client_mode_hook.py", line 103, in wrapper
+    return func(*args, **kwargs)
+  File "/home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/ray/_private/worker.py", line 2526, in get
+    raise value
+ray.exceptions.OutOfMemoryError: Task was killed due to the node running low on memory.
+Memory on the node (IP: 172.24.108.56, ID: df4b44ae2678b4f48702f56bc522108076c1eda25fcb4586f01bdc84) where the task (actor ID: 98ac71a7dee61995f4ca0b4001000000, name=DefaultActor.__init__, pid=3645332, memory used=0.38GB) was running was 14.79GB / 15.49GB (0.954823), which exceeds the memory usage threshold of 0.95. Ray killed this worker (ID: 1936cf16e623e476577ebd8f1cdfdfd568e370ad3da5158c0fe34d61) because it was the most recently scheduled task; to see more information about memory usage on this node, use `ray logs raylet.out -ip 172.24.108.56`. To see the logs of the worker, use `ray logs worker-1936cf16e623e476577ebd8f1cdfdfd568e370ad3da5158c0fe34d61*out -ip 172.24.108.56. Top 10 memory users:
+PID	MEM(GB)	COMMAND
+3641041	1.90	python -m models.gbm_bestmodel.run --scheme iid --num_rounds 10 --num_clients 5 --oversampling smote...
+3500030	0.40	/home/justin/.vscode-server/cli/servers/Stable-8761a5560cfd65fdd19ce7e2bd18dab5c0a4d84e/server/node ...
+3645335	0.39	ray::DefaultActor.run
+3645336	0.38	ray::DefaultActor.run
+3645332	0.38	ray::DefaultActor.run
+3645331	0.31	ray::DefaultActor.run
+3645330	0.29	ray::DefaultActor.run
+3639236	0.18	claude
+3644330	0.09	/home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/ray/core/src/ray/gcs/gcs_serve...
+3644783	0.08	/home/justin/miniconda3/envs/fraud-fl-TA/bin/python -u /home/justin/miniconda3/envs/fraud-fl-TA/lib/...
+Refer to the documentation on how to address the out of memory issue: https://docs.ray.io/en/latest/ray-core/scheduling/ray-oom-prevention.html. Consider provisioning more memory on this node or reducing task parallelism by requesting more CPUs per task. Set max_restarts and max_task_retries to enable retry when the task crashes due to OOM. To adjust the kill threshold, set the environment variable `RAY_memory_usage_threshold` when starting Ray. To disable worker killing, set the environment variable `RAY_memory_monitor_refresh_ms` to zero.
+
+ERROR flwr 2026-06-03 14:52:47,621 | ray_client_proxy.py:148 | Task was killed due to the node running low on memory.
+Memory on the node (IP: 172.24.108.56, ID: df4b44ae2678b4f48702f56bc522108076c1eda25fcb4586f01bdc84) where the task (actor ID: 98ac71a7dee61995f4ca0b4001000000, name=DefaultActor.__init__, pid=3645332, memory used=0.38GB) was running was 14.79GB / 15.49GB (0.954823), which exceeds the memory usage threshold of 0.95. Ray killed this worker (ID: 1936cf16e623e476577ebd8f1cdfdfd568e370ad3da5158c0fe34d61) because it was the most recently scheduled task; to see more information about memory usage on this node, use `ray logs raylet.out -ip 172.24.108.56`. To see the logs of the worker, use `ray logs worker-1936cf16e623e476577ebd8f1cdfdfd568e370ad3da5158c0fe34d61*out -ip 172.24.108.56. Top 10 memory users:
+PID	MEM(GB)	COMMAND
+3641041	1.90	python -m models.gbm_bestmodel.run --scheme iid --num_rounds 10 --num_clients 5 --oversampling smote...
+3500030	0.40	/home/justin/.vscode-server/cli/servers/Stable-8761a5560cfd65fdd19ce7e2bd18dab5c0a4d84e/server/node ...
+3645335	0.39	ray::DefaultActor.run
+3645336	0.38	ray::DefaultActor.run
+3645332	0.38	ray::DefaultActor.run
+3645331	0.31	ray::DefaultActor.run
+3645330	0.29	ray::DefaultActor.run
+3639236	0.18	claude
+3644330	0.09	/home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/ray/core/src/ray/gcs/gcs_serve...
+3644783	0.08	/home/justin/miniconda3/envs/fraud-fl-TA/bin/python -u /home/justin/miniconda3/envs/fraud-fl-TA/lib/...
+Refer to the documentation on how to address the out of memory issue: https://docs.ray.io/en/latest/ray-core/scheduling/ray-oom-prevention.html. Consider provisioning more memory on this node or reducing task parallelism by requesting more CPUs per task. Set max_restarts and max_task_retries to enable retry when the task crashes due to OOM. To adjust the kill threshold, set the environment variable `RAY_memory_usage_threshold` when starting Ray. To disable worker killing, set the environment variable `RAY_memory_monitor_refresh_ms` to zero.
+ERROR flwr 2026-06-03 14:52:47,622 | ray_client_proxy.py:147 | Traceback (most recent call last):
+  File "/home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/flwr/simulation/ray_transport/ray_client_proxy.py", line 140, in _submit_job
+    res = self.actor_pool.get_client_result(self.cid, timeout)
+  File "/home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/flwr/simulation/ray_transport/ray_actor.py", line 402, in get_client_result
+    return self._fetch_future_result(cid)
+  File "/home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/flwr/simulation/ray_transport/ray_actor.py", line 288, in _fetch_future_result
+    res_cid, res = ray.get(future)  # type: (str, ClientRes)
+  File "/home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/ray/_private/auto_init_hook.py", line 24, in auto_init_wrapper
+    return fn(*args, **kwargs)
+  File "/home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/ray/_private/client_mode_hook.py", line 103, in wrapper
+    return func(*args, **kwargs)
+  File "/home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/ray/_private/worker.py", line 2526, in get
+    raise value
+ray.exceptions.OutOfMemoryError: Task was killed due to the node running low on memory.
+Memory on the node (IP: 172.24.108.56, ID: df4b44ae2678b4f48702f56bc522108076c1eda25fcb4586f01bdc84) where the task (actor ID: d1b26e9af1b9d566fbc169d901000000, name=DefaultActor.__init__, pid=3645330, memory used=0.28GB) was running was 14.85GB / 15.49GB (0.958819), which exceeds the memory usage threshold of 0.95. Ray killed this worker (ID: d21751cec7519bca97b0e717bb25381f28a158a3a041664874ad45cf) because it was the most recently scheduled task; to see more information about memory usage on this node, use `ray logs raylet.out -ip 172.24.108.56`. To see the logs of the worker, use `ray logs worker-d21751cec7519bca97b0e717bb25381f28a158a3a041664874ad45cf*out -ip 172.24.108.56. Top 10 memory users:
+PID	MEM(GB)	COMMAND
+3641041	1.78	python -m models.gbm_bestmodel.run --scheme iid --num_rounds 10 --num_clients 5 --oversampling smote...
+3645336	0.49	ray::DefaultActor.run
+3646018	0.41	ray::IDLE_SpillWorker
+3645335	0.40	ray::DefaultActor.run
+3645331	0.39	ray::DefaultActor.run
+3500030	0.37	/home/justin/.vscode-server/cli/servers/Stable-8761a5560cfd65fdd19ce7e2bd18dab5c0a4d84e/server/node ...
+3645330	0.28	ray::DefaultActor.run
+3652087	0.21	claude
+3644783	0.06	/home/justin/miniconda3/envs/fraud-fl-TA/bin/python -u /home/justin/miniconda3/envs/fraud-fl-TA/lib/...
+3508245	0.06	/home/justin/.vscode-server/cli/servers/Stable-8761a5560cfd65fdd19ce7e2bd18dab5c0a4d84e/server/node ...
+Refer to the documentation on how to address the out of memory issue: https://docs.ray.io/en/latest/ray-core/scheduling/ray-oom-prevention.html. Consider provisioning more memory on this node or reducing task parallelism by requesting more CPUs per task. Set max_restarts and max_task_retries to enable retry when the task crashes due to OOM. To adjust the kill threshold, set the environment variable `RAY_memory_usage_threshold` when starting Ray. To disable worker killing, set the environment variable `RAY_memory_monitor_refresh_ms` to zero.
+
+ERROR flwr 2026-06-03 14:52:47,622 | ray_client_proxy.py:148 | Task was killed due to the node running low on memory.
+Memory on the node (IP: 172.24.108.56, ID: df4b44ae2678b4f48702f56bc522108076c1eda25fcb4586f01bdc84) where the task (actor ID: d1b26e9af1b9d566fbc169d901000000, name=DefaultActor.__init__, pid=3645330, memory used=0.28GB) was running was 14.85GB / 15.49GB (0.958819), which exceeds the memory usage threshold of 0.95. Ray killed this worker (ID: d21751cec7519bca97b0e717bb25381f28a158a3a041664874ad45cf) because it was the most recently scheduled task; to see more information about memory usage on this node, use `ray logs raylet.out -ip 172.24.108.56`. To see the logs of the worker, use `ray logs worker-d21751cec7519bca97b0e717bb25381f28a158a3a041664874ad45cf*out -ip 172.24.108.56. Top 10 memory users:
+PID	MEM(GB)	COMMAND
+3641041	1.78	python -m models.gbm_bestmodel.run --scheme iid --num_rounds 10 --num_clients 5 --oversampling smote...
+3645336	0.49	ray::DefaultActor.run
+3646018	0.41	ray::IDLE_SpillWorker
+3645335	0.40	ray::DefaultActor.run
+3645331	0.39	ray::DefaultActor.run
+3500030	0.37	/home/justin/.vscode-server/cli/servers/Stable-8761a5560cfd65fdd19ce7e2bd18dab5c0a4d84e/server/node ...
+3645330	0.28	ray::DefaultActor.run
+3652087	0.21	claude
+3644783	0.06	/home/justin/miniconda3/envs/fraud-fl-TA/bin/python -u /home/justin/miniconda3/envs/fraud-fl-TA/lib/...
+3508245	0.06	/home/justin/.vscode-server/cli/servers/Stable-8761a5560cfd65fdd19ce7e2bd18dab5c0a4d84e/server/node ...
+Refer to the documentation on how to address the out of memory issue: https://docs.ray.io/en/latest/ray-core/scheduling/ray-oom-prevention.html. Consider provisioning more memory on this node or reducing task parallelism by requesting more CPUs per task. Set max_restarts and max_task_retries to enable retry when the task crashes due to OOM. To adjust the kill threshold, set the environment variable `RAY_memory_usage_threshold` when starting Ray. To disable worker killing, set the environment variable `RAY_memory_monitor_refresh_ms` to zero.
+DEBUG flwr 2026-06-03 14:53:02,644 | server.py:236 | fit_round 5 received 3 results and 2 failures
+INFO flwr 2026-06-03 14:53:05,347 | server.py:171 | evaluate_round 5: no clients selected, cancel
+DEBUG flwr 2026-06-03 14:53:05,347 | server.py:222 | fit_round 6: strategy sampled 5 clients (out of 5)
+ERROR flwr 2026-06-03 14:53:07,993 | ray_client_proxy.py:147 | Traceback (most recent call last):
+  File "/home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/flwr/simulation/ray_transport/ray_client_proxy.py", line 140, in _submit_job
+    res = self.actor_pool.get_client_result(self.cid, timeout)
+  File "/home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/flwr/simulation/ray_transport/ray_actor.py", line 402, in get_client_result
+    return self._fetch_future_result(cid)
+  File "/home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/flwr/simulation/ray_transport/ray_actor.py", line 288, in _fetch_future_result
+    res_cid, res = ray.get(future)  # type: (str, ClientRes)
+  File "/home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/ray/_private/auto_init_hook.py", line 24, in auto_init_wrapper
+    return fn(*args, **kwargs)
+  File "/home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/ray/_private/client_mode_hook.py", line 103, in wrapper
+    return func(*args, **kwargs)
+  File "/home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/ray/_private/worker.py", line 2526, in get
+    raise value
+ray.exceptions.OutOfMemoryError: Task was killed due to the node running low on memory.
+Memory on the node (IP: 172.24.108.56, ID: df4b44ae2678b4f48702f56bc522108076c1eda25fcb4586f01bdc84) where the task (actor ID: d1b26e9af1b9d566fbc169d901000000, name=DefaultActor.__init__, pid=3645330, memory used=0.28GB) was running was 14.85GB / 15.49GB (0.958819), which exceeds the memory usage threshold of 0.95. Ray killed this worker (ID: d21751cec7519bca97b0e717bb25381f28a158a3a041664874ad45cf) because it was the most recently scheduled task; to see more information about memory usage on this node, use `ray logs raylet.out -ip 172.24.108.56`. To see the logs of the worker, use `ray logs worker-d21751cec7519bca97b0e717bb25381f28a158a3a041664874ad45cf*out -ip 172.24.108.56. Top 10 memory users:
+PID	MEM(GB)	COMMAND
+3641041	1.78	python -m models.gbm_bestmodel.run --scheme iid --num_rounds 10 --num_clients 5 --oversampling smote...
+3645336	0.49	ray::DefaultActor.run
+3646018	0.41	ray::IDLE_SpillWorker
+3645335	0.40	ray::DefaultActor.run
+3645331	0.39	ray::DefaultActor.run
+3500030	0.37	/home/justin/.vscode-server/cli/servers/Stable-8761a5560cfd65fdd19ce7e2bd18dab5c0a4d84e/server/node ...
+3645330	0.28	ray::DefaultActor.run
+3652087	0.21	claude
+3644783	0.06	/home/justin/miniconda3/envs/fraud-fl-TA/bin/python -u /home/justin/miniconda3/envs/fraud-fl-TA/lib/...
+3508245	0.06	/home/justin/.vscode-server/cli/servers/Stable-8761a5560cfd65fdd19ce7e2bd18dab5c0a4d84e/server/node ...
+Refer to the documentation on how to address the out of memory issue: https://docs.ray.io/en/latest/ray-core/scheduling/ray-oom-prevention.html. Consider provisioning more memory on this node or reducing task parallelism by requesting more CPUs per task. Set max_restarts and max_task_retries to enable retry when the task crashes due to OOM. To adjust the kill threshold, set the environment variable `RAY_memory_usage_threshold` when starting Ray. To disable worker killing, set the environment variable `RAY_memory_monitor_refresh_ms` to zero.
+
+ERROR flwr 2026-06-03 14:53:07,993 | ray_client_proxy.py:148 | Task was killed due to the node running low on memory.
+Memory on the node (IP: 172.24.108.56, ID: df4b44ae2678b4f48702f56bc522108076c1eda25fcb4586f01bdc84) where the task (actor ID: d1b26e9af1b9d566fbc169d901000000, name=DefaultActor.__init__, pid=3645330, memory used=0.28GB) was running was 14.85GB / 15.49GB (0.958819), which exceeds the memory usage threshold of 0.95. Ray killed this worker (ID: d21751cec7519bca97b0e717bb25381f28a158a3a041664874ad45cf) because it was the most recently scheduled task; to see more information about memory usage on this node, use `ray logs raylet.out -ip 172.24.108.56`. To see the logs of the worker, use `ray logs worker-d21751cec7519bca97b0e717bb25381f28a158a3a041664874ad45cf*out -ip 172.24.108.56. Top 10 memory users:
+PID	MEM(GB)	COMMAND
+3641041	1.78	python -m models.gbm_bestmodel.run --scheme iid --num_rounds 10 --num_clients 5 --oversampling smote...
+3645336	0.49	ray::DefaultActor.run
+3646018	0.41	ray::IDLE_SpillWorker
+3645335	0.40	ray::DefaultActor.run
+3645331	0.39	ray::DefaultActor.run
+3500030	0.37	/home/justin/.vscode-server/cli/servers/Stable-8761a5560cfd65fdd19ce7e2bd18dab5c0a4d84e/server/node ...
+3645330	0.28	ray::DefaultActor.run
+3652087	0.21	claude
+3644783	0.06	/home/justin/miniconda3/envs/fraud-fl-TA/bin/python -u /home/justin/miniconda3/envs/fraud-fl-TA/lib/...
+3508245	0.06	/home/justin/.vscode-server/cli/servers/Stable-8761a5560cfd65fdd19ce7e2bd18dab5c0a4d84e/server/node ...
+Refer to the documentation on how to address the out of memory issue: https://docs.ray.io/en/latest/ray-core/scheduling/ray-oom-prevention.html. Consider provisioning more memory on this node or reducing task parallelism by requesting more CPUs per task. Set max_restarts and max_task_retries to enable retry when the task crashes due to OOM. To adjust the kill threshold, set the environment variable `RAY_memory_usage_threshold` when starting Ray. To disable worker killing, set the environment variable `RAY_memory_monitor_refresh_ms` to zero.
+ERROR flwr 2026-06-03 14:53:07,994 | ray_client_proxy.py:147 | Traceback (most recent call last):
+  File "/home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/flwr/simulation/ray_transport/ray_client_proxy.py", line 140, in _submit_job
+    res = self.actor_pool.get_client_result(self.cid, timeout)
+  File "/home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/flwr/simulation/ray_transport/ray_actor.py", line 402, in get_client_result
+    return self._fetch_future_result(cid)
+  File "/home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/flwr/simulation/ray_transport/ray_actor.py", line 288, in _fetch_future_result
+    res_cid, res = ray.get(future)  # type: (str, ClientRes)
+  File "/home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/ray/_private/auto_init_hook.py", line 24, in auto_init_wrapper
+    return fn(*args, **kwargs)
+  File "/home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/ray/_private/client_mode_hook.py", line 103, in wrapper
+    return func(*args, **kwargs)
+  File "/home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/ray/_private/worker.py", line 2526, in get
+    raise value
+ray.exceptions.OutOfMemoryError: Task was killed due to the node running low on memory.
+Memory on the node (IP: 172.24.108.56, ID: df4b44ae2678b4f48702f56bc522108076c1eda25fcb4586f01bdc84) where the task (actor ID: 375f26252776471fccb7248d01000000, name=DefaultActor.__init__, pid=3645336, memory used=0.49GB) was running was 14.91GB / 15.49GB (0.962345), which exceeds the memory usage threshold of 0.95. Ray killed this worker (ID: 64af5605f1fed6f082daefd08f2644fd0efbfaca3ea4979e4a70d96b) because it was the most recently scheduled task; to see more information about memory usage on this node, use `ray logs raylet.out -ip 172.24.108.56`. To see the logs of the worker, use `ray logs worker-64af5605f1fed6f082daefd08f2644fd0efbfaca3ea4979e4a70d96b*out -ip 172.24.108.56. Top 10 memory users:
+PID	MEM(GB)	COMMAND
+3641041	2.72	python -m models.gbm_bestmodel.run --scheme iid --num_rounds 10 --num_clients 5 --oversampling smote...
+3645336	0.49	ray::DefaultActor.run
+3646018	0.41	ray::IDLE_SpillWorker
+3645331	0.40	ray::DefaultActor.run
+3645335	0.39	ray::DefaultActor.run
+3500030	0.35	/home/justin/.vscode-server/cli/servers/Stable-8761a5560cfd65fdd19ce7e2bd18dab5c0a4d84e/server/node ...
+3658925	0.22	claude
+3644783	0.06	/home/justin/miniconda3/envs/fraud-fl-TA/bin/python -u /home/justin/miniconda3/envs/fraud-fl-TA/lib/...
+3508245	0.06	/home/justin/.vscode-server/cli/servers/Stable-8761a5560cfd65fdd19ce7e2bd18dab5c0a4d84e/server/node ...
+3500098	0.06	/home/justin/.vscode-server/cli/servers/Stable-8761a5560cfd65fdd19ce7e2bd18dab5c0a4d84e/server/node ...
+Refer to the documentation on how to address the out of memory issue: https://docs.ray.io/en/latest/ray-core/scheduling/ray-oom-prevention.html. Consider provisioning more memory on this node or reducing task parallelism by requesting more CPUs per task. Set max_restarts and max_task_retries to enable retry when the task crashes due to OOM. To adjust the kill threshold, set the environment variable `RAY_memory_usage_threshold` when starting Ray. To disable worker killing, set the environment variable `RAY_memory_monitor_refresh_ms` to zero.
+
+ERROR flwr 2026-06-03 14:53:07,994 | ray_client_proxy.py:148 | Task was killed due to the node running low on memory.
+Memory on the node (IP: 172.24.108.56, ID: df4b44ae2678b4f48702f56bc522108076c1eda25fcb4586f01bdc84) where the task (actor ID: 375f26252776471fccb7248d01000000, name=DefaultActor.__init__, pid=3645336, memory used=0.49GB) was running was 14.91GB / 15.49GB (0.962345), which exceeds the memory usage threshold of 0.95. Ray killed this worker (ID: 64af5605f1fed6f082daefd08f2644fd0efbfaca3ea4979e4a70d96b) because it was the most recently scheduled task; to see more information about memory usage on this node, use `ray logs raylet.out -ip 172.24.108.56`. To see the logs of the worker, use `ray logs worker-64af5605f1fed6f082daefd08f2644fd0efbfaca3ea4979e4a70d96b*out -ip 172.24.108.56. Top 10 memory users:
+PID	MEM(GB)	COMMAND
+3641041	2.72	python -m models.gbm_bestmodel.run --scheme iid --num_rounds 10 --num_clients 5 --oversampling smote...
+3645336	0.49	ray::DefaultActor.run
+3646018	0.41	ray::IDLE_SpillWorker
+3645331	0.40	ray::DefaultActor.run
+3645335	0.39	ray::DefaultActor.run
+3500030	0.35	/home/justin/.vscode-server/cli/servers/Stable-8761a5560cfd65fdd19ce7e2bd18dab5c0a4d84e/server/node ...
+3658925	0.22	claude
+3644783	0.06	/home/justin/miniconda3/envs/fraud-fl-TA/bin/python -u /home/justin/miniconda3/envs/fraud-fl-TA/lib/...
+3508245	0.06	/home/justin/.vscode-server/cli/servers/Stable-8761a5560cfd65fdd19ce7e2bd18dab5c0a4d84e/server/node ...
+3500098	0.06	/home/justin/.vscode-server/cli/servers/Stable-8761a5560cfd65fdd19ce7e2bd18dab5c0a4d84e/server/node ...
+Refer to the documentation on how to address the out of memory issue: https://docs.ray.io/en/latest/ray-core/scheduling/ray-oom-prevention.html. Consider provisioning more memory on this node or reducing task parallelism by requesting more CPUs per task. Set max_restarts and max_task_retries to enable retry when the task crashes due to OOM. To adjust the kill threshold, set the environment variable `RAY_memory_usage_threshold` when starting Ray. To disable worker killing, set the environment variable `RAY_memory_monitor_refresh_ms` to zero.
+ERROR flwr 2026-06-03 14:53:07,994 | ray_client_proxy.py:147 | Traceback (most recent call last):
+  File "/home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/flwr/simulation/ray_transport/ray_client_proxy.py", line 140, in _submit_job
+    res = self.actor_pool.get_client_result(self.cid, timeout)
+  File "/home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/flwr/simulation/ray_transport/ray_actor.py", line 402, in get_client_result
+    return self._fetch_future_result(cid)
+  File "/home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/flwr/simulation/ray_transport/ray_actor.py", line 288, in _fetch_future_result
+    res_cid, res = ray.get(future)  # type: (str, ClientRes)
+  File "/home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/ray/_private/auto_init_hook.py", line 24, in auto_init_wrapper
+    return fn(*args, **kwargs)
+  File "/home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/ray/_private/client_mode_hook.py", line 103, in wrapper
+    return func(*args, **kwargs)
+  File "/home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/ray/_private/worker.py", line 2526, in get
+    raise value
+ray.exceptions.OutOfMemoryError: Task was killed due to the node running low on memory.
+Memory on the node (IP: 172.24.108.56, ID: df4b44ae2678b4f48702f56bc522108076c1eda25fcb4586f01bdc84) where the task (actor ID: 98ac71a7dee61995f4ca0b4001000000, name=DefaultActor.__init__, pid=3645332, memory used=0.38GB) was running was 14.79GB / 15.49GB (0.954823), which exceeds the memory usage threshold of 0.95. Ray killed this worker (ID: 1936cf16e623e476577ebd8f1cdfdfd568e370ad3da5158c0fe34d61) because it was the most recently scheduled task; to see more information about memory usage on this node, use `ray logs raylet.out -ip 172.24.108.56`. To see the logs of the worker, use `ray logs worker-1936cf16e623e476577ebd8f1cdfdfd568e370ad3da5158c0fe34d61*out -ip 172.24.108.56. Top 10 memory users:
+PID	MEM(GB)	COMMAND
+3641041	1.90	python -m models.gbm_bestmodel.run --scheme iid --num_rounds 10 --num_clients 5 --oversampling smote...
+3500030	0.40	/home/justin/.vscode-server/cli/servers/Stable-8761a5560cfd65fdd19ce7e2bd18dab5c0a4d84e/server/node ...
+3645335	0.39	ray::DefaultActor.run
+3645336	0.38	ray::DefaultActor.run
+3645332	0.38	ray::DefaultActor.run
+3645331	0.31	ray::DefaultActor.run
+3645330	0.29	ray::DefaultActor.run
+3639236	0.18	claude
+3644330	0.09	/home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/ray/core/src/ray/gcs/gcs_serve...
+3644783	0.08	/home/justin/miniconda3/envs/fraud-fl-TA/bin/python -u /home/justin/miniconda3/envs/fraud-fl-TA/lib/...
+Refer to the documentation on how to address the out of memory issue: https://docs.ray.io/en/latest/ray-core/scheduling/ray-oom-prevention.html. Consider provisioning more memory on this node or reducing task parallelism by requesting more CPUs per task. Set max_restarts and max_task_retries to enable retry when the task crashes due to OOM. To adjust the kill threshold, set the environment variable `RAY_memory_usage_threshold` when starting Ray. To disable worker killing, set the environment variable `RAY_memory_monitor_refresh_ms` to zero.
+
+ERROR flwr 2026-06-03 14:53:07,995 | ray_client_proxy.py:148 | Task was killed due to the node running low on memory.
+Memory on the node (IP: 172.24.108.56, ID: df4b44ae2678b4f48702f56bc522108076c1eda25fcb4586f01bdc84) where the task (actor ID: 98ac71a7dee61995f4ca0b4001000000, name=DefaultActor.__init__, pid=3645332, memory used=0.38GB) was running was 14.79GB / 15.49GB (0.954823), which exceeds the memory usage threshold of 0.95. Ray killed this worker (ID: 1936cf16e623e476577ebd8f1cdfdfd568e370ad3da5158c0fe34d61) because it was the most recently scheduled task; to see more information about memory usage on this node, use `ray logs raylet.out -ip 172.24.108.56`. To see the logs of the worker, use `ray logs worker-1936cf16e623e476577ebd8f1cdfdfd568e370ad3da5158c0fe34d61*out -ip 172.24.108.56. Top 10 memory users:
+PID	MEM(GB)	COMMAND
+3641041	1.90	python -m models.gbm_bestmodel.run --scheme iid --num_rounds 10 --num_clients 5 --oversampling smote...
+3500030	0.40	/home/justin/.vscode-server/cli/servers/Stable-8761a5560cfd65fdd19ce7e2bd18dab5c0a4d84e/server/node ...
+3645335	0.39	ray::DefaultActor.run
+3645336	0.38	ray::DefaultActor.run
+3645332	0.38	ray::DefaultActor.run
+3645331	0.31	ray::DefaultActor.run
+3645330	0.29	ray::DefaultActor.run
+3639236	0.18	claude
+3644330	0.09	/home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/ray/core/src/ray/gcs/gcs_serve...
+3644783	0.08	/home/justin/miniconda3/envs/fraud-fl-TA/bin/python -u /home/justin/miniconda3/envs/fraud-fl-TA/lib/...
+Refer to the documentation on how to address the out of memory issue: https://docs.ray.io/en/latest/ray-core/scheduling/ray-oom-prevention.html. Consider provisioning more memory on this node or reducing task parallelism by requesting more CPUs per task. Set max_restarts and max_task_retries to enable retry when the task crashes due to OOM. To adjust the kill threshold, set the environment variable `RAY_memory_usage_threshold` when starting Ray. To disable worker killing, set the environment variable `RAY_memory_monitor_refresh_ms` to zero.
+[2m[33m(raylet)[0m [2026-06-03 14:53:16,200 E 3644733 3644733] (raylet) node_manager.cc:3084: 1 Workers (tasks / actors) killed due to memory pressure (OOM), 0 Workers crashed due to other reasons at node (ID: df4b44ae2678b4f48702f56bc522108076c1eda25fcb4586f01bdc84, IP: 172.24.108.56) over the last time period. To see more information about the Workers killed on this node, use `ray logs raylet.out -ip 172.24.108.56`
+[2m[33m(raylet)[0m 
+[2m[33m(raylet)[0m Refer to the documentation on how to address the out of memory issue: https://docs.ray.io/en/latest/ray-core/scheduling/ray-oom-prevention.html. Consider provisioning more memory on this node or reducing task parallelism by requesting more CPUs per task. To adjust the kill threshold, set the environment variable `RAY_memory_usage_threshold` when starting Ray. To disable worker killing, set the environment variable `RAY_memory_monitor_refresh_ms` to zero.
+DEBUG flwr 2026-06-03 14:53:22,423 | server.py:236 | fit_round 6 received 2 results and 3 failures
+INFO flwr 2026-06-03 14:53:24,308 | server.py:171 | evaluate_round 6: no clients selected, cancel
+DEBUG flwr 2026-06-03 14:53:24,308 | server.py:222 | fit_round 7: strategy sampled 5 clients (out of 5)
+ERROR flwr 2026-06-03 14:53:24,383 | ray_client_proxy.py:147 | Traceback (most recent call last):
+  File "/home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/flwr/simulation/ray_transport/ray_client_proxy.py", line 140, in _submit_job
+    res = self.actor_pool.get_client_result(self.cid, timeout)
+  File "/home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/flwr/simulation/ray_transport/ray_actor.py", line 402, in get_client_result
+    return self._fetch_future_result(cid)
+  File "/home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/flwr/simulation/ray_transport/ray_actor.py", line 288, in _fetch_future_result
+    res_cid, res = ray.get(future)  # type: (str, ClientRes)
+  File "/home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/ray/_private/auto_init_hook.py", line 24, in auto_init_wrapper
+    return fn(*args, **kwargs)
+  File "/home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/ray/_private/client_mode_hook.py", line 103, in wrapper
+    return func(*args, **kwargs)
+  File "/home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/ray/_private/worker.py", line 2526, in get
+    raise value
+ray.exceptions.OutOfMemoryError: Task was killed due to the node running low on memory.
+Memory on the node (IP: 172.24.108.56, ID: df4b44ae2678b4f48702f56bc522108076c1eda25fcb4586f01bdc84) where the task (actor ID: 98ac71a7dee61995f4ca0b4001000000, name=DefaultActor.__init__, pid=3645332, memory used=0.38GB) was running was 14.79GB / 15.49GB (0.954823), which exceeds the memory usage threshold of 0.95. Ray killed this worker (ID: 1936cf16e623e476577ebd8f1cdfdfd568e370ad3da5158c0fe34d61) because it was the most recently scheduled task; to see more information about memory usage on this node, use `ray logs raylet.out -ip 172.24.108.56`. To see the logs of the worker, use `ray logs worker-1936cf16e623e476577ebd8f1cdfdfd568e370ad3da5158c0fe34d61*out -ip 172.24.108.56. Top 10 memory users:
+PID	MEM(GB)	COMMAND
+3641041	1.90	python -m models.gbm_bestmodel.run --scheme iid --num_rounds 10 --num_clients 5 --oversampling smote...
+3500030	0.40	/home/justin/.vscode-server/cli/servers/Stable-8761a5560cfd65fdd19ce7e2bd18dab5c0a4d84e/server/node ...
+3645335	0.39	ray::DefaultActor.run
+3645336	0.38	ray::DefaultActor.run
+3645332	0.38	ray::DefaultActor.run
+3645331	0.31	ray::DefaultActor.run
+3645330	0.29	ray::DefaultActor.run
+3639236	0.18	claude
+3644330	0.09	/home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/ray/core/src/ray/gcs/gcs_serve...
+3644783	0.08	/home/justin/miniconda3/envs/fraud-fl-TA/bin/python -u /home/justin/miniconda3/envs/fraud-fl-TA/lib/...
+Refer to the documentation on how to address the out of memory issue: https://docs.ray.io/en/latest/ray-core/scheduling/ray-oom-prevention.html. Consider provisioning more memory on this node or reducing task parallelism by requesting more CPUs per task. Set max_restarts and max_task_retries to enable retry when the task crashes due to OOM. To adjust the kill threshold, set the environment variable `RAY_memory_usage_threshold` when starting Ray. To disable worker killing, set the environment variable `RAY_memory_monitor_refresh_ms` to zero.
+
+ERROR flwr 2026-06-03 14:53:24,383 | ray_client_proxy.py:148 | Task was killed due to the node running low on memory.
+Memory on the node (IP: 172.24.108.56, ID: df4b44ae2678b4f48702f56bc522108076c1eda25fcb4586f01bdc84) where the task (actor ID: 98ac71a7dee61995f4ca0b4001000000, name=DefaultActor.__init__, pid=3645332, memory used=0.38GB) was running was 14.79GB / 15.49GB (0.954823), which exceeds the memory usage threshold of 0.95. Ray killed this worker (ID: 1936cf16e623e476577ebd8f1cdfdfd568e370ad3da5158c0fe34d61) because it was the most recently scheduled task; to see more information about memory usage on this node, use `ray logs raylet.out -ip 172.24.108.56`. To see the logs of the worker, use `ray logs worker-1936cf16e623e476577ebd8f1cdfdfd568e370ad3da5158c0fe34d61*out -ip 172.24.108.56. Top 10 memory users:
+PID	MEM(GB)	COMMAND
+3641041	1.90	python -m models.gbm_bestmodel.run --scheme iid --num_rounds 10 --num_clients 5 --oversampling smote...
+3500030	0.40	/home/justin/.vscode-server/cli/servers/Stable-8761a5560cfd65fdd19ce7e2bd18dab5c0a4d84e/server/node ...
+3645335	0.39	ray::DefaultActor.run
+3645336	0.38	ray::DefaultActor.run
+3645332	0.38	ray::DefaultActor.run
+3645331	0.31	ray::DefaultActor.run
+3645330	0.29	ray::DefaultActor.run
+3639236	0.18	claude
+3644330	0.09	/home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/ray/core/src/ray/gcs/gcs_serve...
+3644783	0.08	/home/justin/miniconda3/envs/fraud-fl-TA/bin/python -u /home/justin/miniconda3/envs/fraud-fl-TA/lib/...
+Refer to the documentation on how to address the out of memory issue: https://docs.ray.io/en/latest/ray-core/scheduling/ray-oom-prevention.html. Consider provisioning more memory on this node or reducing task parallelism by requesting more CPUs per task. Set max_restarts and max_task_retries to enable retry when the task crashes due to OOM. To adjust the kill threshold, set the environment variable `RAY_memory_usage_threshold` when starting Ray. To disable worker killing, set the environment variable `RAY_memory_monitor_refresh_ms` to zero.
+ERROR flwr 2026-06-03 14:53:24,434 | ray_client_proxy.py:147 | Traceback (most recent call last):
+  File "/home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/flwr/simulation/ray_transport/ray_client_proxy.py", line 140, in _submit_job
+    res = self.actor_pool.get_client_result(self.cid, timeout)
+  File "/home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/flwr/simulation/ray_transport/ray_actor.py", line 402, in get_client_result
+    return self._fetch_future_result(cid)
+  File "/home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/flwr/simulation/ray_transport/ray_actor.py", line 288, in _fetch_future_result
+    res_cid, res = ray.get(future)  # type: (str, ClientRes)
+  File "/home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/ray/_private/auto_init_hook.py", line 24, in auto_init_wrapper
+    return fn(*args, **kwargs)
+  File "/home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/ray/_private/client_mode_hook.py", line 103, in wrapper
+    return func(*args, **kwargs)
+  File "/home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/ray/_private/worker.py", line 2526, in get
+    raise value
+ray.exceptions.OutOfMemoryError: Task was killed due to the node running low on memory.
+Memory on the node (IP: 172.24.108.56, ID: df4b44ae2678b4f48702f56bc522108076c1eda25fcb4586f01bdc84) where the task (actor ID: 98ac71a7dee61995f4ca0b4001000000, name=DefaultActor.__init__, pid=3645332, memory used=0.38GB) was running was 14.79GB / 15.49GB (0.954823), which exceeds the memory usage threshold of 0.95. Ray killed this worker (ID: 1936cf16e623e476577ebd8f1cdfdfd568e370ad3da5158c0fe34d61) because it was the most recently scheduled task; to see more information about memory usage on this node, use `ray logs raylet.out -ip 172.24.108.56`. To see the logs of the worker, use `ray logs worker-1936cf16e623e476577ebd8f1cdfdfd568e370ad3da5158c0fe34d61*out -ip 172.24.108.56. Top 10 memory users:
+PID	MEM(GB)	COMMAND
+3641041	1.90	python -m models.gbm_bestmodel.run --scheme iid --num_rounds 10 --num_clients 5 --oversampling smote...
+3500030	0.40	/home/justin/.vscode-server/cli/servers/Stable-8761a5560cfd65fdd19ce7e2bd18dab5c0a4d84e/server/node ...
+3645335	0.39	ray::DefaultActor.run
+3645336	0.38	ray::DefaultActor.run
+3645332	0.38	ray::DefaultActor.run
+3645331	0.31	ray::DefaultActor.run
+3645330	0.29	ray::DefaultActor.run
+3639236	0.18	claude
+3644330	0.09	/home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/ray/core/src/ray/gcs/gcs_serve...
+3644783	0.08	/home/justin/miniconda3/envs/fraud-fl-TA/bin/python -u /home/justin/miniconda3/envs/fraud-fl-TA/lib/...
+Refer to the documentation on how to address the out of memory issue: https://docs.ray.io/en/latest/ray-core/scheduling/ray-oom-prevention.html. Consider provisioning more memory on this node or reducing task parallelism by requesting more CPUs per task. Set max_restarts and max_task_retries to enable retry when the task crashes due to OOM. To adjust the kill threshold, set the environment variable `RAY_memory_usage_threshold` when starting Ray. To disable worker killing, set the environment variable `RAY_memory_monitor_refresh_ms` to zero.
+
+ERROR flwr 2026-06-03 14:53:24,435 | ray_client_proxy.py:148 | Task was killed due to the node running low on memory.
+Memory on the node (IP: 172.24.108.56, ID: df4b44ae2678b4f48702f56bc522108076c1eda25fcb4586f01bdc84) where the task (actor ID: 98ac71a7dee61995f4ca0b4001000000, name=DefaultActor.__init__, pid=3645332, memory used=0.38GB) was running was 14.79GB / 15.49GB (0.954823), which exceeds the memory usage threshold of 0.95. Ray killed this worker (ID: 1936cf16e623e476577ebd8f1cdfdfd568e370ad3da5158c0fe34d61) because it was the most recently scheduled task; to see more information about memory usage on this node, use `ray logs raylet.out -ip 172.24.108.56`. To see the logs of the worker, use `ray logs worker-1936cf16e623e476577ebd8f1cdfdfd568e370ad3da5158c0fe34d61*out -ip 172.24.108.56. Top 10 memory users:
+PID	MEM(GB)	COMMAND
+3641041	1.90	python -m models.gbm_bestmodel.run --scheme iid --num_rounds 10 --num_clients 5 --oversampling smote...
+3500030	0.40	/home/justin/.vscode-server/cli/servers/Stable-8761a5560cfd65fdd19ce7e2bd18dab5c0a4d84e/server/node ...
+3645335	0.39	ray::DefaultActor.run
+3645336	0.38	ray::DefaultActor.run
+3645332	0.38	ray::DefaultActor.run
+3645331	0.31	ray::DefaultActor.run
+3645330	0.29	ray::DefaultActor.run
+3639236	0.18	claude
+3644330	0.09	/home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/ray/core/src/ray/gcs/gcs_serve...
+3644783	0.08	/home/justin/miniconda3/envs/fraud-fl-TA/bin/python -u /home/justin/miniconda3/envs/fraud-fl-TA/lib/...
+Refer to the documentation on how to address the out of memory issue: https://docs.ray.io/en/latest/ray-core/scheduling/ray-oom-prevention.html. Consider provisioning more memory on this node or reducing task parallelism by requesting more CPUs per task. Set max_restarts and max_task_retries to enable retry when the task crashes due to OOM. To adjust the kill threshold, set the environment variable `RAY_memory_usage_threshold` when starting Ray. To disable worker killing, set the environment variable `RAY_memory_monitor_refresh_ms` to zero.
+ERROR flwr 2026-06-03 14:53:24,435 | ray_client_proxy.py:147 | Traceback (most recent call last):
+  File "/home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/flwr/simulation/ray_transport/ray_client_proxy.py", line 140, in _submit_job
+    res = self.actor_pool.get_client_result(self.cid, timeout)
+  File "/home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/flwr/simulation/ray_transport/ray_actor.py", line 402, in get_client_result
+    return self._fetch_future_result(cid)
+  File "/home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/flwr/simulation/ray_transport/ray_actor.py", line 288, in _fetch_future_result
+    res_cid, res = ray.get(future)  # type: (str, ClientRes)
+  File "/home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/ray/_private/auto_init_hook.py", line 24, in auto_init_wrapper
+    return fn(*args, **kwargs)
+  File "/home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/ray/_private/client_mode_hook.py", line 103, in wrapper
+    return func(*args, **kwargs)
+  File "/home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/ray/_private/worker.py", line 2526, in get
+    raise value
+ray.exceptions.OutOfMemoryError: Task was killed due to the node running low on memory.
+Memory on the node (IP: 172.24.108.56, ID: df4b44ae2678b4f48702f56bc522108076c1eda25fcb4586f01bdc84) where the task (actor ID: 375f26252776471fccb7248d01000000, name=DefaultActor.__init__, pid=3645336, memory used=0.49GB) was running was 14.91GB / 15.49GB (0.962345), which exceeds the memory usage threshold of 0.95. Ray killed this worker (ID: 64af5605f1fed6f082daefd08f2644fd0efbfaca3ea4979e4a70d96b) because it was the most recently scheduled task; to see more information about memory usage on this node, use `ray logs raylet.out -ip 172.24.108.56`. To see the logs of the worker, use `ray logs worker-64af5605f1fed6f082daefd08f2644fd0efbfaca3ea4979e4a70d96b*out -ip 172.24.108.56. Top 10 memory users:
+PID	MEM(GB)	COMMAND
+3641041	2.72	python -m models.gbm_bestmodel.run --scheme iid --num_rounds 10 --num_clients 5 --oversampling smote...
+3645336	0.49	ray::DefaultActor.run
+3646018	0.41	ray::IDLE_SpillWorker
+3645331	0.40	ray::DefaultActor.run
+3645335	0.39	ray::DefaultActor.run
+3500030	0.35	/home/justin/.vscode-server/cli/servers/Stable-8761a5560cfd65fdd19ce7e2bd18dab5c0a4d84e/server/node ...
+3658925	0.22	claude
+3644783	0.06	/home/justin/miniconda3/envs/fraud-fl-TA/bin/python -u /home/justin/miniconda3/envs/fraud-fl-TA/lib/...
+3508245	0.06	/home/justin/.vscode-server/cli/servers/Stable-8761a5560cfd65fdd19ce7e2bd18dab5c0a4d84e/server/node ...
+3500098	0.06	/home/justin/.vscode-server/cli/servers/Stable-8761a5560cfd65fdd19ce7e2bd18dab5c0a4d84e/server/node ...
+Refer to the documentation on how to address the out of memory issue: https://docs.ray.io/en/latest/ray-core/scheduling/ray-oom-prevention.html. Consider provisioning more memory on this node or reducing task parallelism by requesting more CPUs per task. Set max_restarts and max_task_retries to enable retry when the task crashes due to OOM. To adjust the kill threshold, set the environment variable `RAY_memory_usage_threshold` when starting Ray. To disable worker killing, set the environment variable `RAY_memory_monitor_refresh_ms` to zero.
+
+ERROR flwr 2026-06-03 14:53:24,435 | ray_client_proxy.py:148 | Task was killed due to the node running low on memory.
+Memory on the node (IP: 172.24.108.56, ID: df4b44ae2678b4f48702f56bc522108076c1eda25fcb4586f01bdc84) where the task (actor ID: 375f26252776471fccb7248d01000000, name=DefaultActor.__init__, pid=3645336, memory used=0.49GB) was running was 14.91GB / 15.49GB (0.962345), which exceeds the memory usage threshold of 0.95. Ray killed this worker (ID: 64af5605f1fed6f082daefd08f2644fd0efbfaca3ea4979e4a70d96b) because it was the most recently scheduled task; to see more information about memory usage on this node, use `ray logs raylet.out -ip 172.24.108.56`. To see the logs of the worker, use `ray logs worker-64af5605f1fed6f082daefd08f2644fd0efbfaca3ea4979e4a70d96b*out -ip 172.24.108.56. Top 10 memory users:
+PID	MEM(GB)	COMMAND
+3641041	2.72	python -m models.gbm_bestmodel.run --scheme iid --num_rounds 10 --num_clients 5 --oversampling smote...
+3645336	0.49	ray::DefaultActor.run
+3646018	0.41	ray::IDLE_SpillWorker
+3645331	0.40	ray::DefaultActor.run
+3645335	0.39	ray::DefaultActor.run
+3500030	0.35	/home/justin/.vscode-server/cli/servers/Stable-8761a5560cfd65fdd19ce7e2bd18dab5c0a4d84e/server/node ...
+3658925	0.22	claude
+3644783	0.06	/home/justin/miniconda3/envs/fraud-fl-TA/bin/python -u /home/justin/miniconda3/envs/fraud-fl-TA/lib/...
+3508245	0.06	/home/justin/.vscode-server/cli/servers/Stable-8761a5560cfd65fdd19ce7e2bd18dab5c0a4d84e/server/node ...
+3500098	0.06	/home/justin/.vscode-server/cli/servers/Stable-8761a5560cfd65fdd19ce7e2bd18dab5c0a4d84e/server/node ...
+Refer to the documentation on how to address the out of memory issue: https://docs.ray.io/en/latest/ray-core/scheduling/ray-oom-prevention.html. Consider provisioning more memory on this node or reducing task parallelism by requesting more CPUs per task. Set max_restarts and max_task_retries to enable retry when the task crashes due to OOM. To adjust the kill threshold, set the environment variable `RAY_memory_usage_threshold` when starting Ray. To disable worker killing, set the environment variable `RAY_memory_monitor_refresh_ms` to zero.
+DEBUG flwr 2026-06-03 14:53:40,975 | server.py:236 | fit_round 7 received 2 results and 3 failures
+INFO flwr 2026-06-03 14:53:42,974 | server.py:171 | evaluate_round 7: no clients selected, cancel
+DEBUG flwr 2026-06-03 14:53:42,974 | server.py:222 | fit_round 8: strategy sampled 5 clients (out of 5)
+ERROR flwr 2026-06-03 14:53:43,097 | ray_client_proxy.py:147 | Traceback (most recent call last):
+  File "/home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/flwr/simulation/ray_transport/ray_client_proxy.py", line 140, in _submit_job
+    res = self.actor_pool.get_client_result(self.cid, timeout)
+  File "/home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/flwr/simulation/ray_transport/ray_actor.py", line 402, in get_client_result
+    return self._fetch_future_result(cid)
+  File "/home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/flwr/simulation/ray_transport/ray_actor.py", line 288, in _fetch_future_result
+    res_cid, res = ray.get(future)  # type: (str, ClientRes)
+  File "/home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/ray/_private/auto_init_hook.py", line 24, in auto_init_wrapper
+    return fn(*args, **kwargs)
+  File "/home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/ray/_private/client_mode_hook.py", line 103, in wrapper
+    return func(*args, **kwargs)
+  File "/home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/ray/_private/worker.py", line 2526, in get
+    raise value
+ray.exceptions.OutOfMemoryError: Task was killed due to the node running low on memory.
+Memory on the node (IP: 172.24.108.56, ID: df4b44ae2678b4f48702f56bc522108076c1eda25fcb4586f01bdc84) where the task (actor ID: 375f26252776471fccb7248d01000000, name=DefaultActor.__init__, pid=3645336, memory used=0.49GB) was running was 14.91GB / 15.49GB (0.962345), which exceeds the memory usage threshold of 0.95. Ray killed this worker (ID: 64af5605f1fed6f082daefd08f2644fd0efbfaca3ea4979e4a70d96b) because it was the most recently scheduled task; to see more information about memory usage on this node, use `ray logs raylet.out -ip 172.24.108.56`. To see the logs of the worker, use `ray logs worker-64af5605f1fed6f082daefd08f2644fd0efbfaca3ea4979e4a70d96b*out -ip 172.24.108.56. Top 10 memory users:
+PID	MEM(GB)	COMMAND
+3641041	2.72	python -m models.gbm_bestmodel.run --scheme iid --num_rounds 10 --num_clients 5 --oversampling smote...
+3645336	0.49	ray::DefaultActor.run
+3646018	0.41	ray::IDLE_SpillWorker
+3645331	0.40	ray::DefaultActor.run
+3645335	0.39	ray::DefaultActor.run
+3500030	0.35	/home/justin/.vscode-server/cli/servers/Stable-8761a5560cfd65fdd19ce7e2bd18dab5c0a4d84e/server/node ...
+3658925	0.22	claude
+3644783	0.06	/home/justin/miniconda3/envs/fraud-fl-TA/bin/python -u /home/justin/miniconda3/envs/fraud-fl-TA/lib/...
+3508245	0.06	/home/justin/.vscode-server/cli/servers/Stable-8761a5560cfd65fdd19ce7e2bd18dab5c0a4d84e/server/node ...
+3500098	0.06	/home/justin/.vscode-server/cli/servers/Stable-8761a5560cfd65fdd19ce7e2bd18dab5c0a4d84e/server/node ...
+Refer to the documentation on how to address the out of memory issue: https://docs.ray.io/en/latest/ray-core/scheduling/ray-oom-prevention.html. Consider provisioning more memory on this node or reducing task parallelism by requesting more CPUs per task. Set max_restarts and max_task_retries to enable retry when the task crashes due to OOM. To adjust the kill threshold, set the environment variable `RAY_memory_usage_threshold` when starting Ray. To disable worker killing, set the environment variable `RAY_memory_monitor_refresh_ms` to zero.
+
+ERROR flwr 2026-06-03 14:53:43,097 | ray_client_proxy.py:148 | Task was killed due to the node running low on memory.
+Memory on the node (IP: 172.24.108.56, ID: df4b44ae2678b4f48702f56bc522108076c1eda25fcb4586f01bdc84) where the task (actor ID: 375f26252776471fccb7248d01000000, name=DefaultActor.__init__, pid=3645336, memory used=0.49GB) was running was 14.91GB / 15.49GB (0.962345), which exceeds the memory usage threshold of 0.95. Ray killed this worker (ID: 64af5605f1fed6f082daefd08f2644fd0efbfaca3ea4979e4a70d96b) because it was the most recently scheduled task; to see more information about memory usage on this node, use `ray logs raylet.out -ip 172.24.108.56`. To see the logs of the worker, use `ray logs worker-64af5605f1fed6f082daefd08f2644fd0efbfaca3ea4979e4a70d96b*out -ip 172.24.108.56. Top 10 memory users:
+PID	MEM(GB)	COMMAND
+3641041	2.72	python -m models.gbm_bestmodel.run --scheme iid --num_rounds 10 --num_clients 5 --oversampling smote...
+3645336	0.49	ray::DefaultActor.run
+3646018	0.41	ray::IDLE_SpillWorker
+3645331	0.40	ray::DefaultActor.run
+3645335	0.39	ray::DefaultActor.run
+3500030	0.35	/home/justin/.vscode-server/cli/servers/Stable-8761a5560cfd65fdd19ce7e2bd18dab5c0a4d84e/server/node ...
+3658925	0.22	claude
+3644783	0.06	/home/justin/miniconda3/envs/fraud-fl-TA/bin/python -u /home/justin/miniconda3/envs/fraud-fl-TA/lib/...
+3508245	0.06	/home/justin/.vscode-server/cli/servers/Stable-8761a5560cfd65fdd19ce7e2bd18dab5c0a4d84e/server/node ...
+3500098	0.06	/home/justin/.vscode-server/cli/servers/Stable-8761a5560cfd65fdd19ce7e2bd18dab5c0a4d84e/server/node ...
+Refer to the documentation on how to address the out of memory issue: https://docs.ray.io/en/latest/ray-core/scheduling/ray-oom-prevention.html. Consider provisioning more memory on this node or reducing task parallelism by requesting more CPUs per task. Set max_restarts and max_task_retries to enable retry when the task crashes due to OOM. To adjust the kill threshold, set the environment variable `RAY_memory_usage_threshold` when starting Ray. To disable worker killing, set the environment variable `RAY_memory_monitor_refresh_ms` to zero.
+ERROR flwr 2026-06-03 14:53:43,098 | ray_client_proxy.py:147 | Traceback (most recent call last):
+  File "/home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/flwr/simulation/ray_transport/ray_client_proxy.py", line 140, in _submit_job
+    res = self.actor_pool.get_client_result(self.cid, timeout)
+  File "/home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/flwr/simulation/ray_transport/ray_actor.py", line 402, in get_client_result
+    return self._fetch_future_result(cid)
+  File "/home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/flwr/simulation/ray_transport/ray_actor.py", line 288, in _fetch_future_result
+    res_cid, res = ray.get(future)  # type: (str, ClientRes)
+  File "/home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/ray/_private/auto_init_hook.py", line 24, in auto_init_wrapper
+    return fn(*args, **kwargs)
+  File "/home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/ray/_private/client_mode_hook.py", line 103, in wrapper
+    return func(*args, **kwargs)
+  File "/home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/ray/_private/worker.py", line 2526, in get
+    raise value
+ray.exceptions.OutOfMemoryError: Task was killed due to the node running low on memory.
+Memory on the node (IP: 172.24.108.56, ID: df4b44ae2678b4f48702f56bc522108076c1eda25fcb4586f01bdc84) where the task (actor ID: 98ac71a7dee61995f4ca0b4001000000, name=DefaultActor.__init__, pid=3645332, memory used=0.38GB) was running was 14.79GB / 15.49GB (0.954823), which exceeds the memory usage threshold of 0.95. Ray killed this worker (ID: 1936cf16e623e476577ebd8f1cdfdfd568e370ad3da5158c0fe34d61) because it was the most recently scheduled task; to see more information about memory usage on this node, use `ray logs raylet.out -ip 172.24.108.56`. To see the logs of the worker, use `ray logs worker-1936cf16e623e476577ebd8f1cdfdfd568e370ad3da5158c0fe34d61*out -ip 172.24.108.56. Top 10 memory users:
+PID	MEM(GB)	COMMAND
+3641041	1.90	python -m models.gbm_bestmodel.run --scheme iid --num_rounds 10 --num_clients 5 --oversampling smote...
+3500030	0.40	/home/justin/.vscode-server/cli/servers/Stable-8761a5560cfd65fdd19ce7e2bd18dab5c0a4d84e/server/node ...
+3645335	0.39	ray::DefaultActor.run
+3645336	0.38	ray::DefaultActor.run
+3645332	0.38	ray::DefaultActor.run
+3645331	0.31	ray::DefaultActor.run
+3645330	0.29	ray::DefaultActor.run
+3639236	0.18	claude
+3644330	0.09	/home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/ray/core/src/ray/gcs/gcs_serve...
+3644783	0.08	/home/justin/miniconda3/envs/fraud-fl-TA/bin/python -u /home/justin/miniconda3/envs/fraud-fl-TA/lib/...
+Refer to the documentation on how to address the out of memory issue: https://docs.ray.io/en/latest/ray-core/scheduling/ray-oom-prevention.html. Consider provisioning more memory on this node or reducing task parallelism by requesting more CPUs per task. Set max_restarts and max_task_retries to enable retry when the task crashes due to OOM. To adjust the kill threshold, set the environment variable `RAY_memory_usage_threshold` when starting Ray. To disable worker killing, set the environment variable `RAY_memory_monitor_refresh_ms` to zero.
+
+ERROR flwr 2026-06-03 14:53:43,098 | ray_client_proxy.py:147 | Traceback (most recent call last):
+  File "/home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/flwr/simulation/ray_transport/ray_client_proxy.py", line 140, in _submit_job
+    res = self.actor_pool.get_client_result(self.cid, timeout)
+  File "/home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/flwr/simulation/ray_transport/ray_actor.py", line 402, in get_client_result
+    return self._fetch_future_result(cid)
+  File "/home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/flwr/simulation/ray_transport/ray_actor.py", line 288, in _fetch_future_result
+    res_cid, res = ray.get(future)  # type: (str, ClientRes)
+  File "/home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/ray/_private/auto_init_hook.py", line 24, in auto_init_wrapper
+    return fn(*args, **kwargs)
+  File "/home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/ray/_private/client_mode_hook.py", line 103, in wrapper
+    return func(*args, **kwargs)
+  File "/home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/ray/_private/worker.py", line 2526, in get
+    raise value
+ray.exceptions.OutOfMemoryError: Task was killed due to the node running low on memory.
+Memory on the node (IP: 172.24.108.56, ID: df4b44ae2678b4f48702f56bc522108076c1eda25fcb4586f01bdc84) where the task (actor ID: d1b26e9af1b9d566fbc169d901000000, name=DefaultActor.__init__, pid=3645330, memory used=0.28GB) was running was 14.85GB / 15.49GB (0.958819), which exceeds the memory usage threshold of 0.95. Ray killed this worker (ID: d21751cec7519bca97b0e717bb25381f28a158a3a041664874ad45cf) because it was the most recently scheduled task; to see more information about memory usage on this node, use `ray logs raylet.out -ip 172.24.108.56`. To see the logs of the worker, use `ray logs worker-d21751cec7519bca97b0e717bb25381f28a158a3a041664874ad45cf*out -ip 172.24.108.56. Top 10 memory users:
+PID	MEM(GB)	COMMAND
+3641041	1.78	python -m models.gbm_bestmodel.run --scheme iid --num_rounds 10 --num_clients 5 --oversampling smote...
+3645336	0.49	ray::DefaultActor.run
+3646018	0.41	ray::IDLE_SpillWorker
+3645335	0.40	ray::DefaultActor.run
+3645331	0.39	ray::DefaultActor.run
+3500030	0.37	/home/justin/.vscode-server/cli/servers/Stable-8761a5560cfd65fdd19ce7e2bd18dab5c0a4d84e/server/node ...
+3645330	0.28	ray::DefaultActor.run
+3652087	0.21	claude
+3644783	0.06	/home/justin/miniconda3/envs/fraud-fl-TA/bin/python -u /home/justin/miniconda3/envs/fraud-fl-TA/lib/...
+3508245	0.06	/home/justin/.vscode-server/cli/servers/Stable-8761a5560cfd65fdd19ce7e2bd18dab5c0a4d84e/server/node ...
+Refer to the documentation on how to address the out of memory issue: https://docs.ray.io/en/latest/ray-core/scheduling/ray-oom-prevention.html. Consider provisioning more memory on this node or reducing task parallelism by requesting more CPUs per task. Set max_restarts and max_task_retries to enable retry when the task crashes due to OOM. To adjust the kill threshold, set the environment variable `RAY_memory_usage_threshold` when starting Ray. To disable worker killing, set the environment variable `RAY_memory_monitor_refresh_ms` to zero.
+
+ERROR flwr 2026-06-03 14:53:43,098 | ray_client_proxy.py:148 | Task was killed due to the node running low on memory.
+Memory on the node (IP: 172.24.108.56, ID: df4b44ae2678b4f48702f56bc522108076c1eda25fcb4586f01bdc84) where the task (actor ID: 98ac71a7dee61995f4ca0b4001000000, name=DefaultActor.__init__, pid=3645332, memory used=0.38GB) was running was 14.79GB / 15.49GB (0.954823), which exceeds the memory usage threshold of 0.95. Ray killed this worker (ID: 1936cf16e623e476577ebd8f1cdfdfd568e370ad3da5158c0fe34d61) because it was the most recently scheduled task; to see more information about memory usage on this node, use `ray logs raylet.out -ip 172.24.108.56`. To see the logs of the worker, use `ray logs worker-1936cf16e623e476577ebd8f1cdfdfd568e370ad3da5158c0fe34d61*out -ip 172.24.108.56. Top 10 memory users:
+PID	MEM(GB)	COMMAND
+3641041	1.90	python -m models.gbm_bestmodel.run --scheme iid --num_rounds 10 --num_clients 5 --oversampling smote...
+3500030	0.40	/home/justin/.vscode-server/cli/servers/Stable-8761a5560cfd65fdd19ce7e2bd18dab5c0a4d84e/server/node ...
+3645335	0.39	ray::DefaultActor.run
+3645336	0.38	ray::DefaultActor.run
+3645332	0.38	ray::DefaultActor.run
+3645331	0.31	ray::DefaultActor.run
+3645330	0.29	ray::DefaultActor.run
+3639236	0.18	claude
+3644330	0.09	/home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/ray/core/src/ray/gcs/gcs_serve...
+3644783	0.08	/home/justin/miniconda3/envs/fraud-fl-TA/bin/python -u /home/justin/miniconda3/envs/fraud-fl-TA/lib/...
+Refer to the documentation on how to address the out of memory issue: https://docs.ray.io/en/latest/ray-core/scheduling/ray-oom-prevention.html. Consider provisioning more memory on this node or reducing task parallelism by requesting more CPUs per task. Set max_restarts and max_task_retries to enable retry when the task crashes due to OOM. To adjust the kill threshold, set the environment variable `RAY_memory_usage_threshold` when starting Ray. To disable worker killing, set the environment variable `RAY_memory_monitor_refresh_ms` to zero.
+ERROR flwr 2026-06-03 14:53:43,099 | ray_client_proxy.py:148 | Task was killed due to the node running low on memory.
+Memory on the node (IP: 172.24.108.56, ID: df4b44ae2678b4f48702f56bc522108076c1eda25fcb4586f01bdc84) where the task (actor ID: d1b26e9af1b9d566fbc169d901000000, name=DefaultActor.__init__, pid=3645330, memory used=0.28GB) was running was 14.85GB / 15.49GB (0.958819), which exceeds the memory usage threshold of 0.95. Ray killed this worker (ID: d21751cec7519bca97b0e717bb25381f28a158a3a041664874ad45cf) because it was the most recently scheduled task; to see more information about memory usage on this node, use `ray logs raylet.out -ip 172.24.108.56`. To see the logs of the worker, use `ray logs worker-d21751cec7519bca97b0e717bb25381f28a158a3a041664874ad45cf*out -ip 172.24.108.56. Top 10 memory users:
+PID	MEM(GB)	COMMAND
+3641041	1.78	python -m models.gbm_bestmodel.run --scheme iid --num_rounds 10 --num_clients 5 --oversampling smote...
+3645336	0.49	ray::DefaultActor.run
+3646018	0.41	ray::IDLE_SpillWorker
+3645335	0.40	ray::DefaultActor.run
+3645331	0.39	ray::DefaultActor.run
+3500030	0.37	/home/justin/.vscode-server/cli/servers/Stable-8761a5560cfd65fdd19ce7e2bd18dab5c0a4d84e/server/node ...
+3645330	0.28	ray::DefaultActor.run
+3652087	0.21	claude
+3644783	0.06	/home/justin/miniconda3/envs/fraud-fl-TA/bin/python -u /home/justin/miniconda3/envs/fraud-fl-TA/lib/...
+3508245	0.06	/home/justin/.vscode-server/cli/servers/Stable-8761a5560cfd65fdd19ce7e2bd18dab5c0a4d84e/server/node ...
+Refer to the documentation on how to address the out of memory issue: https://docs.ray.io/en/latest/ray-core/scheduling/ray-oom-prevention.html. Consider provisioning more memory on this node or reducing task parallelism by requesting more CPUs per task. Set max_restarts and max_task_retries to enable retry when the task crashes due to OOM. To adjust the kill threshold, set the environment variable `RAY_memory_usage_threshold` when starting Ray. To disable worker killing, set the environment variable `RAY_memory_monitor_refresh_ms` to zero.
+DEBUG flwr 2026-06-03 14:53:59,526 | server.py:236 | fit_round 8 received 2 results and 3 failures
+INFO flwr 2026-06-03 14:54:01,502 | server.py:171 | evaluate_round 8: no clients selected, cancel
+DEBUG flwr 2026-06-03 14:54:01,503 | server.py:222 | fit_round 9: strategy sampled 5 clients (out of 5)
+ERROR flwr 2026-06-03 14:54:01,624 | ray_client_proxy.py:147 | Traceback (most recent call last):
+  File "/home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/flwr/simulation/ray_transport/ray_client_proxy.py", line 140, in _submit_job
+    res = self.actor_pool.get_client_result(self.cid, timeout)
+  File "/home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/flwr/simulation/ray_transport/ray_actor.py", line 402, in get_client_result
+    return self._fetch_future_result(cid)
+  File "/home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/flwr/simulation/ray_transport/ray_actor.py", line 288, in _fetch_future_result
+    res_cid, res = ray.get(future)  # type: (str, ClientRes)
+  File "/home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/ray/_private/auto_init_hook.py", line 24, in auto_init_wrapper
+    return fn(*args, **kwargs)
+  File "/home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/ray/_private/client_mode_hook.py", line 103, in wrapper
+    return func(*args, **kwargs)
+  File "/home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/ray/_private/worker.py", line 2526, in get
+    raise value
+ray.exceptions.OutOfMemoryError: Task was killed due to the node running low on memory.
+Memory on the node (IP: 172.24.108.56, ID: df4b44ae2678b4f48702f56bc522108076c1eda25fcb4586f01bdc84) where the task (actor ID: d1b26e9af1b9d566fbc169d901000000, name=DefaultActor.__init__, pid=3645330, memory used=0.28GB) was running was 14.85GB / 15.49GB (0.958819), which exceeds the memory usage threshold of 0.95. Ray killed this worker (ID: d21751cec7519bca97b0e717bb25381f28a158a3a041664874ad45cf) because it was the most recently scheduled task; to see more information about memory usage on this node, use `ray logs raylet.out -ip 172.24.108.56`. To see the logs of the worker, use `ray logs worker-d21751cec7519bca97b0e717bb25381f28a158a3a041664874ad45cf*out -ip 172.24.108.56. Top 10 memory users:
+PID	MEM(GB)	COMMAND
+3641041	1.78	python -m models.gbm_bestmodel.run --scheme iid --num_rounds 10 --num_clients 5 --oversampling smote...
+3645336	0.49	ray::DefaultActor.run
+3646018	0.41	ray::IDLE_SpillWorker
+3645335	0.40	ray::DefaultActor.run
+3645331	0.39	ray::DefaultActor.run
+3500030	0.37	/home/justin/.vscode-server/cli/servers/Stable-8761a5560cfd65fdd19ce7e2bd18dab5c0a4d84e/server/node ...
+3645330	0.28	ray::DefaultActor.run
+3652087	0.21	claude
+3644783	0.06	/home/justin/miniconda3/envs/fraud-fl-TA/bin/python -u /home/justin/miniconda3/envs/fraud-fl-TA/lib/...
+3508245	0.06	/home/justin/.vscode-server/cli/servers/Stable-8761a5560cfd65fdd19ce7e2bd18dab5c0a4d84e/server/node ...
+Refer to the documentation on how to address the out of memory issue: https://docs.ray.io/en/latest/ray-core/scheduling/ray-oom-prevention.html. Consider provisioning more memory on this node or reducing task parallelism by requesting more CPUs per task. Set max_restarts and max_task_retries to enable retry when the task crashes due to OOM. To adjust the kill threshold, set the environment variable `RAY_memory_usage_threshold` when starting Ray. To disable worker killing, set the environment variable `RAY_memory_monitor_refresh_ms` to zero.
+
+ERROR flwr 2026-06-03 14:54:01,624 | ray_client_proxy.py:148 | Task was killed due to the node running low on memory.
+Memory on the node (IP: 172.24.108.56, ID: df4b44ae2678b4f48702f56bc522108076c1eda25fcb4586f01bdc84) where the task (actor ID: d1b26e9af1b9d566fbc169d901000000, name=DefaultActor.__init__, pid=3645330, memory used=0.28GB) was running was 14.85GB / 15.49GB (0.958819), which exceeds the memory usage threshold of 0.95. Ray killed this worker (ID: d21751cec7519bca97b0e717bb25381f28a158a3a041664874ad45cf) because it was the most recently scheduled task; to see more information about memory usage on this node, use `ray logs raylet.out -ip 172.24.108.56`. To see the logs of the worker, use `ray logs worker-d21751cec7519bca97b0e717bb25381f28a158a3a041664874ad45cf*out -ip 172.24.108.56. Top 10 memory users:
+PID	MEM(GB)	COMMAND
+3641041	1.78	python -m models.gbm_bestmodel.run --scheme iid --num_rounds 10 --num_clients 5 --oversampling smote...
+3645336	0.49	ray::DefaultActor.run
+3646018	0.41	ray::IDLE_SpillWorker
+3645335	0.40	ray::DefaultActor.run
+3645331	0.39	ray::DefaultActor.run
+3500030	0.37	/home/justin/.vscode-server/cli/servers/Stable-8761a5560cfd65fdd19ce7e2bd18dab5c0a4d84e/server/node ...
+3645330	0.28	ray::DefaultActor.run
+3652087	0.21	claude
+3644783	0.06	/home/justin/miniconda3/envs/fraud-fl-TA/bin/python -u /home/justin/miniconda3/envs/fraud-fl-TA/lib/...
+3508245	0.06	/home/justin/.vscode-server/cli/servers/Stable-8761a5560cfd65fdd19ce7e2bd18dab5c0a4d84e/server/node ...
+Refer to the documentation on how to address the out of memory issue: https://docs.ray.io/en/latest/ray-core/scheduling/ray-oom-prevention.html. Consider provisioning more memory on this node or reducing task parallelism by requesting more CPUs per task. Set max_restarts and max_task_retries to enable retry when the task crashes due to OOM. To adjust the kill threshold, set the environment variable `RAY_memory_usage_threshold` when starting Ray. To disable worker killing, set the environment variable `RAY_memory_monitor_refresh_ms` to zero.
+ERROR flwr 2026-06-03 14:54:01,625 | ray_client_proxy.py:147 | Traceback (most recent call last):
+  File "/home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/flwr/simulation/ray_transport/ray_client_proxy.py", line 140, in _submit_job
+    res = self.actor_pool.get_client_result(self.cid, timeout)
+  File "/home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/flwr/simulation/ray_transport/ray_actor.py", line 402, in get_client_result
+    return self._fetch_future_result(cid)
+  File "/home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/flwr/simulation/ray_transport/ray_actor.py", line 288, in _fetch_future_result
+    res_cid, res = ray.get(future)  # type: (str, ClientRes)
+  File "/home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/ray/_private/auto_init_hook.py", line 24, in auto_init_wrapper
+    return fn(*args, **kwargs)
+  File "/home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/ray/_private/client_mode_hook.py", line 103, in wrapper
+    return func(*args, **kwargs)
+  File "/home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/ray/_private/worker.py", line 2526, in get
+    raise value
+ray.exceptions.OutOfMemoryError: Task was killed due to the node running low on memory.
+Memory on the node (IP: 172.24.108.56, ID: df4b44ae2678b4f48702f56bc522108076c1eda25fcb4586f01bdc84) where the task (actor ID: 98ac71a7dee61995f4ca0b4001000000, name=DefaultActor.__init__, pid=3645332, memory used=0.38GB) was running was 14.79GB / 15.49GB (0.954823), which exceeds the memory usage threshold of 0.95. Ray killed this worker (ID: 1936cf16e623e476577ebd8f1cdfdfd568e370ad3da5158c0fe34d61) because it was the most recently scheduled task; to see more information about memory usage on this node, use `ray logs raylet.out -ip 172.24.108.56`. To see the logs of the worker, use `ray logs worker-1936cf16e623e476577ebd8f1cdfdfd568e370ad3da5158c0fe34d61*out -ip 172.24.108.56. Top 10 memory users:
+PID	MEM(GB)	COMMAND
+3641041	1.90	python -m models.gbm_bestmodel.run --scheme iid --num_rounds 10 --num_clients 5 --oversampling smote...
+3500030	0.40	/home/justin/.vscode-server/cli/servers/Stable-8761a5560cfd65fdd19ce7e2bd18dab5c0a4d84e/server/node ...
+3645335	0.39	ray::DefaultActor.run
+3645336	0.38	ray::DefaultActor.run
+3645332	0.38	ray::DefaultActor.run
+3645331	0.31	ray::DefaultActor.run
+3645330	0.29	ray::DefaultActor.run
+3639236	0.18	claude
+3644330	0.09	/home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/ray/core/src/ray/gcs/gcs_serve...
+3644783	0.08	/home/justin/miniconda3/envs/fraud-fl-TA/bin/python -u /home/justin/miniconda3/envs/fraud-fl-TA/lib/...
+Refer to the documentation on how to address the out of memory issue: https://docs.ray.io/en/latest/ray-core/scheduling/ray-oom-prevention.html. Consider provisioning more memory on this node or reducing task parallelism by requesting more CPUs per task. Set max_restarts and max_task_retries to enable retry when the task crashes due to OOM. To adjust the kill threshold, set the environment variable `RAY_memory_usage_threshold` when starting Ray. To disable worker killing, set the environment variable `RAY_memory_monitor_refresh_ms` to zero.
+
+ERROR flwr 2026-06-03 14:54:01,625 | ray_client_proxy.py:148 | Task was killed due to the node running low on memory.
+Memory on the node (IP: 172.24.108.56, ID: df4b44ae2678b4f48702f56bc522108076c1eda25fcb4586f01bdc84) where the task (actor ID: 98ac71a7dee61995f4ca0b4001000000, name=DefaultActor.__init__, pid=3645332, memory used=0.38GB) was running was 14.79GB / 15.49GB (0.954823), which exceeds the memory usage threshold of 0.95. Ray killed this worker (ID: 1936cf16e623e476577ebd8f1cdfdfd568e370ad3da5158c0fe34d61) because it was the most recently scheduled task; to see more information about memory usage on this node, use `ray logs raylet.out -ip 172.24.108.56`. To see the logs of the worker, use `ray logs worker-1936cf16e623e476577ebd8f1cdfdfd568e370ad3da5158c0fe34d61*out -ip 172.24.108.56. Top 10 memory users:
+PID	MEM(GB)	COMMAND
+3641041	1.90	python -m models.gbm_bestmodel.run --scheme iid --num_rounds 10 --num_clients 5 --oversampling smote...
+3500030	0.40	/home/justin/.vscode-server/cli/servers/Stable-8761a5560cfd65fdd19ce7e2bd18dab5c0a4d84e/server/node ...
+3645335	0.39	ray::DefaultActor.run
+3645336	0.38	ray::DefaultActor.run
+3645332	0.38	ray::DefaultActor.run
+3645331	0.31	ray::DefaultActor.run
+3645330	0.29	ray::DefaultActor.run
+3639236	0.18	claude
+3644330	0.09	/home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/ray/core/src/ray/gcs/gcs_serve...
+3644783	0.08	/home/justin/miniconda3/envs/fraud-fl-TA/bin/python -u /home/justin/miniconda3/envs/fraud-fl-TA/lib/...
+Refer to the documentation on how to address the out of memory issue: https://docs.ray.io/en/latest/ray-core/scheduling/ray-oom-prevention.html. Consider provisioning more memory on this node or reducing task parallelism by requesting more CPUs per task. Set max_restarts and max_task_retries to enable retry when the task crashes due to OOM. To adjust the kill threshold, set the environment variable `RAY_memory_usage_threshold` when starting Ray. To disable worker killing, set the environment variable `RAY_memory_monitor_refresh_ms` to zero.
+ERROR flwr 2026-06-03 14:54:01,626 | ray_client_proxy.py:147 | Traceback (most recent call last):
+  File "/home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/flwr/simulation/ray_transport/ray_client_proxy.py", line 140, in _submit_job
+    res = self.actor_pool.get_client_result(self.cid, timeout)
+  File "/home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/flwr/simulation/ray_transport/ray_actor.py", line 402, in get_client_result
+    return self._fetch_future_result(cid)
+  File "/home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/flwr/simulation/ray_transport/ray_actor.py", line 288, in _fetch_future_result
+    res_cid, res = ray.get(future)  # type: (str, ClientRes)
+  File "/home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/ray/_private/auto_init_hook.py", line 24, in auto_init_wrapper
+    return fn(*args, **kwargs)
+  File "/home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/ray/_private/client_mode_hook.py", line 103, in wrapper
+    return func(*args, **kwargs)
+  File "/home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/ray/_private/worker.py", line 2526, in get
+    raise value
+ray.exceptions.OutOfMemoryError: Task was killed due to the node running low on memory.
+Memory on the node (IP: 172.24.108.56, ID: df4b44ae2678b4f48702f56bc522108076c1eda25fcb4586f01bdc84) where the task (actor ID: 375f26252776471fccb7248d01000000, name=DefaultActor.__init__, pid=3645336, memory used=0.49GB) was running was 14.91GB / 15.49GB (0.962345), which exceeds the memory usage threshold of 0.95. Ray killed this worker (ID: 64af5605f1fed6f082daefd08f2644fd0efbfaca3ea4979e4a70d96b) because it was the most recently scheduled task; to see more information about memory usage on this node, use `ray logs raylet.out -ip 172.24.108.56`. To see the logs of the worker, use `ray logs worker-64af5605f1fed6f082daefd08f2644fd0efbfaca3ea4979e4a70d96b*out -ip 172.24.108.56. Top 10 memory users:
+PID	MEM(GB)	COMMAND
+3641041	2.72	python -m models.gbm_bestmodel.run --scheme iid --num_rounds 10 --num_clients 5 --oversampling smote...
+3645336	0.49	ray::DefaultActor.run
+3646018	0.41	ray::IDLE_SpillWorker
+3645331	0.40	ray::DefaultActor.run
+3645335	0.39	ray::DefaultActor.run
+3500030	0.35	/home/justin/.vscode-server/cli/servers/Stable-8761a5560cfd65fdd19ce7e2bd18dab5c0a4d84e/server/node ...
+3658925	0.22	claude
+3644783	0.06	/home/justin/miniconda3/envs/fraud-fl-TA/bin/python -u /home/justin/miniconda3/envs/fraud-fl-TA/lib/...
+3508245	0.06	/home/justin/.vscode-server/cli/servers/Stable-8761a5560cfd65fdd19ce7e2bd18dab5c0a4d84e/server/node ...
+3500098	0.06	/home/justin/.vscode-server/cli/servers/Stable-8761a5560cfd65fdd19ce7e2bd18dab5c0a4d84e/server/node ...
+Refer to the documentation on how to address the out of memory issue: https://docs.ray.io/en/latest/ray-core/scheduling/ray-oom-prevention.html. Consider provisioning more memory on this node or reducing task parallelism by requesting more CPUs per task. Set max_restarts and max_task_retries to enable retry when the task crashes due to OOM. To adjust the kill threshold, set the environment variable `RAY_memory_usage_threshold` when starting Ray. To disable worker killing, set the environment variable `RAY_memory_monitor_refresh_ms` to zero.
+
+ERROR flwr 2026-06-03 14:54:01,626 | ray_client_proxy.py:148 | Task was killed due to the node running low on memory.
+Memory on the node (IP: 172.24.108.56, ID: df4b44ae2678b4f48702f56bc522108076c1eda25fcb4586f01bdc84) where the task (actor ID: 375f26252776471fccb7248d01000000, name=DefaultActor.__init__, pid=3645336, memory used=0.49GB) was running was 14.91GB / 15.49GB (0.962345), which exceeds the memory usage threshold of 0.95. Ray killed this worker (ID: 64af5605f1fed6f082daefd08f2644fd0efbfaca3ea4979e4a70d96b) because it was the most recently scheduled task; to see more information about memory usage on this node, use `ray logs raylet.out -ip 172.24.108.56`. To see the logs of the worker, use `ray logs worker-64af5605f1fed6f082daefd08f2644fd0efbfaca3ea4979e4a70d96b*out -ip 172.24.108.56. Top 10 memory users:
+PID	MEM(GB)	COMMAND
+3641041	2.72	python -m models.gbm_bestmodel.run --scheme iid --num_rounds 10 --num_clients 5 --oversampling smote...
+3645336	0.49	ray::DefaultActor.run
+3646018	0.41	ray::IDLE_SpillWorker
+3645331	0.40	ray::DefaultActor.run
+3645335	0.39	ray::DefaultActor.run
+3500030	0.35	/home/justin/.vscode-server/cli/servers/Stable-8761a5560cfd65fdd19ce7e2bd18dab5c0a4d84e/server/node ...
+3658925	0.22	claude
+3644783	0.06	/home/justin/miniconda3/envs/fraud-fl-TA/bin/python -u /home/justin/miniconda3/envs/fraud-fl-TA/lib/...
+3508245	0.06	/home/justin/.vscode-server/cli/servers/Stable-8761a5560cfd65fdd19ce7e2bd18dab5c0a4d84e/server/node ...
+3500098	0.06	/home/justin/.vscode-server/cli/servers/Stable-8761a5560cfd65fdd19ce7e2bd18dab5c0a4d84e/server/node ...
+Refer to the documentation on how to address the out of memory issue: https://docs.ray.io/en/latest/ray-core/scheduling/ray-oom-prevention.html. Consider provisioning more memory on this node or reducing task parallelism by requesting more CPUs per task. Set max_restarts and max_task_retries to enable retry when the task crashes due to OOM. To adjust the kill threshold, set the environment variable `RAY_memory_usage_threshold` when starting Ray. To disable worker killing, set the environment variable `RAY_memory_monitor_refresh_ms` to zero.
+DEBUG flwr 2026-06-03 14:54:17,656 | server.py:236 | fit_round 9 received 2 results and 3 failures
+INFO flwr 2026-06-03 14:54:19,605 | server.py:171 | evaluate_round 9: no clients selected, cancel
+DEBUG flwr 2026-06-03 14:54:19,605 | server.py:222 | fit_round 10: strategy sampled 5 clients (out of 5)
+ERROR flwr 2026-06-03 14:54:19,733 | ray_client_proxy.py:147 | Traceback (most recent call last):
+  File "/home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/flwr/simulation/ray_transport/ray_client_proxy.py", line 140, in _submit_job
+    res = self.actor_pool.get_client_result(self.cid, timeout)
+  File "/home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/flwr/simulation/ray_transport/ray_actor.py", line 402, in get_client_result
+    return self._fetch_future_result(cid)
+  File "/home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/flwr/simulation/ray_transport/ray_actor.py", line 288, in _fetch_future_result
+    res_cid, res = ray.get(future)  # type: (str, ClientRes)
+  File "/home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/ray/_private/auto_init_hook.py", line 24, in auto_init_wrapper
+    return fn(*args, **kwargs)
+  File "/home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/ray/_private/client_mode_hook.py", line 103, in wrapper
+    return func(*args, **kwargs)
+  File "/home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/ray/_private/worker.py", line 2526, in get
+    raise value
+ray.exceptions.OutOfMemoryError: Task was killed due to the node running low on memory.
+Memory on the node (IP: 172.24.108.56, ID: df4b44ae2678b4f48702f56bc522108076c1eda25fcb4586f01bdc84) where the task (actor ID: 375f26252776471fccb7248d01000000, name=DefaultActor.__init__, pid=3645336, memory used=0.49GB) was running was 14.91GB / 15.49GB (0.962345), which exceeds the memory usage threshold of 0.95. Ray killed this worker (ID: 64af5605f1fed6f082daefd08f2644fd0efbfaca3ea4979e4a70d96b) because it was the most recently scheduled task; to see more information about memory usage on this node, use `ray logs raylet.out -ip 172.24.108.56`. To see the logs of the worker, use `ray logs worker-64af5605f1fed6f082daefd08f2644fd0efbfaca3ea4979e4a70d96b*out -ip 172.24.108.56. Top 10 memory users:
+PID	MEM(GB)	COMMAND
+3641041	2.72	python -m models.gbm_bestmodel.run --scheme iid --num_rounds 10 --num_clients 5 --oversampling smote...
+3645336	0.49	ray::DefaultActor.run
+3646018	0.41	ray::IDLE_SpillWorker
+3645331	0.40	ray::DefaultActor.run
+3645335	0.39	ray::DefaultActor.run
+3500030	0.35	/home/justin/.vscode-server/cli/servers/Stable-8761a5560cfd65fdd19ce7e2bd18dab5c0a4d84e/server/node ...
+3658925	0.22	claude
+3644783	0.06	/home/justin/miniconda3/envs/fraud-fl-TA/bin/python -u /home/justin/miniconda3/envs/fraud-fl-TA/lib/...
+3508245	0.06	/home/justin/.vscode-server/cli/servers/Stable-8761a5560cfd65fdd19ce7e2bd18dab5c0a4d84e/server/node ...
+3500098	0.06	/home/justin/.vscode-server/cli/servers/Stable-8761a5560cfd65fdd19ce7e2bd18dab5c0a4d84e/server/node ...
+Refer to the documentation on how to address the out of memory issue: https://docs.ray.io/en/latest/ray-core/scheduling/ray-oom-prevention.html. Consider provisioning more memory on this node or reducing task parallelism by requesting more CPUs per task. Set max_restarts and max_task_retries to enable retry when the task crashes due to OOM. To adjust the kill threshold, set the environment variable `RAY_memory_usage_threshold` when starting Ray. To disable worker killing, set the environment variable `RAY_memory_monitor_refresh_ms` to zero.
+
+ERROR flwr 2026-06-03 14:54:19,733 | ray_client_proxy.py:148 | Task was killed due to the node running low on memory.
+Memory on the node (IP: 172.24.108.56, ID: df4b44ae2678b4f48702f56bc522108076c1eda25fcb4586f01bdc84) where the task (actor ID: 375f26252776471fccb7248d01000000, name=DefaultActor.__init__, pid=3645336, memory used=0.49GB) was running was 14.91GB / 15.49GB (0.962345), which exceeds the memory usage threshold of 0.95. Ray killed this worker (ID: 64af5605f1fed6f082daefd08f2644fd0efbfaca3ea4979e4a70d96b) because it was the most recently scheduled task; to see more information about memory usage on this node, use `ray logs raylet.out -ip 172.24.108.56`. To see the logs of the worker, use `ray logs worker-64af5605f1fed6f082daefd08f2644fd0efbfaca3ea4979e4a70d96b*out -ip 172.24.108.56. Top 10 memory users:
+PID	MEM(GB)	COMMAND
+3641041	2.72	python -m models.gbm_bestmodel.run --scheme iid --num_rounds 10 --num_clients 5 --oversampling smote...
+3645336	0.49	ray::DefaultActor.run
+3646018	0.41	ray::IDLE_SpillWorker
+3645331	0.40	ray::DefaultActor.run
+3645335	0.39	ray::DefaultActor.run
+3500030	0.35	/home/justin/.vscode-server/cli/servers/Stable-8761a5560cfd65fdd19ce7e2bd18dab5c0a4d84e/server/node ...
+3658925	0.22	claude
+3644783	0.06	/home/justin/miniconda3/envs/fraud-fl-TA/bin/python -u /home/justin/miniconda3/envs/fraud-fl-TA/lib/...
+3508245	0.06	/home/justin/.vscode-server/cli/servers/Stable-8761a5560cfd65fdd19ce7e2bd18dab5c0a4d84e/server/node ...
+3500098	0.06	/home/justin/.vscode-server/cli/servers/Stable-8761a5560cfd65fdd19ce7e2bd18dab5c0a4d84e/server/node ...
+Refer to the documentation on how to address the out of memory issue: https://docs.ray.io/en/latest/ray-core/scheduling/ray-oom-prevention.html. Consider provisioning more memory on this node or reducing task parallelism by requesting more CPUs per task. Set max_restarts and max_task_retries to enable retry when the task crashes due to OOM. To adjust the kill threshold, set the environment variable `RAY_memory_usage_threshold` when starting Ray. To disable worker killing, set the environment variable `RAY_memory_monitor_refresh_ms` to zero.
+ERROR flwr 2026-06-03 14:54:19,734 | ray_client_proxy.py:147 | Traceback (most recent call last):
+  File "/home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/flwr/simulation/ray_transport/ray_client_proxy.py", line 140, in _submit_job
+    res = self.actor_pool.get_client_result(self.cid, timeout)
+  File "/home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/flwr/simulation/ray_transport/ray_actor.py", line 402, in get_client_result
+    return self._fetch_future_result(cid)
+  File "/home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/flwr/simulation/ray_transport/ray_actor.py", line 288, in _fetch_future_result
+    res_cid, res = ray.get(future)  # type: (str, ClientRes)
+  File "/home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/ray/_private/auto_init_hook.py", line 24, in auto_init_wrapper
+    return fn(*args, **kwargs)
+  File "/home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/ray/_private/client_mode_hook.py", line 103, in wrapper
+    return func(*args, **kwargs)
+  File "/home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/ray/_private/worker.py", line 2526, in get
+    raise value
+ray.exceptions.OutOfMemoryError: Task was killed due to the node running low on memory.
+Memory on the node (IP: 172.24.108.56, ID: df4b44ae2678b4f48702f56bc522108076c1eda25fcb4586f01bdc84) where the task (actor ID: 98ac71a7dee61995f4ca0b4001000000, name=DefaultActor.__init__, pid=3645332, memory used=0.38GB) was running was 14.79GB / 15.49GB (0.954823), which exceeds the memory usage threshold of 0.95. Ray killed this worker (ID: 1936cf16e623e476577ebd8f1cdfdfd568e370ad3da5158c0fe34d61) because it was the most recently scheduled task; to see more information about memory usage on this node, use `ray logs raylet.out -ip 172.24.108.56`. To see the logs of the worker, use `ray logs worker-1936cf16e623e476577ebd8f1cdfdfd568e370ad3da5158c0fe34d61*out -ip 172.24.108.56. Top 10 memory users:
+PID	MEM(GB)	COMMAND
+3641041	1.90	python -m models.gbm_bestmodel.run --scheme iid --num_rounds 10 --num_clients 5 --oversampling smote...
+3500030	0.40	/home/justin/.vscode-server/cli/servers/Stable-8761a5560cfd65fdd19ce7e2bd18dab5c0a4d84e/server/node ...
+3645335	0.39	ray::DefaultActor.run
+3645336	0.38	ray::DefaultActor.run
+3645332	0.38	ray::DefaultActor.run
+3645331	0.31	ray::DefaultActor.run
+3645330	0.29	ray::DefaultActor.run
+3639236	0.18	claude
+3644330	0.09	/home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/ray/core/src/ray/gcs/gcs_serve...
+3644783	0.08	/home/justin/miniconda3/envs/fraud-fl-TA/bin/python -u /home/justin/miniconda3/envs/fraud-fl-TA/lib/...
+Refer to the documentation on how to address the out of memory issue: https://docs.ray.io/en/latest/ray-core/scheduling/ray-oom-prevention.html. Consider provisioning more memory on this node or reducing task parallelism by requesting more CPUs per task. Set max_restarts and max_task_retries to enable retry when the task crashes due to OOM. To adjust the kill threshold, set the environment variable `RAY_memory_usage_threshold` when starting Ray. To disable worker killing, set the environment variable `RAY_memory_monitor_refresh_ms` to zero.
+
+ERROR flwr 2026-06-03 14:54:19,734 | ray_client_proxy.py:147 | Traceback (most recent call last):
+  File "/home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/flwr/simulation/ray_transport/ray_client_proxy.py", line 140, in _submit_job
+    res = self.actor_pool.get_client_result(self.cid, timeout)
+  File "/home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/flwr/simulation/ray_transport/ray_actor.py", line 402, in get_client_result
+    return self._fetch_future_result(cid)
+  File "/home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/flwr/simulation/ray_transport/ray_actor.py", line 288, in _fetch_future_result
+    res_cid, res = ray.get(future)  # type: (str, ClientRes)
+  File "/home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/ray/_private/auto_init_hook.py", line 24, in auto_init_wrapper
+    return fn(*args, **kwargs)
+  File "/home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/ray/_private/client_mode_hook.py", line 103, in wrapper
+    return func(*args, **kwargs)
+  File "/home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/ray/_private/worker.py", line 2526, in get
+    raise value
+ray.exceptions.OutOfMemoryError: Task was killed due to the node running low on memory.
+Memory on the node (IP: 172.24.108.56, ID: df4b44ae2678b4f48702f56bc522108076c1eda25fcb4586f01bdc84) where the task (actor ID: d1b26e9af1b9d566fbc169d901000000, name=DefaultActor.__init__, pid=3645330, memory used=0.28GB) was running was 14.85GB / 15.49GB (0.958819), which exceeds the memory usage threshold of 0.95. Ray killed this worker (ID: d21751cec7519bca97b0e717bb25381f28a158a3a041664874ad45cf) because it was the most recently scheduled task; to see more information about memory usage on this node, use `ray logs raylet.out -ip 172.24.108.56`. To see the logs of the worker, use `ray logs worker-d21751cec7519bca97b0e717bb25381f28a158a3a041664874ad45cf*out -ip 172.24.108.56. Top 10 memory users:
+PID	MEM(GB)	COMMAND
+3641041	1.78	python -m models.gbm_bestmodel.run --scheme iid --num_rounds 10 --num_clients 5 --oversampling smote...
+3645336	0.49	ray::DefaultActor.run
+3646018	0.41	ray::IDLE_SpillWorker
+3645335	0.40	ray::DefaultActor.run
+3645331	0.39	ray::DefaultActor.run
+3500030	0.37	/home/justin/.vscode-server/cli/servers/Stable-8761a5560cfd65fdd19ce7e2bd18dab5c0a4d84e/server/node ...
+3645330	0.28	ray::DefaultActor.run
+3652087	0.21	claude
+3644783	0.06	/home/justin/miniconda3/envs/fraud-fl-TA/bin/python -u /home/justin/miniconda3/envs/fraud-fl-TA/lib/...
+3508245	0.06	/home/justin/.vscode-server/cli/servers/Stable-8761a5560cfd65fdd19ce7e2bd18dab5c0a4d84e/server/node ...
+Refer to the documentation on how to address the out of memory issue: https://docs.ray.io/en/latest/ray-core/scheduling/ray-oom-prevention.html. Consider provisioning more memory on this node or reducing task parallelism by requesting more CPUs per task. Set max_restarts and max_task_retries to enable retry when the task crashes due to OOM. To adjust the kill threshold, set the environment variable `RAY_memory_usage_threshold` when starting Ray. To disable worker killing, set the environment variable `RAY_memory_monitor_refresh_ms` to zero.
+
+ERROR flwr 2026-06-03 14:54:19,735 | ray_client_proxy.py:148 | Task was killed due to the node running low on memory.
+Memory on the node (IP: 172.24.108.56, ID: df4b44ae2678b4f48702f56bc522108076c1eda25fcb4586f01bdc84) where the task (actor ID: 98ac71a7dee61995f4ca0b4001000000, name=DefaultActor.__init__, pid=3645332, memory used=0.38GB) was running was 14.79GB / 15.49GB (0.954823), which exceeds the memory usage threshold of 0.95. Ray killed this worker (ID: 1936cf16e623e476577ebd8f1cdfdfd568e370ad3da5158c0fe34d61) because it was the most recently scheduled task; to see more information about memory usage on this node, use `ray logs raylet.out -ip 172.24.108.56`. To see the logs of the worker, use `ray logs worker-1936cf16e623e476577ebd8f1cdfdfd568e370ad3da5158c0fe34d61*out -ip 172.24.108.56. Top 10 memory users:
+PID	MEM(GB)	COMMAND
+3641041	1.90	python -m models.gbm_bestmodel.run --scheme iid --num_rounds 10 --num_clients 5 --oversampling smote...
+3500030	0.40	/home/justin/.vscode-server/cli/servers/Stable-8761a5560cfd65fdd19ce7e2bd18dab5c0a4d84e/server/node ...
+3645335	0.39	ray::DefaultActor.run
+3645336	0.38	ray::DefaultActor.run
+3645332	0.38	ray::DefaultActor.run
+3645331	0.31	ray::DefaultActor.run
+3645330	0.29	ray::DefaultActor.run
+3639236	0.18	claude
+3644330	0.09	/home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/ray/core/src/ray/gcs/gcs_serve...
+3644783	0.08	/home/justin/miniconda3/envs/fraud-fl-TA/bin/python -u /home/justin/miniconda3/envs/fraud-fl-TA/lib/...
+Refer to the documentation on how to address the out of memory issue: https://docs.ray.io/en/latest/ray-core/scheduling/ray-oom-prevention.html. Consider provisioning more memory on this node or reducing task parallelism by requesting more CPUs per task. Set max_restarts and max_task_retries to enable retry when the task crashes due to OOM. To adjust the kill threshold, set the environment variable `RAY_memory_usage_threshold` when starting Ray. To disable worker killing, set the environment variable `RAY_memory_monitor_refresh_ms` to zero.
+ERROR flwr 2026-06-03 14:54:19,735 | ray_client_proxy.py:148 | Task was killed due to the node running low on memory.
+Memory on the node (IP: 172.24.108.56, ID: df4b44ae2678b4f48702f56bc522108076c1eda25fcb4586f01bdc84) where the task (actor ID: d1b26e9af1b9d566fbc169d901000000, name=DefaultActor.__init__, pid=3645330, memory used=0.28GB) was running was 14.85GB / 15.49GB (0.958819), which exceeds the memory usage threshold of 0.95. Ray killed this worker (ID: d21751cec7519bca97b0e717bb25381f28a158a3a041664874ad45cf) because it was the most recently scheduled task; to see more information about memory usage on this node, use `ray logs raylet.out -ip 172.24.108.56`. To see the logs of the worker, use `ray logs worker-d21751cec7519bca97b0e717bb25381f28a158a3a041664874ad45cf*out -ip 172.24.108.56. Top 10 memory users:
+PID	MEM(GB)	COMMAND
+3641041	1.78	python -m models.gbm_bestmodel.run --scheme iid --num_rounds 10 --num_clients 5 --oversampling smote...
+3645336	0.49	ray::DefaultActor.run
+3646018	0.41	ray::IDLE_SpillWorker
+3645335	0.40	ray::DefaultActor.run
+3645331	0.39	ray::DefaultActor.run
+3500030	0.37	/home/justin/.vscode-server/cli/servers/Stable-8761a5560cfd65fdd19ce7e2bd18dab5c0a4d84e/server/node ...
+3645330	0.28	ray::DefaultActor.run
+3652087	0.21	claude
+3644783	0.06	/home/justin/miniconda3/envs/fraud-fl-TA/bin/python -u /home/justin/miniconda3/envs/fraud-fl-TA/lib/...
+3508245	0.06	/home/justin/.vscode-server/cli/servers/Stable-8761a5560cfd65fdd19ce7e2bd18dab5c0a4d84e/server/node ...
+Refer to the documentation on how to address the out of memory issue: https://docs.ray.io/en/latest/ray-core/scheduling/ray-oom-prevention.html. Consider provisioning more memory on this node or reducing task parallelism by requesting more CPUs per task. Set max_restarts and max_task_retries to enable retry when the task crashes due to OOM. To adjust the kill threshold, set the environment variable `RAY_memory_usage_threshold` when starting Ray. To disable worker killing, set the environment variable `RAY_memory_monitor_refresh_ms` to zero.
+DEBUG flwr 2026-06-03 14:54:35,939 | server.py:236 | fit_round 10 received 2 results and 3 failures
+INFO flwr 2026-06-03 14:54:39,047 | server.py:171 | evaluate_round 10: no clients selected, cancel
+INFO flwr 2026-06-03 14:54:39,047 | server.py:153 | FL finished in 202.10750072309747
+INFO flwr 2026-06-03 14:54:39,048 | app.py:225 | app_fit: losses_distributed []
+INFO flwr 2026-06-03 14:54:39,048 | app.py:226 | app_fit: metrics_distributed_fit {'selected_client_id': [(1, 0.0), (2, 0.0), (3, 0.0), (4, 0.0), (5, 0.0), (6, 0.0), (7, 3.0), (8, 4.0), (9, 0.0), (10, 0.0)], 'val_auprc': [(1, 0.9971202932015462), (2, 0.9971202932015462), (3, 0.9971202932015462), (4, 0.9971202932015462), (5, 0.9971202932015462), (6, 0.9971202932015462), (7, 0.996798173074599), (8, 0.9970868692486035), (9, 0.9971202932015462), (10, 0.9971202932015462)], 'val_f1': [(1, 0.9052709178031699), (2, 0.9052709178031699), (3, 0.9052709178031699), (4, 0.9052709178031699), (5, 0.9052709178031699), (6, 0.9052709178031699), (7, 0.9069423929098966), (8, 0.9402756508422665), (9, 0.9052709178031699), (10, 0.9052709178031699)], 'val_precision': [(1, 0.8291694800810263), (2, 0.8291694800810263), (3, 0.8291694800810263), (4, 0.8291694800810263), (5, 0.8291694800810263), (6, 0.8291694800810263), (7, 0.8319783197831978), (8, 0.8898550724637682), (9, 0.8291694800810263), (10, 0.8291694800810263)], 'val_recall': [(1, 0.9967532467532467), (2, 0.9967532467532467), (3, 0.9967532467532467), (4, 0.9967532467532467), (5, 0.9967532467532467), (6, 0.9967532467532467), (7, 0.9967532467532467), (8, 0.9967532467532467), (9, 0.9967532467532467), (10, 0.9967532467532467)]}
+INFO flwr 2026-06-03 14:54:39,048 | app.py:227 | app_fit: metrics_distributed {}
+INFO flwr 2026-06-03 14:54:39,048 | app.py:228 | app_fit: losses_centralized []
+INFO flwr 2026-06-03 14:54:39,048 | app.py:229 | app_fit: metrics_centralized {}
+wandb: Waiting for W&B process to finish... (success).
+wandb: 
+wandb: Run history:
+wandb: best_client_id ▁▁▁▁▁▁▆█▁▁
+wandb: client_0_auprc ▁▁▁▁▁▁▁▁
+wandb: client_1_auprc ▁▁▁▁
+wandb: client_2_auprc ▁▁▁▁
+wandb: client_3_auprc ▁▁▁
+wandb: client_4_auprc ▁▁▁▁▁▁▁▁
+wandb:          round ▁▂▃▃▄▅▆▆▇██
+wandb:     test_auprc ▁
+wandb:        test_f1 ▁
+wandb:      test_loss ▁
+wandb: test_precision ▁
+wandb:    test_recall ▁
+wandb:      val_auprc ██████▁▇██
+wandb:         val_f1 ▁▁▁▁▁▁▁█▁▁
+wandb:       val_loss ▁▁▁▁▁▁█▂▁▁
+wandb:  val_precision ▁▁▁▁▁▁▁█▁▁
+wandb:     val_recall ▁▁▁▁▁▁▁▁▁▁
+wandb: 
+wandb: Run summary:
+wandb:   best_client_id 0
+wandb:       best_round 1
+wandb:   best_val_auprc 0.99712
+wandb:   client_0_auprc 0.99712
+wandb:   client_1_auprc 0.99611
+wandb:   client_2_auprc 0.99525
+wandb:   client_3_auprc 0.9968
+wandb:   client_4_auprc 0.99709
+wandb: duration_seconds 220.80745
+wandb:            round 10
+wandb:       test_auprc 0.99614
+wandb:          test_f1 0.9032
+wandb:        test_loss 0.00386
+wandb:   test_precision 0.82626
+wandb:      test_recall 0.99594
+wandb:        val_auprc 0.99712
+wandb:           val_f1 0.90527
+wandb:         val_loss 0.00288
+wandb:    val_precision 0.82917
+wandb:       val_recall 0.99675
+wandb: 
+wandb: 🚀 View run gbm_iid_alpha-_smote_seed42 at: https://wandb.ai/deo250605-sepuluh-nopember-insitute-of-technology/hfedxgboost-paysim/runs/3pfpjkzr
+wandb: Synced 6 W&B file(s), 0 media file(s), 0 artifact file(s) and 0 other file(s)
+wandb: Find logs at: ./wandb/run-20260603_145112-3pfpjkzr/logs
+[run] resolved config: {'model': 'gbm_bestmodel', 'num_clients': 5, 'num_rounds': 10, 'random_seed': 42, 'oversampling': 'smote', 'smote_k_neighbors': 5, 'smote_sampling_strategy': 'auto', 'use_wandb': True, 'wandb_project': 'hfedxgboost-paysim', 'early_stop_patience': 10, 'partition': {'scheme': 'iid', 'alpha': None}, 'gbm_params': {'max_iter': 100, 'learning_rate': 0.1, 'max_depth': 6}}
+[run] === gbm | scheme=iid alpha=None K=5 R=10 oversampling=smote seed=42 ===
+[paysim] loading data/paysim/paysim.csv
+[paysim] loaded 6,362,620 rows, 11 columns
+
+[paysim] === data summary ===
+  total rows loaded : 6,362,620
+  feature count     : 13
+  feature names     : ['step', 'amount', 'oldbalanceOrg', 'newbalanceOrig', 'oldbalanceDest', 'newbalanceDest', 'errorBalanceOrig', 'errorBalanceDest', 'type_CASH_IN', 'type_CASH_OUT', 'type_DEBIT', 'type_PAYMENT', 'type_TRANSFER']
+  x_train: (4453834, 13)  dtype=float32   |  y_train: (4453834,)  dtype=int32
+  x_val  : (954393, 13)  dtype=float32   |  y_val  : (954393,)  dtype=int32
+  x_test : (954393, 13)  dtype=float32   |  y_test : (954393,)  dtype=int32
+  fraud in train: 5,749 / 4,453,834  (0.1291%)
+  fraud in val  : 1,232 / 954,393  (0.1291%)
+  fraud in test : 1,232 / 954,393  (0.1291%)
+[paysim] === end summary ===
+
+
+[smote] === per-client SMOTE summary ===
+  cid |    n_before |     n_after |  fraud_before |  fraud_after | ratio_after | applied
+----------------------------------------------------------------------------------------
+    0 |     890,767 |   1,779,230 |         1,152 |      889,615 |    50.0000% |    True
+    1 |     890,767 |   1,779,352 |         1,091 |      889,676 |    50.0000% |    True
+    2 |     890,767 |   1,779,186 |         1,174 |      889,593 |    50.0000% |    True
+    3 |     890,767 |   1,779,224 |         1,155 |      889,612 |    50.0000% |    True
+    4 |     890,766 |   1,779,178 |         1,177 |      889,589 |    50.0000% |    True
+[smote] === end summary ===
+
+[run] FL starting: 10 rounds, 5 clients
+[server] round 1 | client_0_auprc=0.9971 | client_1_auprc=0.9961 | client_2_auprc=0.9952 | client_4_auprc=0.9971 | selected_client=0 | val_auprc=0.9971 | val_f1=0.9053 | val_precision=0.8292 | val_recall=0.9968
+[server] round 2 | client_0_auprc=0.9971 | client_2_auprc=0.9952 | client_3_auprc=0.9968 | client_4_auprc=0.9971 | selected_client=0 | val_auprc=0.9971 | val_f1=0.9053 | val_precision=0.8292 | val_recall=0.9968
+[server] round 3 | client_0_auprc=0.9971 | client_2_auprc=0.9952 | client_4_auprc=0.9971 | selected_client=0 | val_auprc=0.9971 | val_f1=0.9053 | val_precision=0.8292 | val_recall=0.9968
+[server] round 4 | client_0_auprc=0.9971 | client_2_auprc=0.9952 | client_4_auprc=0.9971 | selected_client=0 | val_auprc=0.9971 | val_f1=0.9053 | val_precision=0.8292 | val_recall=0.9968
+[server] round 5 | client_0_auprc=0.9971 | client_1_auprc=0.9961 | client_4_auprc=0.9971 | selected_client=0 | val_auprc=0.9971 | val_f1=0.9053 | val_precision=0.8292 | val_recall=0.9968
+[server] round 6 | client_0_auprc=0.9971 | client_1_auprc=0.9961 | selected_client=0 | val_auprc=0.9971 | val_f1=0.9053 | val_precision=0.8292 | val_recall=0.9968
+[server] round 7 | client_1_auprc=0.9961 | client_3_auprc=0.9968 | selected_client=3 | val_auprc=0.9968 | val_f1=0.9069 | val_precision=0.8320 | val_recall=0.9968
+[server] round 8 | client_3_auprc=0.9968 | client_4_auprc=0.9971 | selected_client=4 | val_auprc=0.9971 | val_f1=0.9403 | val_precision=0.8899 | val_recall=0.9968
+[server] round 9 | client_0_auprc=0.9971 | client_4_auprc=0.9971 | selected_client=0 | val_auprc=0.9971 | val_f1=0.9053 | val_precision=0.8292 | val_recall=0.9968
+[server] round 10 | client_0_auprc=0.9971 | client_4_auprc=0.9971 | selected_client=0 | val_auprc=0.9971 | val_f1=0.9053 | val_precision=0.8292 | val_recall=0.9968
+[server] FINAL round 10 | test_auprc=0.9961 | test_f1=0.9032 | test_precision=0.8263 | test_recall=0.9959
+[run] best val_auprc: 0.9971 at round 1 (selected client 0)
+[run] final test: auprc=0.9961 | f1=0.9032 | precision=0.8263 | recall=0.9959
+[run] selection trace: r1:c0 r2:c0 r3:c0 r4:c0 r5:c0 r6:c0 r7:c3 r8:c4 r9:c0 r10:c0
+[results] wrote summary CSV → results/logs/gbm/gbm_iid_alpha-_smote_seed42.csv
+[results] wrote rounds CSV  → results/logs/gbm/gbm_iid_alpha-_smote_seed42_rounds.csv

@@ -1,0 +1,76 @@
+/home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/ray/_private/parameter.py:4: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools<81.
+  import pkg_resources
+/home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/wandb/sdk/launch/builder/build.py:11: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools<81.
+  import pkg_resources
+wandb: Currently logged in as: deo250605 (deo250605-sepuluh-nopember-insitute-of-technology). Use `wandb login --relogin` to force relogin
+wandb: wandb version 0.27.0 is available!  To upgrade, please run:
+wandb:  $ pip install wandb --upgrade
+wandb: Tracking run with wandb version 0.15.12
+wandb: Run data is saved locally in /home/justin/fraud-fl-TA/wandb/run-20260603_144628-5522ae7u
+wandb: Run `wandb offline` to turn off syncing.
+wandb: Syncing run ffd_iid_alpha-_none_seed42
+wandb: ⭐️ View project at https://wandb.ai/deo250605-sepuluh-nopember-insitute-of-technology/hfedxgboost-paysim
+wandb: 🚀 View run at https://wandb.ai/deo250605-sepuluh-nopember-insitute-of-technology/hfedxgboost-paysim/runs/5522ae7u
+INFO flwr 2026-06-03 14:46:31,135 | app.py:175 | Starting Flower simulation, config: ServerConfig(num_rounds=50, round_timeout=None)
+2026-06-03 14:46:32,710	INFO worker.py:1621 -- Started a local Ray instance.
+INFO flwr 2026-06-03 14:46:33,424 | app.py:210 | Flower VCE: Ray initialized with resources: {'node:172.24.108.56': 1.0, 'CPU': 20.0, 'node:__internal_head__': 1.0, 'memory': 4008348059.0, 'object_store_memory': 2004174028.0}
+INFO flwr 2026-06-03 14:46:33,424 | app.py:224 | Flower VCE: Resources for each Virtual Client: {'num_cpus': 1, 'num_gpus': 0.2}
+WARNING flwr 2026-06-03 14:46:33,425 | ray_actor.py:132 | The ActorPool is empty. The system (CPUs=20.0, GPUs=0) does not meet the criteria to host at least one client with resources: {'num_cpus': 1, 'num_gpus': 0.2}. Lowering the `client_resources` could help.
+Traceback (most recent call last):
+  File "/home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/runpy.py", line 196, in _run_module_as_main
+    return _run_code(code, main_globals, None,
+  File "/home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/runpy.py", line 86, in _run_code
+    exec(code, run_globals)
+  File "/home/justin/fraud-fl-TA/models/ffd/run.py", line 213, in <module>
+    main()
+  File "/home/justin/fraud-fl-TA/models/ffd/run.py", line 209, in main
+    run(cfg)
+  File "/home/justin/fraud-fl-TA/models/ffd/run.py", line 157, in run
+    history = fl.simulation.start_simulation(
+  File "/home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/flwr/simulation/app.py", line 242, in start_simulation
+    pool = VirtualClientEngineActorPool(
+  File "/home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/flwr/simulation/ray_transport/ray_actor.py", line 184, in __init__
+    num_actors = pool_size_from_resources(client_resources)
+  File "/home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/flwr/simulation/ray_transport/ray_actor.py", line 141, in pool_size_from_resources
+    raise ValueError(
+ValueError: ActorPool is empty. Stopping Simulation. Check 'client_resources' passed to `start_simulation`
+Traceback (most recent call last):
+  File "/home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/runpy.py", line 196, in _run_module_as_main
+    return _run_code(code, main_globals, None,
+  File "/home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/runpy.py", line 86, in _run_code
+    exec(code, run_globals)
+  File "/home/justin/fraud-fl-TA/models/ffd/run.py", line 213, in <module>
+    main()
+  File "/home/justin/fraud-fl-TA/models/ffd/run.py", line 209, in main
+    run(cfg)
+  File "/home/justin/fraud-fl-TA/models/ffd/run.py", line 157, in run
+    history = fl.simulation.start_simulation(
+  File "/home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/flwr/simulation/app.py", line 242, in start_simulation
+    pool = VirtualClientEngineActorPool(
+  File "/home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/flwr/simulation/ray_transport/ray_actor.py", line 184, in __init__
+    num_actors = pool_size_from_resources(client_resources)
+  File "/home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/flwr/simulation/ray_transport/ray_actor.py", line 141, in pool_size_from_resources
+    raise ValueError(
+ValueError: ActorPool is empty. Stopping Simulation. Check 'client_resources' passed to `start_simulation`
+wandb: Waiting for W&B process to finish... (failed 1). Press Control-C to abort syncing.
+wandb: 🚀 View run ffd_iid_alpha-_none_seed42 at: https://wandb.ai/deo250605-sepuluh-nopember-insitute-of-technology/hfedxgboost-paysim/runs/5522ae7u
+wandb: Synced 6 W&B file(s), 0 media file(s), 0 artifact file(s) and 0 other file(s)
+wandb: Find logs at: ./wandb/run-20260603_144628-5522ae7u/logs
+[run] resolved config: {'model': 'ffd', 'num_clients': 5, 'num_rounds': 50, 'local_epochs': 5, 'batch_size': 80, 'lr': 0.01, 'random_seed': 42, 'oversampling': 'none', 'use_wandb': True, 'wandb_project': 'hfedxgboost-paysim', 'early_stop_patience': 10, 'partition': {'scheme': 'iid', 'alpha': None}}
+[run] === ffd | scheme=iid alpha=None K=5 R=50 oversampling=none seed=42 ===
+[paysim] loading data/paysim/paysim.csv
+[paysim] loaded 6,362,620 rows, 11 columns
+
+[paysim] === data summary ===
+  total rows loaded : 6,362,620
+  feature count     : 13
+  feature names     : ['step', 'amount', 'oldbalanceOrg', 'newbalanceOrig', 'oldbalanceDest', 'newbalanceDest', 'errorBalanceOrig', 'errorBalanceDest', 'type_CASH_IN', 'type_CASH_OUT', 'type_DEBIT', 'type_PAYMENT', 'type_TRANSFER']
+  x_train: (4453834, 13)  dtype=float32   |  y_train: (4453834,)  dtype=int32
+  x_val  : (954393, 13)  dtype=float32   |  y_val  : (954393,)  dtype=int32
+  x_test : (954393, 13)  dtype=float32   |  y_test : (954393,)  dtype=int32
+  fraud in train: 5,749 / 4,453,834  (0.1291%)
+  fraud in val  : 1,232 / 954,393  (0.1291%)
+  fraud in test : 1,232 / 954,393  (0.1291%)
+[paysim] === end summary ===
+
+[run] FL starting: 50 rounds, 5 clients
