@@ -68,7 +68,7 @@ KNOWN = ["bert_fraud", "fedxgbllr", "gbm", "ffd", "svm", "lr", "xgb"]
 # cross-client variation is real and they also carry no sampling floor ("n/a").
 #   TODO(box): replace ffd's interim value below with its OWN measured floor once
 #   shap_noise_floor.py reports it (it is now measured directly, not borrowed).
-NOISE_FLOOR = {"fedxgbllr": 0.9730, "bert_fraud": 0.9972, "ffd": 0.9730}  # ffd interim
+NOISE_FLOOR = {"fedxgbllr": 0.9730, "bert_fraud": 0.9972, "ffd": 0.9966}
 SUMMARY_COLS = ["dataset", "model", "condition", "arm", "explainer", "n_clients",
                 "manifest_sha256", "data_hash", "partition_hash",
                 "spearman", "jaccard_at5", "kuncheva",

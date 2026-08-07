@@ -472,11 +472,13 @@ def serverside_eval(
                 "val_f1": v_f1,
                 "val_precision": v_precision,
                 "val_recall": v_recall,
+                "val_recall_at_fpr": vm["recall_at_fpr"],
             }
             print(
                 f"Evaluation on the server (val): val_loss={v_loss:.4f},",
                 f"val_auprc={v_auprc:.4f}, val_f1={v_f1:.4f},",
-                f"val_precision={v_precision:.4f}, val_recall={v_recall:.4f}",
+                f"val_precision={v_precision:.4f}, val_recall={v_recall:.4f},",
+                f"val_{fair_metrics.format_recall_at_fpr(vm)}",
             )
 
         # Test F1/precision/recall at the val-tuned threshold (0.5 fallback
@@ -487,7 +489,8 @@ def serverside_eval(
             f"Evaluation on the server: test_loss={loss:.4f},",
             f"test_,{metric_name},={result:.4f},",
             f"thr={server_threshold:.4f}, auprc={auprc:.4f}, f1={f1:.4f},",
-            f"precision={precision:.4f}, recall={recall:.4f}",
+            f"precision={precision:.4f}, recall={recall:.4f},",
+            fair_metrics.format_recall_at_fpr(tm),
         )
 
         if cfg.use_wandb:
@@ -515,8 +518,16 @@ def serverside_eval(
             ("test_f1", f1),
             ("test_precision", precision),
             ("test_recall", recall),
+            # Recall@5%FPR (always a real float); its operating-point fields are
+            # added below because they can be NA on degenerate labels.
+            ("test_recall_at_fpr", tm["recall_at_fpr"]),
         ):
             history_metrics[name] = torch.tensor(float(raw))
+        # Operating point of the Recall@5%FPR reading — skip any NA (degenerate)
+        # value so the tensor-only history stays clean, mirroring calibration.
+        for _name in ("test_threshold_at_fpr", "test_actual_fpr"):
+            if tm[_name] != fair_metrics.NA:
+                history_metrics[_name] = torch.tensor(float(tm[_name]))
         # Calibration: FedXGBllr's CNN head is a Sigmoid, so `probs` are genuine
         # probabilities (not logits) — calibration applies directly. Skip any NA
         # (degenerate) value so the tensor-only history stays clean.

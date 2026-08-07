@@ -28,16 +28,20 @@ from sklearn.metrics import (
     precision_recall_curve,
     precision_score,
     recall_score,
+    roc_curve,
 )
 
 __all__ = [
     "auprc",
     "best_f1_threshold",
     "metrics_at_threshold",
+    "recall_at_fpr",
+    "format_recall_at_fpr",
     "tuned_metrics",
     "calibration_metrics",
     "calibration_for",
     "baseline_auprc",
+    "TARGET_FPR",
     "NA",
 ]
 
@@ -45,6 +49,11 @@ __all__ = [
 # that emits decision-function margins, not probabilities). Written verbatim to
 # CSVs so downstream code never mistakes it for a real 0.0.
 NA = "NA"
+
+# Target false-positive-rate budget for the Recall@FPR operational metric.
+# Fixed at 5% (0.05): report the recall achievable while raising at most 5%
+# false alarms. See :func:`recall_at_fpr`.
+TARGET_FPR = 0.05
 
 
 def _as_arrays(y_true, scores) -> Tuple[np.ndarray, np.ndarray]:
@@ -85,8 +94,89 @@ def best_f1_threshold(y_true, scores) -> float:
     return float(thresholds[int(np.argmax(f1))])
 
 
+def recall_at_fpr(
+    y_true, scores, target_fpr: float = TARGET_FPR
+) -> Dict[str, float]:
+    """Recall (TPR) at the operating point whose FPR is at most ``target_fpr``.
+
+    **What it measures.** Recall@5%FPR is the fraction of positive (fraud)
+    samples the model detects while raising false alarms on at most 5% of the
+    negatives. Unlike AUPRC — which summarizes ranking quality across *all*
+    thresholds — this is a *threshold-specific operational* metric: it answers
+    "at a fixed, deployable false-alarm budget, how much fraud do we catch?".
+    The two are complementary and reported side by side.
+
+    **How it is computed.** Build the ROC curve from ``(y_true, scores)`` with
+    scikit-learn's :func:`~sklearn.metrics.roc_curve` (rank-based, so it is valid
+    for probabilities *and* SVM decision margins alike, exactly like AUPRC).
+    ROC points are monotone: FPR and TPR both increase as the threshold drops.
+    Among the points with ``FPR <= target_fpr`` we take the one with the largest
+    FPR — equivalently the largest achievable recall inside the budget, at the
+    lowest threshold that still respects it. **No interpolation** is performed
+    (the surrounding evaluation code never interpolates ROC metrics), so the
+    reported point is an operating point the model can actually be run at, and
+    ``actual_fpr`` is the true FPR there (typically just under 5%).
+
+    Edge cases (deterministic, no division-by-zero / NaN):
+
+    * Degenerate or empty labels (single class) — no ROC is defined, returns
+      ``recall_at_fpr=0.0`` and :data:`NA` for the threshold / actual FPR.
+    * ``roc_curve`` always anchors an ``FPR=0`` point, so at least one point
+      satisfies the budget. Should that ever not hold, we fall back to the
+      point of *smallest available FPR* (the tightest achievable operating
+      point) so a value is always returned.
+
+    Returns ``{"recall_at_fpr", "threshold_at_fpr", "actual_fpr"}``.
+    """
+    y_true, scores = _as_arrays(y_true, scores)
+    if y_true.size == 0 or np.unique(y_true).size < 2:
+        return {"recall_at_fpr": 0.0, "threshold_at_fpr": NA, "actual_fpr": NA}
+
+    fpr, tpr, thresholds = roc_curve(y_true, scores)
+
+    # Points within the FPR budget. fpr is sorted non-decreasing, so the LAST
+    # such index is the largest FPR <= target — i.e. the maximum recall we can
+    # buy inside the 5% false-alarm budget. If (defensively) none qualify, fall
+    # back to the smallest-FPR point so the metric is always defined.
+    within = np.nonzero(fpr <= target_fpr)[0]
+    idx = int(within[-1]) if within.size else int(np.argmin(fpr))
+
+    return {
+        "recall_at_fpr": float(tpr[idx]),
+        "threshold_at_fpr": float(thresholds[idx]),
+        "actual_fpr": float(fpr[idx]),
+    }
+
+
+def format_recall_at_fpr(m: Dict[str, object], target_fpr: float = TARGET_FPR) -> str:
+    """One-line, :data:`NA`-safe console string for the Recall@FPR operating point.
+
+    Accepts any dict carrying ``recall_at_fpr`` / ``threshold_at_fpr`` /
+    ``actual_fpr`` (e.g. the return of :func:`metrics_at_threshold` /
+    :func:`recall_at_fpr`). Non-numeric fields (degenerate labels) render as
+    ``NA`` instead of crashing a ``%.4f`` format.
+    """
+    pct = f"{target_fpr * 100:g}%"
+
+    def _f(x: object) -> str:
+        return f"{x:.4f}" if isinstance(x, (int, float)) else str(x)
+
+    return (
+        f"recall@{pct}fpr={_f(m.get('recall_at_fpr', NA))} "
+        f"(thr={_f(m.get('threshold_at_fpr', NA))}, "
+        f"fpr={_f(m.get('actual_fpr', NA))})"
+    )
+
+
 def metrics_at_threshold(y_true, scores, threshold: float) -> Dict[str, float]:
-    """AUPRC (threshold-free) + F1/precision/recall at ``score >= threshold``."""
+    """AUPRC (threshold-free) + F1/precision/recall at ``score >= threshold``.
+
+    Also carries the threshold-free, operational Recall@5%FPR triple
+    (``recall_at_fpr`` / ``threshold_at_fpr`` / ``actual_fpr``) so every eval
+    loop reports it alongside AUPRC without a second call. See
+    :func:`recall_at_fpr`; it is independent of ``threshold`` (it derives its
+    own operating point from the ROC curve).
+    """
     y_true, scores = _as_arrays(y_true, scores)
     preds = (scores >= threshold).astype(np.int32)
     return {
@@ -94,6 +184,7 @@ def metrics_at_threshold(y_true, scores, threshold: float) -> Dict[str, float]:
         "f1": float(f1_score(y_true, preds, zero_division=0)),
         "precision": float(precision_score(y_true, preds, zero_division=0)),
         "recall": float(recall_score(y_true, preds, zero_division=0)),
+        **recall_at_fpr(y_true, scores),
     }
 
 

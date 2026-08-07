@@ -10,7 +10,12 @@ from __future__ import annotations
 from typing import Any, Callable, Dict, List, Tuple
 
 import numpy as np
-from evaluation.metrics import best_f1_threshold, metrics_at_threshold, calibration_for
+from evaluation.metrics import (
+    best_f1_threshold,
+    metrics_at_threshold,
+    calibration_for,
+    format_recall_at_fpr,
+)
 
 from .model import BertFraudModel
 
@@ -70,7 +75,8 @@ def make_server_eval_fn(
         print(
             f"[server] round {server_round} | thr={threshold:.4f} | "
             f"val_auprc={v['auprc']:.4f} | val_f1={v['f1']:.4f} | "
-            f"val_precision={v['precision']:.4f} | val_recall={v['recall']:.4f}"
+            f"val_precision={v['precision']:.4f} | val_recall={v['recall']:.4f} | "
+            f"val_{format_recall_at_fpr(v)}"
         )
 
         metrics: Dict[str, float] = {
@@ -78,6 +84,7 @@ def make_server_eval_fn(
             "val_f1": v["f1"],
             "val_precision": v["precision"],
             "val_recall": v["recall"],
+            "val_recall_at_fpr": v["recall_at_fpr"],
         }
 
         if wandb_run is not None:
@@ -112,13 +119,17 @@ def make_server_eval_fn(
                 f"[server] FINAL round {server_round} | "
                 f"test_auprc={t['auprc']:.4f} | test_f1={t['f1']:.4f} | "
                 f"test_precision={t['precision']:.4f} | "
-                f"test_recall={t['recall']:.4f}"
+                f"test_recall={t['recall']:.4f} | "
+                f"test_{format_recall_at_fpr(t)}"
             )
             state["final_test"] = {
                 "test_auprc": t["auprc"],
                 "test_f1": t["f1"],
                 "test_precision": t["precision"],
                 "test_recall": t["recall"],
+                "test_recall_at_fpr": t["recall_at_fpr"],
+                "test_threshold_at_fpr": t["threshold_at_fpr"],
+                "test_actual_fpr": t["actual_fpr"],
                 "threshold": threshold,
                 **calibration_for(y_test, test_scores, is_probability=True),
             }

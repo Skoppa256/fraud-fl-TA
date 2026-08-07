@@ -57,6 +57,7 @@ PRIMARY_COLUMNS: Sequence[str] = (
     "test_f1",
     "test_precision",
     "test_recall",
+    "test_recall_at_fpr",
     "duration_seconds",
     "timestamp",
     "run_name",
@@ -159,12 +160,12 @@ def print_markdown_table(rows: List[Dict[str, str]]) -> None:
     header = (
         "| Dataset | Model | Scheme | Oversampling | Seed | "
         "test_auprc | baseline (prev.) | test_f1 | test_precision | test_recall | "
-        "brier | cal_int | cal_slope | best_round | duration (s) |"
+        "recall@5%fpr | brier | cal_int | cal_slope | best_round | duration (s) |"
     )
     sep = (
         "|---------|-------|--------|--------------|------|"
         "------------|------------------|---------|----------------|-------------|"
-        "-------|---------|-----------|------------|--------------|"
+        "-------------|-------|---------|-----------|------------|--------------|"
     )
     print(header)
     print(sep)
@@ -188,6 +189,7 @@ def print_markdown_table(rows: List[Dict[str, str]]) -> None:
             f"{_fmt(row.get('test_f1'))} | "
             f"{_fmt(row.get('test_precision'))} | "
             f"{_fmt(row.get('test_recall'))} | "
+            f"{_fmt(row.get('test_recall_at_fpr'))} | "
             f"{_fmt(row.get('test_brier'))} | "
             f"{_fmt(row.get('test_cal_intercept'))} | "
             f"{_fmt(row.get('test_cal_slope'))} | "

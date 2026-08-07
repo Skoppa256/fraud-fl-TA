@@ -1593,9 +1593,27 @@ model dilatih dengan empat skema agregasi sebagaimana diringkas pada @tab-3-4.
 === Perancangan Modul Evaluasi
 
 Pengukuran performa dilakukan pada test set terpusat untuk seluruh skenario
-eksperimen. Empat metrik dihitung: AUPRC (utama), F1-score, Precision, dan
+eksperimen. Empat metrik utama dihitung: AUPRC (utama), F1-score, Precision, dan
 Recall. Setiap eksperimen dijalankan sebanyak tiga kali dengan random seed yang
 berbeda, dan hasil akhir dilaporkan sebagai rata-rata dengan deviasi standar.
+
+Sebagai pelengkap keempat metrik utama tersebut, penelitian ini juga melaporkan
+*Recall\@5%FPR*, yaitu proporsi transaksi fraud yang berhasil dideteksi sembari
+membatasi false positive rate (FPR) pada paling banyak 5%. Metrik ini
+diperoleh dengan membangun kurva ROC dari skor prediksi model, lalu memilih titik
+operasi (operating point) dengan FPR $lt.eq 0,05$ yang menghasilkan Recall (TPR)
+tertinggi — setara dengan ambang terendah yang masih memenuhi anggaran 5% false
+alarm. Karena kerangka evaluasi tidak melakukan interpolasi pada metrik berbasis
+ROC, titik yang dilaporkan merupakan titik operasi nyata yang dapat dijalankan
+model, dan FPR aktual pada titik tersebut (umumnya sedikit di bawah 5%) turut
+dilaporkan bersama ambangnya. Berbeda dari AUPRC yang meringkas kualitas
+peringkat pada seluruh ambang, Recall\@5%FPR bersifat *operasional dan
+spesifik-ambang*: metrik ini menjawab berapa banyak fraud yang tertangkap pada
+anggaran false alarm tetap yang layak-terapkan, sehingga melengkapi — bukan
+menggantikan — AUPRC. Metrik ini bersifat berbasis peringkat sehingga valid baik
+untuk keluaran probabilitas maupun margin fungsi keputusan SVM. Nilainya
+deterministik; pada kasus degeneratif (label satu kelas) metrik dikembalikan
+sebagai `NA` alih-alih memicu pembagian dengan nol.
 
 Analisis explainability dirancang untuk mengukur dua dimensi yang saling
 melengkapi, yaitu konsistensi interpretasi sebagai indikator kesepakatan antar
@@ -2192,6 +2210,22 @@ Realisasi modul evaluasi yang dirancang pada Subbab Perancangan Modul Evaluasi
 mencakup dua komponen yang saling melengkapi, yaitu pengukuran performa model dan
 analisis explainability, yang keduanya dieksekusi pada model global akhir setiap
 skenario eksperimen.
+
+Komponen pengukuran performa direalisasikan sebagai sekumpulan fungsi metrik
+bersama pada modul `evaluation/metrics.py` yang dipakai identik oleh seluruh model
+FL maupun baseline terpusat, sehingga skema penilaian seragam antar arm. AUPRC
+dihitung bebas-ambang, sedangkan F1-score, Precision, dan Recall dihitung pada
+ambang hasil penyetelan (max-F1 pada validation set). Metrik pelengkap
+Recall\@5%FPR diimplementasikan pada fungsi `recall_at_fpr` yang membangun kurva
+ROC melalui `sklearn.metrics.roc_curve`, memilih titik operasi dengan FPR
+$lt.eq 0,05$ yang memberikan Recall tertinggi tanpa interpolasi, lalu melaporkan
+Recall, ambang, dan FPR aktual pada titik tersebut. Fungsi ini bersifat
+deterministik dan aman terhadap kasus degeneratif (label satu kelas dikembalikan
+sebagai `NA`, tanpa pembagian dengan nol). Nilai Recall\@5%FPR disurfacekan ke
+seluruh jalur pelaporan — keluaran konsol per-ronde maupun final, log W&B, CSV
+per-run (`test_recall_at_fpr`, `test_threshold_at_fpr`, `test_actual_fpr`, serta
+`best_val_recall_at_fpr` dan kolom per-ronde `val_recall_at_fpr`), dan tabel
+ringkasan agregat — berdampingan dengan AUPRC tanpa mengubah komputasi AUPRC.
 
 Komponen analisis explainability merealisasikan kerangka pengukuran yang telah
 dirancang pada Subbab Perancangan Modul Evaluasi dengan mengacu pada konfigurasi
@@ -2807,14 +2841,12 @@ mengubah keduanya dalam rentang noise (FedXGBllr +0,011, BERT −0,001). Karena
 angka-angka ini berbeda secara bermakna, stabilitas antar-client tiap model dibaca
 terhadap floor-nya sendiri, bukan satu ambang global. Floor FFD diukur langsung pada
 arsitekturnya sendiri dengan protokol yang sama — dua run KernelSHAP berbeda-seed
-pada satu client — bukan dipinjam dari FedXGBllr, sehingga setiap model dinilai
-terhadap floor arsitekturnya masing-masing.
-// TODO(box): isi nilai floor FFD terukur dari shap_noise_floor.py di sini, dan
-// perbarui NOISE_FLOOR["ffd"] pada experiments/shap_analysis.py agar sinkron.
-Floor diukur pada 250 sampel
+pada satu client — bukan dipinjam dari FedXGBllr, dan bernilai 0,9966; setiap model
+dinilai terhadap floor arsitekturnya masing-masing (FedXGBllr 0,9730; FFD 0,9966;
+BERT 0,9972). Floor diukur pada 250 sampel
 explanation sedangkan produksi memakai 500; karena penambahan sampel hanya
-memperbanyak perataan, floor merupakan batas bawah — stabilitas produksi setidaknya
-sebaik itu.
+memperbanyak perataan, floor merupakan batas bawah — floor produksi setidaknya
+setinggi itu.
 
 *Dua temuan tentang metrik stabilitas.* Pertama, Jaccard\@5 jenuh pada 1,00 di
 setiap setting noise-floor sehingga tidak dapat membedakan apa pun pada kasus ini.
@@ -2822,11 +2854,12 @@ Dengan 13/30/55 fitur antar dataset, ukuran top-5 tak-terkoreksi yang menempel p
 1,00 tidak membawa informasi — hal ini menguatkan penggunaan indeks Kuncheva yang
 terkoreksi-peluang untuk seluruh klaim lintas-dataset (lihat Subbab Perancangan
 Modul Evaluasi). Kedua, pada FFD kesepakatan DeepSHAP↔KernelSHAP adalah Spearman
-0,9193, di bawah kesepakatan KernelSHAP dengan dirinya sendiri (0,9730). Selisih
-itu adalah galat pendekatan terhadap referensi nyaris-eksak dan menjadi batas jujur
-seberapa halus peringkat antar-client dapat dibaca: perbedaan Spearman antar-client
-yang lebih kecil dari selisih tersebut tidak dapat ditafsirkan sebagai perbedaan
-perilaku model.
+0,9193, jauh di bawah kesepakatan KernelSHAP dengan dirinya sendiri (floor FFD
+0,9966). Selisih itu adalah galat pendekatan KernelSHAP terhadap referensi
+nyaris-eksak dan menjadi batas jujur seberapa halus peringkat antar-client dapat
+dibaca: perbedaan Spearman antar-client yang lebih kecil dari galat tersebut tidak
+dapat ditafsirkan sebagai perbedaan perilaku model. Implikasi kuantitatifnya
+dibahas pada temuan berikut.
 
 *Model pohon sebagai peserta RQ3.* Model pohon (GBM, XGBoost) dijelaskan dengan
 TreeSHAP mode `interventional` memakai background lokal per-client, bukan mode
@@ -2861,6 +2894,62 @@ beserta alasannya, bukan sebagai nilai stabilitas, karena vektor seragam akan
 memalsukan Spearman menjadi nol dan Jaccard maupun Kuncheva menjadi 1,00. Nilai
 stabilitas akhir kedua sel ini mengikuti eksekusi ulang pada skala log-odds
 (dilaporkan bersama tabel produksi di bawah).
+
+*Stabilitas KernelSHAP tidak terselesaikan pada nsamples = 500.* Seluruh sel yang
+dijelaskan KernelSHAP dan telah dijalankan (FFD dan FedXGBllr, 22 sel) memiliki
+Spearman antar-client di bawah floor arsitekturnya sendiri; selisih terhadap floor
+berkisar dari −0,0022 hingga −0,9730, dengan ujung −0,9730 merupakan sel PaySim
+FedXGBllr degeneratif yang masih menunggu eksekusi ulang (lihat paragraf di atas)
+dan bukan sinyal ketidakstabilan. Sebagai contoh terukur, FFD memiliki Spearman
+antar-client rerata 0,9767 terhadap floor 0,9966. Artinya sebaran antar-client yang
+teramati lebih kecil daripada galat estimator itu sendiri, sehingga variasi
+interpretasi antar-client tidak dapat dibedakan dari noise KernelSHAP pada nsamples
+ini. Bukti dari arah independen menguatkan: kesepakatan DeepSHAP↔KernelSHAP pada FFD
+(0,9193) adalah galat KernelSHAP terhadap referensi nyaris-eksak, dan galat ini
+melampaui sebaran antar-client yang teramati ($1 - 0,9767 = 0,0233$ berbanding
+$1 - 0,9193 = 0,0807$) — sehingga perbedaan antar-client berada di dalam selubung
+galat metode. Sel BERT (floor 0,9972, tertinggi di antara ketiganya) belum
+dijalankan pada iterasi ini; mengingat floor-nya, resolvabilitasnya diperkirakan
+tidak berbeda dan angkanya dilaporkan setelah eksekusi ulang. Konsekuensinya,
+jawaban RQ3 bertumpu pada explainer deterministik — LinearSHAP untuk LR dan SVM,
+serta TreeSHAP `interventional` untuk GBM dan XGBoost — yang tidak memiliki floor
+sampling, bukan pada model yang dijelaskan KernelSHAP.
+
+*Apakah menaikkan nsamples akan menyelesaikannya?* Nilai default pustaka SHAP adalah
+$"nsamples" = 2d + 2048$, yakni 2158 untuk BAF berdimensi 55. Dari timing terukur
+pada nsamples = 500 (FedXGBllr ≈195 s dan BERT ≈132 s per client per run) dan sifat
+KernelSHAP yang kira-kira linear terhadap nsamples, 2158 menuntut ≈4,3× waktu: per
+sel (lima client) FedXGBllr ≈1,2 jam dan BERT ≈0,8 jam — dari sekitar 16 dan 11
+menit pada nsamples = 500 — sehingga di seluruh cakupan KernelSHAP menambah puluhan
+GPU-hour. Menaikkan nsamples memang mengecilkan selubung galat estimator (KernelSHAP
+konvergen ke nilai eksak), sehingga secara prinsip sebaran antar-client dapat menjadi
+terselesaikan; namun floor self-agreement pun ikut naik seiring bertambahnya sampel
+(pada nsamples = 1000 floor FedXGBllr telah naik ≈0,011), dan tidak ada jaminan
+sebaran sejati antar-client melampaui selubung yang mengecil. Atas pertimbangan
+biaya-manfaat itu — biaya ≈4,3× tanpa jaminan resolusi — kenaikan nsamples tidak
+ditempuh, dan keterbatasan ini dilaporkan sebagai batas metode pada anggaran
+komputasi penelitian, bukan sebagai kegagalan.
+
+*Temuan RQ3 pada model deterministik.* Karena stabilitas KernelSHAP tidak
+terselesaikan, temuan interpretabilitas yang substantif berada pada explainer
+deterministik yang tidak memiliki floor sampling. Di antara ketiganya, GBM (TreeSHAP
+`interventional`) adalah yang paling tidak stabil: indeks Kuncheva rerata 0,8219
+(minimum 0,544) dan Jaccard\@5 rerata 0,7765 (minimum 0,4702), dengan sel paling
+tidak stabil pada creditcard Dirichlet no-SMOTE (Spearman 0,9287; Jaccard\@5 0,4702)
+— kelima client menyepakati kurang dari separuh lima fitur teratas. Karena model
+pohon tidak memiliki floor sampling, ketidaksepakatan ini bersifat nyata, bukan
+artefak estimator. Sebagai perbandingan, LR dan SVM (LinearSHAP eksak) jauh lebih
+stabil, dengan indeks Kuncheva rerata 0,9112 dan 0,9433.
+
+Temuan ini dihubungkan dengan analisis performa (Subbab Perbandingan Performa Antar
+Paradigma Agregasi dan Subbab Pengaruh Non-IID dan SMOTE): paradigma seleksi
+model-terbaik — yang justru paling robust dalam performa di bawah SMOTE — merupakan
+yang paling tidak stabil dalam interpretasi. Robustnes performa dan stabilitas
+interpretasi karenanya adalah dua properti yang berbeda: sebuah paradigma dapat
+mempertahankan diskriminasi tinggi lintas kondisi sekaligus menghasilkan penjelasan
+yang bergeser antar distribusi lokal. Pemisahan kedua properti ini merupakan salah
+satu kontribusi orisinal penelitian terhadap diskursus Explainable Federated
+Learning.
 
 // TODO (RQ3 — hasil produksi): Tabel stabilitas antar-client (rerata feature
 // importance, Spearman terhadap floor per-model, Jaccard\@5, indeks Kuncheva) per

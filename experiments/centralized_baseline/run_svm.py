@@ -36,7 +36,12 @@ import warnings
 import numpy as np
 from imblearn.over_sampling import ADASYN, SMOTE
 from sklearn.exceptions import ConvergenceWarning
-from evaluation.metrics import tuned_metrics, calibration_for, baseline_auprc
+from evaluation.metrics import (
+    tuned_metrics,
+    calibration_for,
+    baseline_auprc,
+    format_recall_at_fpr,
+)
 from evaluation import model_persistence
 from sklearn.svm import LinearSVC
 
@@ -211,11 +216,13 @@ def main() -> None:
 
     print(
         f"[VAL]  auprc={v['auprc']:.4f} | f1={v['f1']:.4f} | "
-        f"precision={v['precision']:.4f} | recall={v['recall']:.4f}"
+        f"precision={v['precision']:.4f} | recall={v['recall']:.4f} | "
+        f"val_{format_recall_at_fpr(v)}"
     )
     print(
         f"[TEST] auprc={t['auprc']:.4f} | f1={t['f1']:.4f} | "
-        f"precision={t['precision']:.4f} | recall={t['recall']:.4f}"
+        f"precision={t['precision']:.4f} | recall={t['recall']:.4f} | "
+        f"test_{format_recall_at_fpr(t)}"
     )
     print(f"Training time: {train_time:.2f}s")
 
@@ -235,12 +242,16 @@ def main() -> None:
             "val_f1": v["f1"],
             "val_precision": v["precision"],
             "val_recall": v["recall"],
+            "val_recall_at_fpr": v["recall_at_fpr"],
         },
         test_metrics={
             "test_auprc": t["auprc"],
             "test_f1": t["f1"],
             "test_precision": t["precision"],
             "test_recall": t["recall"],
+            "test_recall_at_fpr": t["recall_at_fpr"],
+            "test_threshold_at_fpr": t["threshold_at_fpr"],
+            "test_actual_fpr": t["actual_fpr"],
             "threshold": threshold,
             **calibration_for(y_test, test_scores, is_probability=False),
         },
@@ -261,6 +272,7 @@ def main() -> None:
                 "test_f1": t["f1"],
                 "test_precision": t["precision"],
                 "test_recall": t["recall"],
+                "test_recall_at_fpr": t["recall_at_fpr"],
                 "training_time_s": train_time,
             }
         )
@@ -271,6 +283,7 @@ def main() -> None:
                 "test_f1": t["f1"],
                 "test_precision": t["precision"],
                 "test_recall": t["recall"],
+                "test_recall_at_fpr": t["recall_at_fpr"],
                 "training_time_s": train_time,
             }
         )

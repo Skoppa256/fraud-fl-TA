@@ -809,6 +809,7 @@ def main(argv=None) -> int:
 # recorded value (e.g. SVM calibration), not an empty cell.
 _SMOKE_REQUIRED_COLS = (
     "test_auprc", "test_f1", "test_precision", "test_recall",
+    "test_recall_at_fpr",
     "best_val_auprc", "best_val_f1", "threshold", "data_hash",
     "baseline_auprc", "timestamp", "duration_seconds", "run_name",
 )

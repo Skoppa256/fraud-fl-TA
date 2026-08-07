@@ -72,10 +72,15 @@ def _build_history_state(
     val_f1_map = _series_to_map("val_f1")
     val_precision_map = _series_to_map("val_precision")
     val_recall_map = _series_to_map("val_recall")
+    val_recall_at_fpr_map = _series_to_map("val_recall_at_fpr")
     test_auprc_map = _series_to_map("test_auprc")
     test_f1_map = _series_to_map("test_f1")
     test_precision_map = _series_to_map("test_precision")
     test_recall_map = _series_to_map("test_recall")
+    # Recall@5%FPR operating point (see evaluation.metrics.recall_at_fpr).
+    test_recall_at_fpr_map = _series_to_map("test_recall_at_fpr")
+    test_threshold_at_fpr_map = _series_to_map("test_threshold_at_fpr")
+    test_actual_fpr_map = _series_to_map("test_actual_fpr")
     test_brier_map = _series_to_map("test_brier")
     test_cal_intercept_map = _series_to_map("test_cal_intercept")
     test_cal_slope_map = _series_to_map("test_cal_slope")
@@ -90,6 +95,7 @@ def _build_history_state(
                 "val_f1": val_f1_map.get(r, ""),
                 "val_precision": val_precision_map.get(r, ""),
                 "val_recall": val_recall_map.get(r, ""),
+                "val_recall_at_fpr": val_recall_at_fpr_map.get(r, ""),
             }
         )
 
@@ -115,6 +121,13 @@ def _build_history_state(
             "test_precision": test_precision_map.get(final_round, 0.0),
             "test_recall": test_recall_map.get(final_round, 0.0),
         }
+        # Recall@5%FPR operating point (present only if the server surfaced it).
+        if final_round in test_recall_at_fpr_map:
+            final_test["test_recall_at_fpr"] = test_recall_at_fpr_map[final_round]
+        if final_round in test_threshold_at_fpr_map:
+            final_test["test_threshold_at_fpr"] = test_threshold_at_fpr_map[final_round]
+        if final_round in test_actual_fpr_map:
+            final_test["test_actual_fpr"] = test_actual_fpr_map[final_round]
         # Calibration + threshold (present only if the server surfaced them).
         if final_round in test_brier_map:
             final_test["test_brier"] = test_brier_map[final_round]

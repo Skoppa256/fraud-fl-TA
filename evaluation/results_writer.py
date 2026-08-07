@@ -43,10 +43,20 @@ SUMMARY_COLUMNS: Sequence[str] = (
     "best_val_f1",
     "best_val_precision",
     "best_val_recall",
+    # Recall@5%FPR on validation: recall reachable while holding the false-alarm
+    # rate at <=5%. A threshold-specific operational metric complementing the
+    # threshold-free AUPRC. See evaluation.metrics.recall_at_fpr.
+    "best_val_recall_at_fpr",
     "test_auprc",
     "test_f1",
     "test_precision",
     "test_recall",
+    # Recall@5%FPR on the central test set, plus the operating point it was read
+    # at: the score cut-off (test_threshold_at_fpr) and the FPR actually achieved
+    # there (test_actual_fpr, typically just under 0.05). See recall_at_fpr.
+    "test_recall_at_fpr",
+    "test_threshold_at_fpr",
+    "test_actual_fpr",
     # Calibration (van den Goorbergh et al. 2022). "NA" for models that emit
     # margins, not probabilities (e.g. SVM decision_function). See
     # evaluation.metrics.calibration_metrics.
@@ -82,6 +92,9 @@ ROUND_COLUMNS: Sequence[str] = (
     "val_f1",
     "val_precision",
     "val_recall",
+    # Recall@5%FPR per round (threshold-free operational metric; see
+    # evaluation.metrics.recall_at_fpr).
+    "val_recall_at_fpr",
     "train_loss",
 )
 
@@ -160,6 +173,7 @@ def _best_val_metrics(
                     "best_val_f1": entry.get("val_f1", ""),
                     "best_val_precision": entry.get("val_precision", ""),
                     "best_val_recall": entry.get("val_recall", ""),
+                    "best_val_recall_at_fpr": entry.get("val_recall_at_fpr", ""),
                 }
         except (TypeError, ValueError):
             continue
@@ -167,6 +181,7 @@ def _best_val_metrics(
         "best_val_f1": "",
         "best_val_precision": "",
         "best_val_recall": "",
+        "best_val_recall_at_fpr": "",
     }
 
 
@@ -262,6 +277,10 @@ def write_fl_results(
         "test_f1": final_test.get("test_f1", ""),
         "test_precision": final_test.get("test_precision", ""),
         "test_recall": final_test.get("test_recall", ""),
+        # Recall@5%FPR operating point (blank when the arm did not supply it).
+        "test_recall_at_fpr": final_test.get("test_recall_at_fpr", ""),
+        "test_threshold_at_fpr": final_test.get("test_threshold_at_fpr", ""),
+        "test_actual_fpr": final_test.get("test_actual_fpr", ""),
         # Calibration — "NA" when the arm did not supply it (e.g. SVM margins,
         # or an arm whose eval has not yet been wired to compute calibration).
         "test_brier": final_test.get("test_brier", "NA"),
@@ -295,6 +314,7 @@ def write_fl_results(
                 "val_f1": entry.get("val_f1", ""),
                 "val_precision": entry.get("val_precision", ""),
                 "val_recall": entry.get("val_recall", ""),
+                "val_recall_at_fpr": entry.get("val_recall_at_fpr", ""),
                 "train_loss": entry.get("train_loss", ""),
             }
         )
@@ -353,10 +373,14 @@ def write_centralized_results(
         "best_val_f1": val_metrics.get("val_f1", ""),
         "best_val_precision": val_metrics.get("val_precision", ""),
         "best_val_recall": val_metrics.get("val_recall", ""),
+        "best_val_recall_at_fpr": val_metrics.get("val_recall_at_fpr", ""),
         "test_auprc": test_metrics.get("test_auprc", ""),
         "test_f1": test_metrics.get("test_f1", ""),
         "test_precision": test_metrics.get("test_precision", ""),
         "test_recall": test_metrics.get("test_recall", ""),
+        "test_recall_at_fpr": test_metrics.get("test_recall_at_fpr", ""),
+        "test_threshold_at_fpr": test_metrics.get("test_threshold_at_fpr", ""),
+        "test_actual_fpr": test_metrics.get("test_actual_fpr", ""),
         "test_brier": test_metrics.get("test_brier", "NA"),
         "test_cal_intercept": test_metrics.get("test_cal_intercept", "NA"),
         "test_cal_slope": test_metrics.get("test_cal_slope", "NA"),
