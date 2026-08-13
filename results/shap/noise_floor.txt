@@ -1,0 +1,28 @@
+/home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/ray/_private/parameter.py:4: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools<81.
+  import pkg_resources
+/home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/torch/nn/modules/transformer.py:392: UserWarning: enable_nested_tensor is True, but self.use_nested_tensor is False because encoder_layer.norm_first was True
+  warnings.warn(
+========================================================================
+KernelSHAP NOISE FLOOR — READ-ONLY, writes nothing
+dataset=baf dirichlet a=0.5 | N_explain=250 bg=100->kmeans10 | seeds=(11, 22)
+========================================================================
+shap 0.49.1
+background client=0 n=100 | explanation n=250 (0 shape (250, 55))
+
+### FedXGBllr noise floor (manifest 595526c1979e8a4f)
+    nsamples= 100: Spearman=0.9405  Jaccard@5=1.00  [270s for both runs]
+    nsamples= 500: Spearman=0.9730  Jaccard@5=1.00  [390s for both runs]  <= adopt
+    nsamples=1000: Spearman=0.9836  Jaccard@5=1.00  [473s for both runs]  <= adopt
+
+### BERT noise floor (manifest 29b30f1f2e40e468)
+    nsamples= 100: Spearman=0.9653  Jaccard@5=1.00  [36s for both runs]  <= adopt
+    nsamples= 500: Spearman=0.9972  Jaccard@5=1.00  [264s for both runs]  <= adopt
+    nsamples=1000: Spearman=0.9961  Jaccard@5=1.00  [474s for both runs]  <= adopt
+
+### FFD DeepSHAP↔KernelSHAP cross-check (manifest 375cb56c28c7abcc)
+    DeepSHAP vs KernelSHAP(nsamples=500): Spearman=0.9193 Jaccard@5=1.00 mean|Δ importance|=3.40e-02
+
+========================================================================
+Decision rule: adopt smallest nsamples with Spearman > 0.95 on BOTH FedXGBllr and BERT. If 1000 fails, report floor as a stability limitation.
+No artifact or results file was modified.
+========================================================================

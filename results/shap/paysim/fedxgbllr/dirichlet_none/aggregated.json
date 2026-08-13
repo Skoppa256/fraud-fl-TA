@@ -1,0 +1,55 @@
+{
+  "dataset": "paysim",
+  "model": "fedxgbllr",
+  "condition": "dirichlet",
+  "arm": "none",
+  "explainer": "kernel",
+  "nsamples": 500,
+  "n_clients": 5,
+  "manifest_sha256": "0df1f56e0b271090",
+  "data_hash": "dd257865dfff5b8f",
+  "partition_hash": "09ff2c0d5af4f6c6",
+  "feature_names_source": "artifact",
+  "top10_features": [
+    [
+      "errorBalanceOrig",
+      0.036104446985274166
+    ],
+    [
+      "newbalanceOrig",
+      0.024290230283015527
+    ],
+    [
+      "amount",
+      0.0067423001164732075
+    ],
+    [
+      "type_PAYMENT",
+      0.0065829077525594495
+    ],
+    [
+      "oldbalanceOrg",
+      0.0045313434553257165
+    ],
+    [
+      "type_TRANSFER",
+      0.004182555786887609
+    ],
+    [
+      "errorBalanceDest",
+      0.0024714762946729256
+    ],
+    [
+      "newbalanceDest",
+      0.0022578843175063896
+    ],
+    [
+      "oldbalanceDest",
+      0.0016479923836829843
+    ],
+    [
+      "step",
+      0.0007163474677822369
+    ]
+  ]
+}

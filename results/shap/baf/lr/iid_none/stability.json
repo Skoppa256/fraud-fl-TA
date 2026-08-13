@@ -1,0 +1,16 @@
+{
+  "dataset": "baf",
+  "model": "lr",
+  "condition": "iid",
+  "arm": "none",
+  "explainer": "linear",
+  "nsamples": "n/a",
+  "n_clients": 5,
+  "manifest_sha256": "53c7710919f270d1",
+  "data_hash": "b3e0d335cd39bbe7",
+  "partition_hash": "cd5b049a3e8a4b5f",
+  "feature_names_source": "artifact",
+  "spearman": 0.9864569428911574,
+  "jaccard_at5": 1.0,
+  "kuncheva": 1.0
+}

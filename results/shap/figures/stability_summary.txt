@@ -1,0 +1,23 @@
+SHAP stability summary (federated cells only, n_clients > 1)
+============================================================
+total federated cells: 66
+
+cell counts by explainer:
+  kernel   33
+  linear   22
+  tree     11
+
+KernelSHAP cells at or below their own floor: 33/33 (100%)
+
+mean Kuncheva per (dataset, model) — deterministic models only:
+  dataset          LR      SVM      GBM
+  BAF           0.956    0.927    0.853
+  ULB           1.000    0.964    0.742
+  PaySim        0.789    0.935    0.878
+
+five least stable deterministic cells by Kuncheva:
+  0.5440  GBM · ULB / dirichlet / none  (Jaccard@5=0.4702, Spearman=0.9287)
+  0.6880  GBM · ULB / iid / none  (Jaccard@5=0.6048, Spearman=0.9870)
+  0.7400  LR · PaySim / iid / none  (Jaccard@5=0.7333, Spearman=0.9841)
+  0.7725  LR · PaySim / dirichlet / none  (Jaccard@5=0.7667, Spearman=0.9286)
+  0.7725  GBM · PaySim / dirichlet / none  (Jaccard@5=0.7667, Spearman=0.9363)

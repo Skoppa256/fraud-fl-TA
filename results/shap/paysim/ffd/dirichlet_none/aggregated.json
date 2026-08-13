@@ -1,0 +1,55 @@
+{
+  "dataset": "paysim",
+  "model": "ffd",
+  "condition": "dirichlet",
+  "arm": "none",
+  "explainer": "kernel",
+  "nsamples": 500,
+  "n_clients": 5,
+  "manifest_sha256": "810e32e1bed8527c",
+  "data_hash": "dd257865dfff5b8f",
+  "partition_hash": "09ff2c0d5af4f6c6",
+  "feature_names_source": "artifact",
+  "top10_features": [
+    [
+      "type_CASH_IN",
+      2.477238698685967
+    ],
+    [
+      "errorBalanceOrig",
+      2.4695675011848777
+    ],
+    [
+      "newbalanceDest",
+      2.45006626148128
+    ],
+    [
+      "amount",
+      1.3133591360759058
+    ],
+    [
+      "newbalanceOrig",
+      1.2562686126233424
+    ],
+    [
+      "type_CASH_OUT",
+      0.60364858965721
+    ],
+    [
+      "errorBalanceDest",
+      0.5965484751729571
+    ],
+    [
+      "oldbalanceOrg",
+      0.5806774378996131
+    ],
+    [
+      "oldbalanceDest",
+      0.3803038839199152
+    ],
+    [
+      "step",
+      0.2459765468112566
+    ]
+  ]
+}

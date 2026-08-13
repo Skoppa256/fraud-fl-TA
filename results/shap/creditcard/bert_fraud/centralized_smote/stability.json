@@ -1,0 +1,22 @@
+{
+  "dataset": "creditcard",
+  "model": "bert_fraud",
+  "condition": "centralized",
+  "arm": "smote",
+  "explainer": "kernel",
+  "nsamples": 500,
+  "n_clients": 1,
+  "manifest_sha256": "57a0f0b5c5ad5534",
+  "data_hash": "529651a852144c96",
+  "partition_hash": "n/a (centralized",
+  "feature_names_source": "artifact",
+  "spearman": null,
+  "jaccard_at5": null,
+  "kuncheva": null,
+  "degenerate": false,
+  "degenerate_clients": [],
+  "near_zero_fraction_per_client": [
+    0.0
+  ],
+  "undefined_reason": "fewer than 2 clients"
+}

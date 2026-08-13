@@ -1,0 +1,55 @@
+{
+  "dataset": "baf",
+  "model": "svm",
+  "condition": "iid",
+  "arm": "none",
+  "explainer": "linear",
+  "nsamples": "n/a",
+  "n_clients": 5,
+  "manifest_sha256": "6122ddf3b7f66b95",
+  "data_hash": "b3e0d335cd39bbe7",
+  "partition_hash": "cd5b049a3e8a4b5f",
+  "feature_names_source": "artifact",
+  "top10_features": [
+    [
+      "prev_address_months_count_missing",
+      1.8919071129316882
+    ],
+    [
+      "employment_status_CF",
+      0.7558968581376465
+    ],
+    [
+      "employment_status_CA",
+      0.6622076116282193
+    ],
+    [
+      "housing_status_BE",
+      0.4292700968534394
+    ],
+    [
+      "employment_status_CB",
+      0.40197370659318843
+    ],
+    [
+      "employment_status_CE",
+      0.34259935297663047
+    ],
+    [
+      "prev_address_months_count",
+      0.29547369868722057
+    ],
+    [
+      "has_other_cards",
+      0.24678098599748485
+    ],
+    [
+      "housing_status_BC",
+      0.19686961521419682
+    ],
+    [
+      "housing_status_BA",
+      0.1509580622591912
+    ]
+  ]
+}

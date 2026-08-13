@@ -1,0 +1,16 @@
+{
+  "dataset": "baf",
+  "model": "svm",
+  "condition": "dirichlet",
+  "arm": "none",
+  "explainer": "linear",
+  "nsamples": "n/a",
+  "n_clients": 5,
+  "manifest_sha256": "da8fedfb7eb5f0ea",
+  "data_hash": "b3e0d335cd39bbe7",
+  "partition_hash": "2a1e43d2c0e3b2d5",
+  "feature_names_source": "artifact",
+  "spearman": 0.989718243803889,
+  "jaccard_at5": 0.8,
+  "kuncheva": 0.868
+}

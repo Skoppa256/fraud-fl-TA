@@ -1,0 +1,16 @@
+{
+  "dataset": "creditcard",
+  "model": "svm",
+  "condition": "centralized",
+  "arm": "smote",
+  "explainer": "linear",
+  "nsamples": "n/a",
+  "n_clients": 1,
+  "manifest_sha256": "0552f3ea8fbace37",
+  "data_hash": "529651a852144c96",
+  "partition_hash": "n/a (centralized",
+  "feature_names_source": "artifact",
+  "spearman": NaN,
+  "jaccard_at5": NaN,
+  "kuncheva": NaN
+}

@@ -1,0 +1,26 @@
+{
+  "dataset": "paysim",
+  "model": "fedxgbllr",
+  "condition": "dirichlet",
+  "arm": "smote",
+  "explainer": "kernel",
+  "nsamples": 500,
+  "n_clients": 5,
+  "manifest_sha256": "3bec39a4456065da",
+  "data_hash": "dd257865dfff5b8f",
+  "partition_hash": "09ff2c0d5af4f6c6",
+  "feature_names_source": "artifact",
+  "spearman": 0.7560439560439561,
+  "jaccard_at5": 0.6714285714285715,
+  "kuncheva": 0.6425,
+  "degenerate": false,
+  "degenerate_clients": [],
+  "near_zero_fraction_per_client": [
+    0.0,
+    0.0769,
+    0.0,
+    0.0769,
+    0.0
+  ],
+  "undefined_reason": null
+}

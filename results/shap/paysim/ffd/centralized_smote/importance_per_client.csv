@@ -1,0 +1,14 @@
+feature,client_0,mean
+step,0.560381,0.560381
+amount,3.51983,3.51983
+oldbalanceOrg,1.34622,1.34622
+newbalanceOrig,2.40575,2.40575
+oldbalanceDest,2.30219,2.30219
+newbalanceDest,6.39149,6.39149
+errorBalanceOrig,6.32663,6.32663
+errorBalanceDest,0.73532,0.73532
+type_CASH_IN,5.45492,5.45492
+type_CASH_OUT,2.688,2.688
+type_DEBIT,0.0154157,0.0154157
+type_PAYMENT,0.0171743,0.0171743
+type_TRANSFER,0.0155333,0.0155333

@@ -1,0 +1,26 @@
+{
+  "dataset": "creditcard",
+  "model": "gbm",
+  "condition": "iid",
+  "arm": "none",
+  "explainer": "tree",
+  "nsamples": "n/a",
+  "n_clients": 5,
+  "manifest_sha256": "c7037a68438fadc9",
+  "data_hash": "529651a852144c96",
+  "partition_hash": "7b688054df33b633",
+  "feature_names_source": "artifact",
+  "spearman": 0.9869540555870676,
+  "jaccard_at5": 0.6047619047619047,
+  "kuncheva": 0.688,
+  "degenerate": false,
+  "degenerate_clients": [],
+  "near_zero_fraction_per_client": [
+    0.6,
+    0.6,
+    0.6,
+    0.6,
+    0.6
+  ],
+  "undefined_reason": null
+}

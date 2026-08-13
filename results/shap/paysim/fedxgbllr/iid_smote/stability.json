@@ -1,0 +1,16 @@
+{
+  "dataset": "paysim",
+  "model": "fedxgbllr",
+  "condition": "iid",
+  "arm": "smote",
+  "explainer": "kernel",
+  "nsamples": 500,
+  "n_clients": 5,
+  "manifest_sha256": "1d603e74e857ffcf",
+  "data_hash": "dd257865dfff5b8f",
+  "partition_hash": "bca1e67969caa7a8",
+  "feature_names_source": "artifact",
+  "spearman": 0.9472527472527472,
+  "jaccard_at5": 0.8,
+  "kuncheva": 0.8049999999999999
+}

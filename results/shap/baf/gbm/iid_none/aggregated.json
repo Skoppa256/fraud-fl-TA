@@ -1,0 +1,55 @@
+{
+  "dataset": "baf",
+  "model": "gbm",
+  "condition": "iid",
+  "arm": "none",
+  "explainer": "tree",
+  "nsamples": "n/a",
+  "n_clients": 5,
+  "manifest_sha256": "c5d14a1aeaa498cc",
+  "data_hash": "b3e0d335cd39bbe7",
+  "partition_hash": "cd5b049a3e8a4b5f",
+  "feature_names_source": "artifact",
+  "top10_features": [
+    [
+      "housing_status_BA",
+      0.3064454128426499
+    ],
+    [
+      "device_os_windows",
+      0.2850420105136358
+    ],
+    [
+      "prev_address_months_count_missing",
+      0.28066050316596086
+    ],
+    [
+      "keep_alive_session",
+      0.2659906462602152
+    ],
+    [
+      "has_other_cards",
+      0.24392756690692644
+    ],
+    [
+      "phone_home_valid",
+      0.23791117539442985
+    ],
+    [
+      "name_email_similarity",
+      0.22250346203842994
+    ],
+    [
+      "current_address_months_count",
+      0.19215634534701986
+    ],
+    [
+      "income",
+      0.1758045036884069
+    ],
+    [
+      "email_is_free",
+      0.15974822086459622
+    ]
+  ]
+}

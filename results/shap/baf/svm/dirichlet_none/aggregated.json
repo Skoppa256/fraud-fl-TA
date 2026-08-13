@@ -1,0 +1,55 @@
+{
+  "dataset": "baf",
+  "model": "svm",
+  "condition": "dirichlet",
+  "arm": "none",
+  "explainer": "linear",
+  "nsamples": "n/a",
+  "n_clients": 5,
+  "manifest_sha256": "da8fedfb7eb5f0ea",
+  "data_hash": "b3e0d335cd39bbe7",
+  "partition_hash": "2a1e43d2c0e3b2d5",
+  "feature_names_source": "artifact",
+  "top10_features": [
+    [
+      "prev_address_months_count_missing",
+      2.32078015732431
+    ],
+    [
+      "housing_status_BA",
+      1.2690961319966578
+    ],
+    [
+      "employment_status_CA",
+      0.9004086598562611
+    ],
+    [
+      "device_os_windows",
+      0.8858994697045312
+    ],
+    [
+      "housing_status_BE",
+      0.8832363159548029
+    ],
+    [
+      "has_other_cards",
+      0.8304438154565469
+    ],
+    [
+      "phone_home_valid",
+      0.7888790978461031
+    ],
+    [
+      "credit_risk_score",
+      0.6020269310939463
+    ],
+    [
+      "device_os_linux",
+      0.5929875403821483
+    ],
+    [
+      "keep_alive_session",
+      0.5754724387494935
+    ]
+  ]
+}

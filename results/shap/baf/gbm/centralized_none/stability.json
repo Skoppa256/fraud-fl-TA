@@ -1,0 +1,22 @@
+{
+  "dataset": "baf",
+  "model": "gbm",
+  "condition": "centralized",
+  "arm": "none",
+  "explainer": "tree",
+  "nsamples": "n/a",
+  "n_clients": 1,
+  "manifest_sha256": "2a4d7ed6f067525d",
+  "data_hash": "b3e0d335cd39bbe7",
+  "partition_hash": "n/a (centralized",
+  "feature_names_source": "artifact",
+  "spearman": null,
+  "jaccard_at5": null,
+  "kuncheva": null,
+  "degenerate": false,
+  "degenerate_clients": [],
+  "near_zero_fraction_per_client": [
+    0.1455
+  ],
+  "undefined_reason": "fewer than 2 clients"
+}

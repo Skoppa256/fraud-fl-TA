@@ -1,0 +1,55 @@
+{
+  "dataset": "creditcard",
+  "model": "lr",
+  "condition": "centralized",
+  "arm": "smote",
+  "explainer": "linear",
+  "nsamples": "n/a",
+  "n_clients": 1,
+  "manifest_sha256": "74fe21c3a78e2da6",
+  "data_hash": "529651a852144c96",
+  "partition_hash": "n/a (centralized",
+  "feature_names_source": "artifact",
+  "top10_features": [
+    [
+      "V4",
+      1.1266747487976279
+    ],
+    [
+      "V10",
+      0.5533999584349882
+    ],
+    [
+      "V14",
+      0.4233716769761901
+    ],
+    [
+      "V13",
+      0.34816148573051503
+    ],
+    [
+      "Time",
+      0.2812338806480577
+    ],
+    [
+      "V16",
+      0.2797392771553518
+    ],
+    [
+      "V1",
+      0.2518349238395209
+    ],
+    [
+      "V22",
+      0.2257628658931802
+    ],
+    [
+      "V5",
+      0.14780569155632522
+    ],
+    [
+      "V20",
+      0.10938582102952447
+    ]
+  ]
+}

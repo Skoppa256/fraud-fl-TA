@@ -1,0 +1,22 @@
+{
+  "dataset": "paysim",
+  "model": "xgb",
+  "condition": "centralized",
+  "arm": "smote",
+  "explainer": "tree",
+  "nsamples": "n/a",
+  "n_clients": 1,
+  "manifest_sha256": "87686a33d54ab9ac",
+  "data_hash": "dd257865dfff5b8f",
+  "partition_hash": "n/a (centralized",
+  "feature_names_source": "artifact",
+  "spearman": null,
+  "jaccard_at5": null,
+  "kuncheva": null,
+  "degenerate": false,
+  "degenerate_clients": [],
+  "near_zero_fraction_per_client": [
+    0.0
+  ],
+  "undefined_reason": "fewer than 2 clients"
+}

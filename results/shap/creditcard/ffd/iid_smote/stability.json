@@ -1,0 +1,16 @@
+{
+  "dataset": "creditcard",
+  "model": "ffd",
+  "condition": "iid",
+  "arm": "smote",
+  "explainer": "kernel",
+  "nsamples": 500,
+  "n_clients": 5,
+  "manifest_sha256": "fd7b7f839a23fa9e",
+  "data_hash": "529651a852144c96",
+  "partition_hash": "7b688054df33b633",
+  "feature_names_source": "artifact",
+  "spearman": 0.9919466073414906,
+  "jaccard_at5": 0.7333333333333334,
+  "kuncheva": 0.8079999999999998
+}

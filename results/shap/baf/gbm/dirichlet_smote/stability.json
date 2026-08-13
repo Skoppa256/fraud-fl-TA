@@ -1,0 +1,26 @@
+{
+  "dataset": "baf",
+  "model": "gbm",
+  "condition": "dirichlet",
+  "arm": "smote",
+  "explainer": "tree",
+  "nsamples": "n/a",
+  "n_clients": 5,
+  "manifest_sha256": "cd59649c584e3330",
+  "data_hash": "b3e0d335cd39bbe7",
+  "partition_hash": "2a1e43d2c0e3b2d5",
+  "feature_names_source": "artifact",
+  "spearman": 0.9957101449275362,
+  "jaccard_at5": 0.8,
+  "kuncheva": 0.868,
+  "degenerate": false,
+  "degenerate_clients": [],
+  "near_zero_fraction_per_client": [
+    0.1636,
+    0.1636,
+    0.1636,
+    0.1636,
+    0.1636
+  ],
+  "undefined_reason": null
+}

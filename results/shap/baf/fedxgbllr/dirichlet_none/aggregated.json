@@ -1,0 +1,55 @@
+{
+  "dataset": "baf",
+  "model": "fedxgbllr",
+  "condition": "dirichlet",
+  "arm": "none",
+  "explainer": "kernel",
+  "nsamples": 500,
+  "n_clients": 5,
+  "manifest_sha256": "595526c1979e8a4f",
+  "data_hash": "b3e0d335cd39bbe7",
+  "partition_hash": "2a1e43d2c0e3b2d5",
+  "feature_names_source": "artifact",
+  "top10_features": [
+    [
+      "housing_status_BA",
+      0.04102445648568935
+    ],
+    [
+      "device_os_windows",
+      0.030382653293305924
+    ],
+    [
+      "name_email_similarity",
+      0.02357064675021197
+    ],
+    [
+      "phone_home_valid",
+      0.021821440347666605
+    ],
+    [
+      "current_address_months_count",
+      0.019363668100363697
+    ],
+    [
+      "keep_alive_session",
+      0.018945936209534615
+    ],
+    [
+      "intended_balcon_amount",
+      0.014943564580366553
+    ],
+    [
+      "has_other_cards",
+      0.012890900500399868
+    ],
+    [
+      "income",
+      0.012563410475943348
+    ],
+    [
+      "bank_branch_count_8w",
+      0.011898652443434753
+    ]
+  ]
+}

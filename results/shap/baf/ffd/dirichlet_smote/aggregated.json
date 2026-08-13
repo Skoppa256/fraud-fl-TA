@@ -1,0 +1,55 @@
+{
+  "dataset": "baf",
+  "model": "ffd",
+  "condition": "dirichlet",
+  "arm": "smote",
+  "explainer": "kernel",
+  "nsamples": 500,
+  "n_clients": 5,
+  "manifest_sha256": "e5f5362322729942",
+  "data_hash": "b3e0d335cd39bbe7",
+  "partition_hash": "2a1e43d2c0e3b2d5",
+  "feature_names_source": "artifact",
+  "top10_features": [
+    [
+      "housing_status_BB",
+      2.0022477331370485
+    ],
+    [
+      "phone_home_valid",
+      1.5458547323205738
+    ],
+    [
+      "housing_status_BC",
+      1.39662931915797
+    ],
+    [
+      "email_is_free",
+      1.251560952373738
+    ],
+    [
+      "has_other_cards",
+      1.1211785954706153
+    ],
+    [
+      "device_os_other",
+      1.026524133992528
+    ],
+    [
+      "housing_status_BE",
+      0.8438410543678317
+    ],
+    [
+      "zip_count_4w",
+      0.7439585368240941
+    ],
+    [
+      "intended_balcon_amount",
+      0.6699055475793221
+    ],
+    [
+      "payment_type_AA",
+      0.6556958048694163
+    ]
+  ]
+}

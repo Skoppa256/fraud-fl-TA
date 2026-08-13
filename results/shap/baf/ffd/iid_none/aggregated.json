@@ -1,0 +1,55 @@
+{
+  "dataset": "baf",
+  "model": "ffd",
+  "condition": "iid",
+  "arm": "none",
+  "explainer": "kernel",
+  "nsamples": 500,
+  "n_clients": 5,
+  "manifest_sha256": "97a54229f021c535",
+  "data_hash": "b3e0d335cd39bbe7",
+  "partition_hash": "cd5b049a3e8a4b5f",
+  "feature_names_source": "artifact",
+  "top10_features": [
+    [
+      "prev_address_months_count_missing",
+      0.44853221382652136
+    ],
+    [
+      "phone_home_valid",
+      0.40023956893017376
+    ],
+    [
+      "has_other_cards",
+      0.3161015865341803
+    ],
+    [
+      "keep_alive_session",
+      0.3005364406079929
+    ],
+    [
+      "device_os_linux",
+      0.23795453774895656
+    ],
+    [
+      "name_email_similarity",
+      0.23526667721640085
+    ],
+    [
+      "email_is_free",
+      0.2068866433582453
+    ],
+    [
+      "employment_status_CA",
+      0.15990953639365352
+    ],
+    [
+      "device_os_other",
+      0.1496107630319045
+    ],
+    [
+      "housing_status_BA",
+      0.13264433402662743
+    ]
+  ]
+}

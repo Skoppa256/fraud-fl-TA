@@ -1,0 +1,22 @@
+{
+  "dataset": "creditcard",
+  "model": "xgb",
+  "condition": "centralized",
+  "arm": "smote",
+  "explainer": "tree",
+  "nsamples": "n/a",
+  "n_clients": 1,
+  "manifest_sha256": "7d448b02c4204c91",
+  "data_hash": "529651a852144c96",
+  "partition_hash": "n/a (centralized",
+  "feature_names_source": "artifact",
+  "spearman": null,
+  "jaccard_at5": null,
+  "kuncheva": null,
+  "degenerate": false,
+  "degenerate_clients": [],
+  "near_zero_fraction_per_client": [
+    0.0
+  ],
+  "undefined_reason": "fewer than 2 clients"
+}

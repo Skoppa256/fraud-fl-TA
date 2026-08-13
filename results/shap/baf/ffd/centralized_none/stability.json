@@ -1,0 +1,16 @@
+{
+  "dataset": "baf",
+  "model": "ffd",
+  "condition": "centralized",
+  "arm": "none",
+  "explainer": "kernel",
+  "nsamples": 500,
+  "n_clients": 1,
+  "manifest_sha256": "2be379d06a02b50f",
+  "data_hash": "b3e0d335cd39bbe7",
+  "partition_hash": "n/a (centralized",
+  "feature_names_source": "artifact",
+  "spearman": NaN,
+  "jaccard_at5": NaN,
+  "kuncheva": NaN
+}

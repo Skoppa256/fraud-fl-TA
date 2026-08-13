@@ -1,0 +1,16 @@
+{
+  "dataset": "paysim",
+  "model": "ffd",
+  "condition": "dirichlet",
+  "arm": "smote",
+  "explainer": "kernel",
+  "nsamples": 500,
+  "n_clients": 5,
+  "manifest_sha256": "2c4714daa0689e42",
+  "data_hash": "dd257865dfff5b8f",
+  "partition_hash": "09ff2c0d5af4f6c6",
+  "feature_names_source": "artifact",
+  "spearman": 0.9417582417582417,
+  "jaccard_at5": 0.6952380952380952,
+  "kuncheva": 0.675
+}

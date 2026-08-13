@@ -1,0 +1,55 @@
+{
+  "dataset": "baf",
+  "model": "xgb",
+  "condition": "centralized",
+  "arm": "none",
+  "explainer": "tree",
+  "nsamples": "n/a",
+  "n_clients": 1,
+  "manifest_sha256": "8050ba62be1be896",
+  "data_hash": "b3e0d335cd39bbe7",
+  "partition_hash": "n/a (centralized",
+  "feature_names_source": "artifact",
+  "top10_features": [
+    [
+      "housing_status_BA",
+      0.321934501489486
+    ],
+    [
+      "device_os_windows",
+      0.2661425622507401
+    ],
+    [
+      "has_other_cards",
+      0.22530476659584273
+    ],
+    [
+      "keep_alive_session",
+      0.2145114475853077
+    ],
+    [
+      "prev_address_months_count_missing",
+      0.2036690823822468
+    ],
+    [
+      "phone_home_valid",
+      0.1965526185880897
+    ],
+    [
+      "name_email_similarity",
+      0.16938813904117125
+    ],
+    [
+      "current_address_months_count",
+      0.12285621037843054
+    ],
+    [
+      "income",
+      0.11762591740022876
+    ],
+    [
+      "email_is_free",
+      0.09670005464442538
+    ]
+  ]
+}

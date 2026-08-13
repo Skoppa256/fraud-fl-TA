@@ -1,0 +1,22 @@
+{
+  "dataset": "paysim",
+  "model": "bert_fraud",
+  "condition": "centralized",
+  "arm": "none",
+  "explainer": "kernel",
+  "nsamples": 500,
+  "n_clients": 1,
+  "manifest_sha256": "f7a3a88a5f576058",
+  "data_hash": "dd257865dfff5b8f",
+  "partition_hash": "n/a (centralized",
+  "feature_names_source": "artifact",
+  "spearman": null,
+  "jaccard_at5": null,
+  "kuncheva": null,
+  "degenerate": false,
+  "degenerate_clients": [],
+  "near_zero_fraction_per_client": [
+    0.0
+  ],
+  "undefined_reason": "fewer than 2 clients"
+}

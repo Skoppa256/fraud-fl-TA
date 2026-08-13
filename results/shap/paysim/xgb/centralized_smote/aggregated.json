@@ -1,0 +1,55 @@
+{
+  "dataset": "paysim",
+  "model": "xgb",
+  "condition": "centralized",
+  "arm": "smote",
+  "explainer": "tree",
+  "nsamples": "n/a",
+  "n_clients": 1,
+  "manifest_sha256": "87686a33d54ab9ac",
+  "data_hash": "dd257865dfff5b8f",
+  "partition_hash": "n/a (centralized",
+  "feature_names_source": "artifact",
+  "top10_features": [
+    [
+      "errorBalanceOrig",
+      0.58162305194356
+    ],
+    [
+      "newbalanceOrig",
+      0.43211927898549934
+    ],
+    [
+      "type_PAYMENT",
+      0.16751811466019628
+    ],
+    [
+      "type_TRANSFER",
+      0.12251713597924677
+    ],
+    [
+      "amount",
+      0.07992881614620917
+    ],
+    [
+      "errorBalanceDest",
+      0.05868182869339011
+    ],
+    [
+      "oldbalanceOrg",
+      0.04425568223286073
+    ],
+    [
+      "type_CASH_OUT",
+      0.043726903580455105
+    ],
+    [
+      "newbalanceDest",
+      0.0395868902228482
+    ],
+    [
+      "oldbalanceDest",
+      0.038932134771090914
+    ]
+  ]
+}

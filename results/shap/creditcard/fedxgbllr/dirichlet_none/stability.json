@@ -1,0 +1,16 @@
+{
+  "dataset": "creditcard",
+  "model": "fedxgbllr",
+  "condition": "dirichlet",
+  "arm": "none",
+  "explainer": "kernel",
+  "nsamples": 500,
+  "n_clients": 5,
+  "manifest_sha256": "cda9853bf9a63276",
+  "data_hash": "529651a852144c96",
+  "partition_hash": "a74b400c56313f2e",
+  "feature_names_source": "artifact",
+  "spearman": 0.960222469410456,
+  "jaccard_at5": 0.8,
+  "kuncheva": 0.8559999999999999
+}

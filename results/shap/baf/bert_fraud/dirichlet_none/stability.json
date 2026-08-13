@@ -1,0 +1,26 @@
+{
+  "dataset": "baf",
+  "model": "bert_fraud",
+  "condition": "dirichlet",
+  "arm": "none",
+  "explainer": "kernel",
+  "nsamples": 500,
+  "n_clients": 5,
+  "manifest_sha256": "29b30f1f2e40e468",
+  "data_hash": "b3e0d335cd39bbe7",
+  "partition_hash": "2a1e43d2c0e3b2d5",
+  "feature_names_source": "artifact",
+  "spearman": 0.9692150256953941,
+  "jaccard_at5": 0.5571428571428572,
+  "kuncheva": 0.67,
+  "degenerate": false,
+  "degenerate_clients": [],
+  "near_zero_fraction_per_client": [
+    0.1636,
+    0.1636,
+    0.1273,
+    0.1818,
+    0.1091
+  ],
+  "undefined_reason": null
+}

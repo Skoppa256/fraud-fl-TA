@@ -1,0 +1,55 @@
+{
+  "dataset": "baf",
+  "model": "bert_fraud",
+  "condition": "centralized",
+  "arm": "none",
+  "explainer": "kernel",
+  "nsamples": 500,
+  "n_clients": 1,
+  "manifest_sha256": "86dc8ea477bbc0da",
+  "data_hash": "b3e0d335cd39bbe7",
+  "partition_hash": "n/a (centralized",
+  "feature_names_source": "artifact",
+  "top10_features": [
+    [
+      "prev_address_months_count_missing",
+      0.2214382516342034
+    ],
+    [
+      "phone_home_valid",
+      0.18761304902898163
+    ],
+    [
+      "current_address_months_count",
+      0.18463695929779805
+    ],
+    [
+      "housing_status_BA",
+      0.16833223087787647
+    ],
+    [
+      "keep_alive_session",
+      0.16343079511268097
+    ],
+    [
+      "has_other_cards",
+      0.1503835539710767
+    ],
+    [
+      "name_email_similarity",
+      0.14903192507677798
+    ],
+    [
+      "device_os_windows",
+      0.1465283763576461
+    ],
+    [
+      "email_is_free",
+      0.13573075717778477
+    ],
+    [
+      "income",
+      0.0791920558763484
+    ]
+  ]
+}

@@ -1,0 +1,16 @@
+{
+  "dataset": "creditcard",
+  "model": "lr",
+  "condition": "iid",
+  "arm": "none",
+  "explainer": "linear",
+  "nsamples": "n/a",
+  "n_clients": 5,
+  "manifest_sha256": "1b6e343cc4737cd2",
+  "data_hash": "529651a852144c96",
+  "partition_hash": "7b688054df33b633",
+  "feature_names_source": "artifact",
+  "spearman": 0.9965294771968856,
+  "jaccard_at5": 1.0,
+  "kuncheva": 1.0
+}

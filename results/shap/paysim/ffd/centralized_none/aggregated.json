@@ -1,0 +1,55 @@
+{
+  "dataset": "paysim",
+  "model": "ffd",
+  "condition": "centralized",
+  "arm": "none",
+  "explainer": "kernel",
+  "nsamples": 500,
+  "n_clients": 1,
+  "manifest_sha256": "2442e7fa4ef3e25b",
+  "data_hash": "dd257865dfff5b8f",
+  "partition_hash": "n/a (centralized",
+  "feature_names_source": "artifact",
+  "top10_features": [
+    [
+      "newbalanceDest",
+      5.379960099514817
+    ],
+    [
+      "errorBalanceOrig",
+      5.32338627218012
+    ],
+    [
+      "type_CASH_IN",
+      3.8579355494567653
+    ],
+    [
+      "type_CASH_OUT",
+      2.61453107421358
+    ],
+    [
+      "amount",
+      1.914694305339642
+    ],
+    [
+      "oldbalanceDest",
+      1.452286061671741
+    ],
+    [
+      "newbalanceOrig",
+      1.3483670362789344
+    ],
+    [
+      "errorBalanceDest",
+      0.5653712632596195
+    ],
+    [
+      "oldbalanceOrg",
+      0.544642434869795
+    ],
+    [
+      "step",
+      0.34440034365359695
+    ]
+  ]
+}

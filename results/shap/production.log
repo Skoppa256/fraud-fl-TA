@@ -1,0 +1,318 @@
+/home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/ray/_private/parameter.py:4: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools<81.
+  import pkg_resources
+shap 0.49.1 | nsamples=500 bg=100->kmeans10 explain=500
+96 cells in scope (cheap first, then expensive BAF->ULB->PaySim).
+    [paysim/lr/centralized_none] clients=1 spearman=nan kuncheva=nan jac5=nan top=errorBalanceOrig
+    [paysim/svm/dirichlet_smote] clients=5 spearman=0.9626 kuncheva=0.8700 jac5=0.87 top=type_CASH_OUT
+    [paysim/gbm/iid_none] clients=5 spearman=1.0000 kuncheva=1.0000 jac5=1.00 top=errorBalanceDest
+    [paysim/xgb/centralized_smote] clients=1 spearman=nan kuncheva=nan jac5=nan top=errorBalanceOrig
+    [paysim/svm/iid_none] clients=5 spearman=0.9879 kuncheva=1.0000 jac5=1.00 top=type_PAYMENT
+    [paysim/gbm/iid_smote] clients=5 spearman=1.0000 kuncheva=1.0000 jac5=1.00 top=errorBalanceOrig
+    [paysim/lr/iid_none] clients=5 spearman=0.9841 kuncheva=0.7400 jac5=0.73 top=errorBalanceOrig
+    [paysim/lr/dirichlet_none] clients=5 spearman=0.9286 kuncheva=0.7725 jac5=0.77 top=errorBalanceOrig
+    [paysim/svm/centralized_smote] clients=1 spearman=nan kuncheva=nan jac5=nan top=type_CASH_IN
+    [paysim/xgb/centralized_none] clients=1 spearman=nan kuncheva=nan jac5=nan top=errorBalanceOrig
+    [paysim/svm/iid_smote] clients=5 spearman=0.9934 kuncheva=1.0000 jac5=1.00 top=type_CASH_OUT
+    [paysim/gbm/dirichlet_none] clients=5 spearman=1.0000 kuncheva=1.0000 jac5=1.00 top=errorBalanceOrig
+    [paysim/lr/iid_smote] clients=5 spearman=0.9670 kuncheva=0.8700 jac5=0.87 top=errorBalanceOrig
+    [paysim/svm/dirichlet_none] clients=5 spearman=0.9725 kuncheva=0.8700 jac5=0.87 top=type_CASH_OUT
+    [paysim/lr/dirichlet_smote] clients=5 spearman=0.9703 kuncheva=0.7725 jac5=0.77 top=errorBalanceOrig
+    [paysim/gbm/centralized_none] clients=1 spearman=nan kuncheva=nan jac5=nan top=oldbalanceDest
+    [paysim/gbm/dirichlet_smote] clients=5 spearman=1.0000 kuncheva=1.0000 jac5=1.00 top=errorBalanceOrig
+    [paysim/lr/centralized_smote] clients=1 spearman=nan kuncheva=nan jac5=nan top=errorBalanceOrig
+    [paysim/svm/centralized_none] clients=1 spearman=nan kuncheva=nan jac5=nan top=type_CASH_IN
+    [paysim/gbm/centralized_smote] clients=1 spearman=nan kuncheva=nan jac5=nan top=newbalanceOrig
+    [baf/lr/centralized_none] clients=1 spearman=nan kuncheva=nan jac5=nan top=prev_address_months_count_missing
+    [baf/svm/dirichlet_smote] clients=5 spearman=0.9663 kuncheva=1.0000 jac5=1.00 top=housing_status_BB
+    [baf/gbm/iid_none] clients=5 spearman=1.0000 kuncheva=1.0000 jac5=1.00 top=housing_status_BA
+    [baf/svm/iid_none] clients=5 spearman=0.9082 kuncheva=0.9120 jac5=0.87 top=prev_address_months_count_missing
+    [baf/lr/iid_none] clients=5 spearman=0.9865 kuncheva=1.0000 jac5=1.00 top=prev_address_months_count_missing
+    [baf/lr/dirichlet_none] clients=5 spearman=0.9861 kuncheva=0.8680 jac5=0.80 top=prev_address_months_count_missing
+    [baf/xgb/centralized_none] clients=1 spearman=nan kuncheva=nan jac5=nan top=housing_status_BA
+    [baf/gbm/dirichlet_none] clients=5 spearman=1.0000 kuncheva=1.0000 jac5=1.00 top=housing_status_BA
+    [baf/svm/dirichlet_none] clients=5 spearman=0.9897 kuncheva=0.8680 jac5=0.80 top=prev_address_months_count_missing
+    [baf/lr/dirichlet_smote] clients=5 spearman=0.9870 kuncheva=1.0000 jac5=1.00 top=housing_status_BB
+    [baf/gbm/centralized_none] clients=1 spearman=nan kuncheva=nan jac5=nan top=housing_status_BA
+    [baf/gbm/dirichlet_smote] clients=5 spearman=1.0000 kuncheva=1.0000 jac5=1.00 top=housing_status_BA
+    [baf/svm/centralized_none] clients=1 spearman=nan kuncheva=nan jac5=nan top=prev_address_months_count_missing
+    [creditcard/lr/centralized_none] clients=1 spearman=nan kuncheva=nan jac5=nan top=V4
+    [creditcard/svm/dirichlet_smote] clients=5 spearman=0.9984 kuncheva=1.0000 jac5=1.00 top=V4
+    [creditcard/gbm/iid_none] clients=5 spearman=1.0000 kuncheva=1.0000 jac5=1.00 top=V14
+    [creditcard/xgb/centralized_smote] clients=1 spearman=nan kuncheva=nan jac5=nan top=V4
+    [creditcard/svm/iid_none] clients=5 spearman=0.9988 kuncheva=0.8560 jac5=0.80 top=V4
+    [creditcard/gbm/iid_smote] clients=5 spearman=1.0000 kuncheva=1.0000 jac5=1.00 top=V12
+    [creditcard/lr/iid_none] clients=5 spearman=0.9965 kuncheva=1.0000 jac5=1.00 top=V4
+    [creditcard/lr/dirichlet_none] clients=5 spearman=0.9982 kuncheva=1.0000 jac5=1.00 top=V4
+    [creditcard/svm/centralized_smote] clients=1 spearman=nan kuncheva=nan jac5=nan top=V10
+    [creditcard/xgb/centralized_none] clients=1 spearman=nan kuncheva=nan jac5=nan top=V14
+    [creditcard/svm/iid_smote] clients=5 spearman=0.9993 kuncheva=1.0000 jac5=1.00 top=V4
+    [creditcard/gbm/dirichlet_none] clients=5 spearman=1.0000 kuncheva=1.0000 jac5=1.00 top=V14
+    [creditcard/lr/iid_smote] clients=5 spearman=0.9970 kuncheva=1.0000 jac5=1.00 top=V4
+    [creditcard/svm/dirichlet_none] clients=5 spearman=0.9975 kuncheva=1.0000 jac5=1.00 top=V4
+    [creditcard/lr/dirichlet_smote] clients=5 spearman=0.9969 kuncheva=1.0000 jac5=1.00 top=V4
+    [creditcard/gbm/centralized_none] clients=1 spearman=nan kuncheva=nan jac5=nan top=V10
+    [creditcard/gbm/dirichlet_smote] clients=5 spearman=1.0000 kuncheva=1.0000 jac5=1.00 top=V4
+    [creditcard/lr/centralized_smote] clients=1 spearman=nan kuncheva=nan jac5=nan top=V4
+    [creditcard/svm/centralized_none] clients=1 spearman=nan kuncheva=nan jac5=nan top=V10
+    [creditcard/gbm/centralized_smote] clients=1 spearman=nan kuncheva=nan jac5=nan top=V4
+    [ERROR] baf/bert_fraud/dirichlet_none:
+        Traceback (most recent call last):
+          File "/home/justin/fraud-fl-TA/experiments/shap_analysis.py", line 343, in main
+            process_cell(art, None, summary_rows)
+          File "/home/justin/fraud-fl-TA/experiments/shap_analysis.py", line 255, in process_cell
+            kind = EXPLAINER[art["model"]]
+        KeyError: 'bert_fraud'
+      client 0: 462s
+      client 1: 458s
+      client 2: 468s
+      client 3: 465s
+      client 4: 467s
+    [baf/fedxgbllr/dirichlet_smote] clients=5 spearman=0.9708 kuncheva=0.7800 jac5=0.68 top=housing_status_BA
+    [ERROR] baf/bert_fraud/centralized_none:
+        Traceback (most recent call last):
+          File "/home/justin/fraud-fl-TA/experiments/shap_analysis.py", line 343, in main
+            process_cell(art, None, summary_rows)
+          File "/home/justin/fraud-fl-TA/experiments/shap_analysis.py", line 255, in process_cell
+            kind = EXPLAINER[art["model"]]
+        KeyError: 'bert_fraud'
+      client 0: 439s
+      client 1: 442s
+      client 2: 443s
+      client 3: 445s
+      client 4: 453s
+    [baf/fedxgbllr/dirichlet_none] clients=5 spearman=0.9443 kuncheva=0.8240 jac5=0.73 top=housing_status_BA
+      client 0: 69s
+      client 1: 70s
+      client 2: 70s
+      client 3: 71s
+      client 4: 69s
+    [baf/ffd/dirichlet_smote] clients=5 spearman=0.9651 kuncheva=0.8680 jac5=0.80 top=housing_status_BB
+    [ERROR] baf/bert_fraud/dirichlet_smote:
+        Traceback (most recent call last):
+          File "/home/justin/fraud-fl-TA/experiments/shap_analysis.py", line 343, in main
+            process_cell(art, None, summary_rows)
+          File "/home/justin/fraud-fl-TA/experiments/shap_analysis.py", line 255, in process_cell
+            kind = EXPLAINER[art["model"]]
+        KeyError: 'bert_fraud'
+      client 0: 69s
+    [baf/ffd/centralized_none] clients=1 spearman=nan kuncheva=nan jac5=nan top=prev_address_months_count_missing
+      client 0: 464s
+      client 1: 482s
+      client 2: 461s
+      client 3: 459s
+      client 4: 469s
+    [baf/fedxgbllr/iid_none] clients=5 spearman=0.9665 kuncheva=0.7360 jac5=0.63 top=housing_status_BA
+      client 0: 70s
+      client 1: 71s
+      client 2: 70s
+      client 3: 69s
+      client 4: 70s
+    [baf/ffd/dirichlet_none] clients=5 spearman=0.9795 kuncheva=0.9120 jac5=0.87 top=phone_home_valid
+      client 0: 71s
+      client 1: 69s
+      client 2: 70s
+      client 3: 69s
+      client 4: 71s
+    [baf/ffd/iid_none] clients=5 spearman=0.9794 kuncheva=0.8680 jac5=0.80 top=prev_address_months_count_missing
+    [ERROR] baf/bert_fraud/iid_none:
+/home/justin/fraud-fl-TA/evaluation/shap_stability.py:41: ConstantInputWarning: An input array is constant; the correlation coefficient is not defined.
+  rho = spearmanr(imp[i], imp[j]).correlation
+/home/justin/fraud-fl-TA/evaluation/shap_stability.py:41: ConstantInputWarning: An input array is constant; the correlation coefficient is not defined.
+  rho = spearmanr(imp[i], imp[j]).correlation
+        Traceback (most recent call last):
+          File "/home/justin/fraud-fl-TA/experiments/shap_analysis.py", line 343, in main
+            process_cell(art, None, summary_rows)
+          File "/home/justin/fraud-fl-TA/experiments/shap_analysis.py", line 255, in process_cell
+            kind = EXPLAINER[art["model"]]
+        KeyError: 'bert_fraud'
+    [ERROR] creditcard/bert_fraud/dirichlet_none:
+        Traceback (most recent call last):
+          File "/home/justin/fraud-fl-TA/experiments/shap_analysis.py", line 343, in main
+            process_cell(art, None, summary_rows)
+          File "/home/justin/fraud-fl-TA/experiments/shap_analysis.py", line 255, in process_cell
+            kind = EXPLAINER[art["model"]]
+        KeyError: 'bert_fraud'
+      client 0: 367s
+      client 1: 365s
+      client 2: 355s
+      client 3: 358s
+      client 4: 356s
+    [creditcard/fedxgbllr/dirichlet_smote] clients=5 spearman=0.9358 kuncheva=0.7120 jac5=0.63 top=V4
+    [ERROR] creditcard/bert_fraud/centralized_none:
+        Traceback (most recent call last):
+          File "/home/justin/fraud-fl-TA/experiments/shap_analysis.py", line 343, in main
+            process_cell(art, None, summary_rows)
+          File "/home/justin/fraud-fl-TA/experiments/shap_analysis.py", line 255, in process_cell
+            kind = EXPLAINER[art["model"]]
+        KeyError: 'bert_fraud'
+      client 0: 60s
+    [creditcard/ffd/centralized_smote] clients=1 spearman=nan kuncheva=nan jac5=nan top=V4
+      client 0: 340s
+      client 1: 342s
+      client 2: 345s
+      client 3: 346s
+      client 4: 342s
+    [creditcard/fedxgbllr/dirichlet_none] clients=5 spearman=0.9602 kuncheva=0.8560 jac5=0.80 top=V4
+      client 0: 60s
+      client 1: 61s
+      client 2: 61s
+      client 3: 61s
+      client 4: 60s
+    [creditcard/ffd/dirichlet_smote] clients=5 spearman=0.9923 kuncheva=0.8560 jac5=0.80 top=V4
+    [ERROR] creditcard/bert_fraud/dirichlet_smote:
+        Traceback (most recent call last):
+          File "/home/justin/fraud-fl-TA/experiments/shap_analysis.py", line 343, in main
+            process_cell(art, None, summary_rows)
+          File "/home/justin/fraud-fl-TA/experiments/shap_analysis.py", line 255, in process_cell
+            kind = EXPLAINER[art["model"]]
+        KeyError: 'bert_fraud'
+      client 0: 60s
+    [creditcard/ffd/centralized_none] clients=1 spearman=nan kuncheva=nan jac5=nan top=V14
+    [ERROR] creditcard/bert_fraud/iid_smote:
+        Traceback (most recent call last):
+          File "/home/justin/fraud-fl-TA/experiments/shap_analysis.py", line 343, in main
+            process_cell(art, None, summary_rows)
+          File "/home/justin/fraud-fl-TA/experiments/shap_analysis.py", line 255, in process_cell
+            kind = EXPLAINER[art["model"]]
+        KeyError: 'bert_fraud'
+    [ERROR] creditcard/bert_fraud/centralized_smote:
+        Traceback (most recent call last):
+          File "/home/justin/fraud-fl-TA/experiments/shap_analysis.py", line 343, in main
+            process_cell(art, None, summary_rows)
+          File "/home/justin/fraud-fl-TA/experiments/shap_analysis.py", line 255, in process_cell
+            kind = EXPLAINER[art["model"]]
+        KeyError: 'bert_fraud'
+      client 0: 344s
+      client 1: 342s
+      client 2: 343s
+      client 3: 345s
+      client 4: 348s
+    [creditcard/fedxgbllr/iid_none] clients=5 spearman=0.9374 kuncheva=1.0000 jac5=1.00 top=V14
+      client 0: 363s
+      client 1: 362s
+      client 2: 364s
+      client 3: 449s
+      client 4: 362s
+    [creditcard/fedxgbllr/iid_smote] clients=5 spearman=0.9342 kuncheva=0.9040 jac5=0.87 top=V14
+      client 0: 62s
+      client 1: 61s
+      client 2: 59s
+      client 3: 60s
+      client 4: 62s
+    [creditcard/ffd/dirichlet_none] clients=5 spearman=0.9941 kuncheva=1.0000 jac5=1.00 top=V14
+      client 0: 61s
+      client 1: 62s
+      client 2: 59s
+      client 3: 61s
+      client 4: 61s
+    [creditcard/ffd/iid_smote] clients=5 spearman=0.9919 kuncheva=0.8080 jac5=0.73 top=V4
+      client 0: 61s
+      client 1: 62s
+      client 2: 59s
+      client 3: 60s
+      client 4: 62s
+    [creditcard/ffd/iid_none] clients=5 spearman=0.9905 kuncheva=0.6880 jac5=0.60 top=V14
+    [ERROR] creditcard/bert_fraud/iid_none:
+        Traceback (most recent call last):
+          File "/home/justin/fraud-fl-TA/experiments/shap_analysis.py", line 343, in main
+            process_cell(art, None, summary_rows)
+          File "/home/justin/fraud-fl-TA/experiments/shap_analysis.py", line 255, in process_cell
+            kind = EXPLAINER[art["model"]]
+        KeyError: 'bert_fraud'
+    [ERROR] paysim/bert_fraud/dirichlet_none:
+        Traceback (most recent call last):
+          File "/home/justin/fraud-fl-TA/experiments/shap_analysis.py", line 343, in main
+            process_cell(art, None, summary_rows)
+          File "/home/justin/fraud-fl-TA/experiments/shap_analysis.py", line 255, in process_cell
+            kind = EXPLAINER[art["model"]]
+        KeyError: 'bert_fraud'
+      client 0: 322s
+      client 1: 320s
+      client 2: 322s
+      client 3: 320s
+      client 4: 320s
+    [paysim/fedxgbllr/dirichlet_smote] clients=5 spearman=0.0000 kuncheva=1.0000 jac5=1.00 top=type_TRANSFER
+    [ERROR] paysim/bert_fraud/centralized_none:
+        Traceback (most recent call last):
+          File "/home/justin/fraud-fl-TA/experiments/shap_analysis.py", line 343, in main
+            process_cell(art, None, summary_rows)
+          File "/home/justin/fraud-fl-TA/experiments/shap_analysis.py", line 255, in process_cell
+            kind = EXPLAINER[art["model"]]
+        KeyError: 'bert_fraud'
+      client 0: 49s
+    [paysim/ffd/centralized_smote] clients=1 spearman=nan kuncheva=nan jac5=nan top=newbalanceDest
+      client 0: 329s
+      client 1: 317s
+      client 2: 337s
+      client 3: 320s
+      client 4: 318s
+    [paysim/fedxgbllr/dirichlet_none] clients=5 spearman=0.0000 kuncheva=1.0000 jac5=1.00 top=type_TRANSFER
+      client 0: 49s
+      client 1: 44s
+      client 2: 50s
+      client 3: 50s
+      client 4: 48s
+    [paysim/ffd/dirichlet_smote] clients=5 spearman=0.9418 kuncheva=0.6750 jac5=0.70 top=type_CASH_IN
+    [ERROR] paysim/bert_fraud/dirichlet_smote:
+        Traceback (most recent call last):
+          File "/home/justin/fraud-fl-TA/experiments/shap_analysis.py", line 343, in main
+            process_cell(art, None, summary_rows)
+          File "/home/justin/fraud-fl-TA/experiments/shap_analysis.py", line 255, in process_cell
+            kind = EXPLAINER[art["model"]]
+        KeyError: 'bert_fraud'
+      client 0: 49s
+    [paysim/ffd/centralized_none] clients=1 spearman=nan kuncheva=nan jac5=nan top=newbalanceDest
+    [ERROR] paysim/bert_fraud/iid_smote:
+        Traceback (most recent call last):
+          File "/home/justin/fraud-fl-TA/experiments/shap_analysis.py", line 343, in main
+            process_cell(art, None, summary_rows)
+          File "/home/justin/fraud-fl-TA/experiments/shap_analysis.py", line 255, in process_cell
+            kind = EXPLAINER[art["model"]]
+        KeyError: 'bert_fraud'
+    [ERROR] paysim/bert_fraud/centralized_smote:
+        Traceback (most recent call last):
+          File "/home/justin/fraud-fl-TA/experiments/shap_analysis.py", line 343, in main
+            process_cell(art, None, summary_rows)
+          File "/home/justin/fraud-fl-TA/experiments/shap_analysis.py", line 255, in process_cell
+            kind = EXPLAINER[art["model"]]
+        KeyError: 'bert_fraud'
+      client 0: 338s
+      client 1: 335s
+      client 2: 336s
+      client 3: 338s
+      client 4: 339s
+    [paysim/fedxgbllr/iid_none] clients=5 spearman=0.9297 kuncheva=1.0000 jac5=1.00 top=errorBalanceOrig
+      client 0: 349s
+      client 1: 350s
+      client 2: 345s
+      client 3: 350s
+      client 4: 345s
+    [paysim/fedxgbllr/iid_smote] clients=5 spearman=0.9473 kuncheva=0.8050 jac5=0.80 top=errorBalanceOrig
+      client 0: 49s
+      client 1: 48s
+      client 2: 52s
+      client 3: 49s
+      client 4: 49s
+    [paysim/ffd/dirichlet_none] clients=5 spearman=0.9374 kuncheva=0.8700 jac5=0.87 top=type_CASH_IN
+      client 0: 49s
+      client 1: 50s
+      client 2: 50s
+      client 3: 51s
+      client 4: 47s
+    [paysim/ffd/iid_smote] clients=5 spearman=0.9791 kuncheva=0.8050 jac5=0.80 top=errorBalanceOrig
+      client 0: 49s
+      client 1: 47s
+      client 2: 50s
+      client 3: 49s
+      client 4: 47s
+    [paysim/ffd/iid_none] clients=5 spearman=0.9923 kuncheva=1.0000 jac5=1.00 top=newbalanceDest
+    [ERROR] paysim/bert_fraud/iid_none:
+        Traceback (most recent call last):
+          File "/home/justin/fraud-fl-TA/experiments/shap_analysis.py", line 343, in main
+            process_cell(art, None, summary_rows)
+          File "/home/justin/fraud-fl-TA/experiments/shap_analysis.py", line 255, in process_cell
+            kind = EXPLAINER[art["model"]]
+        KeyError: 'bert_fraud'
+
+Wrote 80 cells -> results/shap/ (+ shap_summary.csv, 80 total rows).
+Elapsed 403.7 min. Nothing outside results/shap/ was written.

@@ -1,0 +1,55 @@
+{
+  "dataset": "paysim",
+  "model": "lr",
+  "condition": "iid",
+  "arm": "smote",
+  "explainer": "linear",
+  "nsamples": "n/a",
+  "n_clients": 5,
+  "manifest_sha256": "f3e82acbc2ff3f28",
+  "data_hash": "dd257865dfff5b8f",
+  "partition_hash": "bca1e67969caa7a8",
+  "feature_names_source": "artifact",
+  "top10_features": [
+    [
+      "errorBalanceOrig",
+      6.830616322545595
+    ],
+    [
+      "type_PAYMENT",
+      3.9170995662825376
+    ],
+    [
+      "type_CASH_OUT",
+      3.8547748527038954
+    ],
+    [
+      "newbalanceOrig",
+      3.480287962140306
+    ],
+    [
+      "type_TRANSFER",
+      1.659037142039642
+    ],
+    [
+      "amount",
+      1.5328364029169776
+    ],
+    [
+      "type_CASH_IN",
+      1.4509745494004052
+    ],
+    [
+      "oldbalanceOrg",
+      1.2051370702498994
+    ],
+    [
+      "errorBalanceDest",
+      0.7962332893247439
+    ],
+    [
+      "step",
+      0.5031029066563245
+    ]
+  ]
+}

@@ -1,0 +1,16 @@
+{
+  "dataset": "baf",
+  "model": "svm",
+  "condition": "centralized",
+  "arm": "none",
+  "explainer": "linear",
+  "nsamples": "n/a",
+  "n_clients": 1,
+  "manifest_sha256": "0f7fb782f74eb132",
+  "data_hash": "b3e0d335cd39bbe7",
+  "partition_hash": "n/a (centralized",
+  "feature_names_source": "artifact",
+  "spearman": NaN,
+  "jaccard_at5": NaN,
+  "kuncheva": NaN
+}

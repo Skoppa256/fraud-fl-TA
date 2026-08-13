@@ -1,0 +1,16 @@
+{
+  "dataset": "baf",
+  "model": "ffd",
+  "condition": "dirichlet",
+  "arm": "none",
+  "explainer": "kernel",
+  "nsamples": 500,
+  "n_clients": 5,
+  "manifest_sha256": "375cb56c28c7abcc",
+  "data_hash": "b3e0d335cd39bbe7",
+  "partition_hash": "2a1e43d2c0e3b2d5",
+  "feature_names_source": "artifact",
+  "spearman": 0.9794875406053739,
+  "jaccard_at5": 0.8666666666666666,
+  "kuncheva": 0.9119999999999999
+}
