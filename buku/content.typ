@@ -1727,20 +1727,18 @@ Jumlah evaluasi (nsamples) KernelSHAP ditetapkan bukan secara asumtif melainkan
 melalui pengukuran *noise floor*: KernelSHAP dijalankan dua kali dengan random
 seed berbeda pada satu client, lalu Spearman rank correlation antar kedua vektor
 importance diukur pada nsamples ∈ {100, 500, 1000}. Nilai terkecil yang mencapai
-Spearman > 0,95 pada kedua model tanpa referensi eksak (FedXGBllr dan BERT) adalah
-nsamples = 500 (FedXGBllr 0,9730; BERT 0,9972), sementara nsamples = 1000 hanya
-mengubah keduanya dalam rentang noise; nsamples = 500 karena itu digunakan. Karena
+Spearman > 0,95 pada ketiga model yang dijelaskan KernelSHAP adalah nsamples = 500
+(FedXGBllr 0,9730; FFD 0,9966; BERT 0,9972), sementara nsamples = 1000 hanya
+mengubah ketiganya dalam rentang noise; nsamples = 500 karena itu digunakan. Karena
 floor diukur pada 250 sampel explanation sedangkan produksi memakai 500, dan
 penambahan sampel hanya memperbanyak perataan, floor bersifat batas bawah:
-stabilitas produksi setidaknya sebaik itu. Floor bersifat per-model, bukan satu
-angka global — FedXGBllr 0,9730 berbeda dari BERT 0,9972 — sehingga setiap sel
-dinilai relatif terhadap floor modelnya sendiri: Spearman antar-client yang berada
-pada atau di bawah floor tergolong dalam rentang noise sampling estimator dan tidak
-dapat dibaca sebagai ketidakstabilan model. FFD tidak memiliki floor self-agreement
-yang diukur langsung (probe-nya menjalankan uji-silang DeepSHAP↔KernelSHAP, bukan
-pengulangan seed), sehingga floor FedXGBllr 0,9730 dipakai sebagai proksi
-konservatif — nilai self-agreement KernelSHAP terukur yang paling rendah, sehingga
-cenderung under-flag. Kolom `noise_floor` dan penanda `below_floor` dilaporkan pada
+floor produksi setidaknya setinggi itu. Floor bersifat per-model, bukan satu
+angka global, sehingga setiap sel dinilai relatif terhadap floor modelnya sendiri:
+Spearman antar-client yang berada pada atau di bawah floor tergolong dalam rentang
+noise sampling estimator dan tidak dapat dibaca sebagai ketidakstabilan model. Floor
+FFD diukur langsung pada arsitekturnya sendiri dengan protokol yang sama — bukan
+dipinjam dari FedXGBllr — sehingga ketiga model dinilai terhadap floor arsitekturnya
+masing-masing. Kolom `noise_floor` dan penanda `below_floor` dilaporkan pada
 ringkasan hasil agar stabilitas dibaca relatif terhadap floor, bukan secara
 absolut.
 
@@ -1749,7 +1747,7 @@ yang diperoleh melalui rerata absolut SHAP values pada seluruh sampel explanatio
 data. Vektor ini merefleksikan seberapa besar pengaruh setiap fitur terhadap
 prediksi model global menurut perspektif client yang bersangkutan. Vektor feature
 importance dari seluruh client kemudian dihimpun di server simulasi untuk
-dianalisis lebih lanjut menggunakan tiga jenis komputasi statistik yang saling
+dianalisis lebih lanjut menggunakan empat jenis komputasi statistik yang saling
 melengkapi.
 
 Komputasi pertama adalah rerata feature importance antar client yang berfungsi
@@ -2997,7 +2995,12 @@ dengan hati-hati.
 dapat dipaskan; penjaga *degenerate-predictor* dengan tepat mengembalikan NA
 alih-alih nilai palsu. Precision 0,995 dan recall 0,994 mengonfirmasi diskriminasi
 nyaris sempurna dengan probabilitas yang tak dapat ditafsirkan. Ini adalah penjaga
-yang bekerja, bukan data yang hilang.
+yang bekerja, bukan data yang hilang. Kompresi probabilitas yang sama muncul kembali
+pada analisis interpretabilitas: pada @sec-hasil-rq3 kedua sel PaySim FedXGBllr
+Dirichlet mula-mula menghasilkan atribusi SHAP nol karena wrapper menerapkan
+$"logit"(p)$ pada probabilitas $tilde.op 10^(-9)$ yang terpotong klip numerik. Satu
+degenerasi yang sama menampakkan diri di dua tempat — kalibrasi dan atribusi —
+keduanya teratasi dengan bekerja pada skala logit.
 
 *SVM: NA di seluruh sel.* Loss hinge menghasilkan margin fungsi keputusan, bukan
 probabilitas; tidak ada sigmoid yang dipaksakan untuk memanufaktur satu, sehingga
@@ -3021,155 +3024,272 @@ terpengaruh.
 == Interpretabilitas Model (RQ3) <sec-hasil-rq3>
 
 Analisis explainability dijalankan terhadap model global akhir yang dibekukan dan
-dipersistensi oleh sweep; SHAP bersifat konsumen read-only atas artefak tersebut
-dan tidak melatih ulang apa pun. Pemetaan explainer final mengikuti Subbab
-Perancangan Modul Evaluasi: LinearSHAP untuk LR dan SVM (eksak; SVM pada skala
-margin), TreeSHAP `interventional` dengan background lokal per-client untuk GBM dan
-XGBoost, serta KernelSHAP model-agnostik untuk FedXGBllr, FFD, dan BERT. Tiga
-keputusan explainer ditetapkan oleh pengukuran, bukan reputasi, dan dilaporkan di
-sini sebagai justifikasi empirisnya.
+dipersistensi oleh sweep; SHAP bersifat konsumen read-only atas artefak tersebut dan
+tidak melatih ulang apa pun. Grid SHAP mencakup 96 sel, 66 di antaranya federated
+(lebih dari satu client). Hanya sel federated yang membawa stabilitas antar-client;
+30 sel centralized memiliki satu client sehingga stabilitasnya tak-terdefinisi
+menurut definisi dan dikeluarkan dari seluruh agregat pada subbab ini.
 
-*Mengapa KernelSHAP untuk model deep.* DeepSHAP diuji lebih dulu karena mendekati
-eksak. Pada FFD (1D-CNN) DeepSHAP memenuhi aksioma local accuracy dengan galat
-rekonstruksi 1,37e−06. Pada BERT (FT-Transformer) DeepSHAP gagal: pustaka SHAP
+=== Konfigurasi dan batas resolusi pengukuran ===
+
+Pada setiap client, SHAP dihitung terhadap model global akhir menggunakan background
+100 sampel data latih lokal pasca-SMOTE yang diringkas menjadi 10 sentroid k-means.
+Ringkasan k-means-10 ini menentukan distribusi referensi explainer dan wajib identik
+antara pengukuran noise-floor dan produksi. Explanation set adalah 500 sampel dari
+test set terpusat, identik untuk seluruh client agar perbedaan importance
+mencerminkan perbedaan model-per-distribusi-lokal, bukan perbedaan sampel yang
+dijelaskan. Seluruh atribusi dihitung pada skala log-odds, dengan margin fungsi
+keputusan sebagai pengecualian terdokumentasi untuk SVM.
+
+Pemetaan explainer ditetapkan oleh pengukuran local accuracy, bukan reputasi
+(@tab-4-shap-explainer). Nilai local accuracy diambil dari probe Tahap-0
+(`results/shap_stage0_report.txt`).
+
+#figure(
+  table(
+    columns: 3,
+    align: (left, left, center),
+    table.header([*Model*], [*Explainer*], [*Local accuracy*]),
+    [LR, SVM], [LinearSHAP (SVM: margin)], [$9,26 times 10^(-8)$],
+    [GBM, XGB], [TreeSHAP `interventional`], [$0,00$],
+    [FFD, BERT, FedXGBllr], [KernelSHAP ($"nsamples" = 500$)], [—],
+  ),
+  caption: [Pemetaan explainer per model beserta galat local accuracy yang terukur. LinearSHAP dan TreeSHAP `interventional` bersifat eksak; KernelSHAP berbasis sampling sehingga tidak memiliki galat local accuracy tunggal dan sebagai gantinya diukur melalui noise floor.],
+) <tab-4-shap-explainer>
+
+*Mengapa `interventional`, bukan `tree_path_dependent`.* Mode `tree_path_dependent`
+mengabaikan data background, sehingga setiap client yang menjelaskan satu model
+global yang sama menghasilkan nilai identik dan stabilitas antar-client bernilai 1,0
+secara konstruksi — angka yang akan mengeluarkan model pohon dari RQ3 sepenuhnya.
+Mode `interventional` dengan background lokal per-client menjadikan model pohon
+peserta yang sesungguhnya. Asumsi independensi fiturnya adalah asumsi yang sama yang
+telah didokumentasikan untuk LinearSHAP dan KernelSHAP, sehingga tidak
+memperkenalkan kelas batasan baru.
+
+*Mengapa BERT memakai KernelSHAP.* DeepSHAP diuji lebih dulu karena mendekati eksak.
+Pada FFD (1D-CNN) DeepSHAP memenuhi aksioma local accuracy dengan galat rekonstruksi
+$1,37 times 10^(-6)$. Pada BERT (FT-Transformer) DeepSHAP gagal: pustaka SHAP
 menaikkan `AssertionError` bahwa jumlah atribusi tidak sama dengan luaran model,
 didahului peringatan `unrecognized nn.Module: LayerNorm` — DeepLIFT tidak memiliki
 aturan propagasi untuk `LayerNorm` yang hadir di setiap blok Transformer.
-GradientExplainer sebagai alternatif melaporkan galat local accuracy 1,40e+01
-terhadap toleransi 0,01, yakni sekitar 1.400× di atas ambang, sehingga atribusinya
-tidak mendekomposisi prediksi dan dicatat sebagai estimator yang *gagal*, bukan
-pendekatan. BERT karenanya memakai KernelSHAP. Meskipun DeepSHAP lolos pada FFD,
-FFD tetap memakai KernelSHAP demi komparabilitas: analisis stabilitas membandingkan
-Spearman dan Jaccard antar client, dan bila FFD memakai estimator nyaris-eksak
-sementara BERT memakai estimator berbasis sampling, ketidakstabilan BERT yang
-teramati akan sebagian mencerminkan varians estimator alih-alih perilaku model —
-padahal kedua model deep dibandingkan langsung.
+GradientExplainer sebagai alternatif melaporkan galat local accuracy $1,40 times
+10^(1)$ terhadap toleransi 0,01, yakni sekitar 1.400× di atas ambang, sehingga
+atribusinya tidak mendekomposisi prediksi dan dicatat sebagai estimator yang
+*gagal*, bukan pendekatan. BERT karenanya memakai KernelSHAP. Meskipun DeepSHAP
+lolos pada FFD, FFD tetap memakai KernelSHAP demi komparabilitas: bila FFD memakai
+estimator nyaris-eksak sementara BERT memakai estimator berbasis sampling,
+ketidakstabilan BERT yang teramati akan sebagian mencerminkan varians estimator
+alih-alih perilaku model — padahal kedua model deep dibandingkan langsung. Run
+DeepSHAP FFD dipertahankan sebagai cross-check.
 
-*Noise floor sebagai garis acuan.* Karena KernelSHAP menyampel koalisi secara acak,
+*Noise floor dan konsekuensinya.* Karena KernelSHAP menyampel koalisi secara acak,
 stabilitas antar-client hanya bermakna relatif terhadap kesepakatan KernelSHAP
 dengan dirinya sendiri. Floor diukur dengan menjalankan KernelSHAP dua kali (seed
 berbeda) pada satu client BAF Dirichlet dan mengukur Spearman antar kedua vektor
-importance. Pada nsamples = 500 — nilai yang diadopsi — floor bersifat *per-model*:
-FedXGBllr mencapai Spearman 0,9730 dan BERT 0,9972, sementara nsamples = 1000 hanya
-mengubah keduanya dalam rentang noise (FedXGBllr +0,011, BERT −0,001). Karena
-angka-angka ini berbeda secara bermakna, stabilitas antar-client tiap model dibaca
-terhadap floor-nya sendiri, bukan satu ambang global. Floor FFD diukur langsung pada
-arsitekturnya sendiri dengan protokol yang sama — dua run KernelSHAP berbeda-seed
-pada satu client — bukan dipinjam dari FedXGBllr, dan bernilai 0,9966; setiap model
-dinilai terhadap floor arsitekturnya masing-masing (FedXGBllr 0,9730; FFD 0,9966;
-BERT 0,9972). Floor diukur pada 250 sampel
-explanation sedangkan produksi memakai 500; karena penambahan sampel hanya
-memperbanyak perataan, floor merupakan batas bawah — floor produksi setidaknya
-setinggi itu.
+importance pada $"nsamples" = 500$; nilainya per-model — FedXGBllr 0,9730, BERT
+0,9972, FFD 0,9966 (`results/shap/noise_floor.txt`). *Seluruh 33 sel yang dijelaskan
+KernelSHAP jatuh pada atau di bawah floor modelnya sendiri.* Klaim ini tidak
+bersandar pada perbandingan floor semata melainkan pada batas DeepSHAP: pada FFD,
+ketidaksepakatan KernelSHAP dengan referensi nyaris-eksak adalah 0,0807 (Spearman
+0,9193), yang melampaui sebaran antar-client yang teramati — sehingga perbedaan
+antar-client lebih kecil daripada ketakakuratan estimator itu sendiri dan tidak
+dapat diatribusikan pada model. Sebagai catatan pelengkap, Jaccard\@5 jenuh pada
+1,00 pada setiap pengukuran floor sehingga tidak membawa informasi, yang menjadi
+salah satu alasan diperlukannya ukuran terkoreksi-peluang (indeks Kuncheva). Karena
+floor diukur pada 250 sampel explanation sedangkan produksi memakai 500, dan
+penambahan sampel hanya memperbanyak perataan, floor merupakan batas bawah.
 
-*Dua temuan tentang metrik stabilitas.* Pertama, Jaccard\@5 jenuh pada 1,00 di
-setiap setting noise-floor sehingga tidak dapat membedakan apa pun pada kasus ini.
-Dengan 13/30/55 fitur antar dataset, ukuran top-5 tak-terkoreksi yang menempel pada
-1,00 tidak membawa informasi — hal ini menguatkan penggunaan indeks Kuncheva yang
-terkoreksi-peluang untuk seluruh klaim lintas-dataset (lihat Subbab Perancangan
-Modul Evaluasi). Kedua, pada FFD kesepakatan DeepSHAP↔KernelSHAP adalah Spearman
-0,9193, jauh di bawah kesepakatan KernelSHAP dengan dirinya sendiri (floor FFD
-0,9966). Selisih itu adalah galat pendekatan KernelSHAP terhadap referensi
-nyaris-eksak dan menjadi batas jujur seberapa halus peringkat antar-client dapat
-dibaca: perbedaan Spearman antar-client yang lebih kecil dari galat tersebut tidak
-dapat ditafsirkan sebagai perbedaan perilaku model. Implikasi kuantitatifnya
-dibahas pada temuan berikut.
+#figure(
+  image("resources/fig-shap-vs-floor.png", width: 88%),
+  caption: [Spearman antar-client tiap sel KernelSHAP terhadap floor modelnya (tanda vertikal). Seluruh 33 sel berada pada atau di bawah floor, sehingga sebaran antar-client tidak dapat dibedakan dari noise sampling estimator.],
+) <fig-4-shap-vs-floor>
 
-*Model pohon sebagai peserta RQ3.* Model pohon (GBM, XGBoost) dijelaskan dengan
-TreeSHAP mode `interventional` memakai background lokal per-client, bukan mode
-bebas-background `tree_path_dependent`. Dengan mode bebas-background, importance tiap
-client atas satu model global yang sama akan identik dan stabilitas antar-client
-bernilai 1,00 secara konstruksi — angka yang tidak membawa informasi dan akan
-mengeluarkan model pohon dari analisis RQ3. Mode `interventional` menjadikan
-stabilitas model pohon terukur, bukan konstan. Hal ini khususnya relevan bagi GBM:
-karena seleksi model-terbaik membuat model global merupakan model milik salah satu
-client, bagaimana atribusinya bergeser di lima distribusi lokal justru merupakan
-pertanyaan RQ3. Sebagai catatan kasus, artefak GBM ULB no-SMOTE adalah satu pohon
-berkedalaman-6 ($k^* = 1$, dipilih pada validation set — lihat @tab-4-kalibrasi dan
-pembahasan pada Subbab Diskriminasi versus Kalibrasi); SHAP atas ensemble satu-pohon
-menghasilkan atribusi yang nyaris trivial — konsekuensi seleksi iterasi, bukan bug.
-
-*Degenerasi atribusi pada PaySim FedXGBllr.* Dua sel — PaySim FedXGBllr Dirichlet
-tanpa-SMOTE dan dengan-SMOTE — mula-mula menghasilkan vektor SHAP nol untuk seluruh
-fitur pada kelima client ketika atribusi dihitung pada skala probabilitas, sementara
-sel PaySim FedXGBllr IID tetap menghasilkan atribusi tak-nol. Penyebabnya sama
-dengan yang membuat kalibrasi kedua sel tersebut tak-terdefinisi (dibahas pada
-Subbab Diskriminasi versus Kalibrasi): probabilitas keluaran FedXGBllr pada PaySim
-terkompresi hingga $tilde.op 10^(-9)$, sehingga memperturbasi sebuah fitur hanya
-menggeser keluaran sebesar $tilde.op 10^(-9)$ yang kemudian underflow menjadi
-atribusi nol. Kompresi probabilitas yang sama yang membuat kalibrasi tak-terdefinisi
-juga membuat atribusi skala-probabilitas degeneratif secara numerik; keduanya
-berakar pada skala probabilitas dan ditangani dengan menghitung atribusi pada skala
-log-odds melalui aktivasi pra-Sigmoid kepala CNN (lihat Subbab Perancangan Modul
-Evaluasi) — satu cerita yang koheren, bukan dua anomali terpisah. Skala pra-Sigmoid
-menghilangkan underflow secara pasti; namun bila log-odds sebuah sel memang
-nyaris-konstan pada explanation set, sel tersebut dilaporkan sebagai *undefined*
-beserta alasannya, bukan sebagai nilai stabilitas, karena vektor seragam akan
-memalsukan Spearman menjadi nol dan Jaccard maupun Kuncheva menjadi 1,00. Nilai
-stabilitas akhir kedua sel ini mengikuti eksekusi ulang pada skala log-odds
-(dilaporkan bersama tabel produksi di bawah).
-
-*Stabilitas KernelSHAP tidak terselesaikan pada nsamples = 500.* Seluruh sel yang
-dijelaskan KernelSHAP dan telah dijalankan (FFD dan FedXGBllr, 22 sel) memiliki
-Spearman antar-client di bawah floor arsitekturnya sendiri; selisih terhadap floor
-berkisar dari −0,0022 hingga −0,9730, dengan ujung −0,9730 merupakan sel PaySim
-FedXGBllr degeneratif yang masih menunggu eksekusi ulang (lihat paragraf di atas)
-dan bukan sinyal ketidakstabilan. Sebagai contoh terukur, FFD memiliki Spearman
-antar-client rerata 0,9767 terhadap floor 0,9966. Artinya sebaran antar-client yang
-teramati lebih kecil daripada galat estimator itu sendiri, sehingga variasi
-interpretasi antar-client tidak dapat dibedakan dari noise KernelSHAP pada nsamples
-ini. Bukti dari arah independen menguatkan: kesepakatan DeepSHAP↔KernelSHAP pada FFD
-(0,9193) adalah galat KernelSHAP terhadap referensi nyaris-eksak, dan galat ini
-melampaui sebaran antar-client yang teramati ($1 - 0,9767 = 0,0233$ berbanding
-$1 - 0,9193 = 0,0807$) — sehingga perbedaan antar-client berada di dalam selubung
-galat metode. Sel BERT (floor 0,9972, tertinggi di antara ketiganya) belum
-dijalankan pada iterasi ini; mengingat floor-nya, resolvabilitasnya diperkirakan
-tidak berbeda dan angkanya dilaporkan setelah eksekusi ulang. Konsekuensinya,
-jawaban RQ3 bertumpu pada explainer deterministik — LinearSHAP untuk LR dan SVM,
-serta TreeSHAP `interventional` untuk GBM dan XGBoost — yang tidak memiliki floor
-sampling, bukan pada model yang dijelaskan KernelSHAP.
+#figure(
+  image("resources/fig-shap-jaccard-vs-kuncheva.png", width: 62%),
+  caption: [Jaccard\@5 terhadap indeks Kuncheva per sel, ditandai menurut dataset dengan dimensionalitasnya (PaySim $d = 13$, ULB $d = 30$, BAF $d = 55$). Kedua ukuran menyimpang seiring bertambahnya dimensi — pembenaran empiris untuk koreksi peluang @nogueira2018stability.],
+) <fig-4-shap-jaccard-kuncheva>
 
 *Apakah menaikkan nsamples akan menyelesaikannya?* Nilai default pustaka SHAP adalah
-$"nsamples" = 2d + 2048$, yakni 2158 untuk BAF berdimensi 55. Dari timing terukur
-pada nsamples = 500 (FedXGBllr ≈195 s dan BERT ≈132 s per client per run) dan sifat
-KernelSHAP yang kira-kira linear terhadap nsamples, 2158 menuntut ≈4,3× waktu: per
-sel (lima client) FedXGBllr ≈1,2 jam dan BERT ≈0,8 jam — dari sekitar 16 dan 11
-menit pada nsamples = 500 — sehingga di seluruh cakupan KernelSHAP menambah puluhan
-GPU-hour. Menaikkan nsamples memang mengecilkan selubung galat estimator (KernelSHAP
-konvergen ke nilai eksak), sehingga secara prinsip sebaran antar-client dapat menjadi
-terselesaikan; namun floor self-agreement pun ikut naik seiring bertambahnya sampel
-(pada nsamples = 1000 floor FedXGBllr telah naik ≈0,011), dan tidak ada jaminan
-sebaran sejati antar-client melampaui selubung yang mengecil. Atas pertimbangan
-biaya-manfaat itu — biaya ≈4,3× tanpa jaminan resolusi — kenaikan nsamples tidak
-ditempuh, dan keterbatasan ini dilaporkan sebagai batas metode pada anggaran
-komputasi penelitian, bukan sebagai kegagalan.
+$"nsamples" = 2 d + 2048$, yakni 2158 untuk BAF berdimensi 55. Dari timing terukur
+pada $"nsamples" = 500$ (FedXGBllr $approx 195$ s dan BERT $approx 132$ s per client
+per run) dan sifat KernelSHAP yang kira-kira linear terhadap nsamples, 2158 menuntut
+$approx 4,3 times$ waktu: per sel (lima client) FedXGBllr $approx 1,2$ jam dan BERT
+$approx 0,8$ jam, sehingga di seluruh cakupan KernelSHAP menambah puluhan GPU-hour.
+Menaikkan nsamples memang mengecilkan selubung galat estimator, sehingga secara
+prinsip sebaran antar-client dapat menjadi terselesaikan; namun floor self-agreement
+pun ikut naik seiring bertambahnya sampel (pada $"nsamples" = 1000$ floor FedXGBllr
+telah naik $approx 0,011$), dan tidak ada jaminan sebaran sejati antar-client
+melampaui selubung yang mengecil. Atas pertimbangan biaya-manfaat itu, kenaikan
+nsamples tidak ditempuh dan keterbatasan ini dilaporkan sebagai batas metode pada
+anggaran komputasi penelitian, bukan sebagai kegagalan.
 
-*Temuan RQ3 pada model deterministik.* Karena stabilitas KernelSHAP tidak
-terselesaikan, temuan interpretabilitas yang substantif berada pada explainer
-deterministik yang tidak memiliki floor sampling. Di antara ketiganya, GBM (TreeSHAP
-`interventional`) adalah yang paling tidak stabil: indeks Kuncheva rerata 0,8219
-(minimum 0,544) dan Jaccard\@5 rerata 0,7765 (minimum 0,4702), dengan sel paling
-tidak stabil pada creditcard Dirichlet no-SMOTE (Spearman 0,9287; Jaccard\@5 0,4702)
-— kelima client menyepakati kurang dari separuh lima fitur teratas. Karena model
-pohon tidak memiliki floor sampling, ketidaksepakatan ini bersifat nyata, bukan
-artefak estimator. Sebagai perbandingan, LR dan SVM (LinearSHAP eksak) jauh lebih
-stabil, dengan indeks Kuncheva rerata 0,9112 dan 0,9433.
+Konsekuensinya, RQ3 hanya terjawab untuk explainer deterministik yang tidak memiliki
+floor sampling. Di antara model deterministik, XGB tidak memiliki sel federated (di
+sini hanya dievaluasi centralized), sehingga analisis stabilitas antar-client
+deterministik mencakup GBM, LR, dan SVM.
 
-Temuan ini dihubungkan dengan analisis performa (Subbab Perbandingan Performa Antar
+=== Stabilitas antar client pada explainer deterministik ===
+
+Pada explainer deterministik, sebaran antar-client mencerminkan perilaku model,
+bukan noise estimator. Rerata indeks Kuncheva sel federated adalah LR 0,9112, SVM
+0,9433, dan GBM 0,8219 (minimum 0,544); GBM karenanya paling tidak stabil secara
+agregat. Rincian per dataset × model (@tab-4-shap-kuncheva-det) menunjukkan bahwa
+urutan ini bukan properti model semata.
+
+#figure(
+  table(
+    columns: 4,
+    align: (left, center, center, center),
+    table.header([*Dataset*], [*GBM*], [*LR*], [*SVM*]),
+    [BAF], [0,853], [0,956], [0,927],
+    [ULB], [0,742], [1,000], [0,964],
+    [PaySim], [0,878], [0,789], [0,935],
+  ),
+  caption: [Rerata indeks Kuncheva per dataset × model untuk explainer deterministik (sel federated). Ketidakstabilan merupakan interaksi antara keluarga model dan data, bukan properti salah satunya.],
+) <tab-4-shap-kuncheva-det>
+
+#figure(
+  image("resources/fig-shap-heatmap-deterministic.png", width: 92%),
+  caption: [Peta panas indeks Kuncheva untuk explainer deterministik per sel (dataset/kondisi/arm). Baris GBM paling sering bernilai rendah; di sinilah sinyal RQ3 yang terukur berada.],
+) <fig-4-shap-heatmap>
+
+Ordering-nya bukan sekadar "GBM paling buruk". GBM paling tidak stabil pada ULB
+(0,742) justru di tempat LR sempurna stabil (1,000); sebaliknya LR paling tidak
+stabil pada PaySim (0,789) di tempat GBM relatif baik (0,878). Ketidakstabilan
+interpretasi adalah interaksi antara keluarga model dan distribusi data, bukan
+properti salah satu saja.
+
+Mekanisme yang konsisten: atribusi LinearSHAP bergantung pada background hanya
+melalui rerata fitur, yang serupa antar client ketika distribusi fitur serupa. Fitur
+ULB adalah komponen PCA yang menurut konstruksinya nyaris terdistribusi identik
+antar client, sehingga LR mencapai 1,000 di sana. Struktur split pohon berinteraksi
+dengan densitas lokal dengan cara yang tidak dialami koefisien linear, sehingga GBM
+tetap sensitif terhadap heterogenitas bahkan pada data yang membuat model linear
+stabil. @fig-4-shap-by-model merangkum distribusi ini per model, membedakan explainer
+deterministik (sinyal) dari KernelSHAP (di bawah floor).
+
+#figure(
+  image("resources/fig-shap-by-model.png", width: 100%),
+  caption: [Distribusi Spearman, Kuncheva, dan Jaccard\@5 per model (sel federated). Warna biru menandai explainer deterministik yang membawa sinyal; warna merah menandai model KernelSHAP yang berada di bawah floor-nya (garis putus-putus pada panel Spearman).],
+) <fig-4-shap-by-model>
+
+Temuan ini terhubung dengan analisis performa (Subbab Perbandingan Performa Antar
 Paradigma Agregasi dan Subbab Pengaruh Non-IID dan SMOTE): paradigma seleksi
-model-terbaik — yang justru paling robust dalam performa di bawah SMOTE — merupakan
-yang paling tidak stabil dalam interpretasi. Robustnes performa dan stabilitas
-interpretasi karenanya adalah dua properti yang berbeda: sebuah paradigma dapat
-mempertahankan diskriminasi tinggi lintas kondisi sekaligus menghasilkan penjelasan
-yang bergeser antar distribusi lokal. Pemisahan kedua properti ini merupakan salah
-satu kontribusi orisinal penelitian terhadap diskursus Explainable Federated
-Learning.
+model-terbaik yang mendasari GBM adalah paradigma paling robust dalam performa di
+bawah SMOTE (0% kehilangan AUPRC), namun justru paling tidak stabil dalam
+interpretasi. Robustnes performa dan stabilitas interpretasi adalah dua properti yang
+berbeda: sebuah paradigma dapat mempertahankan diskriminasi tinggi lintas kondisi
+sekaligus menghasilkan penjelasan yang bergeser antar distribusi lokal. Pernyataan
+ini merupakan salah satu kontribusi orisinal penelitian terhadap diskursus
+Explainable Federated Learning.
 
-// TODO (RQ3 — hasil produksi): Tabel stabilitas antar-client (rerata feature
-// importance, Spearman terhadap floor per-model, Jaccard\@5, indeks Kuncheva) per
-// (dataset, model, kondisi, arm) diisi dari keluaran results/shap/ setelah eksekusi
-// produksi di GPU box selesai (cheap models seluruh sel; expensive models BAF lebih
-// dulu, lalu ULB/PaySim). Jangan menuliskan angka stabilitas sebelum run selesai.
+=== SMOTE meningkatkan kesepakatan tetapi mengubah dasarnya ===
+
+Hasil paling penting subbab ini menyangkut efek SMOTE terhadap stabilitas
+interpretasi, dan efek tersebut memiliki dua sisi.
+
+*Pengamatan 1 — kesepakatan meningkat.* Pada model deterministik, rerata indeks
+Kuncheva naik dari 0,8657 (tanpa-SMOTE) menjadi 0,9238 (dengan-SMOTE) dan
+minimumnya dari 0,544 menjadi 0,7725 (@tab-4-shap-arm). Kenaikan ini konsisten pada
+6 dari 9 pasangan dataset-model, dengan 2 pasangan datar (sudah jenuh: ULB LR pada
+1,000 dan PaySim SVM pada 0,935). Pasangan kesembilan, PaySim GBM, sedikit menurun
+($-0,016$), tetapi bukan anomali: sel IID-nya turun (1,000 → 0,870) sementara sel
+Dirichlet-nya naik (0,7725 → 0,870). Keduanya bergerak menuju nilai tengah yang sama
+dari arah berlawanan — persis yang diprediksi mekanisme homogenisasi, yakni SMOTE
+menarik stabilitas ke sebuah nilai tengah terlepas dari titik awalnya. Sebuah
+reversal yang sesuai mekanisme merupakan bukti yang lebih kuat daripada kenaikan
+seragam. Besar kenaikan kira-kira dua kali lipat di bawah Dirichlet (+0,085)
+dibanding IID (+0,048) — konsisten dengan SMOTE memiliki lebih banyak yang perlu
+dihomogenkan ketika partisi berawal lebih berjauhan.
+
+#figure(
+  table(
+    columns: 3,
+    align: (left, center, center),
+    table.header([*Agregat (deterministik)*], [*Tanpa-SMOTE*], [*Dengan-SMOTE*]),
+    [Rerata Kuncheva], [0,8657], [0,9238],
+    [Minimum Kuncheva], [0,544], [0,7725],
+    [Kenaikan rerata — IID], table.cell(colspan: 2, align: center)[$+0,048$],
+    [Kenaikan rerata — Dirichlet], table.cell(colspan: 2, align: center)[$+0,085$],
+  ),
+  caption: [Indeks Kuncheva deterministik menurut arm SMOTE. Kesepakatan meningkat, dan kenaikannya kira-kira dua kali lipat di bawah Dirichlet.],
+) <tab-4-shap-arm>
+
+*Pengamatan 2 — dasarnya berubah.* Fitur paling penting (`top_feature`) berbeda
+antar arm pada 5 dari 15 pasangan sel yang sebanding; ketika dibatasi pada partisi
+Dirichlet, 3 dari 9. Konsentrasi perubahan di bawah Dirichlet mendukung mekanisme
+yang sama. Ini bukan sekadar kesepakatan yang lebih kuat atas fitur yang sama,
+melainkan kesepakatan atas fitur yang *berbeda*. @tab-4-shap-shift menyajikan tiga
+kasus terverifikasi.
+
+#figure(
+  text(size: 8pt)[#table(
+    columns: (5em, 1fr, 1fr),
+    align: (left, left, left),
+    table.header([*Sel (Dirichlet)*], [*Top-5 tanpa-SMOTE*], [*Top-5 dengan-SMOTE*]),
+    [ULB GBM (Kuncheva 0,544 → 0,904)],
+    [Semua client membuka #raw("V14") > #raw("V7"), lalu menyebar ke #raw("V4"), #raw("V15"), #raw("V19"), #raw("V12"), #raw("V10"), #raw("V26"), #raw("V17")],
+    [Kelima membuka #raw("V4") > #raw("V14") > #raw("V3"); empat dari lima berbagi #raw("V24")/#raw("V28") pada peringkat 4–5],
+
+    [BAF LR],
+    [#raw("prev_address_months_count_missing") teratas pada semua client],
+    [#raw("housing_status_BB") menggeser indikator missing menjadi teratas],
+
+    [BAF SVM],
+    [Campuran #raw("prev_address_months_count_missing"), #raw("housing_status_BA"), #raw("housing_status_BE"), #raw("has_other_cards"), #raw("employment_status_CA"), #raw("device_os_windows")],
+    [Empat dari lima teratas adalah kolom #raw("housing_status_*") (BB, BA, BC, BE) plus #raw("has_other_cards")],
+  )],
+  caption: [Pergeseran fitur top-5 antar arm SMOTE pada tiga sel Dirichlet. Kesepakatan meningkat sekaligus berpindah ke himpunan fitur yang berbeda.],
+) <tab-4-shap-shift>
+
+Pada ULB GBM, `V7` yang tanpa-SMOTE menempati peringkat kedua secara bulat menghilang
+dari setiap daftar, sementara `V3` yang semula absen dari seluruh daftar menjadi
+peringkat ketiga secara universal. Pada BAF SVM — kasus paling tajam — di bawah SMOTE
+empat dari lima fitur teratas adalah kolom one-hot `housing_status_*`. Inilah
+keterbatasan one-hot yang telah didokumentasikan (Subbab Perancangan Skema Class
+Imbalance Handling dan Subbab SMOTE pada dasar teori) memperlihatkan konsekuensi
+teramati: SMOTE standar menginterpolasi secara kontinu melintasi kolom one-hot yang
+saling eksklusif, menghasilkan rekaman sintetis dengan nilai pecahan di beberapa
+indikator sekaligus — sebuah transaksi yang sebagiannya beberapa status hunian
+sekaligus. Model menemukan gradien buatan itu informatif dan atribusi terkonsentrasi
+pada blok tersebut. SMOTE-NC @chawla2002smote merupakan remedi yang dimaksudkan;
+pengamatan ini menaikkan rekomendasi tersebut dari sekadar sitasi menjadi temuan
+empiris.
+
+Klaim yang perlu dinyatakan secara hati-hati: kesepakatan interpretasi antar-client
+bukan bukti bahwa model federated telah mempelajari struktur bersama. Oversampling
+lokal dapat memanufaktur kesepakatan sambil mengubah apa yang disepakati.
+Digabungkan dengan analisis performa — intervensi yang sama membuat kedua model deep
+kehilangan 71–73% AUPRC — model menjadi lebih konsisten, lebih tampak-percaya-diri,
+sekaligus lebih buruk. Perlu ditegaskan bahwa pengamatan ini diukur pada 9 pasangan
+dataset-model dengan satu seed dan tiga contoh terperinci; ini adalah observasi
+terdokumentasi dengan mekanisme yang konsisten, bukan hukum umum yang terbukti.
+
+=== Degenerasi dan kasus batas ===
+
+*PaySim FedXGBllr, Dirichlet.* Dua sel ini mula-mula menghasilkan atribusi nol untuk
+seluruh fitur pada setiap client. Akar penyebabnya adalah wrapper explanation yang
+menghitung probabilitas lalu menerapkan $"logit"(p)$ dengan klip $10^(-6)$;
+probabilitas PaySim FedXGBllr berada di sekitar $10^(-9)$, di bawah batas klip,
+sehingga setiap prediksi jenuh pada satu konstanta dan setiap perturbasi fitur tidak
+menggeser luaran. Diperbaiki dengan mengekspos aktivasi pra-Sigmoid secara langsung.
+Pasca-perbaikan kedua sel memberi Spearman 0,756 dan 0,818 — yang paling tidak stabil
+dalam keseluruhan studi. Ini adalah kompresi probabilitas yang sama yang membuat
+kalibrasi tak-terdefinisi pada Subbab Diskriminasi versus Kalibrasi: satu degenerasi
+muncul di dua tempat, keduanya teratasi pada skala logit.
+
+*Penjaga degenerasi.* Vektor client yang seluruhnya nol atau konstan kini
+menghasilkan `undefined`, bukan metrik. Sebelum penjaga ini, vektor nol menghasilkan
+Jaccard 1,0 dan Kuncheva 1,0 — kesepakatan sempurna yang semu atas ketiadaan. Nilai
+`undefined` dan 0,0 tidak boleh disamakan: 0,0 berarti "client sepenuhnya tidak
+sepakat" sedangkan `undefined` berarti "peringkat memang degeneratif dan korelasi
+tidak terdefinisi".
+
+*Sel GBM dengan $k^* = 1$* adalah satu pohon berkedalaman-6, sehingga atribusinya
+terbatas secara struktural. Hal ini mengikuti seleksi iterasi pada validation set
+(Subbab Implementasi Pelatihan Model dan Skema Agregasi), bukan sebuah kesalahan.
+Sel centralized memiliki satu client sehingga tidak memiliki stabilitas antar-client
+menurut definisi dan tidak masuk agregat mana pun.
 
 // ---------------------------------------------------------------------------
 // BAB 5 — PENUTUP  (stub)
@@ -3212,7 +3332,16 @@ setelah Bab 4 rampung.
 
 + *Migrasi ke SMOTE-NC* untuk data bertipe campuran, sebagaimana diperkenalkan
   #cite(<chawla2002smote>, form: "prose"), guna menghindari nilai pecahan pada
-  kolom kategorikal hasil one-hot.
+  kolom kategorikal hasil one-hot. Rekomendasi ini kini memiliki dukungan empiris,
+  bukan sekadar sitasi: pada @sec-hasil-rq3 di bawah SMOTE atribusi BAF SVM
+  terkonsentrasi pada empat kolom `housing_status_*` sekaligus, konsekuensi teramati
+  dari interpolasi kontinu SMOTE standar melintasi blok one-hot yang saling eksklusif.
+
++ *Jangan memakai kesepakatan SHAP antar-client sebagai bukti struktur yang
+  dipelajari* tanpa mengontrol oversampling. Pada @sec-hasil-rq3 SMOTE lokal
+  menaikkan kesepakatan interpretasi antar-client sekaligus menggeser fitur yang
+  disepakati, sehingga kenaikan kesepakatan dapat termanufaktur alih-alih
+  mencerminkan struktur bersama yang benar-benar dipelajari model federated.
 
 + *Melaporkan kalibrasi berdampingan dengan diskriminasi* pada penelitian
   imbalance FL selanjutnya, mengikuti @goorbergh2022harm.
