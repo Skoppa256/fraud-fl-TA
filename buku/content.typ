@@ -934,6 +934,42 @@ prevalensinya lebih besar. Untuk itu, penelitian ini melaporkan garis dasar acak
 agar nilai AUPRC mentah tetap dapat dibandingkan di dalam satu dataset sekaligus
 dibaca relatif terhadap batas bawahnya saat dibandingkan antar dataset.
 
+*Recall\@5%FPR.* AUPRC meringkas kualitas peringkat pada seluruh ambang dan —
+sebagaimana ditegaskan di atas — batas bawahnya bergerak mengikuti prevalensi,
+sehingga perbandingan lintas dataset menjadi kurang langsung. Sebagai pelengkap
+yang konkret secara operasional, penelitian ini juga melaporkan *Recall\@5%FPR*,
+yaitu proporsi fraud yang terdeteksi ketika ambang keputusan ditetapkan agar false
+positive rate (FPR) pada transaksi sah sama dengan 5% (@eq-fpr). Metrik ini tetap
+diturunkan dari ambang, tetapi dibaca pada satu titik operasi tetap alih-alih pada
+ambang yang disetel bebas.
+
+$ "FPR" = "FP" / ("FP" + "TN") $ <eq-fpr>
+
+Recall\@FPR menjawab pertanyaan yang berbeda dari AUPRC dan langsung relevan bagi
+praktik: pada anggaran false alarm yang benar-benar sanggup ditinjau sebuah
+institusi, berapa proporsi fraud yang tertangkap? Sebuah tim analis yang hanya
+mampu meninjau 5% transaksi yang ditandai peduli pada angka ini, bukan pada luas
+area di bawah sebuah kurva. Berbeda dari AUPRC, batas bawah Recall\@FPR tidak
+bergantung prevalensi sehingga perbandingan antar dataset tidak memerlukan
+normalisasi. Titik operasi pada FPR tetap semacam ini merupakan konvensi pelaporan
+yang lazim pada deteksi fraud maupun intrusi.
+
+Ambang yang dipilih dilaporkan pada skala skor masing-masing model, dan skala ini
+tidak seragam. Untuk LR, GBM, FFD, BERT, dan FedXGBllr ambang berupa probabilitas
+dalam rentang [0, 1], tetapi untuk SVM ambang berupa margin `decision_function`
+bertanda (loss hinge, tanpa probabilitas). Karena itu ambang SVM bermagnitudo besar
+— misalnya −128,08 pada ULB dan −49,14 pada BAF — adalah margin yang wajar, bukan
+galat, dan tidak sebanding dengan ambang berskala probabilitas seperti GBM yang
+berada dalam rentang [0, 1] (misalnya 0,038 pada BAF). Pembacaan naif yang
+menyandingkan kedua skala tanpa memperhatikan perbedaan ini akan keliru
+menyimpulkan adanya kerusakan. Selain itu, karena distribusi skor bersifat diskret
+dan ambang diambil pada nilai terbesar yang masih memenuhi FPR $lt.eq$ 5%, FPR yang
+benar-benar dicapai umumnya sedikit di bawah 5%; capaian ini dilaporkan berdampingan
+dengan targetnya agar titik operasi dapat diverifikasi. Pada sebagian kecil sel FPR
+aktual jatuh jauh di bawah target — misalnya GBM pada ULB skema IID tanpa SMOTE
+hanya mencapai 0,0068 — yaitu ketika ties skor atau model yang terpangkas
+menghasilkan distribusi skor kasar tanpa ambang mana pun yang dekat dengan 5%.
+
 *Kalibrasi.* Keempat metrik di atas hanya mengukur diskriminasi dan tidak dapat
 mendeteksi pergeseran skala probabilitas. Karena
 #cite(<goorbergh2022harm>, form: "prose") menemukan bahwa koreksi imbalance
@@ -1599,7 +1635,9 @@ berbeda, dan hasil akhir dilaporkan sebagai rata-rata dengan deviasi standar.
 
 Sebagai pelengkap keempat metrik utama tersebut, penelitian ini juga melaporkan
 *Recall\@5%FPR*, yaitu proporsi transaksi fraud yang berhasil dideteksi sembari
-membatasi false positive rate (FPR) pada paling banyak 5%. Metrik ini
+membatasi false positive rate (FPR) pada paling banyak 5% — anggaran false alarm
+yang ditetapkan sebagai parameter modul evaluasi (`TARGET_FPR = 0,05`) dan dapat
+diubah bila kebijakan operasional menuntut anggaran berbeda. Metrik ini
 diperoleh dengan membangun kurva ROC dari skor prediksi model, lalu memilih titik
 operasi (operating point) dengan FPR $lt.eq 0,05$ yang menghasilkan Recall (TPR)
 tertinggi — setara dengan ambang terendah yang masih memenuhi anggaran 5% false
@@ -2227,6 +2265,27 @@ per-run (`test_recall_at_fpr`, `test_threshold_at_fpr`, `test_actual_fpr`, serta
 `best_val_recall_at_fpr` dan kolom per-ronde `val_recall_at_fpr`), dan tabel
 ringkasan agregat — berdampingan dengan AUPRC tanpa mengubah komputasi AUPRC.
 
+Metrik Recall\@5%FPR ditambahkan setelah sweep utama selesai, sehingga nilainya
+di-*backfill* dengan memuat ulang model global final yang telah dibekukan pada
+`results/models/` dan menghitung ulang skornya memakai loader baca-saja yang sama
+dengan probe SHAP; tidak ada model yang dilatih ulang. Penambahan ini bersifat
+post hoc dan dinyatakan demikian secara transparan, bukan bagian dari rancangan
+awal. Kebenaran tiap baris dijaga oleh satu pengecekan: AUPRC yang dihitung ulang
+wajib cocok dengan `test_auprc` tersimpan dalam toleransi $2 times 10^(-3)$, jika
+tidak baris dilewati. Seluruh 96 sel lolos, sehingga setiap nilai yang di-backfill
+terbukti berasal dari keadaan model yang menghasilkan baris tersebut, dan seluruh
+sel lain diverifikasi identik secara bita setelah penulisan ulang (kolom hash tidak
+berubah).
+
+Dua keterbatasan rekonstruksi dicatat. Pertama, `best_val_recall_at_fpr` hanya
+tersedia untuk run terpusat: run federated memilih model final pada putaran
+terbaiknya sedangkan model per-putaran tidak dipersistensi, sehingga nilai sisi
+validasi tidak dapat direkonstruksi dan sel tersebut dibiarkan kosong untuk run FL.
+Kedua, `val_recall_at_fpr` per-putaran tidak dapat di-backfill sama sekali karena
+tidak ada artefak per-putaran yang disimpan. Kedua kolom akan terisi secara wajar
+pada eksekusi berikutnya karena metrik ini kini menjadi bagian tetap dari pipeline
+evaluasi.
+
 Komponen analisis explainability merealisasikan kerangka pengukuran yang telah
 dirancang pada Subbab Perancangan Modul Evaluasi dengan mengacu pada konfigurasi
 data dan varian explainer yang telah ditetapkan. Implementasi dilakukan
@@ -2470,6 +2529,122 @@ paling banyak sebesar 2,1%, dan sebesar 0,0% pada sembilan dari sebelas run FL
 FedXGBllr. Asimetri anggaran karenanya tidak memengaruhi komparabilitas antar
 paradigma secara material.
 
+=== Detektabilitas pada Titik Operasi Tetap (Recall\@5%FPR)
+
+AUPRC mengukur kualitas peringkat pada seluruh ambang; Recall\@5%FPR sebaliknya
+membaca performa pada satu titik operasi yang dapat diterapkan — berapa proporsi
+fraud yang tertangkap saat false alarm dibatasi 5%. @tab-4-rfpr-ulb,
+@tab-4-rfpr-baf, dan @tab-4-rfpr-paysim menyajikan metrik ini dalam tata letak yang
+sama dengan tabel AUPRC di atas, dihitung dari skor model yang dibekukan.
+
+#figure(
+  kind: table,
+  text(size: 8pt)[
+    #table(
+      columns: (auto, auto, auto, auto, auto, auto, auto),
+      align: (left, right, right, right, right, right, right),
+      table.header(
+        table.cell(rowspan: 2)[*Model*],
+        table.cell(colspan: 2)[*Centralized*],
+        table.cell(colspan: 2)[*Dirichlet $alpha=0,5$*],
+        table.cell(colspan: 2)[*IID*],
+        [none], [SMOTE], [none], [SMOTE], [none], [SMOTE],
+      ),
+      [LR], [0,878], [0,878], [0,878], [0,878], [0,878], [0,865],
+      [SVM], [0,878], [0,878], [0,892], [0,892], [0,892], [0,892],
+      [GBM], [0,851], [0,865], [0,824], [0,865], [0,770], [0,905],
+      [FFD], [0,865], [0,878], [0,865], [0,919], [0,865], [0,892],
+      [BERT], [0,878], [0,878], [0,892], [0,878], [0,851], [0,905],
+      [FedXGBllr], [—], [—], [0,851], [0,878], [0,878], [0,878],
+      [XGBoost], [0,892], [0,892], [—], [—], [—], [—],
+    )
+  ],
+  caption: [Recall\@5%FPR test pada ULB (creditcard). Titik operasi dipilih pada
+  FPR terbesar yang masih $lt.eq$ 5%; FPR aktual dilaporkan pada CSV hasil. Baris
+  XGBoost adalah FedXGBllr terpusat; sel "—" tidak berlaku secara struktural.],
+) <tab-4-rfpr-ulb>
+
+#figure(
+  kind: table,
+  text(size: 8pt)[
+    #table(
+      columns: (auto, auto, auto, auto, auto),
+      align: (left, right, right, right, right),
+      table.header(
+        [*Model*], [*Centralized (none)*], [*Dirichlet none*],
+        [*Dirichlet SMOTE*], [*IID (none)*],
+      ),
+      [LR], [0,528], [0,521], [0,430], [0,527],
+      [SVM], [0,524], [0,477], [0,389], [0,404],
+      [GBM], [0,563], [0,560], [0,560], [0,519],
+      [FFD], [0,545], [0,550], [0,253], [0,548],
+      [BERT], [0,564], [0,574], [0,271], [0,570],
+      [FedXGBllr], [—], [0,537], [0,506], [0,525],
+      [XGBoost], [0,545], [—], [—], [—],
+    )
+  ],
+  caption: [Recall\@5%FPR test pada BAF. Hanya arm operatif ditampilkan, konsisten
+  dengan tabel AUPRC BAF.],
+) <tab-4-rfpr-baf>
+
+#figure(
+  kind: table,
+  text(size: 8pt)[
+    #table(
+      columns: (auto, auto, auto, auto, auto, auto, auto),
+      align: (left, right, right, right, right, right, right),
+      table.header(
+        table.cell(rowspan: 2)[*Model*],
+        table.cell(colspan: 2)[*Centralized*],
+        table.cell(colspan: 2)[*Dirichlet $alpha=0,5$*],
+        table.cell(colspan: 2)[*IID*],
+        [none], [SMOTE], [none], [SMOTE], [none], [SMOTE],
+      ),
+      [LR], [0,919], [0,951], [0,933], [0,923], [0,922], [0,957],
+      [SVM], [0,932], [0,941], [0,907], [0,915], [0,571], [0,938],
+      [GBM], [0,999], [0,998], [0,999], [0,996], [0,996], [0,997],
+      [FFD], [0,944], [0,976], [0,886], [0,925], [0,953], [0,976],
+      [BERT], [0,997], [0,997], [0,972], [0,861], [0,996], [0,997],
+      [FedXGBllr], [—], [—], [0,996], [0,996], [0,996], [0,996],
+      [XGBoost], [0,996], [1,000], [—], [—], [—], [—],
+    )
+  ],
+  caption: [Recall\@5%FPR test pada PaySim.],
+) <tab-4-rfpr-paysim>
+
+*BAF: lemah dalam peringkat, memadai dalam deteksi.* Dibaca lewat AUPRC, BAF
+tampak nyaris gagal — skor terbaik hanya sekitar 0,16, jauh di bawah ULB yang
+mencapai 0,83. Namun pada titik operasi 5% FPR model-model BAF menangkap proporsi
+fraud yang bermakna secara operasional: pada arm no-SMOTE, GBM 0,563 (terpusat),
+BERT 0,574 (Dirichlet), FFD 0,550 (Dirichlet), XGBoost 0,545, FedXGBllr 0,537
+(Dirichlet), dan LR 0,528 — kira-kira 52–57% fraud tertangkap sambil hanya
+menandai 5% transaksi sah. SVM adalah pengecualian, lebih lemah pada 0,524
+(terpusat) hingga 0,404 (IID). Kesimpulan RQ1 mengenai "BAF berperforma buruk"
+karena itu perlu diperhalus: BAF lemah pada presisi peringkat namun memadai pada
+deteksi di titik operasi yang layak-pakai. AUPRC dan Recall\@FPR mengukur hal yang
+berbeda, dan lebar jurang di antaranya justru informatif tentang bentuk distribusi
+skor. Hal ini terhubung langsung dengan pembahasan baseline pada Subbab ini: batas
+bawah AUPRC adalah prevalensi sehingga nilai rendah pada BAF sebagian mencerminkan
+bahwa metrik itu memang lebih sukar diskor tinggi di sana, sedangkan Recall\@FPR
+tidak memiliki batas bawah yang bergantung prevalensi dan memberi perbandingan yang
+tidak perlu dinormalkan.
+
+*Ketika kedua metrik sepakat — dan ketika tidak.* Pada model tree PaySim keduanya
+sepakat: GBM dan FedXGBllr sama-sama mencapai $tilde.op$0,996 baik pada AUPRC
+maupun Recall\@5%FPR, konsisten dengan saturasi yang telah dicatat — kesepakatan
+ini sekaligus mengingatkan bahwa masalahnya terlalu mudah bagi model tree sehingga
+perbandingan di sana terbatas nilainya. Ketidaksepakatan terbesar muncul justru di
+tempat peringkat runtuh tetapi deteksi bertahan. Contoh paling tajam adalah SVM
+PaySim pada IID no-SMOTE: AUPRC-nya hanya 0,311 — sekilas seperti model rusak —
+namun Recall\@5%FPR-nya 0,571, artinya model tetap memulihkan 57% fraud pada
+anggaran 5% FPR meski peringkat keseluruhannya buruk. Pola serupa terlihat menyapu
+seluruh ULB, di mana AUPRC berkisar 0,70–0,84 sementara Recall\@5%FPR konsisten
+lebih tinggi pada 0,85–0,92: fitur PCA ULB menyediakan wilayah recall-tinggi yang
+bersih meski presisi peringkat keseluruhannya hanya sedang. Sebuah model dapat
+berperingkat baik secara menyeluruh namun buruk pada wilayah presisi-tinggi yang
+ditimbang berat oleh AUPRC, atau sebaliknya; kedua metrik karena itu dilaporkan
+berdampingan.
+
 === Analisis Separabilitas Kelas
 
 Salah satu pengamatan RQ1 tampak paradoks: BAF memiliki prevalensi fraud 8,5×
@@ -2624,6 +2799,45 @@ dimanipulasi client memiliki ketahanan tertinggi.
   seed 42, per paradigma agregasi. Kondisi identik pada seluruh baris; yang
   berbeda hanya aturan agregasi.],
 ) <tab-4-baf-smote>
+
+Agar temuan ini tidak bergantung pada satu metrik, @tab-4-baf-smote-rfpr menghitung
+ulang efek yang sama dalam Recall\@5%FPR.
+
+#figure(
+  kind: table,
+  text(size: 9pt)[
+    #table(
+      columns: (auto, auto, auto, auto, auto),
+      align: (left, left, right, right, right),
+      table.header([*Paradigma agregasi*], [*Model*], [*no-SMOTE*],
+        [*SMOTE*], [*$Delta$*]),
+      [Best-model selection], [GBM], [0,560], [0,560], [0,0%],
+      [Tree ensemble aggregation], [FedXGBllr], [0,537], [0,506], [−5,7%],
+      [FedAvg], [LR], [0,521], [0,430], [−17,3%],
+      [FedAvg], [SVM], [0,477], [0,389], [−18,5%],
+      [Accuracy-weighted FedAvg], [FFD], [0,550], [0,253], [−53,9%],
+      [Accuracy-weighted FedAvg], [BERT], [0,574], [0,271], [−52,8%],
+    )
+  ],
+  caption: [Efek SMOTE terhadap Recall\@5%FPR test pada BAF Dirichlet
+  $alpha = 0,5$, seed 42, per paradigma agregasi. Kondisi identik dengan
+  @tab-4-baf-smote; hanya metriknya yang berbeda.],
+) <tab-4-baf-smote-rfpr>
+
+*Urutan bertahan, magnitudo mengecil.* Peringkat ketahanan antar paradigma tidak
+berubah: best-model selection tak tersentuh (0,0%), tree ensemble aggregation
+tergerus paling ringan (−5,7%), FedAvg linear di tengah (−17,3% dan −18,5%), dan
+FedAvg terbobot-akurasi pada model deep runtuh paling dalam (−53,9% dan −52,8%).
+Bahwa urutan monoton yang sama muncul pada metrik operasional yang sepenuhnya
+berbeda menjadikan klaim §4.3 lebih kuat daripada bila hanya bersandar pada AUPRC.
+Yang berubah adalah besarannya: setiap penurunan Recall\@5%FPR lebih kecil daripada
+penurunan AUPRC padanannya — model deep, misalnya, kehilangan sekitar 53% deteksi
+dibanding sekitar 72% AUPRC. Ini memberi tahu di mana kerusakan terkonsentrasi:
+geometri SMOTE wireframe (dibahas pada subbab berikut) merusak *pengurutan* skor
+lebih parah daripada menghancurkan wilayah deteksi pada ambang tinggi, sehingga
+keruntuhan peringkat yang diukur AUPRC tampak lebih dramatis daripada hilangnya
+deteksi pada titik operasi 5% FPR. Keruntuhan deep tetap besar dengan ukuran apa
+pun; yang bertambah adalah pemahaman bahwa kerugiannya terpusat di ranah peringkat.
 
 === Mekanisme: Geometri Sintetis dan Inversi Bobot
 
