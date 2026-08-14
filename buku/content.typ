@@ -3210,11 +3210,11 @@ memperkenalkan kelas batasan baru.
 *Mengapa BERT memakai KernelSHAP.* DeepSHAP diuji lebih dulu karena mendekati eksak.
 Pada FFD (1D-CNN) DeepSHAP memenuhi aksioma local accuracy dengan galat rekonstruksi
 $1,37 times 10^(-6)$. Pada BERT (FT-Transformer) DeepSHAP gagal: pustaka SHAP
-menaikkan `AssertionError` bahwa jumlah atribusi tidak sama dengan luaran model,
-didahului peringatan `unrecognized nn.Module: LayerNorm` — DeepLIFT tidak memiliki
-aturan propagasi untuk `LayerNorm` yang hadir di setiap blok Transformer.
-GradientExplainer sebagai alternatif melaporkan galat local accuracy $1,38 times
-10^(1)$ terhadap toleransi 0,01, yakni sekitar 1.380× di atas ambang, sehingga
+menaikkan `AssertionError` bahwa atribusi tidak menjumlah ke luaran model.
+Penyebabnya adalah `LayerNorm` yang hadir di setiap blok Transformer — DeepLIFT
+tidak memiliki aturan propagasi untuk lapisan tersebut.
+GradientExplainer sebagai alternatif melaporkan galat local accuracy $1,36 times
+10^(1)$ terhadap toleransi 0,01, yakni sekitar 1.360× di atas ambang, sehingga
 atribusinya tidak mendekomposisi prediksi dan dicatat sebagai estimator yang
 *gagal*, bukan pendekatan. BERT karenanya memakai KernelSHAP. Meskipun DeepSHAP
 lolos pada FFD, FFD tetap memakai KernelSHAP demi komparabilitas: bila FFD memakai
