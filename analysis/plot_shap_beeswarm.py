@@ -1,13 +1,18 @@
 """Per-client SHAP beeswarms — RUN ON THE BOX (frozen model artifacts live there).
 
 Makes client-to-client feature-importance differences visible, beyond the Spearman/
-Kuncheva summaries. Deliberately narrow scope:
+Kuncheva summaries. Scope:
 
-  * BAF only (the sole dataset with real named features).
+  * All three datasets. RQ3's finding is a dataset x model-family interaction (GBM
+    worst on ULB, LR worst on PaySim), which a single-dataset figure cannot show;
+    ULB also holds the study's lowest deterministic stability (GBM Kuncheva 0.742,
+    Jaccard 0.4702), so it is the most extreme case, not one to drop. Chapter
+    selection stays BAF (named housing_status_* features carry the §4.2 argument);
+    the rest are analysis outputs / appendix.
   * Deterministic explainers only — LR/SVM (LinearSHAP), GBM (interventional TreeSHAP);
     these are the only cells whose cross-client stability is resolvable (every
     KernelSHAP cell sits at or below its own noise floor).
-  * Dirichlet alpha = 0.5, both arms, all five clients.
+  * Dirichlet alpha = 0.5, both arms, all five clients. 3 x 3 x 2 = 18 figures.
 
 It REUSES the exact experiments/shap_analysis.py pipeline (same explanation set, same
 per-client backgrounds, same explainer construction) so the extracted raw SHAP values
@@ -43,7 +48,7 @@ sys.path.insert(0, str(PROJECT_ROOT / "models" / "fedxgbllr"))
 
 from experiments import shap_analysis as SA  # noqa: E402
 
-DATASET = "baf"
+DATASETS = ["creditcard", "paysim", "baf"]
 MODELS = ["lr", "svm", "gbm"]
 CONDITION = "dirichlet"
 ALPHA = 0.5
@@ -58,6 +63,8 @@ plt.rcParams.update({"font.size": 8, "axes.titlesize": 9, "axes.labelsize": 8,
                      "xtick.labelsize": 7, "ytick.labelsize": 7, "figure.dpi": 150})
 MODEL_LABEL = {"lr": "LR", "svm": "SVM", "gbm": "GBM"}
 ARM_LABEL = {"none": "tanpa-SMOTE", "smote": "dengan-SMOTE"}
+DATASET_LABEL = {"creditcard": "ULB", "paysim": "PaySim", "baf": "BAF"}
+DS_FNAME = {"creditcard": "ulb", "paysim": "paysim", "baf": "baf"}
 
 
 def client_shap_matrix(obj, kind, bg, X):
@@ -155,14 +162,14 @@ def fig_beeswarm(art, fnames, sv, X):
     sm = plt.cm.ScalarMappable(cmap="coolwarm", norm=plt.Normalize(0, 1))
     cb = fig.colorbar(sm, ax=axes, fraction=0.015, pad=0.01)
     cb.set_ticks([0, 1]); cb.set_ticklabels(["rendah", "tinggi"]); cb.set_label("nilai fitur")
-    fig.suptitle(f"BAF {MODEL_LABEL[art['model']]} — Dirichlet α=0.5, {ARM_LABEL[art['arm']]}",
-                 fontsize=10)
-    p = OUT / f"fig-shap-beeswarm-baf-{art['model']}-{art['arm']}.png"
+    fig.suptitle(f"{DATASET_LABEL[art['dataset']]} {MODEL_LABEL[art['model']]} — "
+                 f"Dirichlet α=0.5, {ARM_LABEL[art['arm']]}", fontsize=10)
+    p = OUT / f"fig-shap-beeswarm-{DS_FNAME[art['dataset']]}-{art['model']}-{art['arm']}.png"
     fig.savefig(p, bbox_inches="tight"); plt.close(fig)
     return p
 
 
-def fig_clientbars(model, cells):
+def fig_clientbars(dataset, model, cells):
     """Grouped bars: mean|SHAP| of top-10 consensus features, 5 bars/feature, per arm."""
     fig, axes = plt.subplots(1, len(cells), figsize=(6.6 * len(cells), 4.0), sharey=False)
     if len(cells) == 1:
@@ -177,11 +184,11 @@ def fig_clientbars(model, cells):
             ax.bar(xs + (ci - (n - 1) / 2) * w, imp[ci, order], width=w, label=f"client {ci}")
         ax.set_xticks(xs)
         ax.set_xticklabels([fnames[j] for j in order], rotation=45, ha="right", fontsize=6)
-        ax.set_title(f"{MODEL_LABEL[model]} — {ARM_LABEL[art['arm']]}")
+        ax.set_title(f"{DATASET_LABEL[dataset]} {MODEL_LABEL[model]} — {ARM_LABEL[art['arm']]}")
         ax.set_ylabel("mean |SHAP|")
         ax.grid(axis="y", alpha=0.25)
     axes[-1].legend(fontsize=7, ncol=1)
-    p = OUT / f"fig-shap-baf-{model}-clientbars.png"
+    p = OUT / f"fig-shap-{DS_FNAME[dataset]}-{model}-clientbars.png"
     fig.tight_layout(); fig.savefig(p, bbox_inches="tight"); plt.close(fig)
     return p
 
@@ -194,31 +201,32 @@ def main():
     arts = SA.discover()
     if not arts:
         print("NO artifacts under results/models/ — run on the box."); return 2
-    sel = [a for a in arts if a["dataset"] == DATASET and a["model"] in MODELS
+    sel = [a for a in arts if a["dataset"] in DATASETS and a["model"] in MODELS
            and a["condition"] == CONDITION and a["arm"] in ARMS
            and (a["alpha"] == ALPHA)]
     if not sel:
-        print(f"No BAF {CONDITION} α={ALPHA} deterministic cells found."); return 2
+        print(f"No {CONDITION} α={ALPHA} deterministic cells found for {DATASETS}."); return 2
     OUT.mkdir(parents=True, exist_ok=True)
     RAW.mkdir(parents=True, exist_ok=True)
-    print(f"{len(sel)} cells in scope (BAF {CONDITION} α={ALPHA}; {MODELS}; {ARMS}).")
+    print(f"{len(sel)} cells in scope ({DATASETS}; {CONDITION} α={ALPHA}; {MODELS}; {ARMS}).")
 
-    by_model = {m: [] for m in MODELS}
-    for art in sorted(sel, key=lambda a: (MODELS.index(a["model"]), a["arm"])):
-        tag = f"{art['model']}/{art['arm']}"
+    by_ds_model = {}
+    for art in sorted(sel, key=lambda a: (DATASETS.index(a["dataset"]),
+                                          MODELS.index(a["model"]), a["arm"])):
+        tag = f"{art['dataset']}/{art['model']}/{art['arm']}"
         print(f"  [{tag}] extracting raw SHAP ...")
         fnames, sv, X = extract_cell(art)
-        np.savez_compressed(RAW / f"{DATASET}__{art['model']}__{CONDITION}_{art['arm']}.npz",
-                            sv=sv, X=X, features=np.array(fnames))
+        np.savez_compressed(
+            RAW / f"{art['dataset']}__{art['model']}__{CONDITION}_{art['arm']}.npz",
+            sv=sv, X=X, features=np.array(fnames))
         p = fig_beeswarm(art, fnames, sv, X)
         print(f"    wrote {p.name}")
-        by_model[art["model"]].append((art, fnames, sv, X))
+        by_ds_model.setdefault((art["dataset"], art["model"]), []).append((art, fnames, sv, X))
 
-    for m, cells in by_model.items():
-        if cells:
-            cells = sorted(cells, key=lambda c: ARMS.index(c[0]["arm"]))
-            p = fig_clientbars(m, cells)
-            print(f"  wrote {p.name}")
+    for (ds, m), cells in by_ds_model.items():
+        cells = sorted(cells, key=lambda c: ARMS.index(c[0]["arm"]))
+        p = fig_clientbars(ds, m, cells)
+        print(f"  wrote {p.name}")
 
     print(f"\nRaw matrices -> {RAW.relative_to(PROJECT_ROOT)}/ ; figures -> "
           f"{OUT.relative_to(PROJECT_ROOT)}/")
