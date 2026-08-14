@@ -1,0 +1,143 @@
+========================================================================
+SHAP Stage-0 feasibility probe — READ-ONLY, writes nothing
+========================================================================
+shap 0.49.1
+
+Discovered 96 artifacts. Provenance example (manifest hash to record in SHAP outputs, joined on dataset/model/condition/arm):
+    paysim/lr/centralized_none: manifest_sha256[:16]=19961dc6a7daae54
+    paysim/bert_fraud/dirichlet_none: manifest_sha256[:16]=d357c4018251385e
+    paysim/fedxgbllr/dirichlet_smote: manifest_sha256[:16]=3bec39a4456065da
+
+[1] FedXGBllr reload reproduces stored predictions (baf/fedxgbllr_dirichlet_alpha0.5_smote_seed42)
+    recomputed test AUPRC = 0.1374 | stored clean_summary = 0.1373970806598663
+    data_hash match: b3e0d335cd39 vs manifest b3e0d335cd39
+    => reload reproduces stored test AUPRC (tol 2e-3): True
+
+[2] TreeExplainer on truncated GBM (creditcard/gbm_iid_alpha-_none_seed42)
+    reloaded n_iter_=1  len(_predictors)=1  (k* selected model)
+    TreeExplainer OK on sliced _predictors: True | base=-6.1254
+    local-accuracy max|Σφ+φ0 − f(x)| = 0.00e+00
+
+[3] LinearExplainer on SVM (paysim/svm_dirichlet_alpha0.5_smote_seed42)
+    coef_ shape=(1, 13)  intercept_=[-16.41873134]
+    LinearExplainer OK (coef_/intercept_ suffice): True
+    local-accuracy on margin: max|Σφ+φ0 − margin| = 9.26e-08
+
+[4] DeepExplainer local accuracy (FFDModel: creditcard/centralized_ffd_smote_seed42)
+    explainer used: DeepExplainer | tolerance (abs, log-odds) = 0.01
+    local-accuracy max|Σφ+φ0 − f(x)| = 1.37e-06  => PASS
+    timing: ~   3.4s / 500 (DeepExplainer)
+
+[4] DeepExplainer local accuracy (BertFraudModel: creditcard/bert_fraud_dirichlet_alpha0.5_none_seed42)
+    DeepExplainer failed: AssertionError: The SHAP explanations do not sum up to the model's output! This is either because of a rounding error or because an oper
+    explainer used: GradientExplainer | tolerance (abs, log-odds) = 0.01
+    local-accuracy max|Σφ+φ0 − f(x)| = 1.36e+01  => APPROX (Gradient — local accuracy not guaranteed)
+    timing: ~  11.3s / 500 (GradientExplainer)
+
+[5] Timing estimate for 500 explanation samples
+    GBM   (TreeExplainer, creditcard) : ~   0.0s / 500
+    SVM   (LinearExplainer, paysim) : ~   0.0s / 500
+    FedXGBllr (KernelSHAP,nsamples=100): ~ 318.8s / 500  (per-sample 0.64s; scales with nsamples)
+
+[6] feature_names.json order == cache feature_names
+    paysim     lr        : match=True (n=13)
+    paysim     bert_fraud: match=True (n=13)
+    paysim     fedxgbllr : match=True (n=13)
+    paysim     bert_fraud: match=True (n=13)
+    paysim     svm       : match=True (n=13)
+    paysim     gbm       : match=True (n=13)
+    paysim     xgb       : match=True (n=13)
+    paysim     ffd       : match=True (n=13)
+    paysim     svm       : match=True (n=13)
+    paysim     gbm       : match=True (n=13)
+    paysim     fedxgbllr : match=True (n=13)
+    paysim     lr        : match=True (n=13)
+    paysim     ffd       : match=True (n=13)
+    paysim     lr        : match=True (n=13)
+    paysim     svm       : match=True (n=13)
+    paysim     bert_fraud: match=True (n=13)
+    paysim     ffd       : match=True (n=13)
+    paysim     xgb       : match=True (n=13)
+    paysim     svm       : match=True (n=13)
+    paysim     bert_fraud: match=True (n=13)
+    paysim     gbm       : match=True (n=13)
+    paysim     bert_fraud: match=True (n=13)
+    paysim     fedxgbllr : match=True (n=13)
+    paysim     lr        : match=True (n=13)
+    paysim     fedxgbllr : match=True (n=13)
+    paysim     svm       : match=True (n=13)
+    paysim     lr        : match=True (n=13)
+    paysim     ffd       : match=True (n=13)
+    paysim     gbm       : match=True (n=13)
+    paysim     gbm       : match=True (n=13)
+    paysim     lr        : match=True (n=13)
+    paysim     ffd       : match=True (n=13)
+    paysim     svm       : match=True (n=13)
+    paysim     ffd       : match=True (n=13)
+    paysim     bert_fraud: match=True (n=13)
+    paysim     gbm       : match=True (n=13)
+    baf        lr        : match=True (n=55)
+    baf        bert_fraud: match=True (n=55)
+    baf        fedxgbllr : match=True (n=55)
+    baf        bert_fraud: match=True (n=55)
+    baf        svm       : match=True (n=55)
+    baf        gbm       : match=True (n=55)
+    baf        svm       : match=True (n=55)
+    baf        fedxgbllr : match=True (n=55)
+    baf        lr        : match=True (n=55)
+    baf        ffd       : match=True (n=55)
+    baf        lr        : match=True (n=55)
+    baf        bert_fraud: match=True (n=55)
+    baf        ffd       : match=True (n=55)
+    baf        xgb       : match=True (n=55)
+    baf        gbm       : match=True (n=55)
+    baf        fedxgbllr : match=True (n=55)
+    baf        svm       : match=True (n=55)
+    baf        lr        : match=True (n=55)
+    baf        ffd       : match=True (n=55)
+    baf        gbm       : match=True (n=55)
+    baf        gbm       : match=True (n=55)
+    baf        svm       : match=True (n=55)
+    baf        ffd       : match=True (n=55)
+    baf        bert_fraud: match=True (n=55)
+    creditcard lr        : match=True (n=30)
+    creditcard bert_fraud: match=True (n=30)
+    creditcard fedxgbllr : match=True (n=30)
+    creditcard bert_fraud: match=True (n=30)
+    creditcard svm       : match=True (n=30)
+    creditcard gbm       : match=True (n=30)
+    creditcard xgb       : match=True (n=30)
+    creditcard ffd       : match=True (n=30)
+    creditcard svm       : match=True (n=30)
+    creditcard gbm       : match=True (n=30)
+    creditcard fedxgbllr : match=True (n=30)
+    creditcard lr        : match=True (n=30)
+    creditcard ffd       : match=True (n=30)
+    creditcard lr        : match=True (n=30)
+    creditcard svm       : match=True (n=30)
+    creditcard bert_fraud: match=True (n=30)
+    creditcard ffd       : match=True (n=30)
+    creditcard xgb       : match=True (n=30)
+    creditcard svm       : match=True (n=30)
+    creditcard bert_fraud: match=True (n=30)
+    creditcard gbm       : match=True (n=30)
+    creditcard bert_fraud: match=True (n=30)
+    creditcard fedxgbllr : match=True (n=30)
+    creditcard lr        : match=True (n=30)
+    creditcard fedxgbllr : match=True (n=30)
+    creditcard svm       : match=True (n=30)
+    creditcard lr        : match=True (n=30)
+    creditcard ffd       : match=True (n=30)
+    creditcard gbm       : match=True (n=30)
+    creditcard gbm       : match=True (n=30)
+    creditcard lr        : match=True (n=30)
+    creditcard ffd       : match=True (n=30)
+    creditcard svm       : match=True (n=30)
+    creditcard ffd       : match=True (n=30)
+    creditcard bert_fraud: match=True (n=30)
+    creditcard gbm       : match=True (n=30)
+  => feature-name order consistent across all artifacts: True
+
+========================================================================
+Probe complete. No artifact or results file was modified.
+========================================================================
