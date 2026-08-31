@@ -21,6 +21,12 @@ Background = 100 local post-SMOTE samples from one client (summarised to 10 kmea
 centroids for the explainer, matching the probe's cost model). Explanation data =
 a fixed class-proportional central-test subset, identical across the two seeds.
 Log-odds scale throughout.
+
+NOTE (RQ3 v2): experiments/shap_rq3.py now measures PER-CELL, PER-CLIENT floors
+(two seeds per client, every cell) — this single-client BAF probe is kept as a
+cheap sanity check, no longer the production floor source. It now runs with
+l1_reg=False, so its floors are NOT comparable to the pre-fix values recorded in
+results/shap/noise_floor.txt (measured under the num_features(10) default).
 """
 
 from __future__ import annotations
@@ -47,12 +53,6 @@ N_BG = 100                   # local background pool
 KMEANS_K = 10                # background summary size (cost model)
 BG_CLIENT = 0                # which client's local data seeds the background
 SEEDS = (11, 22)             # two KernelSHAP random seeds
-LOGIT_EPS = 1e-6
-
-
-def _logit(p):
-    p = np.clip(np.asarray(p, np.float64), LOGIT_EPS, 1 - LOGIT_EPS)
-    return np.log(p / (1 - p))
 
 
 def _sv_2d(sv, n):
@@ -93,6 +93,12 @@ def load_fedxgbllr_f(art_dir):
                             "run_experiment": {"batch_size": 512}})
     trees, cnn = mp.load_fedxgbllr(XGBClassifier, CNN, (cfg,), art_dir)
     cnn = cnn.cpu().eval()
+    # Pre-Sigmoid activation = exact, unclipped log-odds — same as production
+    # (shap_analysis._fedxgbllr_fn). The old logit(clip(p, 1e-6, ...)) wrapper
+    # saturated to a constant on probabilities below the clip floor (~1e-9 on
+    # PaySim) and returned all-zero attributions; on BAF the clip never bound,
+    # so historical BAF floors from this probe remain scale-consistent.
+    cnn.final_layer = torch.nn.Identity()
     tlist = [(t, i) for i, t in enumerate(trees)]
 
     def f(X):
@@ -104,7 +110,7 @@ def load_fedxgbllr_f(art_dir):
         with torch.no_grad():
             for xb, _ in tl:
                 out.append(cnn(xb).numpy().reshape(-1))
-        return _logit(np.concatenate(out))
+        return np.concatenate(out)  # pre-Sigmoid log-odds, unclipped
     return f
 
 
@@ -162,7 +168,10 @@ def kernel_importance(f, bg_km, X, nsamples, seed):
     import shap
     np.random.seed(seed)
     ex = shap.KernelExplainer(f, bg_km)
-    sv = _sv_2d(ex.shap_values(X, nsamples=nsamples, silent=True), len(X))
+    # l1_reg=False: the >= 0.47 default (num_features(10)) zeroes all but 10
+    # features per instance and INFLATES the floor this probe exists to measure.
+    sv = _sv_2d(ex.shap_values(X, nsamples=nsamples, l1_reg=False, silent=True),
+                len(X))
     return np.abs(sv).mean(axis=0)
 
 

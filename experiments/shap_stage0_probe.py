@@ -354,7 +354,7 @@ def probe_timing(gbm_pair, svm_pair, fx_predict):
         bg = shap.kmeans(fx_xte[:200], 10)
         ex = shap.KernelExplainer(f, bg)
         n_small = 2
-        t = time.time(); ex.shap_values(fx_xte[:n_small], nsamples=100, silent=True); dt = time.time() - t
+        t = time.time(); ex.shap_values(fx_xte[:n_small], nsamples=100, l1_reg=False, silent=True); dt = time.time() - t
         print(f"    FedXGBllr (KernelSHAP,nsamples=100): ~{dt/n_small*N_EXPLAIN_TARGET:6.1f}s / {N_EXPLAIN_TARGET}"
               f"  (per-sample {dt/n_small:.2f}s; scales with nsamples)")
 

@@ -22,6 +22,12 @@ Per cell (dataset, model, condition, arm) with a persisted artifact:
 
 Scope order (approved): cheap models (LR/SVM/GBM/XGB) on all cells/datasets first,
 then expensive models (FFD/BERT/FedXGBllr) on BAF, then ULB, then PaySim.
+
+NOTE (RQ3 v2): experiments/shap_rq3.py supersedes this script for RQ3 stability
+outputs (two-seed per-client floors, exchangeability test, l1_reg=False) and
+writes under results/shap_v2/. This script keeps l1_reg=False as well but still
+writes under results/shap/ — RE-RUNNING IT OVERWRITES THE v1 ARTIFACTS that the
+currently reported numbers came from; prefer shap_rq3.py.
 """
 
 from __future__ import annotations
@@ -286,7 +292,13 @@ def client_importance(obj, kind, bg, X):
     else:  # kernel
         np.random.seed(SEED)
         ex = shap.KernelExplainer(obj, shap.kmeans(bg, KMEANS_K))
-        sv = _sv2d(ex.shap_values(X, nsamples=NSAMPLES, silent=True), len(X))
+        # l1_reg=False: shap >= 0.47 defaults to l1_reg="num_features(10)" — LARS
+        # keeps 10 features and sets every other phi to EXACTLY 0.0 per instance
+        # (>= 45/55 zeros on BAF), which tie-dominates rank statistics and inflates
+        # the noise floor because the selection is discontinuous in the coalition
+        # draw. Never rely on the default here.
+        sv = _sv2d(ex.shap_values(X, nsamples=NSAMPLES, l1_reg=False, silent=True),
+                   len(X))
     return np.abs(sv).mean(axis=0)
 
 

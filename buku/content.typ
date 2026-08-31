@@ -1722,25 +1722,61 @@ FFD serta BERT dijelaskan (logit mentah pra-aktivasi).
 
 Latar (background) KernelSHAP adalah 100 sampel data latih lokal pasca-SMOTE tiap
 client yang diringkas menjadi 10 sentroid k-means; peringkasan ini menentukan
-distribusi referensi dan wajib identik antara pengukuran noise-floor dan produksi.
+distribusi referensi dan wajib identik antara pengukuran floor dan produksi.
 Jumlah evaluasi (nsamples) KernelSHAP ditetapkan bukan secara asumtif melainkan
-melalui pengukuran *noise floor*: KernelSHAP dijalankan dua kali dengan random
-seed berbeda pada satu client, lalu Spearman rank correlation antar kedua vektor
-importance diukur pada nsamples ∈ {100, 500, 1000}. Nilai terkecil yang mencapai
-Spearman > 0,95 pada ketiga model yang dijelaskan KernelSHAP adalah nsamples = 500
-(FedXGBllr 0,9730; FFD 0,9966; BERT 0,9972), sementara nsamples = 1000 hanya
-mengubah ketiganya dalam rentang noise; nsamples = 500 karena itu digunakan. Karena
-floor diukur pada 250 sampel explanation sedangkan produksi memakai 500, dan
-penambahan sampel hanya memperbanyak perataan, floor bersifat batas bawah:
-floor produksi setidaknya setinggi itu. Floor bersifat per-model, bukan satu
-angka global, sehingga setiap sel dinilai relatif terhadap floor modelnya sendiri:
-Spearman antar-client yang berada pada atau di bawah floor tergolong dalam rentang
-noise sampling estimator dan tidak dapat dibaca sebagai ketidakstabilan model. Floor
-FFD diukur langsung pada arsitekturnya sendiri dengan protokol yang sama — bukan
-dipinjam dari FedXGBllr — sehingga ketiga model dinilai terhadap floor arsitekturnya
-masing-masing. Kolom `noise_floor` dan penanda `below_floor` dilaporkan pada
-ringkasan hasil agar stabilitas dibaca relatif terhadap floor, bukan secara
-absolut.
+melalui pengukuran agreement antar-seed: KernelSHAP dijalankan dua kali dengan
+random seed berbeda pada satu client, lalu Spearman rank correlation antar kedua
+vektor importance diukur pada nsamples ∈ {100, 500, 1000}. Nilai terkecil yang
+mencapai Spearman > 0,95 pada ketiga model yang dijelaskan KernelSHAP adalah
+nsamples = 500, yang karena itu digunakan. Pengukuran pemilihan tersebut
+dilakukan di bawah perilaku bawaan `l1_reg` pustaka — lihat paragraf berikut —
+sehingga angka floor historisnya tidak dibandingkan langsung dengan floor pada
+protokol final.
+
+Seluruh pemanggilan KernelSHAP menonaktifkan seleksi fitur bawaan pustaka
+(`l1_reg=False`). Sejak shap 0.47.0, nilai bawaan `l1_reg="num_features(10)"`
+menjalankan regresi LARS yang mempertahankan paling banyak 10 fitur per sampel
+dan menetapkan atribusi seluruh fitur lain tepat 0,0 — pada BAF (55 fitur)
+berarti sekurang-kurangnya 45 nol eksak per sampel yang dijelaskan. Perilaku
+tersebut membuat statistik peringkat didominasi ties, dan karena himpunan
+sepuluh fitur yang lolos merupakan fungsi diskontinu dari undian koalisi,
+agreement antar-seed ikut tertekan sehingga floor yang terukur membesar secara
+artifisial. Penonaktifannya diverifikasi oleh guard regresi pada runner: sel
+dengan jumlah fitur di atas 10 yang seluruh baris atribusinya memuat paling
+banyak 10 nilai taknol menghentikan eksekusi dengan pesan kesalahan eksplisit.
+
+Ketidakpastian estimator tidak dibaca terhadap satu floor global yang diukur
+pada satu dataset lalu disiarkan ke dataset lain, melainkan diuji per sel.
+Untuk setiap sel dan setiap client, vektor importance global dihitung pada dua
+seed koalisi khusus SHAP (seed pelatihan tidak disentuh) dengan explanation
+data dan background identik, menghasilkan floor per-client
+$rho(g_c^((s_1)), g_c^((s_2)))$ untuk setiap client $c$ — reliabilitas
+estimator pada data client itu sendiri. Perbandingan antar-client memakai
+common random numbers: kedua client pada setiap pasangan berbagi seed koalisi
+yang sama, sehingga nilai antar-client $rho(g_i^((s)), g_j^((s)))$, $i < j$,
+dievaluasi pada undian koalisi identik dan deviasi run-to-run-nya mengecil
+tanpa menggeser taksiran titiknya. Di bawah hipotesis nol bahwa seluruh client
+berbagi satu vektor importance sejati, ke-$2K$ vektor tersebut bersifat
+exchangeable sehingga pemasangan (client, seed) bersifat arbitrer; distribusi
+null karenanya dibentuk oleh seluruh perfect matching dari $2K$ vektor menjadi
+$K$ pasangan — untuk $K = 5$ berjumlah $(2K - 1)!! = 945$ dan dienumerasi
+lengkap, menghasilkan uji eksak dengan nilai p minimum 1/945. Statistik ujinya
+adalah selisih rerata korelasi dalam-pasangan terhadap rerata korelasi
+luar-pasangan; uji permutasi gabungan (pooling) tidak dipakai karena nilai
+antar-client dihitung dari hanya lima vektor client sehingga saling bergantung
+kuat. Rancangan seed-berulang ini mengikuti preseden pengujian stabilitas LIME
+oleh #cite(<visani2022stability>, form: "prose") dan memperluasnya ke
+perbandingan antar-client federatif. Koreksi multiplisitas Benjamini–Hochberg
+diterapkan pada seluruh sel kernel multi-client; sebuah sel dinyatakan
+berbeda-antar-client bila p terkoreksi $lt.eq 0,05$, dan rasio disatenuasi
+between/floor dilaporkan sebagai indikator sekunder yang bersifat aproksimatif.
+Ringkasan hasil memuat kolom floor per sel (`floor_mean`, `floor_min`),
+statistik antar-client (`between_mean`, `between_sd`), selisih `delta`,
+`p_value` beserta `p_adj`, dan verdict per sel — menggantikan penanda
+`below_floor` tunggal, yang merangkum keliru dua kasus berlawanan: nilai
+antar-client sedikit di bawah floor memang tak terbedakan dari noise estimator,
+tetapi nilai yang berada jauh di bawah floor justru bukti melawan hipotesis
+nol, yaitu sinyal ketidaksepakatan antar-client yang nyata.
 
 Pada setiap client, komputasi SHAP menghasilkan vektor feature importance lokal
 yang diperoleh melalui rerata absolut SHAP values pada seluruh sampel explanation
@@ -1791,13 +1827,40 @@ indeks Kuncheva, sedangkan Jaccard\@5 dipertahankan untuk kesinambungan dengan
 argumen auditor di atas; Spearman tidak terpengaruh karena null-nya 0 tanpa
 bergantung dimensi.
 
+Tiga perluasan melengkapi keempat metrik tersebut. Pertama, stabilitas tidak
+diringkas pada satu nilai k saja: indeks Kuncheva dihitung pada seluruh
+k = 1…M dan dibandingkan terhadap pita floor per-client pada k yang sama,
+sehingga kedalaman peringkat yang masih terbaca — titik ketika kurva
+antar-client meninggalkan pita floor-nya — teridentifikasi eksplisit; profil
+ini terbanding antar dataset berdimensi berbeda berkat koreksi peluangnya
+@nogueira2018stability. Korelasi peringkat berbobot magnitudo (bobot rerata
+|SHAP| per fitur) turut dilaporkan agar ekor fitur beratribusi hampir nol
+tidak mendominasi statistik peringkat penuh. Kedua, untuk memisahkan dua
+sumber divergensi yang terkonfundasi — model global berperilaku berbeda pada
+data client tertentu, versus distribusi background lokal client itu sendiri
+yang berbeda — sel-sel terpilih dijalankan dua kali: dengan background
+per-client (konfigurasi baku) dan dengan background bersama hasil penggabungan
+seluruh background lokal, mengikuti motivasi background federatif
+#cite(<ducange2026fedshap>, form: "prose"). Ketiga, khusus PaySim KernelSHAP
+dibuat eksak: dengan $M = 13$ fitur, nilai nsamples sebesar
+$2^(13) - 2 = 8190$ mengenumerasi seluruh bobot kernel tanpa satu pun undian
+acak, dan bila kelima kolom one-hot `type` dikelompokkan sebagai satu pemain
+Shapley ($M$ efektif sama dengan 9) enumerasi lengkap hanya membutuhkan 510
+evaluasi per sampel — setara anggaran produksi. Kedua rute eksak dijalankan
+dan saling memvalidasi; pengelompokan yang sama pada BAF menghasilkan $M$
+efektif 29 sehingga enumerasi lengkap tetap di luar jangkauan dan manfaat
+pengelompokan di sana terbatas pada reduksi variansi.
+
 Sebagai batasan, LinearSHAP, KernelSHAP, dan TreeSHAP mode `interventional`
 sama-sama mengasumsikan independensi fitur sehingga koalisi yang disampel dapat
 membentuk kombinasi mustahil — khususnya blok one-hot yang secara struktural hanya
 bernilai 1 pada tepat satu kolom (26 dari 55 kolom pada BAF, 5 pada PaySim; ULB
 bersih karena seluruhnya komponen PCA). Hal ini dapat menggeser atribusi ke luar
-domain pelatihan @aas2021explaining, tidak dapat diperbaiki dalam ruang lingkup ini,
-dan didokumentasikan sebagai batasan. Karena model pohon kini memakai mode
+domain pelatihan @aas2021explaining dan didokumentasikan sebagai batasan;
+pengelompokan one-hot pada tingkat eksak PaySim di atas menanganinya sebagian —
+blok `type` diperlakukan sebagai satu pemain sehingga koalisi mustahil di dalam
+blok tidak lagi tersampel — sedangkan pada dataset lain batasan ini tetap
+berlaku. Karena model pohon kini memakai mode
 `interventional` (bukan `tree_path_dependent`), asumsi ini berlaku seragam pada
 seluruh explainer yang bergantung-background dan tidak menambah kelas batasan baru.
 
@@ -1834,7 +1897,7 @@ komputasi yang spesifikasinya disajikan pada @tab-3-5.
     [Orkestrasi konfigurasi], [Hydra 1.3.2 (FedXGBllr); YAML + argparse (model lain)],
     [Library ML klasik], [scikit-learn 1.5.0, XGBoost 2.0.0],
     [Penanganan class imbalance], [imbalanced-learn (SMOTE, ADASYN)],
-    [Library XAI], [SHAP (shap)],
+    [Library XAI], [SHAP (shap) 0.49.1],
     [Library numerik & DataFrame], [NumPy, Pandas, SciPy],
     [Library visualisasi], [Matplotlib, Seaborn],
     [Pelacakan eksperimen], [Weights & Biases (wandb 0.15.12)],
@@ -2287,8 +2350,9 @@ evaluasi.
 Komponen analisis explainability merealisasikan kerangka pengukuran yang telah
 dirancang pada Subbab Perancangan Modul Evaluasi dengan mengacu pada konfigurasi
 data dan varian explainer yang telah ditetapkan. Implementasi dilakukan
-menggunakan pustaka SHAP versi terbaru yang mendukung seluruh varian explainer
-yang dibutuhkan, serta diintegrasikan dengan pipeline evaluasi sehingga komputasi
+menggunakan pustaka SHAP versi 0.49.1 — dipin eksak pada `requirements.txt`
+karena perilaku bawaan `l1_reg` KernelExplainer berubah pada versi 0.47.0 —
+serta diintegrasikan dengan pipeline evaluasi sehingga komputasi
 explainability dapat dijalankan secara otomatis setelah pelatihan model global
 selesai.
 
@@ -2333,36 +2397,51 @@ atas fitur asli, dengan memperlakukan komposisi tree-ensemble dan CNN sebagai sa
 fungsi tunggal; koreksi ini tidak bergantung pada hasil SHAP dan berlaku semata
 karena arsitektur model.
 
-LinearSHAP diaplikasikan pada Logistic Regression melalui LinearExplainer, dan
-KernelSHAP diaplikasikan pada SVM linear melalui KernelExplainer. Khusus untuk
-KernelSHAP, jumlah evaluasi fungsi dibatasi pada nilai default pustaka untuk
-menjaga efisiensi komputasi mengingat kompleksitasnya yang bersifat eksponensial
-terhadap jumlah fitur.
+LinearSHAP diaplikasikan pada Logistic Regression dan pada SVM linear melalui
+LinearExplainer, sesuai pemetaan pada Subbab Perancangan Modul Evaluasi (untuk
+SVM kuantitas yang dijelaskan adalah margin fungsi keputusan). Khusus untuk
+KernelSHAP, jumlah evaluasi fungsi ditetapkan nsamples = 500 dari pengukuran
+agreement antar-seed — bukan nilai bawaan pustaka — dan seleksi fitur bawaan
+dinonaktifkan (`l1_reg=False`) sebagaimana dirancang; keduanya diberlakukan
+seragam pada FedXGBllr, FFD, dan BERT.
 
 Komputasi feature importance dijalankan secara independen pada setiap client
 setelah model global akhir tersedia. Setiap client menghitung SHAP values untuk
-seluruh sampel explanation data, kemudian merangkumnya menjadi vektor feature
-importance lokal melalui rerata absolut. Vektor-vektor ini kemudian dikirimkan ke
-server simulasi untuk dihimpun menjadi matriks feature importance antar client,
-yang menjadi dasar seluruh analisis komparatif berikutnya.
+seluruh sampel explanation data pada dua seed koalisi khusus SHAP — explanation
+data dan background identik antar seed, dengan common random numbers antar
+client — kemudian merangkumnya menjadi vektor feature importance lokal melalui
+rerata absolut, menghasilkan dua vektor per client yang sekaligus menjadi dasar
+floor per-client. Vektor-vektor ini kemudian dikirimkan ke server simulasi
+untuk dihimpun menjadi matriks feature importance antar client, yang menjadi
+dasar seluruh analisis komparatif berikutnya.
 
-Pada server simulasi, dilakukan tiga jenis komputasi statistik sesuai rancangan
-pada Subbab Perancangan Modul Evaluasi. Pertama, rerata feature importance antar
-client dihitung sebagai indikator consensus interpretasi dan divisualisasikan
-dalam bentuk bar chart untuk memberikan gambaran fitur-fitur yang secara umum
-dianggap penting oleh seluruh client. Kedua, Spearman rank correlation rerata
-dihitung antar seluruh pasangan client sebagai metrik stabilitas urutan
-kepentingan fitur. Ketiga, Jaccard similarity rerata pada lima fitur teratas
-dihitung antar seluruh pasangan client sebagai metrik stabilitas himpunan fitur
-paling berpengaruh.
+Pada server simulasi, komputasi statistik sesuai rancangan pada Subbab
+Perancangan Modul Evaluasi direalisasikan pada dua modul murni numerik. Modul
+`evaluation/shap_stability.py` menghitung rerata konsensus, Spearman rank
+correlation antar-client, Jaccard\@5, dan indeks Kuncheva; modul
+`evaluation/shap_inference.py` menghitung floor per-client dua-seed, uji
+exchangeability eksak atas seluruh perfect matching (945 pada K = 5), koreksi
+Benjamini–Hochberg, profil Kuncheva atas k, dan korelasi peringkat berbobot
+magnitudo — keduanya bebas dependensi model sehingga teruji unit di luar
+lingkungan GPU. Orkestrasi produksinya adalah `experiments/shap_rq3.py`, yang
+menulis artefak per sel (matriks importance per client dan seed, berkas
+`stability.json` berisi seluruh statistik beserta provenance, dan profil
+stabilitas per k) serta ringkasan `shap_summary_v2.csv` dengan kolom floor,
+between, delta, nilai p mentah dan terkoreksi, dan verdict per sel. Guard
+degenerasi mencatat sel yang vektornya runtuh sebagai undefined tanpa metrik
+stabilitas, dan guard regresi `l1_reg` menghentikan eksekusi bila pola
+seleksi-sepuluh-fitur terdeteksi pada keluaran. Keluaran tahap sebelum
+perbaikan `l1_reg` dipertahankan utuh pada direktori terpisah sehingga setiap
+angka yang berubah dapat dilaporkan berdampingan dengan nilai lamanya.
 
-Hasil pengukuran ketiga metrik dilaporkan untuk setiap kombinasi model, skenario
-partisi, dan penerapan SMOTE, kemudian disajikan dalam bentuk tabel komparatif
-yang memungkinkan analisis lintas paradigma agregasi. Visualisasi pelengkap
-berupa heatmap matriks feature importance antar client, scatter plot korelasi
-peringkat antar pasangan client, serta summary plot SHAP untuk setiap model
-digunakan untuk mendukung interpretasi kualitatif. Stabilitas yang menurun seiring
-penurunan parameter Dirichlet $alpha$ akan diinterpretasikan sebagai indikasi
+Hasil pengukuran dilaporkan untuk setiap kombinasi model, skenario partisi, dan
+penerapan SMOTE, kemudian disajikan dalam bentuk tabel komparatif yang
+memungkinkan analisis lintas paradigma agregasi. Visualisasi pelengkap berupa
+heatmap matriks feature importance antar client, profil stabilitas terhadap k
+dengan pita floor per-client, serta summary plot SHAP digunakan untuk
+mendukung interpretasi kualitatif. Stabilitas yang menurun seiring penurunan
+parameter Dirichlet $alpha$ — kini diuji secara formal per sel, bukan dibaca
+terhadap satu ambang tunggal — akan diinterpretasikan sebagai indikasi
 sensitivitas model terhadap heterogenitas distribusi data antar client, yang
 menjadi salah satu kontribusi orisinal penelitian ini terhadap diskursus
 Explainable Federated Learning.
@@ -2373,49 +2452,33 @@ Explainable Federated Learning.
 
 = HASIL DAN PEMBAHASAN
 
-*Ringkasan pelaksanaan eksperimen.* Matriks eksperimen penuh mencakup 108 sel (3 dataset × 6 model × 3 kondisi ×
-2 arm SMOTE, ditambah pengecualian struktural). Dari jumlah tersebut, 12 sel
-dilewati sebagai *no-op* SMOTE dan 96 sel dieksekusi. Pelewatan terjadi karena
-prevalensi dasar BAF (≈1,10%) telah melampaui target rasio 1:100 (0,01): pada
-kondisi `centralized` dan `iid`, setiap client sudah memenuhi target sehingga
-SMOTE tidak menyala dan kedua arm menjadi identik. Sensus per-client
-mengonfirmasi hal ini — 15 dari 15 instansi client BAF pada skema IID melewati
-SMOTE melalui `target_met`. Akibatnya arm SMOTE untuk BAF hanya bermakna pada
-kondisi Dirichlet, tempat sebagian client kekurangan fraud.
+Keseluruhan eksperimen terdiri atas 108 sel yang terbentuk dari tiga dataset, enam
+model, tiga kondisi partisi, dan dua arm SMOTE. Dari jumlah keseluruhan tersebut, 
+12 sel dilewati karena tidak memenuhi syarat oversampling SMOTE untuk eksperimen 
+ini sehingga tersisa 96 sel yang tereksekusi. Sel-sel yang dilewati itu terjadi karena tingkat fraud
+BAF sebesar 1,10 persen telah melampaui target rasio eksperimen 1:100 sehingga pada kondisi
+centralized dan IID setiap client sudah memenuhi target dan kedua arm menjadi
+identik. Oleh karena itu, arm SMOTE untuk BAF hanya bermakna pada kondisi Dirichlet, 
+tempat sebagian client kekurangan kasus fraud.
 
-Seluruh 96 sel terverifikasi: setiap proses anak memancarkan `data_hash` dan
-`partition_hash` yang cocok dengan cache data dan partisi bersama, tanpa satu pun
-sel yang gagal-verifikasi dan tanpa artefak yang hilang. Kecocokan hash ini
-menjadi dasar klaim komparabilitas yang dirumuskan pada Subbab Perancangan Sistem:
-setiap model dibandingkan atas data dan partisi yang identik secara *byte*.
+Seluruh eksperimen dijalankan pada satu seed, yaitu seed 42. Konsekuensinya, seluruh angka pada bab ini
+merupakan estimasi titik tanpa ukuran variansi dan secara khusus variansi akibat
+pengacakan partisi Dirichlet tidak terkuantifikasi sehingga selisih kecil antar
+sel tidak dapat diklaim signifikan. Kedua, karena AUPRC memiliki batas bawah yang
+setara dengan prevalensi kelas positif, perbandingan lintas dataset atas angka
+AUPRC mentah bersifat menyesatkan. Baseline acak berbeda tajam antar dataset,
+yaitu 0,00129 pada PaySim, 0,00173 pada ULB, dan 0,01103 pada BAF
+#cite(<saito2015>). Seluruh pembahasan pada bab ini karena itu merujuk pada
+baseline masing-masing dataset.
 
-Terdapat dua kualifikasi penting terhadap hasil ini. *Pertama, eksperimen
-dijalankan pada satu seed (42).* Perancangan modul evaluasi mengantisipasi tiga
-seed dengan pelaporan rerata ± simpangan baku, namun hanya seed 42 yang
-dieksekusi. Konsekuensinya, seluruh angka pada bab ini merupakan estimasi titik
-tanpa ukuran variansi; secara khusus, variansi akibat pengacakan partisi
-Dirichlet tidak terkuantifikasi, sehingga selisih kecil antar sel tidak dapat
-diklaim signifikan. *Kedua*, karena AUPRC memiliki batas bawah yang setara dengan
-prevalensi kelas positif, perbandingan lintas dataset atas angka AUPRC mentah
-menyesatkan. Baseline acak (AUPRC = prevalensi) berbeda tajam antar dataset:
-PaySim 0,00129, ULB 0,00173, dan BAF 0,01103 @saito2015. Seluruh pembahasan pada
-bab ini merujuk pada baseline masing-masing dataset.
+== Perbandingan Performa Antar Paradigma Agregasi
 
-Terakhir, label `xgb` yang muncul pada tabel merupakan FedXGBllr yang dijalankan
-pada kondisi `centralized`. Dengan $K = 1$ tidak ada agregasi tree-ensemble maupun
-tahap *learnable learning rates*, sehingga model tereduksi menjadi XGBoost biasa
-tanpa kepala CNN. Sel ini dilaporkan sebagai "XGBoost (batas atas terpusat)"
-dengan `aggregation = n/a (centralized)`, dan bukan model ketujuh — penelitian ini
-tetap mengevaluasi enam model sebagaimana dijanjikan.
+=== Performa AUPRC dan Recall\@5%FPR lintas dataset dan kondisi
 
-== Perbandingan Performa Antar Paradigma Agregasi (RQ1)
-
-=== AUPRC lintas dataset dan kondisi
-
-@tab-4-auprc-ulb, @tab-4-auprc-baf, dan @tab-4-auprc-paysim menyajikan AUPRC test
-per model untuk tiap dataset, dipilah menurut kondisi partisi dan arm SMOTE.
-Ambang klasifikasi untuk seluruh metrik bergantung-ambang di bab ini disetel per
-arm pada validation set terpusat dengan kebijakan `val_f1_tuned`.
+Perbandingan performa antar paradigma agregasi diawali dari metrik diskriminasi
+utama, yaitu AUPRC yang dihitung pada test set terpusat. @tab-4-auprc-ulb,
+@tab-4-auprc-baf, dan @tab-4-auprc-paysim menyajikan nilai tersebut bagi setiap
+model pada masing-masing dataset, dipilah menurut kondisi partisi dan arm SMOTE.
 
 #figure(
   kind: table,
@@ -2439,9 +2502,7 @@ arm pada validation set terpusat dengan kebijakan `val_f1_tuned`.
       [XGBoost], [0,838], [0,831], [—], [—], [—], [—],
     )
   ],
-  caption: [AUPRC test pada ULB (creditcard), baseline acak 0,00173. Baris
-  XGBoost adalah FedXGBllr terpusat (batas atas); sel "—" tidak berlaku secara
-  struktural.],
+  caption: [AUPRC test pada ULB],
 ) <tab-4-auprc-ulb>
 
 #figure(
@@ -2463,9 +2524,7 @@ arm pada validation set terpusat dengan kebijakan `val_f1_tuned`.
       [XGBoost], [0,157], [—], [—], [—],
     )
   ],
-  caption: [AUPRC test pada BAF, baseline acak 0,01103. Hanya arm yang operatif
-  ditampilkan: SMOTE pada BAF hanya bermakna di bawah Dirichlet (di bawah
-  centralized dan IID kedua arm identik).],
+  caption: [AUPRC test pada BAF],
 ) <tab-4-auprc-baf>
 
 #figure(
@@ -2490,50 +2549,36 @@ arm pada validation set terpusat dengan kebijakan `val_f1_tuned`.
       [XGBoost], [0,985], [0,985], [—], [—], [—], [—],
     )
   ],
-  caption: [AUPRC test pada PaySim, baseline acak 0,00129.],
+  caption: [AUPRC test pada PaySim],
 ) <tab-4-auprc-paysim>
 
-*Federated versus centralized.* Besaran penalti federasi bergantung pada
-dataset dan keluarga model. Pada ULB dan PaySim, model tree (GBM, FedXGBllr)
-nyaris tidak kehilangan performa antara kondisi terpusat dan federated —
-FedXGBllr PaySim tetap ≈0,996 pada seluruh kondisi, dan GBM ULB bahkan naik dari
-IID ke centralized pada arm SMOTE. Sebaliknya, model deep (FFD, BERT)
-memperlihatkan penurunan yang jelas di bawah Dirichlet: BERT PaySim turun dari
-0,858 (IID) menjadi 0,660 (Dirichlet) pada arm no-SMOTE. Penalti federasi karena
-itu bukan besaran tunggal, melainkan interaksi antara heterogenitas partisi dan
-kerentanan keluarga model.
+Kesukaran ketiga dataset berbeda tajam apabila AUPRC dinyatakan sebagai kelipatan
+baseline acak masing-masing. Nilai terbaik tiap dataset setara dengan sekitar 15
+kali baseline pada BAF, 484 kali pada ULB, dan 773 kali pada PaySim. Perbandingan
+ini menegaskan bahwa BAF secara intrinsik jauh lebih sukar sehingga angka 0,16
+pada BAF bukan pertanda kegagalan model melainkan cerminan bahwa sinyal fraud di
+sel tersebut memang lebih lemah relatif terhadap baseline yang sudah tinggi. Seluruh
+pembacaan lintas dataset pada bab ini karena itu dilakukan terhadap baseline
+masing-masing, bukan terhadap angka AUPRC mentah.
 
-*Kesukaran dataset ternormalisasi baseline.* Dinyatakan sebagai kelipatan
-baseline, AUPRC terbaik tiap dataset adalah BAF ≈15×, ULB ≈484×, dan PaySim
-≈773×. BAF secara intrinsik jauh lebih sukar; angka 0,16 pada BAF bukan kegagalan
-model, melainkan cerminan bahwa sinyal fraud pada BAF secara nyata lebih lemah
-relatif terhadap baseline yang sudah tinggi.
+Penurunan performa yang ditimbulkan paradigma federated ternyata bergantung pada
+dataset dan keluarga model dan bukan akibat pengaruh tunggal. Pada ULB dan
+PaySim, model tree berupa GBM dan FedXGBllr nyaris tidak kehilangan performa antara
+kondisi terpusat dan federated dimana FedXGBllr pada PaySim bertahan di sekitar 0,996
+pada seluruh kondisi sedangkan GBM pada ULB justru naik dari kondisi IID ke
+kondisi terpusat pada arm SMOTE. Sebaliknya, model deep learning memperlihatkan gambaran yang
+berlawanan, dengan penurunan yang jelas di bawah partisi Dirichlet dimana BERT pada
+PaySim turun dari 0,858 pada kondisi IID menjadi 0,660 pada kondisi Dirichlet untuk
+arm tanpa SMOTE. Maka dari itu, penurunan performa federasi lebih tepat dipahami sebagai hasil
+interaksi antara tingkat heterogenitas partisi dan kerentanan keluarga model dan bukan
+sebagai ongkos tetap yang melekat pada paradigma federated itu sendiri.
 
-*Saturasi model tree pada PaySim.* GBM dan FedXGBllr sama-sama mencapai ≈0,996
-pada setiap kondisi, dan XGBoost terpusat 0,985. Fitur inkonsistensi keseimbangan
-saldo yang direkayasa pada praproses (`errorBalanceOrig`, `errorBalanceDest`)
-kemungkinan membuat PaySim nyaris terpisah secara linear bagi model tree,
-sehingga hampir tidak tersisa ruang bagi efek partisi untuk terlihat. Saturasi
-ini perlu dicatat sebagai batas interpretasi: pada PaySim, model tree tidak
-membedakan paradigma agregasi karena masalahnya terlalu mudah bagi mereka.
-
-*Asimetri anggaran putaran.* FedXGBllr dijalankan 50 global rounds mengikuti
-baseline `hfedxgboost` Flower, berbeda dari 20 rounds untuk kelima model lainnya;
-hal ini telah didokumentasikan pada Subbab Implementasi Perancangan Sistem
-(@tab-3-6). Karena tahap CNN menerapkan early stopping pada validation set
-terpusat, anggaran ini berperan sebagai batas atas: membatasi setiap run
-FedXGBllr pada nilai terbaiknya dalam 20 putaran pertama mengubah AUPRC validasi
-paling banyak sebesar 2,1%, dan sebesar 0,0% pada sembilan dari sebelas run FL
-FedXGBllr. Asimetri anggaran karenanya tidak memengaruhi komparabilitas antar
-paradigma secara material.
-
-=== Detektabilitas pada Titik Operasi Tetap (Recall\@5%FPR)
-
-AUPRC mengukur kualitas peringkat pada seluruh ambang; Recall\@5%FPR sebaliknya
-membaca performa pada satu titik operasi yang dapat diterapkan — berapa proporsi
-fraud yang tertangkap saat false alarm dibatasi 5%. @tab-4-rfpr-ulb,
-@tab-4-rfpr-baf, dan @tab-4-rfpr-paysim menyajikan metrik ini dalam tata letak yang
-sama dengan tabel AUPRC di atas, dihitung dari skor model yang dibekukan.
+AUPRC mengukur kualitas peringkat pada seluruh rentang ambang, sedangkan
+Recall\@5%FPR membaca performa pada satu titik operasi yang dapat diterapkan,
+yaitu proporsi fraud yang tertangkap ketika false positive rate dibatasi pada 5
+persen. @tab-4-rfpr-ulb, @tab-4-rfpr-baf, dan @tab-4-rfpr-paysim menyajikan metrik
+tersebut dalam tata letak yang sama dengan tabel AUPRC sebelumnya, dihitung dari
+skor model yang telah dibekukan.
 
 #figure(
   kind: table,
@@ -2557,9 +2602,7 @@ sama dengan tabel AUPRC di atas, dihitung dari skor model yang dibekukan.
       [XGBoost], [0,892], [0,892], [—], [—], [—], [—],
     )
   ],
-  caption: [Recall\@5%FPR test pada ULB (creditcard). Titik operasi dipilih pada
-  FPR terbesar yang masih $lt.eq$ 5%; FPR aktual dilaporkan pada CSV hasil. Baris
-  XGBoost adalah FedXGBllr terpusat; sel "—" tidak berlaku secara struktural.],
+  caption: [Recall\@5%FPR test pada ULB],
 ) <tab-4-rfpr-ulb>
 
 #figure(
@@ -2581,8 +2624,7 @@ sama dengan tabel AUPRC di atas, dihitung dari skor model yang dibekukan.
       [XGBoost], [0,545], [—], [—], [—],
     )
   ],
-  caption: [Recall\@5%FPR test pada BAF. Hanya arm operatif ditampilkan, konsisten
-  dengan tabel AUPRC BAF.],
+  caption: [Recall\@5%FPR test pada BAF],
 ) <tab-4-rfpr-baf>
 
 #figure(
@@ -2607,51 +2649,84 @@ sama dengan tabel AUPRC di atas, dihitung dari skor model yang dibekukan.
       [XGBoost], [0,996], [1,000], [—], [—], [—], [—],
     )
   ],
-  caption: [Recall\@5%FPR test pada PaySim.],
+  caption: [Recall\@5%FPR test pada PaySim],
 ) <tab-4-rfpr-paysim>
 
-*BAF: lemah dalam peringkat, memadai dalam deteksi.* Dibaca lewat AUPRC, BAF
-tampak nyaris gagal — skor terbaik hanya sekitar 0,16, jauh di bawah ULB yang
-mencapai 0,83. Namun pada titik operasi 5% FPR model-model BAF menangkap proporsi
-fraud yang bermakna secara operasional: pada arm no-SMOTE, GBM 0,563 (terpusat),
-BERT 0,574 (Dirichlet), FFD 0,550 (Dirichlet), XGBoost 0,545, FedXGBllr 0,537
-(Dirichlet), dan LR 0,528 — kira-kira 52–57% fraud tertangkap sambil hanya
-menandai 5% transaksi sah. SVM adalah pengecualian, lebih lemah pada 0,524
-(terpusat) hingga 0,404 (IID). Kesimpulan RQ1 mengenai "BAF berperforma buruk"
-karena itu perlu diperhalus: BAF lemah pada presisi peringkat namun memadai pada
-deteksi di titik operasi yang layak-pakai. AUPRC dan Recall\@FPR mengukur hal yang
-berbeda, dan lebar jurang di antaranya justru informatif tentang bentuk distribusi
-skor. Hal ini terhubung langsung dengan pembahasan baseline pada Subbab ini: batas
-bawah AUPRC adalah prevalensi sehingga nilai rendah pada BAF sebagian mencerminkan
-bahwa metrik itu memang lebih sukar diskor tinggi di sana, sedangkan Recall\@FPR
-tidak memiliki batas bawah yang bergantung prevalensi dan memberi perbandingan yang
-tidak perlu dinormalkan.
+Kedua metrik menghasilkan penilaian yang berbeda terhadap eksperimen dengan dataset BAF. 
+Dibaca lewat AUPRC, BAF tampak nyaris gagal dengan skor terbaik hanya sekitar 0,16.
+Namun pada titik operasi 5 persen FPR, model-model BAF menangkap proporsi fraud
+yang bermakna secara operasional dengan kira-kira 52 hingga
+57 persen fraud tertangkap sambil hanya menandai 5 persen transaksi sah. 
+SVM pada federated dan model deep learning di bawah partisi Dirichlet arm SMOTE
+menjadi pengecualian dengan capaian lebih lemah. Maka dari itu, meskipun 
+BAF lemah pada presisi peringkat namun masih memadai pada deteksi di
+titik operasi yang layak pakai dalam hal fraud detection.
 
-*Ketika kedua metrik sepakat — dan ketika tidak.* Pada model tree PaySim keduanya
-sepakat: GBM dan FedXGBllr sama-sama mencapai $tilde.op$0,996 baik pada AUPRC
-maupun Recall\@5%FPR, konsisten dengan saturasi yang telah dicatat — kesepakatan
-ini sekaligus mengingatkan bahwa masalahnya terlalu mudah bagi model tree sehingga
-perbandingan di sana terbatas nilainya. Ketidaksepakatan terbesar muncul justru di
-tempat peringkat runtuh tetapi deteksi bertahan. Contoh paling tajam adalah SVM
-PaySim pada IID no-SMOTE: AUPRC-nya hanya 0,311 — sekilas seperti model rusak —
-namun Recall\@5%FPR-nya 0,571, artinya model tetap memulihkan 57% fraud pada
-anggaran 5% FPR meski peringkat keseluruhannya buruk. Pola serupa terlihat menyapu
-seluruh ULB, di mana AUPRC berkisar 0,70–0,84 sementara Recall\@5%FPR konsisten
-lebih tinggi pada 0,85–0,92: fitur PCA ULB menyediakan wilayah recall-tinggi yang
-bersih meski presisi peringkat keseluruhannya hanya sedang. Sebuah model dapat
-berperingkat baik secara menyeluruh namun buruk pada wilayah presisi-tinggi yang
-ditimbang berat oleh AUPRC, atau sebaliknya; kedua metrik karena itu dilaporkan
-berdampingan.
+Meskipun secara umum kedua metrik sepakat dalam menilai performa tiap-tiap sel, 
+ada beberapa ketidaksepakatan yang muncul. Ketidaksepakatan terbesar justru muncul 
+pada sel dimana peringkat AUPRC runtuh tetapi kemampuan deteksi bertahan.
+Contoh paling tajam adalah SVM pada PaySim kondisi IID tanpa SMOTE, yang AUPRC-nya hanya 0,311
+sedangkan Recall\@5%FPR-nya mencapai 0,571 dan berarti model tetap memulihkan
+sekitar 57 persen fraud pada anggaran 5 persen FPR meski peringkat keseluruhannya
+buruk. Pola serupa juga terjadi pada seluruh ULB dimana AUPRC berkisar antara 0,70 dan 0,84
+sementara Recall\@5%FPR konsisten lebih tinggi pada rentang 0,85 hingga 0,92. Hal ini disebabkan
+karena fitur PCA ULB menyediakan wilayah recall-tinggi yang bersih meski presisi
+peringkat keseluruhannya hanya sedang. Sebuah model dapat berperingkat baik secara
+menyeluruh namun buruk pada wilayah presisi-tinggi yang ditimbang berat oleh AUPRC,
+atau justru sebaliknya, dan karena itu kedua metrik dilaporkan berdampingan.
 
-=== Perbandingan dengan hasil terpublikasi pada BAF
+=== Performa antar paradigma agregasi
 
-AUPRC BAF sekitar 0,16 tampak seperti kegagalan bila disandingkan dengan ULB
-(≈0,83), padahal bukan: itulah rentang yang dihasilkan BAF Base bagi semua
-pendekatan, termasuk state of the art terpusat yang terpublikasi.
-#cite(<dong2026fcorr>, form: "prose") melaporkan AUPRC test pada BAF Base —
-dataset, varian, dan metrik yang sama, 1.000.000 sampel pada prevalensi ≈1,1% —
-untuk sejumlah arsitektur terpusat (@tab-4-baf-auprc-bench); model terkuat mereka,
-FT-Transformer, mencapai 0,1607.
+Perbandingan performa antar keempat paradigma agregasi tidak menghasilkan satu
+urutan tunggal yang berlaku lintas dataset, melainkan urutan yang bergantung pada
+interaksi antar dataset dan kondisi eksperimen. Keunggulan model tree atas model 
+parametrik dengan agregasi FedAvg terlihat paling tegas pada dataset dengan 
+struktur transaksional yang relatif lebih rumit. Pada PaySim, FedXGBllr
+mempertahankan AUPRC sekitar 0,996 di seluruh kondisi sementara LR bergerak pada
+rentang 0,595 hingga 0,656 dan SVM pada rentang 0,311 hingga 0,632. Pada BAF Dirichlet, 
+FedXGBllr sebesar 0,151 juga melampaui LR sebesar 0,139 dan SVM sebesar 0,119 
+sedangkan pada ULB keunggulan itu menyempit dan bahkan berbalik pada arm tanpa SMOTE 
+dimana FedXGBllr hanya mencapai antara 0,712 dan 0,724 berbanding LR antara 0,757 dan 0,758. 
+Pola ini mencerminkan bahwa keunggulan model tree pada data tabular yang dilaporkan 
+#cite(<grinsztajn2022>, form: "prose") bertahan ketika model dipindahkan ke ekosistem federated, 
+tetapi bergantung pada tersedianya interaksi non-linear yang dapat dieksploitasi oleh struktur pohon.
+
+Model deep dengan agregasi FedAvg terbobot-akurasi menunjukkan hasil dengan langit-langit tertinggi 
+namun disertai lantai terendah. Pencapaian tertinggi seluruh studi pada BAF diraih BERT sebesar 0,1670 yang
+melampaui FT-Transformer terpusat terpublikasi sebesar 0,1607 dan capaian itu
+diperoleh justru pada partisi Dirichlet yang merupakan kondisi paling heterogen dalam matriks. 
+Namun paradigma yang sama memperlihatkan sensitivitas partisi terbesar sebab BERT pada PaySim menurun dari
+0,858 pada kondisi IID menjadi 0,660 pada kondisi Dirichlet, penurunan yang tidak
+dialami model tree mana pun. Penurunan performa akibat federasi dengan demikian bukan besaran tunggal
+milik paradigma federated, melainkan hasil interaksi antara heterogenitas partisi
+dan kerentanan keluarga model, sejalan dengan temuan #cite(<li2021noniid>, form: "prose")
+bahwa degradasi akibat Non-IID terkonsentrasi pada algoritma agregasi yang
+mengasumsikan keseragaman distribusi.
+
+Secara keseluruhan, perbandingan antar paradigma agregasi dapat disimpulkan sebagai
+berikut. FedXGBllr dengan agregasi tree ensemble memberikan performa yang setara
+dengan GBM ber-best-model selection,
+unggul atas LR dan SVM ber-FedAvg pada data dengan struktur non-linear yang kaya,
+dan sedikit di bawah model deep ber-FedAvg terbobot-akurasi pada puncaknya namun
+dengan kestabilan lintas kondisi partisi yang jauh lebih baik daripada keduanya.
+Tidak satu pun paradigma unggul secara serentak pada performa di kedua metrik dan ketahanan
+terhadap heterogenitas sebab setiap paradigma menukar satu properti
+dengan properti lainnya. Temuan ini menegaskan bahwa pemilihan paradigma agregasi
+dalam deteksi fraud kolaboratif lintas institusi merupakan keputusan bersyarat yang
+bergantung pada karakteristik separabilitas data, tingkat heterogenitas antar
+institusi, dan apakah keluaran model akan dipakai sebagai peringkat atau sebagai
+estimasi probabilitas.
+
+=== Analisis lanjutan pada eksperimen dengan dataset BAF
+
+Nilai AUPRC BAF di sekitar 0,16 tampak seperti kegagalan bila disandingkan dengan
+ULB yang mencapai sekitar 0,83, padahal rentang itulah yang dihasilkan BAF Base
+bagi semua pendekatan, termasuk state of the art terpusat yang telah
+dipublikasikan. #cite(<dong2026fcorr>, form: "prose") melaporkan AUPRC test pada
+BAF Base dengan dataset, varian, dan metrik yang sama, yaitu 1.000.000 sampel pada
+prevalensi sekitar 1,1 persen, untuk sejumlah arsitektur terpusat sebagaimana
+disajikan pada @tab-4-baf-auprc-bench; model terkuat mereka, FT-Transformer,
+mencapai 0,1607.
 
 #figure(
   kind: table,
@@ -2676,37 +2751,31 @@ FT-Transformer, mencapai 0,1607.
       [XGBoost (studi ini)], [0,1569], [n/a (terpusat)],
     )
   ],
-  caption: [AUPRC test pada BAF Base: hasil terpusat terpublikasi
-  @dong2026fcorr (Tabel 2 dan 9) berbanding hasil terbaik *federated* per model
-  pada studi ini (dari `results/clean_summary.csv`). Baris XGBoost adalah baseline
-  terpusat (`xgb` = FedXGBllr pada $K = 1$).],
+  caption: [Perbandingan AUPRC test pada BAF Base],
 ) <tab-4-baf-auprc-bench>
 
-Kolom studi ini menyajikan hasil terbaik *federated* per model; sel XGBoost adalah
-baseline terpusat (label `xgb` = FedXGBllr pada $K = 1$, lihat pembuka bab) dan
-ditandai n/a. BERT mencapai 0,1670, melampaui FT-Transformer terpublikasi (0,1607)
-— dan model BERT studi ini adalah keluarga arsitektur yang sama (FT-Transformer).
-GBM 0,1620 juga melampauinya, sedangkan LR 0,1440 praktis setara LightGBM terpusat
-mereka (0,1442). Yang penting, kedua angka terbaik BERT — AUPRC 0,1670 dan
-Recall\@5%FPR 0,5738 di bawah — berasal dari sel Dirichlet $alpha = 0,5$, kondisi
-paling heterogen dalam matriks, bukan dari IID; hal ini memperkuat klaim bahwa
-performa federated tidak bergantung pada partisi yang mudah.
-
-SVM adalah pengecualian yang informatif: AUPRC-nya turun dari 0,1442 (terpusat)
-menjadi 0,1194 (federated), penalti federasi terbesar di antara seluruh model pada
-BAF. Ini konsisten dengan gambaran RQ1 — FedAvg pada model margin linear memiliki
-kapasitas paling kecil untuk memulihkan diri dari skew label antar-client.
+Kolom studi ini pada tabel tersebut memuat hasil terbaik federated per model,
+sedangkan sel XGBoost merupakan baseline terpusat dan ditandai sebagai tidak
+berlaku. BERT mencapai 0,1670 sehingga melampaui FT-Transformer terpublikasi yang
+mencapai 0,1607, dan perlu dicatat bahwa model BERT pada studi ini berasal dari
+keluarga arsitektur yang sama. GBM dengan 0,1620 juga melampauinya, sementara LR
+dengan 0,1440 praktis setara dengan LightGBM terpusat mereka yang mencapai 0,1442.
+Yang lebih penting, kedua capaian terbaik BERT, yaitu AUPRC 0,1670 dan
+Recall\@5%FPR 0,5738, berasal dari sel Dirichlet dengan parameter konsentrasi 0,5
+yang merupakan kondisi paling heterogen dalam matriks eksperimen, bukan dari
+kondisi IID. Hal ini memperkuat klaim bahwa performa federated pada studi ini
+tidak bergantung pada partisi yang mudah.
 
 Pada titik operasi tetap, #cite(<nasif2026csnpc>, form: "prose") menghimpun hasil
-BAF terpublikasi di sekitar 5% FPR (@tab-4-baf-recall-bench). Recall\@5%FPR terbaik
-studi ini, BERT 0,5738 pada Dirichlet $alpha = 0,5$, melampaui #emph[seluruh] entri
-terpublikasi termasuk SpikeConv M5
-(0,570)#footnote[Angka utama 90,8% pada #cite(<nasif2026csnpc>, form: "prose")
-bukan hasil pada Base: Tabel 3 mereka memberi P200-S20 pada Base sebesar TPR 0,476
-pada FPR 0,014, sedangkan 0,908 merujuk varian lain — teks mereka menyebut
-Variant II sementara tabel mereka menunjukkan Variant I, sebuah inkonsistensi
-internal. Nilai Base-komparabel 0,476 yang dipakai di sini.] — dalam setting
-federated.
+BAF terpublikasi di sekitar 5 persen FPR sebagaimana disajikan pada
+@tab-4-baf-recall-bench. Capaian Recall\@5%FPR terbaik studi ini, yaitu BERT
+sebesar 0,5738 pada Dirichlet dengan parameter konsentrasi 0,5, melampaui seluruh
+entri terpublikasi termasuk SpikeConv M5 yang mencapai 0,570#footnote[Angka utama
+90,8% pada #cite(<nasif2026csnpc>, form: "prose") bukan hasil pada Base: Tabel 3
+mereka memberi P200-S20 pada Base sebesar TPR 0,476 pada FPR 0,014, sedangkan 0,908
+merujuk varian lain — teks mereka menyebut Variant II sementara tabel mereka
+menunjukkan Variant I, sebuah inkonsistensi internal. Nilai Base-komparabel 0,476
+yang dipakai di sini.], dan capaian itu diperoleh dalam setting federated.
 
 #figure(
   kind: table,
@@ -2735,47 +2804,53 @@ federated.
       [Studi ini], [XGBoost (terpusat)], [0,5453],
     )
   ],
-  caption: [Recall\@5%FPR pada BAF Base: hasil terpublikasi yang dihimpun
-  #cite(<nasif2026csnpc>, form: "prose") berbanding studi ini. Rentang Pombal dkk.
-  membentang lintas varian, bukan Base saja. Baris XGBoost adalah baseline terpusat.],
+  caption: [Perbandingan Recall\@5%FPR pada BAF Base],
 ) <tab-4-baf-recall-bench>
 
-Tiga peringatan dinyatakan terus-terang. Pertama, dan paling penting, protokol
-split berbeda: studi ini memakai split acak terstratifikasi 70/15/15, sedangkan
-protokol standar BAF @jesus2022baf bersifat temporal — bulan 1–6 untuk latih dan
-7–8 untuk uji. Split acak tidak menuntut generalisasi lintas waktu sehingga
-merupakan setting yang lebih mudah; tanpa peringatan ini perbandingan menjadi tidak
-adil. Kedua, titik operasi berbeda: #cite(<perdigao2024snn>, form: "prose")
-melaporkan pada FPR 4,32% dan #cite(<nasif2026csnpc>, form: "prose") pada 1,4%
-untuk Base, sedangkan studi ini pada ≈5%; recall pada FPR lebih rendah adalah
-target yang lebih sukar. Ketiga, sebagian sumber bersifat non-arsip:
-#cite(<pombal2022unfairness>, form: "prose") melaporkan rentang lintas varian dan
-Uwaoma (2024) adalah tesis magister.
+Tiga peringatan perlu dinyatakan terus terang agar perbandingan tersebut tidak
+menyesatkan. Pertama dan paling penting, protokol pemisahan data berbeda: studi
+ini memakai split acak terstratifikasi dengan proporsi 70:15:15, sedangkan
+protokol standar BAF menurut #cite(<jesus2022baf>, form: "prose") bersifat temporal
+dengan bulan pertama hingga keenam untuk pelatihan dan bulan ketujuh hingga
+kedelapan untuk pengujian. Split acak tidak menuntut generalisasi lintas waktu
+sehingga merupakan setting yang lebih mudah, dan tanpa peringatan ini perbandingan
+menjadi tidak adil. Kedua, titik operasinya berbeda,
+karena #cite(<perdigao2024snn>, form: "prose") melaporkan pada FPR 4,32 persen
+dan #cite(<nasif2026csnpc>, form: "prose") pada 1,4 persen untuk varian Base,
+sedangkan studi ini pada sekitar 5 persen; recall pada FPR yang lebih rendah
+merupakan target yang lebih sukar. Ketiga, sebagian sumber pembanding bersifat
+non-arsip,
+yaitu #cite(<pombal2022unfairness>, form: "prose") yang melaporkan rentang lintas
+varian dan Uwaoma (2024) yang berupa tesis magister.
 
-Kesimpulannya, AUPRC absolut BAF ≈0,16 bukan bukti kegagalan model. Hasil terpusat
-terpublikasi pada dataset dan varian yang sama berada pada rentang yang sama, yang
-terkuat 0,1607 untuk FT-Transformer. Model federated studi ini mencapai nilai
-setara atau lebih tinggi, dan Recall\@5%FPR terbaiknya melampaui seluruh hasil
-terpublikasi. BAF memang sukar secara intrinsik; subbab berikut mengkuantifikasi
-sebabnya.
+Simpulan dari perbandingan ini adalah bahwa AUPRC absolut BAF di sekitar 0,16 bukan
+bukti kegagalan model. Hasil terpusat terpublikasi pada dataset dan varian yang
+sama berada pada rentang yang sama, dengan capaian terkuat 0,1607 untuk
+FT-Transformer. Model federated pada studi ini mencapai nilai yang setara atau
+lebih tinggi, dan capaian Recall\@5%FPR terbaiknya melampaui seluruh hasil
+terpublikasi yang dihimpun. BAF memang sukar secara intrinsik, dan sub-subbab
+berikut mengkuantifikasi penyebabnya.
 
-=== Analisis Separabilitas Kelas
-
-Salah satu pengamatan RQ1 tampak paradoks: BAF memiliki prevalensi fraud 8,5×
-lebih tinggi daripada ULB (1,10% berbanding 0,172%), namun hanya mencapai ≈15×
-baseline sementara ULB mencapai ≈484×. Bila ketidakseimbangan kelas adalah faktor
-kesukaran yang dominan, urutan ini seharusnya terbalik. Hipotesisnya adalah bahwa
-*separabilitas kelas, bukan ketidakseimbangan*, yang mengendalikan perbedaan
-tersebut — kelas minoritas BAF jauh lebih menyatu (overlap) dengan kelas mayoritas
-daripada kelas minoritas ULB. Analisis berikut menguji hipotesis itu secara
-kuantitatif dan bersifat read-only atas data terpraproses yang telah di-cache;
-tidak ada model yang dilatih.
+Pengamatan ini tampak paradoks. Prevalensi fraud BAF sebesar 8,5 kali prevalensi ULB, 
+yaitu 1,10 persen berbanding 0,172 persen, namun BAF hanya
+mencapai sekitar 15 kali baseline sementara ULB mencapai sekitar 484 kali.
+Seandainya ketidakseimbangan kelas merupakan faktor kesukaran yang dominan, urutan
+tersebut seharusnya terbalik. Hipotesis yang diajukan adalah bahwa separabilitas
+kelas, dan bukan ketidakseimbangan, yang mengendalikan perbedaan itu, dengan
+dugaan bahwa kelas minoritas BAF jauh lebih menyatu dengan kelas mayoritas daripada
+kelas minoritas ULB. Analisis berikut menguji hipotesis tersebut secara kuantitatif
+dan bersifat baca-saja atas data terpraproses yang telah di-cache, tanpa melatih
+satu model pun.
 
 Bukti utamanya adalah tipologi contoh minoritas mengikuti
-#cite(<napierala2016types>, form: "prose"): setiap contoh fraud pada data latih
-diklasifikasikan menurut komposisi lima tetangga terdekatnya (k = 5, Euclidean
-pada fitur terskala) menjadi *safe* (4–5 tetangga minoritas), *borderline* (2–3),
-*rare* (1), atau *outlier* (0). @fig-typology dan @tab-typology menyajikan
+#cite(<napierala2016types>, form: "prose"). Setiap contoh fraud pada data latih
+diklasifikasikan menurut komposisi lima tetangga terdekatnya, dengan jarak
+Euclidean pada fitur terskala, menjadi *safe* apabila memiliki empat hingga lima
+tetangga minoritas, *borderline* untuk dua hingga tiga tetangga, *rare* untuk satu
+tetangga, dan *outlier* apabila tidak memiliki tetangga minoritas sama sekali.
+Referensi tetangga bagi ULB dan BAF berupa seluruh data latih, sedangkan bagi
+PaySim berupa subsampel uniform berukuran 500.000 sampel dengan seed 42 yang
+mempertahankan prevalensi aslinya. @fig-typology dan @tab-typology menyajikan
 hasilnya.
 
 #figure(
@@ -2798,202 +2873,60 @@ hasilnya.
       [PaySim], [13], [57,6%], [10,7%], [7,8%], [24,0%], [*31,8%*],
     )
   ],
-  caption: [Tipologi contoh minoritas (Napierala dan Stefanowski, 2016) pada data
-  latih. ULB/BAF memakai seluruh data latih sebagai referensi tetangga; PaySim
-  memakai subsampel uniform yang mempertahankan prevalensi (n = 500.000, seed 42).],
+  caption: [Tipologi contoh minoritas],
 ) <tab-typology>
 
-Kelas minoritas BAF adalah 93,1% *rare* + *outlier* — 73,8% di antaranya *outlier*
-murni tanpa satu pun tetangga minoritas — sedangkan kelas minoritas ULB adalah
-81,4% *safe* + *borderline*. Mengikuti #cite(<napierala2016types>, form: "prose"),
-kelas minoritas yang didominasi contoh *rare* dan *outlier* tidak dapat dipelajari
-secara andal berapa pun banyaknya contoh semacam itu, karena contoh-contoh
-tersebut tidak membawa struktur lokal yang dapat digeneralisasi oleh classifier.
-Ini adalah pembedaan kelangkaan absolut versus relatif @weiss2004rarity: BAF
-memiliki lebih banyak fraud namun fraud tersebut tersebar di wilayah mayoritas.
+Kelas minoritas BAF terdiri atas 93,1 persen contoh *rare* dan *outlier*, dengan
+73,8 persen di antaranya berupa *outlier* murni tanpa satu pun tetangga minoritas,
+sedangkan kelas minoritas ULB terdiri atas 81,4 persen contoh *safe*
+dan *borderline*. Mengikuti #cite(<napierala2016types>, form: "prose"), kelas
+minoritas yang didominasi contoh *rare* dan *outlier* tidak dapat dipelajari secara
+andal berapa pun banyaknya contoh semacam itu, karena contoh-contoh tersebut tidak
+membawa struktur lokal yang dapat digeneralisasi oleh classifier. Temuan ini
+merupakan wujud pembedaan antara kelangkaan absolut dan kelangkaan relatif menurut
+#cite(<weiss2004rarity>, form: "prose"): BAF memiliki lebih banyak kasus fraud,
+namun kasus-kasus tersebut tersebar di wilayah mayoritas.
 
-Ukuran kompleksity klasik #cite(<lorena2019complexity>, form: "prose") menguatkan
-gambaran yang sama (@tab-complexity). N3 (galat leave-one-out 1-NN) dan N1 (fraksi
-titik pada batas kelas melalui minimum spanning tree) BAF jauh lebih tinggi
-daripada ULB; F1 memakai konvensi terbalik Lorena sehingga nilai lebih tinggi
-berarti lebih sukar. Koefisien overlap dari proyeksi LDA satu-dimensi — arah yang
-secara konstruksi memaksimalkan separabilitas linear, sehingga menjadi batas atas
-separabilitas — juga jauh lebih besar pada BAF (0,422) daripada ULB (0,169).
-Secara univariat, fitur tunggal terkuat ULB mencapai AUC 0,956, sedangkan BAF
-hanya 0,705; lima fitur teratas BAF bermakna semantik (`credit_risk_score`,
-`housing_status`, `device_os`, `customer_age`) sementara ULB berupa komponen PCA
-anonim (V14, V4). Batas empiris pada @tab-complexity — XGBoost terpusat tanpa SMOTE
-dari @tab-4-auprc-baf dan padanannya — mengukur langit-langit separabilitas dengan
-model, pipeline, dan hyperparameter identik tanpa federasi maupun oversampling:
-ULB ≈484×, PaySim ≈764×, BAF hanya ≈14×.
+== Pengaruh Heterogenitas Distribusi Data dan Penanganan Class Imbalance
 
-#figure(
-  kind: table,
-  text(size: 9pt)[
-    #table(
-      columns: (auto, auto, auto, auto, auto, auto, auto),
-      align: (left, right, right, right, right, right, right),
-      table.header([*Dataset*], [*N1*], [*N2*], [*N3*], [*F1*],
-        [*overlap LDA*], [*batas XGBoost*]),
-      [ULB], [0,128], [0,274], [0,073], [0,274], [0,169], [≈484×],
-      [BAF], [0,422], [0,901], [0,295], [0,704], [0,422], [≈14×],
-      [PaySim], [0,076], [0,082], [0,046], [0,659], [0,356], [≈764×],
-    )
-  ],
-  caption: [Ukuran kompleksitas (N1, N2, N3, F1 konvensi terbalik — tinggi = sukar),
-  koefisien overlap LDA-1D, dan batas empiris XGBoost. N1–F1 dihitung pada subsampel
-  seimbang-kelas (seluruh minoritas hingga 3.000 + mayoritas seukuran, seed 42)
-  untuk memisahkan overlap dari ketidakseimbangan.],
-) <tab-complexity>
+=== Pengaruh heterogenitas distribusi tanpa oversampling
 
-*Batasan — dimensionalitas dan tipe fitur.* Ketiga dataset berbeda dimensi dan
-tipe fitur (PaySim 13, ULB 30 komponen PCA, BAF 55 dengan 26 kolom one-hot
-kategorikal), sehingga jarak Euclidean bermakna berbeda dan seluruh ukuran
-berbasis jarak (tipologi, N1–N3) terekspos terhadap hal ini; kolom one-hot secara
-khusus menggelembungkan jarak antar-record yang berbeda kategori pada BAF. Untuk
-mengendalikannya, tipologi dan N3 dihitung ulang pada subset berdimensi-sepadan —
-13 fitur teratas menurut AUC univariat tiap dataset. Urutan bertahan: fraksi
-*rare* + *outlier* BAF tetap 93,9% (dari 93,1%) dan N3 tetap 0,313 (dari 0,295),
-sedangkan ULB tetap 17,7% dan 0,068. Kesimpulan karenanya bersandar pada ukuran
-yang paling tahan terhadap perbedaan dimensi — tipologi pada dimensi sepadan, N3,
-dan batas XGBoost yang bersifat agnostik-dimensi — bukan pada N2 atau F1 semata.
+Pengaruh heterogenitas distribusi perlu dibaca terlebih dahulu secara terisolasi,
+yaitu pada arm tanpa SMOTE, agar efeknya tidak tercampur dengan efek oversampling
+yang dibahas setelahnya. Perbandingan kolom IID dan kolom Dirichlet pada
+@tab-4-auprc-ulb, @tab-4-auprc-baf, dan @tab-4-auprc-paysim mengungkap bahwa
+heterogenitas partisi tidak menurunkan performa secara seragam, dan pada sebagian
+sel bahkan tidak menurunkannya sama sekali.
 
-*Tipologi tidak memprediksi lift secara monoton.* Perlu kejujuran di sini: PaySim
-memiliki fraksi *rare* + *outlier* lebih besar (31,8%) daripada ULB (18,6%) namun
-justru mencapai lift lebih tinggi (≈764× berbanding ≈484×), sehingga hubungan
-tipologi-ke-lift tidak monoton lintas ketiga dataset. Yang tetap tertib lintas
-ketiganya adalah ukuran kompleksitas ketetanggaan: N1 (0,076 / 0,128 / 0,422),
-N2 (0,082 / 0,274 / 0,901), dan N3 (0,046 / 0,073 / 0,295) semuanya mengurutkan
-PaySim < ULB < BAF. Resolusinya terletak pada sifat AUPRC yang mengganjar kepala
-peringkat yang terpisah baik: 57,6% minoritas PaySim tergolong *safe* dan mudah
-dipisahkan berkat fitur balance-inconsistency rekayasa `errorBalanceOrig`
-(AUC univariat 0,889, lihat @fig-univariate-auc), sehingga model dapat mengurutkan
-mayoritas kasus fraud itu dengan benar dan meraih AUPRC tinggi meski melewatkan ekor
-*rare*-nya. BAF hampir tidak memiliki kepala *safe* untuk dibentuk — 0,26% —
-sehingga tidak ada yang dapat diurutkan model dengan percaya diri dan AUPRC runtuh.
-Karena itu ukuran ketetanggaan (N1, N2, N3) mengurutkan ketiga dataset dengan benar,
-tipologi menjelaskan *BAF secara spesifik* tempat nilainya ekstrem, dan urutan
-PaySim-berbanding-ULB dikendalikan oleh rekayasa fitur, bukan geometri minoritas
-semata.
+Pada dataset BAF, perpindahan dari partisi IID ke partisi Dirichlet justru menaikkan AUPRC
+bagi mayoritas model. Pola serupa terlihat pada dataset ULB dimana penurunan hanya
+dialami BERT. Temuan ini melawan intuisi umum bahwa Non-IID selalu merugikan namun kenyataannya
+partisi Dirichlet mengonsentrasikan kelas minoritas pada sebagian client alih-alih
+menyebarkannya ke seluruh client sehingga client yang menerima konsentrasi tersebut
+justru memperoleh sinyal minoritas yang lebih padat daripada yang tersedia di bawah
+pembagian seragam.
 
-#figure(
-  image("resources/fig-4-univariate-auc.png", width: 78%),
-  caption: [AUC univariat fitur terkuat per dataset. Tidak ada satu pun fitur BAF
-  yang memisahkan kelas dengan baik (maksimum 0,705), berbeda dari ULB (0,956) dan
-  PaySim (0,889 pada `errorBalanceOrig`).],
-) <fig-univariate-auc>
+Di lain sisi, kerugian akibat heterogenitas terkonsentrasi pada keluarga model deep learning
+terutama pada dataset PaySim. FFD menurun dari 0,756 pada kondisi IID menjadi 0,647 pada
+kondisi Dirichlet, sedangkan BERT menurun lebih dalam dari 0,858 menjadi 0,660.
+Heterogenitas distribusi dengan demikian bukan faktor perusak yang berdiri sendiri.
+Pengaruhnya bergantung pada keluarga model dan arahnya bahkan dapat positif ketika
+konsentrasi minoritas menguntungkan sebagian client. Pengamatan ini menjadi latar
+penting bagi seluruh sub-subbab berikutnya karena penurunan performa tidak hanya muncul
+akibat heterogenitas melainkan dari interaksinya dengan oversampling lokal.
 
-Singkatnya, ketidakseimbangan kelas dan kesukaran kelas adalah dua hal berbeda.
-BAF memiliki 8,5× prevalensi fraud ULB namun hanya sekitar 1/30 lift-nya; tipologi
-minoritas menunjukkan sebabnya — kelas minoritas BAF nyaris seluruhnya *rare* dan
-*outlier*, tanpa manifold lokal untuk digeneralisasi. Temuan ini juga menautkan
-kembali ke patologi SMOTE BAF Non-IID pada Subbab berikutnya: kelas minoritas yang
-didominasi *rare* dan *outlier* justru merupakan regime tempat interpolasi SMOTE
-menghasilkan titik sintetis tak-representatif, karena tidak ada manifold minoritas
-lokal untuk diinterpolasi — persis fenomena *wireframe* yang dibahas pada
-@fig-3-4-smote-geometry.
+=== Pengaruh penanganan class imbalance dengan SMOTE
 
-=== Diskriminasi versus kalibrasi
+Efek SMOTE tidak seragam, melainkan bergantung pada apakah oversampling yang terjadi
+bersifat moderat dan menyeluruh ataukah ekstrem dan terkonsentrasi.
+Generalisasi yang dapat ditarik adalah bahwa oversampling moderat pada seluruh
+client cenderung membantu sedangkan oversampling ekstrem pada segelintir client
+yang kelaparan minoritas meracuni agregat global. Hal ini ditentukan oleh interaksi antar
+partisi, dataset, dan model serta agregasinya.
 
-Termotivasi oleh #cite(<goorbergh2022harm>, form: "prose") yang menemukan bahwa
-koreksi imbalance tidak memperbaiki diskriminasi namun menghasilkan overestimasi
-probabilitas sistematis, penelitian ini melaporkan metrik kalibrasi berdampingan
-dengan diskriminasi. @tab-4-kalibrasi menyajikan rerata per-model. Mengikuti
-konvensi Van Calster, *calibration intercept* < 0 menandakan overestimasi dan
-*slope* < 1 menandakan probabilitas terlalu ekstrem (over-confident), sedangkan
-slope > 1 menandakan probabilitas terlalu terkompresi.
-
-#figure(
-  kind: table,
-  text(size: 9pt)[
-    #table(
-      columns: (auto, auto, auto, auto),
-      align: (left, right, right, right),
-      table.header([*Model*], [*Brier*], [*Intercept (in-the-large)*],
-        [*Slope*]),
-      [LR], [0,0032], [+0,485], [1,027],
-      [SVM], [NA], [NA], [NA],
-      [GBM], [0,0031], [−2,899], [0,963],
-      [FFD], [0,0030], [+0,792], [0,967],
-      [BERT], [0,0030], [+1,332], [0,860],
-      [FedXGBllr], [0,0041], [+3,108], [14,797],
-      [XGBoost], [0,0022], [−0,650], [1,287],
-    )
-  ],
-  caption: [Rerata metrik kalibrasi per model atas seluruh sel. Nilai FedXGBllr
-  adalah rerata dengan dua sel NA; SVM NA di seluruh sel.],
-) <tab-4-kalibrasi>
-
-*GBM over-dispersed pada regime terkompresi.* Pada ULB no-SMOTE, tempat seleksi
-iterasi memilih prefix pendek ($k^* = 1$, satu pohon), kalibrasi menunjukkan slope
-≈0,45 dengan intercept sangat negatif (−6 hingga −9): probabilitas terlalu ekstrem
-sekaligus overestimasi sistematis, di samping diskriminasi yang memadai
-(AUPRC 0,70–0,76). Seleksi iterasi pada validation set terpusat memperbaiki
-dispersi ini dibanding anggaran 100-iterasi penuh, sehingga rerata slope GBM
-mendekati ideal (0,963).
-
-*FedXGBllr under-dispersed.* Slope FedXGBllr membentang dari ≈0,92 (ULB no-SMOTE)
-hingga ≈35 (PaySim IID): probabilitas terkompresi mendekati nol, urutan
-terpelihara namun magnitudonya tak bermakna. Tingkat kompresi bervariasi dengan
-`rounds_completed` (13–37 putaran antar sel), sehingga perbandingan kalibrasi
-antar-kondisi untuk model ini terkonfound oleh early stopping dan harus dibaca
-dengan hati-hati.
-
-*PaySim Non-IID FedXGBllr: kalibrasi takterdefinisi.* Ambang tersetel pada
-1,9e−09 dan transformasi logit menjadi jenuh sehingga regresi rekalibrasi tidak
-dapat dipaskan; penjaga *degenerate-predictor* dengan tepat mengembalikan NA
-alih-alih nilai palsu. Precision 0,995 dan recall 0,994 mengonfirmasi diskriminasi
-nyaris sempurna dengan probabilitas yang tak dapat ditafsirkan. Ini adalah penjaga
-yang bekerja, bukan data yang hilang. Kompresi probabilitas yang sama muncul kembali
-pada analisis interpretabilitas: pada @sec-hasil-rq3 kedua sel PaySim FedXGBllr
-Dirichlet mula-mula menghasilkan atribusi SHAP nol karena wrapper menerapkan
-$"logit"(p)$ pada probabilitas $tilde.op 10^(-9)$ yang terpotong klip numerik. Satu
-degenerasi yang sama menampakkan diri di dua tempat — kalibrasi dan atribusi —
-keduanya teratasi dengan bekerja pada skala logit.
-
-*SVM: NA di seluruh sel.* Loss hinge menghasilkan margin fungsi keputusan, bukan
-probabilitas; tidak ada sigmoid yang dipaksakan untuk memanufaktur satu, sehingga
-metrik kalibrasi dilaporkan NA.
-
-Diskriminasi dan kalibrasi karena itu berpisah lintas keluarga model — sebuah
-model dapat mengurutkan dengan baik namun mengeluarkan probabilitas yang tak
-tepercaya, dan sebaliknya. Inilah alasan Subbab Metrik Evaluasi menambahkan
-metrik kalibrasi di samping metrik diskriminasi.
-
-Sebagai catatan lintas-bab, seleksi iterasi GBM pada validation set terpusat
-(@tab-3-6) bersifat adaptif per-sel. Efeknya paling tegas pada ULB no-SMOTE:
-validation set memilih prefix sangat pendek ($k^* = 1$, satu pohon) sehingga
-menghindari keruntuhan saturasi, dan AUPRC ULB no-SMOTE bernilai 0,70–0,76
-alih-alih ≈0,18 yang dihasilkan anggaran 100-iterasi tanpa seleksi. Pada arm SMOTE
-ULB prefix yang dipilih jauh lebih panjang ($k^* = 81$–$100$). Pada PaySim, $k^*$
-bervariasi (12–99) tanpa memengaruhi hasil karena model tree tetap tersaturasi
-≈0,996, sedangkan pada BAF $k^*$ tetap tinggi (61–96) sehingga praktis tak
-terpengaruh.
-
-== Pengaruh Non-IID dan SMOTE (RQ2)
-
-=== Efek Agregat SMOTE
-
-Efek SMOTE tidak seragam; ia bergantung pada apakah oversampling bersifat moderat
-dan universal ataukah ekstrem dan terkonsentrasi. Pada ULB dan PaySim, prevalensi
-lokal setiap client berada di bawah target 1:100, sehingga seluruh client
-mengalami oversampling moderat — multiplier sintesis rerata ≈7× pada kedua dataset
-— dan SMOTE cenderung membantu. Pada BAF, hanya client yang kekurangan fraud
-akibat partisi Dirichlet yang jatuh di bawah target, sehingga SMOTE menyala secara
-selektif dengan multiplier hingga ×185 tepat pada partisi yang paling
-terdegenerasi.
-
-Generalisasinya: *oversampling moderat pada seluruh client cenderung membantu,
-sedangkan oversampling ekstrem pada segelintir client yang kelaparan-minoritas
-meracuni agregat global.* Regime mana yang terjadi ditentukan oleh partisi, bukan
-oleh dataset atau model secara terpisah.
-
-=== BAF Non-IID: Efek SMOTE per Paradigma Agregasi
-
-@tab-4-baf-smote menyajikan efek SMOTE pada BAF Dirichlet $alpha = 0,5$ — dataset,
-partisi, seed, dan client teracuni yang sama — dipilah menurut paradigma agregasi.
-Terlihat urutan monoton: paradigma yang mengonsultasikan data yang tidak dapat
-dimanipulasi client memiliki ketahanan tertinggi.
+Untuk menunjukkan hal ini, @tab-4-baf-smote menyajikan efek SMOTE pada BAF dengan partisi Dirichlet
+dipilah menurut paradigma agregasi. Seluruh baris berbagi dataset, partisi, seed, dan client teracuni yang sama
+sehingga satu-satunya yang berbeda adalah aturan agregasinya.
 
 #figure(
   kind: table,
@@ -3011,13 +2944,11 @@ dimanipulasi client memiliki ketahanan tertinggi.
       [Accuracy-weighted FedAvg], [BERT], [0,167], [0,045], [−73,2%],
     )
   ],
-  caption: [Efek SMOTE terhadap AUPRC test pada BAF Dirichlet $alpha = 0,5$,
-  seed 42, per paradigma agregasi. Kondisi identik pada seluruh baris; yang
-  berbeda hanya aturan agregasi.],
+  caption: [Efek SMOTE terhadap AUPRC pada BAF Dirichlet],
 ) <tab-4-baf-smote>
 
-Agar temuan ini tidak bergantung pada satu metrik, @tab-4-baf-smote-rfpr menghitung
-ulang efek yang sama dalam Recall\@5%FPR.
+Agar temuan tersebut tidak bergantung pada satu metrik, @tab-4-baf-smote-rfpr
+menghitung ulang efek yang sama dalam Recall\@5%FPR.
 
 #figure(
   kind: table,
@@ -3035,156 +2966,76 @@ ulang efek yang sama dalam Recall\@5%FPR.
       [Accuracy-weighted FedAvg], [BERT], [0,574], [0,271], [−52,8%],
     )
   ],
-  caption: [Efek SMOTE terhadap Recall\@5%FPR test pada BAF Dirichlet
-  $alpha = 0,5$, seed 42, per paradigma agregasi. Kondisi identik dengan
-  @tab-4-baf-smote; hanya metriknya yang berbeda.],
+  caption: [Efek SMOTE terhadap Recall\@5%FPR pada BAF Dirichlet],
 ) <tab-4-baf-smote-rfpr>
 
-*Urutan bertahan, magnitudo mengecil.* Peringkat ketahanan antar paradigma tidak
-berubah: best-model selection tak tersentuh (0,0%), tree ensemble aggregation
-tergerus paling ringan (−5,7%), FedAvg linear di tengah (−17,3% dan −18,5%), dan
-FedAvg terbobot-akurasi pada model deep runtuh paling dalam (−53,9% dan −52,8%).
-Bahwa urutan monoton yang sama muncul pada metrik operasional yang sepenuhnya
-berbeda menjadikan klaim §4.3 lebih kuat daripada bila hanya bersandar pada AUPRC.
-Yang berubah adalah besarannya: setiap penurunan Recall\@5%FPR lebih kecil daripada
-penurunan AUPRC padanannya — model deep, misalnya, kehilangan sekitar 53% deteksi
-dibanding sekitar 72% AUPRC. Ini memberi tahu di mana kerusakan terkonsentrasi:
-geometri SMOTE wireframe (dibahas pada subbab berikut) merusak *pengurutan* skor
-lebih parah daripada menghancurkan wilayah deteksi pada ambang tinggi, sehingga
-keruntuhan peringkat yang diukur AUPRC tampak lebih dramatis daripada hilangnya
-deteksi pada titik operasi 5% FPR. Keruntuhan deep tetap besar dengan ukuran apa
-pun; yang bertambah adalah pemahaman bahwa kerugiannya terpusat di ranah peringkat.
+Peringkat ketahanan antar paradigma tidak berubah ketika metriknya diganti.
+Best-model selection tetap tidak tersentuh dengan penurunan nol persen, tree
+ensemble aggregation mengalami penurunan ringan sebesar 5,7 persen, kedua model
+parametrik dengan FedAvg berada di tengah dengan penurunan 17,3 persen dan 18,5
+persen, sedangkan FedAvg terbobot-akurasi pada model deep runtuh paling dalam
+sebesar 53,9 persen dan 52,8 persen. Kemunculan urutan monoton yang sama pada
+metrik operasional yang sepenuhnya berbeda menjadikan menunjukkan klaim yang kuat
+bahwa efek SMOTE bergantung pada interaksi keseluruhan variabel eksperimen dimana efek terburuk
+terjadi ketika kondisi partisi menyebabkan oversampling ekstrem pada client-client tertentu.
+Kemudian dengan agregasi bersifat Accuracy-weighted FedAvg, clien-client ini diberikan bobot kuat
+dalam model global sehingga memberikan hasil yang menyesatkan.
 
-=== Mekanisme: Geometri Sintetis dan Inversi Bobot
+=== Analisis lanjutan pengaruh heterogenitas dan SMOTE
 
-Argumen mekanistik disusun dalam empat langkah.
+Kedua variabel yang dikaji pada subbab ini ternyata tidak setara bobotnya, dan
+keduanya tidak bekerja secara aditif. Heterogenitas distribusi yang dibaca
+sendirian, yaitu pada arm tanpa SMOTE, tidak menurunkan performa secara sistematis.
+Kerugian akibat heterogenitas terkonsentrasi pada keluarga model deep, 
+terutama pada dataset PaySim. SMOTE yang dibaca sendirian juga tidak
+seragam arahnya sebab tergantung pada kondisi oversampling yang terjadi.
+Yang menentukan arah bukanlah salah satu variabel,
+melainkan interaksi keduanya.
 
-*Langkah 1 — partisi.* Di bawah $alpha = 0,5$ (seed 42), satu client
-(client 1, $n = 391.355$) hanya memiliki 21 kasus fraud nyata. Log SMOTE
-per-client pada partisi tersebut menampilkan kelima regime sekaligus:
+Interaksi itu bekerja melalui satu jalur yang dapat ditelusuri. Partisi Dirichlet
+menciptakan client yang kelaparan minoritas, SMOTE lokal pada client semacam itu
+menghasilkan sampel sintetis berbentuk wireframe alih-alih awan, model yang dipaskan
+pada wireframe tersebut melaporkan metrik lokal yang nyaris sempurna, dan aturan
+agregasi yang memercayai metrik yang dilaporkan sendiri itu kemudian menyerahkan
+mayoritas bobot kepada client yang paling rusak. Tidak satu pun mata rantai tersebut
+berbahaya secara terpisah dan kerusakan baru muncul ketika keempatnya tersambung.
 
-```
-client 0: n=115.636, 4.976 fraud nyata, rasio 0,045 -> dilewati (target terpenuhi)
-client 1: n=391.355,     21 fraud nyata, rasio 0,000 -> 3.892 sintetis (x185,3)
-client 2: n=  5.988, 1.617 fraud nyata, rasio 0,370 -> dilewati (target terpenuhi)
-client 3: n= 27.783,     50 fraud nyata, rasio 0,002 ->   227 sintetis (x4,5)
-client 4: n=159.238,  1.056 fraud nyata, rasio 0,007 ->   525 sintetis (x0,5)
-```
+Konsekuensinya dapat dinyatakan sebagai ketergantungan berjenjang. Besarnya
+kerusakan tidak ditentukan oleh tingkat heterogenitas maupun oleh penerapan SMOTE,
+melainkan oleh aturan agregasi yang menjembatani keduanya, dan selisih antar aturan
+itu membentang dari nol persen hingga 73,2 persen pada kondisi yang identik.
+Bagi rancangan sistem deteksi fraud
+kolaboratif, temuan ini menyiratkan bahwa penanganan class imbalance pada lingkungan
+federated tidak dapat diputuskan terlepas dari aturan agregasi yang dipakai, sebab
+intervensi yang menguntungkan pada partisi seragam dapat berbalik menjadi merusak
+pada partisi heterogen dengan aturan pembobotan yang keliru.
 
-*Langkah 2 — geometri.* @fig-3-4-smote-geometry dan @tab-smote-geometry pada
-Subbab Perancangan Class Imbalance Handling mengukur geometri sintesis pada client
-terburuk tersebut: 3.892 titik sintetis menempati hanya 82 dari 210 segmen k-NN
-yang mungkin, dengan residual on-segment mendekati nol (2,6e−7), dan 16,03% titik
-sintetis lebih dekat ke sampel *mayoritas* nyata daripada ke sampel minoritas
-nyata mana pun. Kelas minoritas pada partisi itu berbentuk *wireframe*, bukan awan.
-Fenomena ini konsisten dengan konsep kelangkaan absolut versus relatif
-@weiss2004rarity, degradasi SMOTE pada dimensi tinggi @blagus2013smote, dan
-pembangkitan di wilayah mayoritas @elreedy2024smote.
+== Interpretabilitas Model <sec-hasil-rq3>
 
-*Langkah 3 — inversi bobot.* @fig-4-1-wireframe memplot bobot agregasi client
-wireframe versus putaran untuk FFD dan BERT pada kedua arm, dengan garis acuan
-pada 0,2 (bobot proporsional untuk $K = 5$). Panel FFD paling jelas: pada arm
-no-SMOTE bobot tertahan datar di ≈0,018 selama 20 putaran, sedangkan pada arm
-SMOTE bobot menanjak monoton dari 0,131 menuju dataran 0,845 pada putaran ke-9.
-BERT mencapai 0,852 pada arm SMOTE tetapi berosilasi (maksimum 0,209) tanpa pernah
-mengambil alih pada arm no-SMOTE.
+Analisis explainability dijalankan terhadap model global akhir yang telah
+dibekukan dan dipersistensi oleh sweep, sehingga SHAP berperan sebagai konsumen
+baca-saja atas artefak tersebut tanpa melatih ulang apa pun. Grid SHAP mencakup 96
+sel, dengan 66 di antaranya berupa sel federated yang memiliki lebih dari satu
+client. Hanya sel federated yang membawa informasi stabilitas antar client,
+sedangkan 30 sel centralized hanya memiliki satu client sehingga stabilitasnya
+tidak terdefinisi menurut definisi dan dikeluarkan dari seluruh agregat pada subbab
+ini.
 
-#figure(
-  image("resources/fig-4-1-wireframe-weights.png", width: 100%),
-  caption: [Bobot agregasi client wireframe (BAF Dirichlet $alpha = 0,5$, seed 42)
-  versus putaran, untuk FFD (kiri) dan BERT (kanan) pada kedua arm. Garis titik
-  pada 0,2 menandai bobot proporsional untuk $K = 5$. Pada arm SMOTE bobot
-  menanjak hingga dataran ≈0,85; pada arm no-SMOTE bobot tetap rendah.],
-) <fig-4-1-wireframe>
+=== Konfigurasi pengukuran
 
-Penyebabnya adalah metrik lokal yang menjadi bobot. Pada arm SMOTE, AUPRC lokal
-client itu memanjat hingga 1,000 (FFD, putaran akhir) sementara arm no-SMOTE hanya
-membaca 0,004. Client tersebut menilai dirinya pada partisi yang 99,5% kelas
-minoritasnya diinterpolasi dari 21 titik yang baru saja ia paskan — penilaian-diri
-sempurna atas geometri sintetisnya sendiri.
+Pada setiap client, SHAP dihitung terhadap model global akhir menggunakan
+background berupa 100 sampel data latih lokal pasca-SMOTE yang diringkas menjadi 10
+sentroid k-means. Ringkasan tersebut menentukan distribusi referensi explainer dan
+wajib identik antara pengukuran noise floor dan produksi. Explanation set berupa 500
+sampel dari test set terpusat yang identik untuk seluruh client, agar perbedaan
+importance yang teramati mencerminkan perbedaan model per distribusi lokal alih-alih
+perbedaan sampel yang dijelaskan. Seluruh atribusi dihitung pada skala log-odds,
+dengan margin fungsi keputusan sebagai pengecualian terdokumentasi untuk SVM.
 
-*Langkah 4 — konsekuensi.* AUPRC validasi global menurun seiring client itu
-mengambil alih. Pada BERT arm SMOTE, trajektori validasi turun dari 0,108 pada
-putaran awal menjadi 0,043 pada putaran akhir, sedangkan arm no-SMOTE konvergen
-di ≈0,167. Pola yang sama muncul pada FFD (arm SMOTE berakhir di 0,046, no-SMOTE
-di 0,157).
-
-Mekanisme ini dapat dinyatakan dalam satu kalimat yang menjadi tesis subbab:
-
-#quote(block: true)[
-  Ketahanan sebuah paradigma agregasi ditentukan oleh apakah aturan agregasi
-  mengonsultasikan data yang tidak dapat dirusak oleh client.
-]
-
-- *Best-model selection* mengevaluasi kandidat pada validation set *terpusat* —
-  client teracuni tidak pernah terpilih ($Delta = 0%$).
-- *Tree ensemble aggregation* menerima pohon dari setiap client namun mempelajari
-  bobot per-pohon pada validation set *terpusat*, sehingga pohon yang memaskan
-  wireframe diberi bobot rendah ($Delta = -9,3%$).
-- *FedAvg* membobot semata-mata menurut ukuran partisi, sehingga client teracuni
-  hanya menerima porsi proporsionalnya ($Delta approx -31%$).
-- *Accuracy-weighted FedAvg* membobot menurut metrik lokal *yang dilaporkan
-  sendiri*, yang oleh wireframe digelembungkan hingga 1,000 ($Delta approx -72%$).
-
-Perlu dicatat bahwa FFD adalah 1D-CNN dan BERT adalah FT-Transformer — arsitektur
-berbeda, trajektori sama pada partisi yang sama. Mekanisme ini karena itu milik
-aturan agregasi, bukan bias induktif satu model tertentu.
-
-=== Prediksi Pra-registrasi: Yang Terbukti dan Yang Terbantah
-
-Prediksi dicatat pada 27 Juli 2026, sebelum hasil grid-penuh tersedia, agar
-analisis oversampling dapat dibaca terhadap prediksi yang dibuat di muka, bukan
-dirasionalisasi setelah fakta.
-
-*Terbukti — urutan keluarga model.* Mengikuti #cite(<elor2022smote>, form:
-"prose"), diprediksikan bahwa balancing membantu classifier lemah tetapi tidak
-classifier kuat, dengan model deep paling terekspos. Teramati: model deep
-−71%/−73%, model parametrik −31%/−32%, model tree 0%/−9%. Urutannya persis
-sebagaimana diprediksi.
-
-*Terbantah — prediksi utama.* Prediksi utama menyatakan SMOTE tidak akan
-memperbaiki AUPRC di mana pun. Pada ULB, SMOTE justru memperbaiki hampir setiap
-model (GBM +0,095, FedXGBllr +0,087 rerata antar kondisi). Prediksi ini terbantah,
-namun mekanisme yang teridentifikasi di atas — regime moderat-universal versus
-ekstrem-terkonsentrasi — menjelaskan mengapa, dan merupakan jawaban yang lebih
-kuat daripada prediksi itu sendiri: sebuah prediksi tercatat yang terbantah dengan
-mekanisme yang ditemukan lebih bernilai daripada tebakan yang kebetulan benar.
-
-*Tidak terwujud — pergeseran kalibrasi.* Prediksi sekunder mengantisipasi F1 dan
-Recall naik di bawah SMOTE meski AUPRC tidak, sebagai tanda pergeseran kalibrasi.
-Pola ini tidak terwujud karena penyetelan ambang per-arm pada validation set
-terpusat (`threshold_policy = val_f1_tuned`) justru menetralkan artefak tersebut;
-sebuah keputusan perancangan mencegah konfound yang diantisipasi prediksi.
-
-*Terbantah — sel paling terdegenerasi.* Prediksi menempatkan ULB $alpha = 0,5$
-sebagai sel paling terdegenerasi. Sensus minoritas menunjukkan minimum
-`n_minority` = 2 justru pada *PaySim* $alpha = 0,5$ (dua client di bawah lantai
-SMOTE = 6), sedangkan pada ULB dan BAF tidak ada client di bawah lantai tersebut
-pada seed 42.
-
-== Interpretabilitas Model (RQ3) <sec-hasil-rq3>
-
-Analisis explainability dijalankan terhadap model global akhir yang dibekukan dan
-dipersistensi oleh sweep; SHAP bersifat konsumen read-only atas artefak tersebut dan
-tidak melatih ulang apa pun. Grid SHAP mencakup 96 sel, 66 di antaranya federated
-(lebih dari satu client). Hanya sel federated yang membawa stabilitas antar-client;
-30 sel centralized memiliki satu client sehingga stabilitasnya tak-terdefinisi
-menurut definisi dan dikeluarkan dari seluruh agregat pada subbab ini.
-
-=== Konfigurasi dan batas resolusi pengukuran
-
-Pada setiap client, SHAP dihitung terhadap model global akhir menggunakan background
-100 sampel data latih lokal pasca-SMOTE yang diringkas menjadi 10 sentroid k-means.
-Ringkasan k-means-10 ini menentukan distribusi referensi explainer dan wajib identik
-antara pengukuran noise-floor dan produksi. Explanation set adalah 500 sampel dari
-test set terpusat, identik untuk seluruh client agar perbedaan importance
-mencerminkan perbedaan model-per-distribusi-lokal, bukan perbedaan sampel yang
-dijelaskan. Seluruh atribusi dihitung pada skala log-odds, dengan margin fungsi
-keputusan sebagai pengecualian terdokumentasi untuk SVM.
-
-Pemetaan explainer ditetapkan oleh pengukuran local accuracy, bukan reputasi
-(@tab-4-shap-explainer). Nilai local accuracy diambil dari probe Tahap-0
-(`results/shap_stage0_report.txt`).
+Pemetaan explainer ditetapkan berdasarkan pengukuran local accuracy alih-alih
+berdasarkan reputasi masing-masing metode, sebagaimana disajikan pada
+@tab-4-shap-explainer. Nilai local accuracy diambil dari probe Tahap-0 yang terekam
+pada `results/shap_stage0_report.txt`.
 
 #figure(
   table(
@@ -3195,91 +3046,135 @@ Pemetaan explainer ditetapkan oleh pengukuran local accuracy, bukan reputasi
     [GBM, XGB], [TreeSHAP `interventional`], [$0,00$],
     [FFD, BERT, FedXGBllr], [KernelSHAP ($"nsamples" = 500$)], [—],
   ),
-  caption: [Pemetaan explainer per model beserta galat local accuracy yang terukur. LinearSHAP dan TreeSHAP `interventional` bersifat eksak; KernelSHAP berbasis sampling sehingga tidak memiliki galat local accuracy tunggal dan sebagai gantinya diukur melalui noise floor.],
+  caption: [Pemetaan explainer per model],
 ) <tab-4-shap-explainer>
 
-*Mengapa `interventional`, bukan `tree_path_dependent`.* Mode `tree_path_dependent`
-mengabaikan data background, sehingga setiap client yang menjelaskan satu model
-global yang sama menghasilkan nilai identik dan stabilitas antar-client bernilai 1,0
-secara konstruksi — angka yang akan mengeluarkan model pohon dari RQ3 sepenuhnya.
-Mode `interventional` dengan background lokal per-client menjadikan model pohon
-peserta yang sesungguhnya. Asumsi independensi fiturnya adalah asumsi yang sama yang
-telah didokumentasikan untuk LinearSHAP dan KernelSHAP, sehingga tidak
-memperkenalkan kelas batasan baru.
+Pemilihan mode interventional alih-alih `tree_path_dependent` untuk model pohon
+merupakan keputusan yang menentukan apakah keluarga model tersebut dapat ikut
+dianalisis sama sekali. Mode `tree_path_dependent` mengabaikan data background,
+sehingga setiap client yang menjelaskan satu model global yang sama menghasilkan
+nilai yang identik dan stabilitas antar client bernilai 1,0 secara konstruksi;
+angka semacam itu akan mengeluarkan model pohon dari analisis ini sepenuhnya.
+Mode interventional dengan background lokal per client menjadikan model pohon
+peserta
+yang sesungguhnya dalam perbandingan. Asumsi independensi fitur yang dituntutnya
+merupakan asumsi yang sama yang telah didokumentasikan untuk LinearSHAP dan
+KernelSHAP, sehingga pemilihan ini tidak memperkenalkan kelas batasan baru.
 
-*Mengapa BERT memakai KernelSHAP.* DeepSHAP diuji lebih dulu karena mendekati eksak.
-Pada FFD (1D-CNN) DeepSHAP memenuhi aksioma local accuracy dengan galat rekonstruksi
-$1,37 times 10^(-6)$. Pada BERT (FT-Transformer) DeepSHAP gagal: pustaka SHAP
-menaikkan `AssertionError` bahwa atribusi tidak menjumlah ke luaran model.
-Penyebabnya adalah `LayerNorm` yang hadir di setiap blok Transformer — DeepLIFT
-tidak memiliki aturan propagasi untuk lapisan tersebut.
-GradientExplainer sebagai alternatif melaporkan galat local accuracy $1,36 times
-10^(1)$ terhadap toleransi 0,01, yakni sekitar 1.360× di atas ambang, sehingga
-atribusinya tidak mendekomposisi prediksi dan dicatat sebagai estimator yang
-*gagal*, bukan pendekatan. BERT karenanya memakai KernelSHAP. Meskipun DeepSHAP
-lolos pada FFD, FFD tetap memakai KernelSHAP demi komparabilitas: bila FFD memakai
-estimator nyaris-eksak sementara BERT memakai estimator berbasis sampling,
-ketidakstabilan BERT yang teramati akan sebagian mencerminkan varians estimator
-alih-alih perilaku model — padahal kedua model deep dibandingkan langsung. Run
-DeepSHAP FFD dipertahankan sebagai cross-check.
+=== Admisibilitas explainer per keluarga model
 
-*Noise floor dan konsekuensinya.* Karena KernelSHAP menyampel koalisi secara acak,
-stabilitas antar-client hanya bermakna relatif terhadap kesepakatan KernelSHAP
-dengan dirinya sendiri. Floor diukur dengan menjalankan KernelSHAP dua kali (seed
-berbeda) pada satu client BAF Dirichlet dan mengukur Spearman antar kedua vektor
-importance pada $"nsamples" = 500$; nilainya per-model — FedXGBllr 0,9730, BERT
-0,9972, FFD 0,9966 (`results/shap/noise_floor.txt`). *Seluruh 33 sel yang dijelaskan
-KernelSHAP jatuh pada atau di bawah floor modelnya sendiri.* Klaim ini tidak
-bersandar pada perbandingan floor semata melainkan pada batas DeepSHAP: pada FFD,
-ketidaksepakatan KernelSHAP dengan referensi nyaris-eksak adalah 0,0807 (Spearman
-0,9193), yang melampaui sebaran antar-client yang teramati — sehingga perbedaan
-antar-client lebih kecil daripada ketakakuratan estimator itu sendiri dan tidak
-dapat diatribusikan pada model. Sebagai catatan pelengkap, Jaccard\@5 nyaris tak
-membawa informasi pada skala ini: pada FedXGBllr dan BERT ia menempel di 1,00 pada
-seluruh nsamples, sedangkan pada FFD ia justru non-monoton — 0,67 pada nsamples 100,
-1,00 pada 500, dan 0,67 kembali pada 1000. Pada himpunan lima elemen dengan satu
-pasang seed, masuk atau keluarnya satu fitur menggeser nilai sebesar 0,33, sehingga
-angka ini tidak stabil dan memperkuat perlunya ukuran terkoreksi-peluang (indeks
-Kuncheva). Karena
-floor diukur pada 250 sampel explanation sedangkan produksi memakai 500, dan
-penambahan sampel hanya memperbanyak perataan, floor merupakan batas bawah.
+Perbedaan pertama antar keluarga model bukan terletak pada seberapa stabil
+interpretasinya, melainkan pada apakah interpretasi yang eksak dimungkinkan sama
+sekali. Model parametrik menerima LinearSHAP dengan galat local accuracy sebesar
+9,26e−8, sedangkan model pohon murni menerima TreeSHAP interventional dengan galat
+tepat nol. Keduanya karena itu memenuhi aksioma local accuracy secara eksak, dan
+atribusinya mendekomposisi prediksi tanpa sisa.
+
+Model deep tidak memiliki estimator eksak yang berlaku, dan hal itu merupakan
+properti arsitekturnya alih-alih keterbatasan anggaran komputasi. DeepSHAP diuji
+lebih dahulu karena sifatnya yang mendekati eksak, dan pada FFD yang berbasis
+1D-CNN metode tersebut memenuhi aksioma local accuracy dengan galat rekonstruksi
+sebesar 1,37e−6. Pada BERT yang berbasis FT-Transformer, DeepSHAP gagal karena
+pustaka SHAP menaikkan AssertionError bahwa atribusi tidak menjumlah ke luaran
+model. Penyebabnya adalah lapisan LayerNorm yang hadir pada setiap blok Transformer,
+dan DeepLIFT tidak memiliki aturan propagasi untuk lapisan tersebut.
+GradientExplainer yang diuji sebagai alternatif melaporkan galat local accuracy
+sebesar 13,6 terhadap toleransi 0,01, yakni sekitar 1.360 kali di atas ambang,
+sehingga atribusinya tidak mendekomposisi prediksi dan dicatat sebagai estimator
+yang gagal alih-alih sebagai pendekatan. BERT karena itu memakai KernelSHAP.
+Meskipun DeepSHAP lolos pada FFD, FFD tetap memakai KernelSHAP demi komparabilitas,
+sebab apabila FFD memakai estimator yang nyaris eksak sementara BERT memakai
+estimator berbasis sampling, ketidakstabilan BERT yang teramati akan sebagian
+mencerminkan varians estimator alih-alih perilaku model, padahal kedua model deep
+tersebut dibandingkan secara langsung. Run DeepSHAP pada FFD dipertahankan sebagai
+pemeriksaan silang.
+
+FedXGBllr menempati posisi yang tidak terduga dalam pemetaan ini, dan posisinya
+merupakan temuan tersendiri. Meskipun berbasis tree ensemble, model ini
+tidak mewarisi keeksakan TreeSHAP yang dinikmati GBM, karena kepala agregasinya
+berupa jaringan konvolusi satu dimensi yang memuat aktivasi ReLU sehingga linearitas
+Shapley terputus, sebagaimana diuraikan pada Subbab Implementasi Modul Evaluasi dan
+SHAP. Konsekuensinya, FedXGBllr harus dijelaskan dengan KernelSHAP yang bersifat
+model-agnostik dan berbasis sampling, sejajar dengan kedua model deep. Kategori
+"model berbasis tree" karena itu tidak menentukan karakteristik explainability
+secara otomatis; yang menentukan adalah keseluruhan jalur komputasi dari masukan
+hingga keluaran, termasuk komponen non-tree yang ditambahkan oleh skema agregasi
+federated.
+
+Karena KernelSHAP menyampel koalisi secara acak, stabilitas antar client bagi
+ketiga model tersebut hanya bermakna relatif terhadap kesepakatan KernelSHAP dengan
+dirinya sendiri. Noise floor diukur dengan menjalankan KernelSHAP dua kali
+menggunakan seed berbeda pada satu client BAF Dirichlet, lalu mengukur korelasi
+Spearman antar kedua vektor importance pada `nsamples` sebesar 500. Nilainya
+bersifat per model, yaitu FedXGBllr 0,9730, BERT 0,9972, dan FFD 0,9966, sebagaimana
+terekam pada `results/shap/noise_floor.txt`. Seluruh 33 sel yang dijelaskan
+KernelSHAP jatuh pada atau di bawah floor modelnya sendiri (@fig-4-shap-vs-floor).
 
 #figure(
   image("resources/fig-shap-vs-floor.png", width: 88%),
   caption: [Spearman antar-client tiap sel KernelSHAP terhadap floor modelnya (tanda vertikal). Seluruh 33 sel berada pada atau di bawah floor, sehingga sebaran antar-client tidak dapat dibedakan dari noise sampling estimator.],
 ) <fig-4-shap-vs-floor>
 
+Klaim tersebut tidak bersandar pada perbandingan terhadap floor semata, melainkan
+juga pada batas yang diberikan DeepSHAP. Pada FFD, ketidaksepakatan KernelSHAP
+terhadap referensi yang nyaris eksak sebesar 0,0807 dengan Spearman 0,9193, dan
+angka itu melampaui sebaran antar client yang teramati. Perbedaan antar client
+dengan demikian lebih kecil daripada ketakakuratan estimatornya sendiri sehingga
+tidak dapat diatribusikan pada perilaku model. Sebagai catatan pelengkap, Jaccard\@5
+nyaris tidak membawa informasi pada skala ini: pada FedXGBllr dan BERT nilainya
+menempel di 1,00 pada seluruh nilai `nsamples`, sedangkan pada FFD nilainya justru
+non-monoton dengan 0,67 pada 100 sampel, 1,00 pada 500 sampel, dan kembali 0,67 pada
+1000 sampel. Pada himpunan lima elemen dengan satu pasang seed, masuk atau keluarnya
+satu fitur menggeser nilai sebesar 0,33, sehingga ukuran ini tidak stabil dan justru
+memperkuat kebutuhan akan ukuran terkoreksi peluang berupa indeks Kuncheva
+(@fig-4-shap-jaccard-kuncheva). Karena floor diukur pada 250 sampel explanation
+sedangkan produksi memakai 500 sampel, dan penambahan sampel hanya memperbanyak
+perataan, floor tersebut merupakan batas bawah.
+
 #figure(
   image("resources/fig-shap-jaccard-vs-kuncheva.png", width: 62%),
   caption: [Jaccard\@5 terhadap indeks Kuncheva per sel, ditandai menurut dataset dengan dimensionalitasnya (PaySim $d = 13$, ULB $d = 30$, BAF $d = 55$). Kedua ukuran menyimpang seiring bertambahnya dimensi — pembenaran empiris untuk koreksi peluang @nogueira2018stability.],
 ) <fig-4-shap-jaccard-kuncheva>
 
-*Apakah menaikkan nsamples akan menyelesaikannya?* Nilai default pustaka SHAP adalah
-$"nsamples" = 2 d + 2048$, yakni 2158 untuk BAF berdimensi 55. Dari timing terukur
-pada $"nsamples" = 500$ (FedXGBllr $approx 190$ s dan BERT $approx 142$ s per client
-per run) dan sifat KernelSHAP yang kira-kira linear terhadap nsamples, 2158 menuntut
-$approx 4,3 times$ waktu: per sel (lima client) FedXGBllr $approx 1,1$ jam dan BERT
-$approx 0,9$ jam, sehingga di seluruh cakupan KernelSHAP menambah puluhan GPU-hour.
-Menaikkan nsamples memang mengecilkan selubung galat estimator, sehingga secara
-prinsip sebaran antar-client dapat menjadi terselesaikan; namun floor self-agreement
-pun ikut naik seiring bertambahnya sampel (pada $"nsamples" = 1000$ floor FedXGBllr
-telah naik $approx 0,011$), dan tidak ada jaminan sebaran sejati antar-client
-melampaui selubung yang mengecil. Atas pertimbangan biaya-manfaat itu, kenaikan
-nsamples tidak ditempuh dan keterbatasan ini dilaporkan sebagai batas metode pada
-anggaran komputasi penelitian, bukan sebagai kegagalan.
+Pertanyaan yang wajar diajukan adalah apakah menaikkan `nsamples` akan menyelesaikan
+persoalan resolusi tersebut. Nilai default pustaka SHAP adalah dua kali jumlah
+dimensi ditambah 2048, yakni 2158 untuk BAF yang berdimensi 55. Dari waktu komputasi
+terukur pada 500 sampel, yaitu sekitar 190 detik per client per run untuk FedXGBllr
+dan sekitar 142 detik untuk BERT, serta dari sifat KernelSHAP yang kira-kira linear
+terhadap `nsamples`, konfigurasi 2158 menuntut sekitar 4,3 kali waktu tersebut,
+sehingga satu sel dengan lima client menghabiskan sekitar 1,1 jam untuk FedXGBllr
+dan sekitar 0,9 jam untuk BERT, dan di seluruh cakupan KernelSHAP tambahan itu
+mencapai puluhan GPU-hour. Menaikkan `nsamples` memang mengecilkan selubung galat
+estimator sehingga secara prinsip sebaran antar client dapat menjadi terselesaikan,
+namun floor self-agreement pun ikut naik seiring bertambahnya sampel, dengan floor
+FedXGBllr yang telah naik sekitar 0,011 pada 1000 sampel, dan tidak ada jaminan
+bahwa sebaran sejati antar client melampaui selubung yang mengecil itu. Atas
+pertimbangan biaya dan manfaat tersebut, kenaikan `nsamples` tidak ditempuh, dan
+keterbatasan ini dilaporkan sebagai batas metode pada anggaran komputasi penelitian
+alih-alih sebagai kegagalan.
 
-Konsekuensinya, RQ3 hanya terjawab untuk explainer deterministik yang tidak memiliki
-floor sampling. Di antara model deterministik, XGB tidak memiliki sel federated (di
-sini hanya dievaluasi centralized), sehingga analisis stabilitas antar-client
-deterministik mencakup GBM, LR, dan SVM.
+Konsekuensi metodologisnya perlu dinyatakan tegas. Konsistensi feature importance
+antar client hanya dapat diukur pada explainer deterministik yang
+tidak memiliki floor sampling, yaitu LinearSHAP pada LR dan SVM serta TreeSHAP
+interventional pada GBM. Untuk ketiga model yang dijelaskan KernelSHAP, yang dapat
+dilaporkan adalah bahwa sebaran antar clientnya tidak dapat dibedakan dari noise
+estimator pada anggaran komputasi ini, dan pernyataan itu sendiri merupakan
+karakteristik yang bermakna: kelas model yang membutuhkan explainer berbasis
+sampling menuntut biaya verifikasi yang jauh lebih besar sebelum klaim
+interpretabilitas apa pun dapat dipertanggungjawabkan. XGB tidak memiliki sel
+federated karena hanya dievaluasi pada kondisi centralized, sehingga analisis
+stabilitas deterministik mencakup GBM, LR, dan SVM.
 
-=== Stabilitas antar client pada explainer deterministik
+=== Konsistensi feature importance antar client
 
-Pada explainer deterministik, sebaran antar-client mencerminkan perilaku model,
-bukan noise estimator. Rerata indeks Kuncheva sel federated adalah LR 0,9112, SVM
-0,9433, dan GBM 0,8219 (minimum 0,544); GBM karenanya paling tidak stabil secara
-agregat. Rincian per dataset × model (@tab-4-shap-kuncheva-det) menunjukkan bahwa
-urutan ini bukan properti model semata.
+Pada explainer deterministik, sebaran antar client mencerminkan perilaku model
+alih-alih noise estimator, sehingga perbandingan antar keluarga model dapat
+dilakukan secara langsung. Rerata indeks Kuncheva pada sel federated adalah 0,9433
+untuk SVM, 0,9112 untuk LR, dan 0,8219 untuk GBM dengan nilai minimum 0,544. Urutan
+tersebut menempatkan kedua model parametrik sebagai keluarga dengan interpretasi
+paling konsisten antar client, sedangkan model pohon paling tidak konsisten secara
+agregat. Rincian per dataset dan per model pada @tab-4-shap-kuncheva-det mengungkap
+bahwa urutan tersebut bukan properti model semata.
 
 #figure(
   table(
@@ -3290,62 +3185,99 @@ urutan ini bukan properti model semata.
     [ULB], [0,742], [1,000], [0,964],
     [PaySim], [0,878], [0,789], [0,935],
   ),
-  caption: [Rerata indeks Kuncheva per dataset × model untuk explainer deterministik (sel federated). Ketidakstabilan merupakan interaksi antara keluarga model dan data, bukan properti salah satunya.],
+  caption: [Indeks Kuncheva per dataset dan model],
 ) <tab-4-shap-kuncheva-det>
 
 #figure(
   image("resources/fig-shap-heatmap-deterministic.png", width: 92%),
-  caption: [Peta panas indeks Kuncheva untuk explainer deterministik per sel (dataset/kondisi/arm). Baris GBM paling sering bernilai rendah; di sinilah sinyal RQ3 yang terukur berada.],
+  caption: [Peta panas indeks Kuncheva untuk explainer deterministik per sel (dataset/kondisi/arm). Baris GBM paling sering bernilai rendah; di sinilah sinyal stabilitas yang terukur berada.],
 ) <fig-4-shap-heatmap>
 
-Ordering-nya bukan sekadar "GBM paling buruk". GBM paling tidak stabil pada ULB
-(0,742) justru di tempat LR sempurna stabil (1,000); sebaliknya LR paling tidak
-stabil pada PaySim (0,789) di tempat GBM relatif baik (0,878). Ketidakstabilan
-interpretasi adalah interaksi antara keluarga model dan distribusi data, bukan
-properti salah satu saja.
+Pernyataan bahwa GBM merupakan model paling tidak stabil karena itu perlu
+diperhalus. GBM paling tidak stabil pada ULB dengan 0,742, yaitu justru pada dataset
+tempat LR mencapai stabilitas sempurna sebesar 1,000. Sebaliknya, LR paling tidak
+stabil pada PaySim dengan 0,789, yaitu pada dataset tempat GBM justru relatif baik
+dengan 0,878. Ketidakstabilan interpretasi dengan demikian merupakan interaksi antara
+keluarga model dan distribusi data, bukan properti yang melekat pada salah satunya
+saja.
 
-Mekanisme yang konsisten: atribusi LinearSHAP bergantung pada background hanya
-melalui rerata fitur, yang serupa antar client ketika distribusi fitur serupa. Fitur
-ULB adalah komponen PCA yang menurut konstruksinya nyaris terdistribusi identik
-antar client, sehingga LR mencapai 1,000 di sana. Struktur split pohon berinteraksi
-dengan densitas lokal dengan cara yang tidak dialami koefisien linear, sehingga GBM
-tetap sensitif terhadap heterogenitas bahkan pada data yang membuat model linear
-stabil. @fig-4-shap-by-model merangkum distribusi ini per model, membedakan explainer
-deterministik (sinyal) dari KernelSHAP (di bawah floor).
+Mekanisme yang menjelaskan interaksi tersebut bersifat konsisten dengan cara
+masing-masing explainer memakai data background. Atribusi LinearSHAP bergantung pada
+background hanya melalui rerata fitur, dan rerata tersebut serupa antar client ketika
+distribusi fiturnya serupa. Fitur ULB berupa komponen PCA yang menurut konstruksinya
+nyaris terdistribusi identik antar client, sehingga LR mencapai 1,000 pada dataset
+tersebut. Struktur split pada model pohon berinteraksi dengan densitas lokal dengan
+cara yang tidak dialami koefisien linear, sehingga GBM tetap sensitif terhadap
+heterogenitas bahkan pada data yang membuat model linear sepenuhnya stabil.
+@fig-4-shap-by-model merangkum distribusi ketiga ukuran per model, sekaligus
+membedakan explainer deterministik yang membawa sinyal dari model KernelSHAP yang
+berada di bawah floor-nya.
 
 #figure(
   image("resources/fig-shap-by-model.png", width: 100%),
   caption: [Distribusi Spearman, Kuncheva, dan Jaccard\@5 per model (sel federated). Warna biru menandai explainer deterministik yang membawa sinyal; warna merah menandai model KernelSHAP yang berada di bawah floor-nya (garis putus-putus pada panel Spearman).],
 ) <fig-4-shap-by-model>
 
-Temuan ini terhubung dengan analisis performa (Subbab Perbandingan Performa Antar
-Paradigma Agregasi dan Subbab Pengaruh Non-IID dan SMOTE): paradigma seleksi
-model-terbaik yang mendasari GBM adalah paradigma paling robust dalam performa di
-bawah SMOTE (0% kehilangan AUPRC), namun justru paling tidak stabil dalam
-interpretasi. Robustnes performa dan stabilitas interpretasi adalah dua properti yang
-berbeda: sebuah paradigma dapat mempertahankan diskriminasi tinggi lintas kondisi
-sekaligus menghasilkan penjelasan yang bergeser antar distribusi lokal. Pernyataan
-ini merupakan salah satu kontribusi orisinal penelitian terhadap diskursus
+Temuan ini terhubung langsung dengan analisis performa pada Subbab Perbandingan
+Performa Antar Paradigma Agregasi dan Subbab Pengaruh Non-IID dan SMOTE, dan
+hubungannya bersifat berlawanan arah. Paradigma best-model selection yang mendasari
+GBM merupakan paradigma paling robust dalam performa di bawah SMOTE dengan kehilangan
+AUPRC sebesar nol persen, namun justru paling tidak stabil dalam interpretasi.
+Robustnes performa dan stabilitas interpretasi karena itu merupakan dua properti yang
+berbeda, sebab sebuah paradigma dapat mempertahankan diskriminasi yang tinggi lintas
+kondisi sekaligus menghasilkan penjelasan yang bergeser antar distribusi lokal.
+Pernyataan ini merupakan salah satu kontribusi orisinal penelitian terhadap diskursus
 Explainable Federated Learning.
 
-=== SMOTE meningkatkan kesepakatan tetapi mengubah dasarnya
+=== Stabilitas interpretasi di bawah kondisi Non-IID
 
-Hasil paling penting subbab ini menyangkut efek SMOTE terhadap stabilitas
-interpretasi, dan efek tersebut memiliki dua sisi.
+Stabilitas interpretasi di bawah kondisi Non-IID secara khusus perlu ditinjau
+tersendiri, dan bukti yang tersedia bersifat konvergen meskipun tidak langsung.
+Rincian
+indeks Kuncheva yang dipilah menurut kondisi partisi tidak disajikan sebagai tabel
+tersendiri, sehingga simpulan pada sub-subbab ini disusun dari tiga sumber bukti yang
+saling menguatkan dan dinyatakan sebagai indikasi alih-alih sebagai pengukuran
+langsung.
 
-*Pengamatan 1 — kesepakatan meningkat.* Pada model deterministik, rerata indeks
-Kuncheva naik dari 0,8657 (tanpa-SMOTE) menjadi 0,9238 (dengan-SMOTE) dan
-minimumnya dari 0,544 menjadi 0,7725 (@tab-4-shap-arm). Kenaikan ini konsisten pada
-6 dari 9 pasangan dataset-model, dengan 2 pasangan datar (sudah jenuh: ULB LR pada
-1,000 dan PaySim SVM pada 0,935). Pasangan kesembilan, PaySim GBM, sedikit menurun
-($-0,016$), tetapi bukan anomali: sel IID-nya turun (1,000 → 0,870) sementara sel
-Dirichlet-nya naik (0,7725 → 0,870). Keduanya bergerak menuju nilai tengah yang sama
-dari arah berlawanan — persis yang diprediksi mekanisme homogenisasi, yakni SMOTE
-menarik stabilitas ke sebuah nilai tengah terlepas dari titik awalnya. Sebuah
-reversal yang sesuai mekanisme merupakan bukti yang lebih kuat daripada kenaikan
-seragam. Besar kenaikan kira-kira dua kali lipat di bawah Dirichlet (+0,085)
-dibanding IID (+0,048) — konsisten dengan SMOTE memiliki lebih banyak yang perlu
-dihomogenkan ketika partisi berawal lebih berjauhan.
+Bukti pertama berasal dari letak nilai-nilai terendah. Nilai minimum indeks Kuncheva
+pada seluruh sel deterministik sebesar 0,544 dan nilai itu terjadi pada sel ULB GBM
+dengan partisi Dirichlet, bukan pada sel IID mana pun. Bukti kedua berasal dari satu
+pasangan yang dapat dibandingkan secara langsung, yaitu PaySim GBM pada arm tanpa
+SMOTE, yang mencapai stabilitas sempurna sebesar 1,000 pada kondisi IID namun turun
+menjadi 0,7725 pada kondisi Dirichlet. Bukti ketiga bersifat tidak langsung namun
+konsisten: kenaikan stabilitas akibat SMOTE kira-kira dua kali lipat lebih besar di
+bawah Dirichlet sebesar 0,085 dibandingkan di bawah IID sebesar 0,048, dan selisih
+itu menyiratkan bahwa titik awal di bawah Dirichlet memang lebih berjauhan antar
+client sehingga menyediakan lebih banyak ruang untuk dihomogenkan.
+
+Ketiga bukti tersebut mengarah pada simpulan yang sama, yaitu bahwa heterogenitas
+distribusi menurunkan konsistensi interpretasi antar client, dan penurunan itu paling
+tajam pada model pohon. Pola ini konsisten dengan mekanisme yang diuraikan pada
+sub-subbab sebelumnya: struktur split pohon dibentuk oleh densitas lokal data yang
+berbeda-beda antar client di bawah partisi Dirichlet, sedangkan koefisien model
+linear hanya menyerap perbedaan itu melalui rerata fitur yang jauh lebih tahan
+terhadap pergeseran distribusi. Verifikasi yang lebih kuat atas simpulan ini menuntut
+rincian indeks Kuncheva yang dipilah menurut kondisi partisi untuk masing-masing
+model, dan hal tersebut direkomendasikan sebagai perluasan analisis.
+
+=== Pengaruh SMOTE terhadap stabilitas interpretasi
+
+Penanganan class imbalance memengaruhi stabilitas interpretasi dengan cara yang
+memiliki dua sisi, dan kedua sisi itu perlu dibaca bersamaan agar tidak menyesatkan.
+
+Sisi pertama adalah kesepakatan antar client yang meningkat. Pada model
+deterministik, rerata indeks Kuncheva naik dari 0,8657 pada arm tanpa SMOTE menjadi
+0,9238 pada arm dengan SMOTE, sedangkan nilai minimumnya naik dari 0,544 menjadi
+0,7725 (@tab-4-shap-arm). Kenaikan tersebut konsisten pada enam dari sembilan
+pasangan dataset dan model, dengan dua pasangan yang datar karena telah jenuh, yaitu
+ULB LR pada 1,000 dan PaySim SVM pada 0,935. Pasangan kesembilan berupa PaySim GBM
+sedikit menurun sebesar 0,016, namun penurunan itu bukan anomali: sel IID-nya turun
+dari 1,000 menjadi 0,870 sementara sel Dirichlet-nya naik dari 0,7725 menjadi 0,870,
+sehingga keduanya bergerak menuju nilai tengah yang sama dari arah yang berlawanan.
+Pergerakan tersebut persis yang diprediksi oleh mekanisme homogenisasi, yakni bahwa
+SMOTE menarik stabilitas menuju sebuah nilai tengah terlepas dari titik awalnya, dan
+sebuah pembalikan yang sesuai dengan mekanisme merupakan bukti yang lebih kuat
+daripada kenaikan yang seragam.
 
 #figure(
   table(
@@ -3357,84 +3289,159 @@ dihomogenkan ketika partisi berawal lebih berjauhan.
     [Kenaikan rerata — IID], table.cell(colspan: 2, align: center)[$+0,048$],
     [Kenaikan rerata — Dirichlet], table.cell(colspan: 2, align: center)[$+0,085$],
   ),
-  caption: [Indeks Kuncheva deterministik menurut arm SMOTE. Kesepakatan meningkat, dan kenaikannya kira-kira dua kali lipat di bawah Dirichlet.],
+  caption: [Indeks Kuncheva menurut arm SMOTE],
 ) <tab-4-shap-arm>
 
-*Pengamatan 2 — dasarnya berubah.* Fitur paling penting (`top_feature`) berbeda
-antar arm pada 5 dari 15 pasangan sel yang sebanding; ketika dibatasi pada partisi
-Dirichlet, 3 dari 9. Konsentrasi perubahan di bawah Dirichlet mendukung mekanisme
-yang sama. Ini bukan sekadar kesepakatan yang lebih kuat atas fitur yang sama,
-melainkan kesepakatan atas fitur yang *berbeda*. @tab-4-shap-shift menyajikan tiga
-kasus terverifikasi.
+Sisi kedua adalah bahwa dasar kesepakatan itu berubah. Fitur paling penting menurut
+`top_feature` berbeda antar arm pada lima dari 15 pasangan sel yang sebanding, dan
+ketika dibatasi pada partisi Dirichlet perbedaan itu terjadi pada tiga dari sembilan
+pasangan. Konsentrasi perubahan di bawah Dirichlet mendukung mekanisme yang sama.
+Yang terjadi karena itu bukan sekadar kesepakatan yang lebih kuat atas fitur yang
+sama, melainkan kesepakatan atas himpunan fitur yang berbeda. @tab-4-shap-shift
+menyajikan tiga kasus yang telah diverifikasi.
 
 #figure(
-  text(size: 8pt)[#table(
-    columns: (5em, 1fr, 1fr),
-    align: (left, left, left),
-    table.header([*Sel (Dirichlet)*], [*Top-5 tanpa-SMOTE*], [*Top-5 dengan-SMOTE*]),
-    [ULB GBM (Kuncheva 0,544 → 0,904)],
-    [Semua client membuka #raw("V14") > #raw("V7"), lalu menyebar ke #raw("V4"), #raw("V15"), #raw("V19"), #raw("V12"), #raw("V10"), #raw("V26"), #raw("V17")],
-    [Kelima membuka #raw("V4") > #raw("V14") > #raw("V3"); empat dari lima berbagi #raw("V24")/#raw("V28") pada peringkat 4–5],
+  text(size: 8pt)[
+    #set par(justify: false)
+    #table(
+      columns: (auto, 1fr, 1fr),
+      align: left + top,
+      table.header([*Sel*], [*Top-5 tanpa SMOTE*], [*Top-5 dengan SMOTE*]),
+      [ULB GBM],
+      [Seluruh client membuka `V14` lalu `V7`, kemudian menyebar ke `V4`, `V15`,
+      `V19`, `V12`, `V10`, `V26`, dan `V17`],
+      [Kelima client membuka `V4`, `V14`, lalu `V3`; empat di antaranya berbagi
+      `V24` atau `V28` pada peringkat keempat dan kelima],
 
-    [BAF LR],
-    [#raw("prev_address_months_count_missing") teratas pada semua client],
-    [#raw("housing_status_BB") menggeser indikator missing menjadi teratas],
+      [BAF LR],
+      [`prev_address_months_count_missing` menempati peringkat teratas pada seluruh
+      client],
+      [`housing_status_BB` menggeser indikator missing dari peringkat teratas],
 
-    [BAF SVM],
-    [Campuran #raw("prev_address_months_count_missing"), #raw("housing_status_BA"), #raw("housing_status_BE"), #raw("has_other_cards"), #raw("employment_status_CA"), #raw("device_os_windows")],
-    [Empat dari lima teratas adalah kolom #raw("housing_status_*") (BB, BA, BC, BE) plus #raw("has_other_cards")],
-  )],
-  caption: [Pergeseran fitur top-5 antar arm SMOTE pada tiga sel Dirichlet. Kesepakatan meningkat sekaligus berpindah ke himpunan fitur yang berbeda.],
+      [BAF SVM],
+      [Campuran `prev_address_months_count_missing`, `housing_status_BA`,
+      `housing_status_BE`, `has_other_cards`, `employment_status_CA`, dan
+      `device_os_windows`],
+      [Empat dari lima teratas berupa kolom `housing_status_*`, yaitu `BB`, `BA`,
+      `BC`, dan `BE`, ditambah `has_other_cards`],
+    )
+  ],
+  caption: [Pergeseran fitur top-5 antar arm SMOTE pada tiga sel Dirichlet],
 ) <tab-4-shap-shift>
 
-Pada ULB GBM, `V7` yang tanpa-SMOTE menempati peringkat kedua secara bulat menghilang
-dari setiap daftar, sementara `V3` yang semula absen dari seluruh daftar menjadi
-peringkat ketiga secara universal. Pada BAF SVM — kasus paling tajam — di bawah SMOTE
-empat dari lima fitur teratas adalah kolom one-hot `housing_status_*`. Inilah
-keterbatasan one-hot yang telah didokumentasikan (Subbab Perancangan Skema Class
-Imbalance Handling dan Subbab SMOTE pada dasar teori) memperlihatkan konsekuensi
-teramati: SMOTE standar menginterpolasi secara kontinu melintasi kolom one-hot yang
-saling eksklusif, menghasilkan rekaman sintetis dengan nilai pecahan di beberapa
-indikator sekaligus — sebuah transaksi yang sebagiannya beberapa status hunian
-sekaligus. Model menemukan gradien buatan itu informatif dan atribusi terkonsentrasi
-pada blok tersebut. SMOTE-NC @chawla2002smote merupakan remedi yang dimaksudkan;
-pengamatan ini menaikkan rekomendasi tersebut dari sekadar sitasi menjadi temuan
-empiris.
+Pergeseran tersebut dapat ditelusuri pada tingkat fitur individual. Pada ULB GBM,
+yang indeks Kunchevanya naik dari 0,544 menjadi 0,904 di bawah SMOTE, fitur V7 yang
+pada arm tanpa SMOTE menempati peringkat kedua secara bulat menghilang dari setiap
+daftar, sementara V3 yang semula absen dari seluruh daftar justru menjadi peringkat
+ketiga secara universal. Kasus paling tajam terjadi pada BAF SVM, tempat
+empat dari lima fitur teratas di bawah SMOTE merupakan kolom one-hot dari kelompok
+`housing_status`. Keterbatasan one-hot yang telah didokumentasikan pada Subbab
+Perancangan Skema Class Imbalance Handling dan pada pembahasan SMOTE di dasar teori
+memperlihatkan konsekuensi teramatinya di sini: SMOTE standar menginterpolasi secara
+kontinu melintasi kolom one-hot yang saling eksklusif sehingga menghasilkan rekaman
+sintetis dengan nilai pecahan pada beberapa indikator sekaligus, yakni sebuah
+transaksi yang sebagiannya menyandang beberapa status hunian pada saat bersamaan.
+Model menemukan gradien buatan tersebut informatif, dan atribusi kemudian
+terkonsentrasi pada blok kolom itu. SMOTE-NC menurut
+#cite(<chawla2002smote>, form: "prose") merupakan remedi yang dimaksudkan untuk kasus
+semacam ini, dan pengamatan ini menaikkan rekomendasi tersebut dari sekadar sitasi
+menjadi temuan empiris.
 
-Klaim yang perlu dinyatakan secara hati-hati: kesepakatan interpretasi antar-client
-bukan bukti bahwa model federated telah mempelajari struktur bersama. Oversampling
-lokal dapat memanufaktur kesepakatan sambil mengubah apa yang disepakati.
-Digabungkan dengan analisis performa — intervensi yang sama membuat kedua model deep
-kehilangan 71–73% AUPRC — model menjadi lebih konsisten, lebih tampak-percaya-diri,
-sekaligus lebih buruk. Perlu ditegaskan bahwa pengamatan ini diukur pada 9 pasangan
-dataset-model dengan satu seed dan tiga contoh terperinci; ini adalah observasi
-terdokumentasi dengan mekanisme yang konsisten, bukan hukum umum yang terbukti.
+Satu klaim perlu dinyatakan secara hati-hati agar tidak disalahtafsirkan. Kesepakatan
+interpretasi antar client bukan bukti bahwa model federated telah mempelajari struktur
+bersama, sebab oversampling lokal terbukti dapat memanufaktur kesepakatan sekaligus
+mengubah apa yang disepakati. Digabungkan dengan analisis performa, tempat intervensi
+yang sama membuat kedua model deep kehilangan antara 71 dan 73 persen AUPRC, gambaran
+yang muncul adalah model yang menjadi lebih konsisten dan lebih tampak percaya diri
+sekaligus lebih buruk. Pengamatan ini diukur pada sembilan pasangan dataset dan model
+dengan satu seed serta tiga contoh terperinci, sehingga statusnya adalah observasi
+terdokumentasi dengan mekanisme yang konsisten, bukan hukum umum yang telah terbukti.
 
 === Degenerasi dan kasus batas
 
-*PaySim FedXGBllr, Dirichlet.* Dua sel ini mula-mula menghasilkan atribusi nol untuk
-seluruh fitur pada setiap client. Akar penyebabnya adalah wrapper explanation yang
-menghitung probabilitas lalu menerapkan $"logit"(p)$ dengan klip $10^(-6)$;
-probabilitas PaySim FedXGBllr berada di sekitar $10^(-9)$, di bawah batas klip,
-sehingga setiap prediksi jenuh pada satu konstanta dan setiap perturbasi fitur tidak
-menggeser luaran. Diperbaiki dengan mengekspos aktivasi pra-Sigmoid secara langsung.
-Pasca-perbaikan kedua sel memberi Spearman 0,756 dan 0,818 — yang paling tidak stabil
-dalam keseluruhan studi. Ini adalah kompresi probabilitas yang sama yang membuat
-kalibrasi tak-terdefinisi pada Subbab Diskriminasi versus Kalibrasi: satu degenerasi
-muncul di dua tempat, keduanya teratasi pada skala logit.
+Dua sel PaySim FedXGBllr pada partisi Dirichlet mula-mula menghasilkan atribusi
+bernilai nol untuk seluruh fitur pada setiap client. Akar penyebabnya adalah wrapper
+explanation yang menghitung probabilitas lalu menerapkan transformasi logit dengan
+klip pada 1e−6, sedangkan probabilitas PaySim FedXGBllr berada di sekitar 1e−9 yang
+berada di bawah batas klip tersebut, sehingga setiap prediksi jenuh pada satu
+konstanta dan setiap perturbasi fitur tidak menggeser luaran. Persoalan ini
+diperbaiki dengan mengekspos aktivasi pra-Sigmoid secara langsung, dan setelah
+perbaikan kedua sel tersebut memberikan Spearman 0,756 dan 0,818 yang merupakan nilai
+paling tidak stabil dalam keseluruhan studi. Degenerasi ini merupakan kompresi
+probabilitas yang sama yang membuat kalibrasi menjadi tidak terdefinisi pada Subbab
+Perbandingan Diskriminasi dan Kalibrasi, sehingga satu degenerasi yang sama
+menampakkan diri di dua tempat dan keduanya teratasi dengan bekerja pada skala
+logit.
 
-*Penjaga degenerasi.* Vektor client yang seluruhnya nol atau konstan kini
-menghasilkan `undefined`, bukan metrik. Sebelum penjaga ini, vektor nol menghasilkan
-Jaccard 1,0 dan Kuncheva 1,0 — kesepakatan sempurna yang semu atas ketiadaan. Nilai
-`undefined` dan 0,0 tidak boleh disamakan: 0,0 berarti "client sepenuhnya tidak
-sepakat" sedangkan `undefined` berarti "peringkat memang degeneratif dan korelasi
-tidak terdefinisi".
+Penjaga degenerasi ditambahkan sebagai konsekuensinya. Vektor client yang seluruhnya
+bernilai nol atau konstan kini menghasilkan status tidak terdefinisi alih-alih
+menghasilkan metrik. Sebelum penjaga tersebut dipasang, vektor nol menghasilkan
+Jaccard 1,0 dan Kuncheva 1,0, yakni kesepakatan sempurna yang semu atas ketiadaan.
+Status tidak terdefinisi dan nilai 0,0 karena itu tidak boleh disamakan, sebab 0,0
+berarti seluruh client sepenuhnya tidak sepakat sedangkan status tidak terdefinisi
+berarti peringkatnya memang degeneratif sehingga korelasi tidak dapat dihitung.
 
-*Sel GBM dengan $k^* = 1$* adalah satu pohon berkedalaman-6, sehingga atribusinya
-terbatas secara struktural. Hal ini mengikuti seleksi iterasi pada validation set
-(Subbab Implementasi Pelatihan Model dan Skema Agregasi), bukan sebuah kesalahan.
-Sel centralized memiliki satu client sehingga tidak memiliki stabilitas antar-client
-menurut definisi dan tidak masuk agregat mana pun.
+Dua kasus batas lain perlu dicatat agar pembacaan agregat tidak keliru. Sel GBM
+dengan prefix satu pohon berkedalaman enam memiliki atribusi yang terbatas secara
+struktural, dan keterbatasan itu mengikuti seleksi iterasi pada validation set
+sebagaimana diuraikan pada Subbab Implementasi Pelatihan Model dan Skema Agregasi
+alih-alih merupakan sebuah kesalahan. Sel centralized hanya memiliki satu client
+sehingga tidak memiliki stabilitas antar client menurut definisi dan tidak masuk ke
+dalam agregat mana pun.
+
+=== Sintesis temuan interpretabilitas antar keluarga model
+
+Karakteristik explainability ketiga keluarga model berbeda pada dua tingkat yang
+perlu dipisahkan, yaitu tingkat admisibilitas dan tingkat konsistensi. Pada tingkat
+admisibilitas, model parametrik dan model pohon murni menerima explainer eksak dengan
+galat local accuracy sebesar 9,26e−8 dan nol, sedangkan model deep tidak menerima
+estimator eksak apa pun karena DeepSHAP tidak memiliki aturan propagasi untuk
+LayerNorm dan GradientExplainer meleset sekitar 1.360 kali di atas toleransi. Temuan
+yang paling menonjol adalah bahwa FedXGBllr, meskipun berbasis tree,
+tidak mewarisi keeksakan TreeSHAP karena kepala agregasi CNN-nya memuat ReLU yang
+memutus linearitas Shapley, sehingga model tersebut harus dijelaskan secara
+model-agnostik sejajar dengan model deep. Kategori berbasis tree karena itu tidak
+menentukan karakteristik explainability secara otomatis; yang menentukan adalah
+keseluruhan jalur komputasi termasuk komponen non-tree yang ditambahkan oleh skema
+agregasi federated.
+
+Pada tingkat konsistensi, hanya explainer deterministik yang menghasilkan pengukuran
+yang dapat diatribusikan pada perilaku model. Model parametrik paling konsisten dengan
+rerata indeks Kuncheva 0,9433 untuk SVM dan 0,9112 untuk LR, sedangkan model pohon
+paling tidak konsisten dengan 0,8219 dan minimum 0,544. Ketiga model yang dijelaskan
+KernelSHAP, yaitu FFD, BERT, dan FedXGBllr, menghasilkan sebaran antar client yang
+seluruhnya jatuh pada atau di bawah noise floor masing-masing, sehingga konsistensinya
+tidak dapat dibedakan dari varians estimator pada anggaran komputasi penelitian ini.
+Ketidakterukuran tersebut merupakan karakteristik yang bermakna dan bukan sekadar
+kekosongan data, sebab kelas model yang menuntut explainer berbasis sampling menuntut
+pula biaya verifikasi yang jauh lebih besar sebelum klaim interpretabilitas dapat
+dipertanggungjawabkan kepada auditor maupun regulator.
+
+Perbedaan konsistensi antar keluarga model ternyata tidak bersifat mutlak melainkan
+merupakan interaksi dengan distribusi data. Model pohon paling tidak stabil pada ULB
+dengan 0,742 justru di tempat model linear mencapai 1,000, sedangkan model linear
+paling tidak stabil pada PaySim dengan 0,789 di tempat model pohon relatif baik dengan
+0,878. Mekanismenya terletak pada cara masing-masing explainer memakai data
+background: LinearSHAP hanya menyerap background melalui rerata fitur yang serupa antar
+client ketika distribusi fiturnya serupa, sedangkan struktur split pohon berinteraksi
+dengan densitas lokal secara langsung. Di bawah kondisi Non-IID, bukti yang tersedia
+mengarah pada penurunan konsistensi yang paling tajam pada model pohon, ditunjukkan
+oleh nilai minimum yang jatuh pada sel Dirichlet, oleh penurunan PaySim GBM dari 1,000
+menjadi 0,7725, dan oleh kebutuhan homogenisasi yang hampir dua kali lipat lebih besar
+di bawah Dirichlet.
+
+Simpulan terakhir menyangkut hubungan antara stabilitas interpretasi dan robustnes
+performa, yang ternyata tidak searah. Paradigma best-model selection yang mendasari
+GBM merupakan paradigma paling tahan terhadap SMOTE dalam dimensi performa dengan
+kehilangan AUPRC nol persen, namun justru paling tidak stabil dalam dimensi
+interpretasi. Sebaliknya, penerapan SMOTE menaikkan rerata indeks Kuncheva dari 0,8657
+menjadi 0,9238 sekaligus mengubah fitur paling penting pada lima dari 15 pasangan sel,
+sehingga menghasilkan model yang lebih konsisten penjelasannya namun menjelaskan
+sesuatu yang berbeda dan berperforma lebih buruk. Kesepakatan antar client karena itu
+tidak dapat diperlakukan sebagai bukti bahwa model federated telah mempelajari
+struktur bersama, dan evaluasi Explainable Federated Learning menuntut dimensi
+performa serta dimensi interpretasi dilaporkan berdampingan alih-alih salah satunya
+dipakai sebagai proksi bagi yang lain.
 
 // ---------------------------------------------------------------------------
 // BAB 5 — PENUTUP  (stub)

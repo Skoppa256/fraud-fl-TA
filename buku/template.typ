@@ -679,6 +679,10 @@ align(right)[
   // Force correct Indonesian supplement for table figures
   show figure.where(kind: table): set figure(supplement: [Tabel], numbering: "1")
 
+  // Extra vertical space above every figure/table (document-wide). Uses block
+  // spacing so it collapses correctly at page tops instead of leaving orphan gaps.
+  show figure: set block(above: 1.5em, below: 0.85em)
+
   // ---- Override outline entry for figures ----
   // Show "Gambar 2.1" / "Tabel 3.1" in DAFTAR GAMBAR / DAFTAR TABEL
   show outline.entry: it => {

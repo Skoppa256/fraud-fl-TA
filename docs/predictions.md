@@ -54,3 +54,55 @@ The uncorrected (no-SMOTE) configuration is the baseline; SMOTE is the intervent
   one-dimensional segments regardless of target ratio; 16.0% of synthetic points
   land in majority territory. Volume scales with the ratio; dimensionality and
   contamination do not. See §3.4.3 and `results/visualizations/`.
+
+---
+
+# Pre-registered predictions — RQ3 SHAP re-run (`l1_reg=False`, per-cell floors)
+
+**Dated 2026-08-28, before any cell of the v2 re-run exists.** Recorded so the
+Phase-1.1/Phase-2 outcome is reportable either way, per the project standard.
+Contrary outcomes are legitimate results requiring explanation, not failures.
+
+Context: every v1 kernel cell and all three noise floors were measured under the
+shap ≥ 0.47 default `l1_reg="num_features(10)"` — LARS keeps at most 10 features
+per explained instance and sets every other attribution to exactly 0.0
+(`git log --all -S "l1_reg"` is empty: the parameter never existed in this
+repository). The v2 runner (`experiments/shap_rq3.py`) sets `l1_reg=False` on
+every KernelSHAP call and replaces the single BAF-measured broadcast floor with
+per-cell, per-client two-seed floors plus an exact exchangeability test
+(`evaluation/shap_inference.py`, 945 matchings at K = 5, Benjamini–Hochberg
+across the 33 multi-client kernel cells).
+
+## Predictions
+
+- **P1.** With `l1_reg=False`, the re-measured noise floors rise for all three
+  kernel models (FedXGBllr, BERT, FFD): most of the measured floor is an
+  artifact of the discontinuous LARS keep-10 selection, not of coalition
+  sampling.
+
+- **P2.** The floors become approximately M-independent: the spread across the
+  PaySim-, ULB-, and BAF-specific floors shrinks relative to the current single
+  BAF number, which is biased low for PaySim (at nsamples = 500, PaySim
+  enumerates 54.0% of the kernel weight deterministically vs BAF's 22.3%, and
+  the keep-10 default depresses floors more as M grows).
+
+- **P3 — the falsifiable one.** Consequently a **majority** of the 33
+  multi-client kernel cells shows between-client disagreement exceeding
+  estimator noise (exchangeability test, BH-adjusted p ≤ 0.05), and the
+  "at or below the floor" framing does not survive.
+
+The between-client Spearman also moves when `l1_reg` changes, and its direction
+is **not** predicted — both sides of the comparison shift together. If the
+floors and the between-client values rise in step and the gaps stay put, P3 is
+refuted and the "RQ3 answerable for the deterministic tier only" conclusion is
+reinstated on much better evidence. Either way it is reported.
+
+## Notes
+
+- No run-to-run sd is carried over from synthetic stand-in models into the
+  thesis. The sd that reaches Bab 4 is the measured one: the spread of the 20
+  between-client ρ values per cell that Phase 2 produces.
+- The deterministic tier (LR, SVM, GBM interventional) carries zero estimator
+  noise by construction (verified per run via the bit-identity check); its
+  between-client spread is the calibration anchor the kernel tier is read
+  against.
