@@ -165,6 +165,33 @@ def benjamini_hochberg(pvals: Sequence[float]) -> List[float]:
 # --------------------------------------------------------------------------- #
 # per-cell summary
 # --------------------------------------------------------------------------- #
+def collapsed_seeds(g: np.ndarray, atol: float = 0.0) -> List[int]:
+    """Seeds at which EVERY client's importance vector is identical.
+
+    A structural collapse, not a measurement: if the explainer received the same
+    model, the same background and the same explained instances for every client,
+    the client dimension carries no information and every cross-client statistic
+    is 1.0 by construction. This is the third such artifact in this pipeline
+    (``tree_path_dependent`` made tree stability trivially 1.0; the all-zero
+    PaySim cells faked Jaccard = 1.0 off identical tie-breaking; a pooled shared
+    background with a shared explanation set collapses the client axis outright),
+    so the check is permanent rather than per-incident.
+
+    Exact equality by default: identical inputs produce bitwise-identical output,
+    whereas genuinely similar-but-distinct clients differ in the low bits. Cells
+    flagged here must be reported undefined with NO stability metrics.
+    """
+    if g.shape[0] < 2:
+        return []
+    out = []
+    for s in range(g.shape[1]):
+        ref = g[0, s]
+        if all(np.allclose(g[c, s], ref, rtol=0.0, atol=atol)
+               for c in range(1, g.shape[0])):
+            out.append(s)
+    return out
+
+
 def floor_and_between(g: np.ndarray) -> Tuple[List[float], List[float]]:
     """F (per-client cross-seed rho) and B (same-seed cross-client rho) from
     ``g`` of shape (K, 2, M)."""
@@ -187,11 +214,21 @@ def cell_inference(g: np.ndarray) -> Dict:
     K = g.shape[0]
     degen = [(c, s) for c in range(K) for s in range(g.shape[1])
              if ST.is_degenerate(g[c, s])]
-    base = {"n_clients": K, "degenerate_client_seed": degen}
+    collapsed = collapsed_seeds(g)
+    base = {"n_clients": K, "degenerate_client_seed": degen,
+            "collapsed_seeds": collapsed}
     if degen:
         base.update(status="undefined",
                     reason=f"degenerate attributions at (client, seed) {degen}: "
                            "all-zero/constant importance carries no ranking signal")
+        return base
+    if collapsed:
+        base.update(status="undefined",
+                    reason=f"collapsed client axis at seed index {collapsed}: every "
+                           "client's importance vector is identical, so all "
+                           "cross-client agreement is 1.0 by construction and "
+                           "measures nothing (check that clients actually receive "
+                           "differing inputs)")
         return base
     if K < 2:
         # single (pseudo-)client: the cross-seed rho is still a valid reliability

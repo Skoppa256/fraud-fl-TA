@@ -155,8 +155,52 @@ def det_g(obj, kind, bg, X):
 
 
 def shared_background(bgs):
-    """Pooled-local shared background (the Ducange-style contrast arm)."""
+    """Pooled-local shared background (the Ducange-style contrast arm).
+
+    Pools the RAW per-client background samples (client_backgrounds returns
+    <=100 local post-SMOTE rows each, not summaries), so the k-means applied
+    afterwards sees ~500 real points and derives its centroid weights from them
+    natively. Pooling per-client CENTROIDS instead would require propagating each
+    centroid's cluster size by hand — the DenseData 4th-positional weight issue —
+    and would throw away the within-client spread; pooling raw rows avoids both.
+    """
     return np.concatenate(bgs, axis=0)
+
+
+def client_explanation_sets(art, rng, n=N_EXPLAIN):
+    """Per-client explanation sets drawn from each client's OWN partition.
+
+    Required by the shared-background arm: with one global model, one pooled
+    background and one shared explanation set, every client receives byte-identical
+    inputs and the client axis collapses (all agreement 1.0 by construction). The
+    local arm varies the background and holds the explained instances fixed; the
+    shared arm does the converse — it holds the background fixed and lets each
+    client explain the region its own data actually occupies. So the two arms
+    isolate the two confounded mechanisms rather than differing in one factor.
+
+    Sampled class-proportionally from the client's PRE-SMOTE partition (real rows
+    only, never synthetic minority points), mirroring how the local arm explains
+    real central-test rows. Clients smaller than ``n`` contribute all they have.
+    Note these are training-split rows: the partition covers x_train only, so
+    there is no per-client held-out split in this pipeline.
+    """
+    from experiments import data_cache
+    clients, phash = data_cache.get_partition_clients(
+        art["dataset"], SEED, art["condition"], art["alpha"], NUM_CLIENTS)
+    out = []
+    for c in clients:
+        x = np.asarray(c["x"], np.float32)
+        y = np.asarray(c["y"]).astype(int)
+        pos, neg = np.where(y == 1)[0], np.where(y == 0)[0]
+        take_pos = min(max(1, int(round(n * y.mean()))) if pos.size else 0, pos.size)
+        take_neg = min(n - take_pos, neg.size)
+        idx = np.concatenate([
+            rng.choice(pos, take_pos, replace=False) if take_pos else np.empty(0, int),
+            rng.choice(neg, take_neg, replace=False) if take_neg else np.empty(0, int),
+        ]).astype(int)
+        rng.shuffle(idx)
+        out.append(x[idx])
+    return out, phash
 
 
 # --------------------------------------------------------------------------- #
@@ -223,14 +267,23 @@ def process_cell(art, bg_mode, X, dh, nsamples=NSAMPLES, groups=None, gnames=Non
     fnames = gnames if groups is not None else feature_names(art)
     d = len(fnames)
     bgs, phash = client_backgrounds(art, np.random.default_rng(SEED + 1))
+    Xs = [X] * len(bgs)
     if bg_mode == "shared":
+        # Hold the background fixed (pooled) and let each client explain its own
+        # data region. Sharing BOTH the background and the explanation set would
+        # hand every client identical inputs and collapse the client axis.
         bgs = [shared_background(bgs)] * len(bgs)
+        Xs, _ = client_explanation_sets(art, np.random.default_rng(SEED + 2))
+        if len(Xs) != len(bgs):
+            raise RuntimeError(f"{len(Xs)} client explanation sets vs "
+                               f"{len(bgs)} backgrounds")
     obj, kind = load_predictor(art)
 
     K = len(bgs)
     G = np.empty((K, 2, d))
     nz_max, det_delta = -1, float("nan")
     for c, bg in enumerate(bgs):
+        X = Xs[c]
         if kind == "kernel":
             bg_sum = shap.kmeans(bg, KMEANS_K)
             if groups is not None:
@@ -286,6 +339,11 @@ def process_cell(art, bg_mode, X, dh, nsamples=NSAMPLES, groups=None, gnames=Non
             "n_clients": K, "manifest_sha256": manifest_hash(art["dir"]),
             "data_hash": dh[:16],
             "partition_hash": phash[:16] if isinstance(phash, str) else phash,
+            # which input the client axis varies over, and how many rows each
+            # client actually explained (small clients contribute fewer)
+            "explanation_set": ("per-client local partition" if bg_mode == "shared"
+                                else "shared central test subset"),
+            "n_explained_per_client": [int(len(x)) for x in Xs],
             "near_zero_fraction": [[round(v, 4) for v in ST.near_zero_fraction(G[c])]
                                    for c in range(K)]}
     mean_imp = write_cell(cell_dir(art, bg_mode, root), fnames, prov, G, stats,
@@ -339,6 +397,11 @@ def _det_stats(G):
         return {"status": "undefined", "n_clients": K,
                 "reason": f"degenerate attributions: clients {degen}", "floor": [],
                 "between": []}
+    if SI.collapsed_seeds(G):
+        return {"status": "undefined", "n_clients": K, "floor": [], "between": [],
+                "reason": "collapsed client axis: every client's importance vector "
+                          "is identical, so cross-client agreement is 1.0 by "
+                          "construction and measures nothing"}
     B = [SI.spearman(G[i, 0], G[j, 0])
          for i in range(K) for j in range(i + 1, K)]
     return {"status": "ok", "reason": None, "n_clients": K,

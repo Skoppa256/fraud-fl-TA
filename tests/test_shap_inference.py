@@ -17,9 +17,9 @@ import numpy as np
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 from evaluation.shap_inference import (  # noqa: E402
-    benjamini_hochberg, cell_inference, double_factorial_odd, exchangeability_test,
-    floor_and_between, kuncheva_profile, perfect_matchings, spearman,
-    weighted_between_within, weighted_spearman,
+    benjamini_hochberg, cell_inference, collapsed_seeds, double_factorial_odd,
+    exchangeability_test, floor_and_between, kuncheva_profile, perfect_matchings,
+    spearman, weighted_between_within, weighted_spearman,
 )
 
 
@@ -81,6 +81,40 @@ def test_rejects_when_clients_differ():
     obs, p, n = exchangeability_test(flat)
     assert obs > 0
     assert p <= 0.05, f"clear two-population structure not detected: p={p}"
+
+
+def test_collapsed_client_axis_yields_undefined_not_perfect_agreement():
+    """Identical clients within a seed => undefined, never stability 1.0.
+
+    The structural-1.0 regression: a shared background AND a shared explanation
+    set hand every client identical inputs, so Spearman/Jaccard/Kuncheva all read
+    1.0 and the exchangeability test reports p = 1.0 while measuring nothing.
+    """
+    rng = np.random.default_rng(20)
+    one = np.abs(rng.random(30) + 0.1)
+    g = np.repeat(one[None, None, :], 5, axis=0)      # 5 identical clients
+    g = np.concatenate([g, g], axis=1)                # 2 seeds, both collapsed
+    assert collapsed_seeds(g) == [0, 1]
+
+    res = cell_inference(g)
+    assert res["status"] == "undefined", res
+    assert "collapsed client axis" in res["reason"]
+    for k in ("p_value", "between_mean", "floor_mean", "delta", "disattenuated"):
+        assert k not in res, f"{k} reported for a collapsed cell"
+
+    # one seed collapsed, the other not => still undefined (the arm is broken)
+    half = g.copy()
+    half[:, 1] = np.abs(one[None, :] + 0.05 * rng.standard_normal((5, 30)))
+    assert collapsed_seeds(half) == [0]
+    assert cell_inference(half)["status"] == "undefined"
+
+    # genuinely distinct clients are NOT flagged
+    ok = np.abs(one[None, None, :] + 0.05 * rng.standard_normal((5, 2, 30)))
+    assert collapsed_seeds(ok) == []
+    assert cell_inference(ok)["status"] == "ok"
+
+    # a single client cannot collapse a client axis that does not exist
+    assert collapsed_seeds(ok[:1]) == []
 
 
 def test_degenerate_vector_yields_undefined_not_agreement():

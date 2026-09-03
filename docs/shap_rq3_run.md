@@ -77,16 +77,45 @@ deterministic tier must show `seed_delta_max = 0.0` on every cell.
 
 ## Step 2 — two-background arm (Phase 2.5, PaySim Non-IID first)
 
+**The first twobg run (before 2026-09-03) was invalid — delete it before re-running.**
+It shared the background *and* the explanation set, so every client received
+byte-identical inputs and the client axis collapsed: all agreement was 1.0 by
+construction. Fixed by giving each client its own explained rows; a permanent
+guard now marks any collapsed cell `undefined`.
+
 ```bash
-python experiments/shap_rq3.py --stage twobg 2>&1 | tee -a results/shap_v2/twobg.log
-# default scope: paysim × dirichlet × kernel models; widen with e.g.
-#   --datasets paysim,creditcard,baf --conditions dirichlet,iid
+rm -rf results/shap_v2/*/*/*/bg_shared          # ONLY bg_shared; leave the local arm alone
+find results/shap_v2 -name bg_shared | wc -l    # expect 0
+python experiments/shap_rq3.py --stage twobg --conditions dirichlet,iid \
+    2>&1 | tee -a results/shap_v2/twobg.log
+# default scope: paysim × kernel models; widen with --datasets/--conditions
 ```
 
-Reads: per-cell rows with `bg=shared` vs `bg=local`. If a cell's disagreement
-shrinks under the shared background, the divergence was carried by the local
-background distributions; if it persists, the models genuinely behave
-differently per client.
+The stale `bg=shared` rows in `shap_summary_v2.csv` are overwritten in place
+(the merge is keyed on dataset/model/condition/arm/bg/explainer), so the CSV
+needs no manual editing — but the `bg=local` rows must not be re-run.
+
+**What the two arms measure.** They are not a one-factor contrast; each holds one
+input fixed and varies the other, isolating one of the two confounded mechanisms:
+
+| arm | background | explained rows | isolates |
+|---|---|---|---|
+| `bg=local` (main) | per-client | shared central-test subset | differences in each client's **background distribution** |
+| `bg=shared` (twobg) | pooled over all clients | each client's **own partition** | differences in the **data region** each client occupies |
+
+Read them together: high between-client agreement in the shared arm means clients'
+data regions elicit the same feature ranking from the global model, so any
+divergence seen in the main arm is background-driven — and vice versa.
+
+Acceptance: no cell may come back with `status=undefined` and reason "collapsed
+client axis" (that is the old bug); `n_explained_per_client` in each
+`stability.json` should show real row counts (500 where the client is large
+enough), and the per-client explained sets must differ.
+
+Caveat to carry into the write-up: client partitions cover `x_train` only, so the
+shared arm explains training rows while the main arm explains held-out test rows.
+SHAP explains the fitted function rather than generalization, so this does not
+invalidate the comparison, but it is a real difference between the arms.
 
 ## Step 3 — PaySim exact tier (Phase 3.1)
 

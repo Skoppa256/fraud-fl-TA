@@ -1837,11 +1837,21 @@ ini terbanding antar dataset berdimensi berbeda berkat koreksi peluangnya
 |SHAP| per fitur) turut dilaporkan agar ekor fitur beratribusi hampir nol
 tidak mendominasi statistik peringkat penuh. Kedua, untuk memisahkan dua
 sumber divergensi yang terkonfundasi — model global berperilaku berbeda pada
-data client tertentu, versus distribusi background lokal client itu sendiri
-yang berbeda — sel-sel terpilih dijalankan dua kali: dengan background
-per-client (konfigurasi baku) dan dengan background bersama hasil penggabungan
-seluruh background lokal, mengikuti motivasi background federatif
-#cite(<ducange2026fedshap>, form: "prose"). Ketiga, khusus PaySim KernelSHAP
+wilayah data yang ditempati sebuah client, versus distribusi background lokal
+client itu sendiri yang berbeda — sel-sel terpilih dijalankan pada dua arm yang
+masing-masing hanya membiarkan satu faktor bervariasi antar client. Arm baku
+menahan explanation data tetap (subset test terpusat yang identik bagi seluruh
+client) dan membiarkan background bervariasi per client, sehingga divergensi
+yang terukur berasal dari perbedaan distribusi background. Arm kedua melakukan
+kebalikannya: background disatukan menjadi satu background bersama hasil
+penggabungan seluruh background lokal — mengikuti motivasi background federatif
+#cite(<ducange2026fedshap>, form: "prose") — sementara setiap client menjelaskan
+sampel dari partisi lokalnya sendiri, sehingga divergensi yang terukur berasal
+dari perbedaan wilayah data antar client. Menyatukan background sekaligus
+menyeragamkan explanation data akan membuat seluruh client menerima masukan yang
+identik sehingga sumbu client runtuh dan setiap ukuran kesepakatan bernilai 1,0
+secara struktural; kondisi tersebut dicegat oleh guard yang menandai sel
+demikian sebagai tak-terdefinisi tanpa metrik stabilitas apa pun. Ketiga, khusus PaySim KernelSHAP
 dibuat eksak: dengan $M = 13$ fitur, nilai nsamples sebesar
 $2^(13) - 2 = 8190$ mengenumerasi seluruh bobot kernel tanpa satu pun undian
 acak, dan bila kelima kolom one-hot `type` dikelompokkan sebagai satu pemain
@@ -2427,10 +2437,14 @@ lingkungan GPU. Orkestrasi produksinya adalah `experiments/shap_rq3.py`, yang
 menulis artefak per sel (matriks importance per client dan seed, berkas
 `stability.json` berisi seluruh statistik beserta provenance, dan profil
 stabilitas per k) serta ringkasan `shap_summary_v2.csv` dengan kolom floor,
-between, delta, nilai p mentah dan terkoreksi, dan verdict per sel. Guard
-degenerasi mencatat sel yang vektornya runtuh sebagai undefined tanpa metrik
-stabilitas, dan guard regresi `l1_reg` menghentikan eksekusi bila pola
-seleksi-sepuluh-fitur terdeteksi pada keluaran. Keluaran tahap sebelum
+between, delta, nilai p mentah dan terkoreksi, dan verdict per sel. Tiga guard
+melindungi pelaporan dari nilai kesepakatan yang bersifat artefak: guard
+degenerasi mencatat sel yang vektor atribusinya runtuh menjadi nol atau konstan
+sebagai undefined tanpa metrik stabilitas; guard keruntuhan sumbu client
+menandai sel yang seluruh vektor client-nya identik pada satu seed — kondisi
+yang membuat setiap ukuran kesepakatan bernilai 1,0 secara struktural — juga
+sebagai undefined; dan guard regresi `l1_reg` menghentikan eksekusi bila pola
+seleksi-sepuluh-fitur masih terdeteksi pada keluaran. Keluaran tahap sebelum
 perbaikan `l1_reg` dipertahankan utuh pada direktori terpisah sehingga setiap
 angka yang berubah dapat dilaporkan berdampingan dengan nilai lamanya.
 
