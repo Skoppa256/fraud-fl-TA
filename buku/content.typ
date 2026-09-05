@@ -1776,7 +1776,13 @@ statistik antar-client (`between_mean`, `between_sd`), selisih `delta`,
 `below_floor` tunggal, yang merangkum keliru dua kasus berlawanan: nilai
 antar-client sedikit di bawah floor memang tak terbedakan dari noise estimator,
 tetapi nilai yang berada jauh di bawah floor justru bukti melawan hipotesis
-nol, yaitu sinyal ketidaksepakatan antar-client yang nyata.
+nol, yaitu sinyal ketidaksepakatan antar-client yang nyata. Skema pengukuran
+tersebut beserta konsekuensinya diringkas pada @fig-3-two-seeds-gap.
+
+#figure(
+  image("resources/fig-3-two-seeds-gap.png", width: 82%),
+  caption: [Skema pengukuran dua-seed. Panel A: setiap client menghasilkan dua vektor importance pada dua seed koalisi, sehingga kesepakatan dalam-client menjadi floor dan perbandingan antar-client dipasangkan pada seed yang sama (common random numbers). Panel B: sebaran kedua ukuran pada satu sel nyata (BAF BERT Dirichlet tanpa SMOTE). Di bawah hipotesis nol kedua sebaran berimpit, sehingga floor tidak dapat dipakai sebagai ambang deteksi dan digantikan oleh uji exchangeability eksak atas seluruh 945 perfect matching.],
+) <fig-3-two-seeds-gap>
 
 Pada setiap client, komputasi SHAP menghasilkan vektor feature importance lokal
 yang diperoleh melalui rerata absolut SHAP values pada seluruh sampel explanation
@@ -1859,7 +1865,12 @@ Shapley ($M$ efektif sama dengan 9) enumerasi lengkap hanya membutuhkan 510
 evaluasi per sampel — setara anggaran produksi. Kedua rute eksak dijalankan
 dan saling memvalidasi; pengelompokan yang sama pada BAF menghasilkan $M$
 efektif 29 sehingga enumerasi lengkap tetap di luar jangkauan dan manfaat
-pengelompokan di sana terbatas pada reduksi variansi.
+pengelompokan di sana terbatas pada reduksi variansi. Keeksakan kedua rute
+tersebut tidak diandaikan melainkan diukur pada setiap sel: selisih maksimum
+absolut antara matriks atribusi kedua seed koalisi dicatat sebagai besaran
+tersendiri, wajib bernilai nol eksak pada sel yang mengenumerasi seluruh
+koalisi, dan pada sel tersampel besaran yang sama berperan sebagai ukuran galat
+estimator dalam satuan atribusi.
 
 Sebagai batasan, LinearSHAP, KernelSHAP, dan TreeSHAP mode `interventional`
 sama-sama mengasumsikan independensi fitur sehingga koalisi yang disampel dapat
@@ -2437,14 +2448,21 @@ lingkungan GPU. Orkestrasi produksinya adalah `experiments/shap_rq3.py`, yang
 menulis artefak per sel (matriks importance per client dan seed, berkas
 `stability.json` berisi seluruh statistik beserta provenance, dan profil
 stabilitas per k) serta ringkasan `shap_summary_v2.csv` dengan kolom floor,
-between, delta, nilai p mentah dan terkoreksi, dan verdict per sel. Tiga guard
-melindungi pelaporan dari nilai kesepakatan yang bersifat artefak: guard
-degenerasi mencatat sel yang vektor atribusinya runtuh menjadi nol atau konstan
-sebagai undefined tanpa metrik stabilitas; guard keruntuhan sumbu client
-menandai sel yang seluruh vektor client-nya identik pada satu seed — kondisi
-yang membuat setiap ukuran kesepakatan bernilai 1,0 secara struktural — juga
-sebagai undefined; dan guard regresi `l1_reg` menghentikan eksekusi bila pola
-seleksi-sepuluh-fitur masih terdeteksi pada keluaran. Keluaran tahap sebelum
+between, delta, nilai p mentah dan terkoreksi, selisih maksimum antar-seed, dan
+verdict per sel. Empat guard melindungi pelaporan dari nilai kesepakatan yang
+bersifat artefak: guard degenerasi mencatat sel yang vektor atribusinya runtuh
+menjadi nol atau konstan sebagai undefined tanpa metrik stabilitas; guard
+keruntuhan sumbu client menandai sel yang seluruh vektor client-nya identik pada
+satu seed — kondisi yang membuat setiap ukuran kesepakatan bernilai 1,0 secara
+struktural — juga sebagai undefined; guard regresi `l1_reg` menghentikan
+eksekusi bila pola seleksi-sepuluh-fitur masih terdeteksi pada keluaran; dan
+guard keeksakan menghentikan sel mana pun yang dinyatakan bebas galat estimator
+— baik karena memakai explainer eksak maupun karena nsamples-nya mengenumerasi
+seluruh koalisi — namun selisih antar-seednya tidak persis nol. Guard terakhir
+menutup satu celah pelaporan: floor bernilai 1,0 pada tingkat eksak kini
+merupakan hasil pengukuran per sel, bukan konsekuensi asumsi, dan status
+enumerasi ditentukan oleh nsamples semata sehingga pengelompokan one-hot tidak
+lagi cukup untuk menyatakan sebuah sel eksak. Keluaran tahap sebelum
 perbaikan `l1_reg` dipertahankan utuh pada direktori terpisah sehingga setiap
 angka yang berubah dapat dilaporkan berdampingan dengan nilai lamanya.
 
@@ -3028,23 +3046,48 @@ pada partisi heterogen dengan aturan pembobotan yang keliru.
 
 Analisis explainability dijalankan terhadap model global akhir yang telah
 dibekukan dan dipersistensi oleh sweep, sehingga SHAP berperan sebagai konsumen
-baca-saja atas artefak tersebut tanpa melatih ulang apa pun. Grid SHAP mencakup 96
-sel, dengan 66 di antaranya berupa sel federated yang memiliki lebih dari satu
+baca-saja atas artefak tersebut tanpa melatih ulang apa pun. Tahap utama mencakup
+96 sel, dengan 66 di antaranya berupa sel federated yang memiliki lebih dari satu
 client. Hanya sel federated yang membawa informasi stabilitas antar client,
 sedangkan 30 sel centralized hanya memiliki satu client sehingga stabilitasnya
 tidak terdefinisi menurut definisi dan dikeluarkan dari seluruh agregat pada subbab
-ini.
+ini. Di luar tahap utama dijalankan dua tahap tambahan, yaitu 12 sel arm background
+bersama dan 16 sel tingkat eksak PaySim, sehingga berkas ringkasan
+`results/shap_v2/shap_summary_v2.csv` memuat 124 baris sel. Seluruh 124 sel
+berstatus `ok`; tidak ada sel yang gugur karena degenerasi pada pengukuran ini.
 
 === Konfigurasi pengukuran
 
 Pada setiap client, SHAP dihitung terhadap model global akhir menggunakan
 background berupa 100 sampel data latih lokal pasca-SMOTE yang diringkas menjadi 10
-sentroid k-means. Ringkasan tersebut menentukan distribusi referensi explainer dan
-wajib identik antara pengukuran noise floor dan produksi. Explanation set berupa 500
-sampel dari test set terpusat yang identik untuk seluruh client, agar perbedaan
-importance yang teramati mencerminkan perbedaan model per distribusi lokal alih-alih
-perbedaan sampel yang dijelaskan. Seluruh atribusi dihitung pada skala log-odds,
-dengan margin fungsi keputusan sebagai pengecualian terdokumentasi untuk SVM.
+sentroid k-means. Ringkasan tersebut menentukan distribusi referensi explainer.
+Explanation set berupa 500 sampel dari test set terpusat yang identik untuk seluruh
+client. Seluruh atribusi dihitung pada skala log-odds, dengan margin fungsi
+keputusan sebagai pengecualian terdokumentasi untuk SVM.
+
+Konfigurasi tersebut menentukan makna klaim pada arm utama. Model yang dijelaskan
+bersifat global dan identik bagi seluruh client, dan baris yang dijelaskan pun
+identik bagi seluruh client; satu-satunya masukan yang bervariasi antar client
+adalah distribusi referensi berupa background lokalnya. Divergensi yang terukur
+pada arm utama karena itu bukan pernyataan umum bahwa client berselisih tentang
+model, melainkan pernyataan yang lebih sempit sekaligus lebih presisi: dengan model
+dan baris yang diaudit ditahan identik, mengganti distribusi referensi lokal saja
+sudah mengubah fitur yang tampak diandalkan model.
+
+Khusus untuk KernelSHAP, dua penetapan konfigurasi menentukan validitas seluruh
+angka pada subbab ini. Pertama, seleksi fitur bawaan dinonaktifkan melalui
+`l1_reg=False`. Sejak versi 0.47.0 pustaka SHAP menetapkan `num_features(10)`
+sebagai nilai bawaan, sehingga LARS hanya mempertahankan sepuluh fitur dan
+memberikan nilai nol eksak pada seluruh fitur lain untuk setiap baris yang
+dijelaskan; pada BAF dengan 55 fitur hal itu berarti sekurang-kurangnya 45 nol
+eksak per baris. Karena seleksi LARS merupakan fungsi yang tidak kontinu terhadap
+undian koalisi, perilaku bawaan tersebut menaikkan lantai derau jauh lebih besar
+daripada penyamplingannya sendiri. Kedua, setiap client dijelaskan pada dua seed
+koalisi khusus SHAP, yaitu 11 dan 22, dengan explanation set dan background yang
+identik antar seed. Seluruh perbandingan antar client memasangkan vektor yang
+dihitung di bawah seed koalisi yang sama, yakni skema common random numbers,
+sehingga galat estimator sebagian besar saling meniadakan pada kontras antar
+client.
 
 Pemetaan explainer ditetapkan berdasarkan pengukuran local accuracy alih-alih
 berdasarkan reputasi masing-masing metode, sebagaimana disajikan pada
@@ -3058,8 +3101,9 @@ pada `results/shap_stage0_report.txt`.
     table.header([*Model*], [*Explainer*], [*Local accuracy*]),
     [LR, SVM], [LinearSHAP (SVM: margin)], [$9,26 times 10^(-8)$],
     [GBM, XGB], [TreeSHAP `interventional`], [$0,00$],
-    [FFD, BERT, FedXGBllr], [KernelSHAP ($"nsamples" = 500$)], [—],
+    [FFD, BERT, FedXGBllr], [KernelSHAP ($"nsamples" = 500$, `l1_reg=False`)], [—],
   ),
+  kind: table,
   caption: [Pemetaan explainer per model],
 ) <tab-4-shap-explainer>
 
@@ -3070,10 +3114,10 @@ sehingga setiap client yang menjelaskan satu model global yang sama menghasilkan
 nilai yang identik dan stabilitas antar client bernilai 1,0 secara konstruksi;
 angka semacam itu akan mengeluarkan model pohon dari analisis ini sepenuhnya.
 Mode interventional dengan background lokal per client menjadikan model pohon
-peserta
-yang sesungguhnya dalam perbandingan. Asumsi independensi fitur yang dituntutnya
-merupakan asumsi yang sama yang telah didokumentasikan untuk LinearSHAP dan
-KernelSHAP, sehingga pemilihan ini tidak memperkenalkan kelas batasan baru.
+peserta yang sesungguhnya dalam perbandingan. Asumsi independensi fitur yang
+dituntutnya merupakan asumsi yang sama yang telah didokumentasikan untuk
+LinearSHAP dan KernelSHAP, sehingga pemilihan ini tidak memperkenalkan kelas
+batasan baru.
 
 === Admisibilitas explainer per keluarga model
 
@@ -3115,80 +3159,138 @@ secara otomatis; yang menentukan adalah keseluruhan jalur komputasi dari masukan
 hingga keluaran, termasuk komponen non-tree yang ditambahkan oleh skema agregasi
 federated.
 
-Karena KernelSHAP menyampel koalisi secara acak, stabilitas antar client bagi
-ketiga model tersebut hanya bermakna relatif terhadap kesepakatan KernelSHAP dengan
-dirinya sendiri. Noise floor diukur dengan menjalankan KernelSHAP dua kali
-menggunakan seed berbeda pada satu client BAF Dirichlet, lalu mengukur korelasi
-Spearman antar kedua vektor importance pada `nsamples` sebesar 500. Nilainya
-bersifat per model, yaitu FedXGBllr 0,9730, BERT 0,9972, dan FFD 0,9966, sebagaimana
-terekam pada `results/shap/noise_floor.txt`. Seluruh 33 sel yang dijelaskan
-KernelSHAP jatuh pada atau di bawah floor modelnya sendiri (@fig-4-shap-vs-floor).
+Perbedaan admisibilitas tersebut tidak mengeluarkan ketiga model berbasis sampling
+dari analisis konsistensi. Yang dituntutnya adalah pembandingan terhadap lantai
+derau estimator, dan cara pembandingan itulah yang diuraikan pada sub-subbab
+berikut.
 
-#figure(
-  image("resources/fig-shap-vs-floor.png", width: 88%),
-  caption: [Spearman antar-client tiap sel KernelSHAP terhadap floor modelnya (tanda vertikal). Seluruh 33 sel berada pada atau di bawah floor, sehingga sebaran antar-client tidak dapat dibedakan dari noise sampling estimator.],
-) <fig-4-shap-vs-floor>
+=== Lantai derau per sel dan uji exchangeability eksak
 
-Klaim tersebut tidak bersandar pada perbandingan terhadap floor semata, melainkan
-juga pada batas yang diberikan DeepSHAP. Pada FFD, ketidaksepakatan KernelSHAP
-terhadap referensi yang nyaris eksak sebesar 0,0807 dengan Spearman 0,9193, dan
-angka itu melampaui sebaran antar client yang teramati. Perbedaan antar client
-dengan demikian lebih kecil daripada ketakakuratan estimatornya sendiri sehingga
-tidak dapat diatribusikan pada perilaku model. Sebagai catatan pelengkap, Jaccard\@5
-nyaris tidak membawa informasi pada skala ini: pada FedXGBllr dan BERT nilainya
-menempel di 1,00 pada seluruh nilai `nsamples`, sedangkan pada FFD nilainya justru
-non-monoton dengan 0,67 pada 100 sampel, 1,00 pada 500 sampel, dan kembali 0,67 pada
-1000 sampel. Pada himpunan lima elemen dengan satu pasang seed, masuk atau keluarnya
-satu fitur menggeser nilai sebesar 0,33, sehingga ukuran ini tidak stabil dan justru
-memperkuat kebutuhan akan ukuran terkoreksi peluang berupa indeks Kuncheva
-(@fig-4-shap-jaccard-kuncheva). Karena floor diukur pada 250 sampel explanation
-sedangkan produksi memakai 500 sampel, dan penambahan sampel hanya memperbanyak
-perataan, floor tersebut merupakan batas bawah.
+Karena KernelSHAP menyampel koalisi secara acak, stabilitas antar client bagi FFD,
+BERT, dan FedXGBllr hanya bermakna relatif terhadap kesepakatan KernelSHAP dengan
+dirinya sendiri. Lantai derau tersebut diukur per client dan per sel, yaitu
+kesepakatan antara dua vektor importance dari client yang sama pada dua seed
+koalisi berbeda dengan explanation set dan background yang identik. Pengukuran
+per sel diperlukan karena lantai bergantung pada jumlah fitur: pada
+`nsamples` sebesar 500, PaySim mengenumerasi sekitar 54 persen bobot kernel, ULB
+sekitar 26 persen, dan BAF sekitar 22 persen. Audit `analysis/verify_kernel_tier.py`
+mencatat 56 nilai lantai yang berbeda pada grid ini, sehingga satu angka tunggal
+tidak dapat mewakili keseluruhannya.
+
+Lantai tersebut tidak dapat dipakai sebagai ambang deteksi, dan penegasan ini
+mengoreksi pembacaan yang lazim. Lantai merupakan kesepakatan client yang sama pada
+seed yang berbeda. Di bawah hipotesis nol bahwa seluruh client berbagi satu vektor
+importance sejati, kesepakatan antar client yang diharapkan justru sama dengan
+lantai, bukan berada di bawahnya. Nilai yang berada jauh di bawah lantai karenanya
+merupakan bukti yang menentang hipotesis nol, sehingga rumusan "pada atau di bawah
+lantai" menggabungkan dua keadaan yang menunjuk ke arah berlawanan dan tidak dapat
+dipertahankan. Pengujian yang dipakai menggantikan pembacaan ambang tersebut dengan
+uji exchangeability eksak: di bawah hipotesis nol, kesepuluh vektor pada satu sel
+bersifat exchangeable, sehingga distribusi nolnya adalah seluruh perfect matching
+atas kesepuluh vektor tersebut. Untuk $K = 5$ jumlahnya $(2K - 1)!! = 945$ dan
+seluruhnya dienumerasi, bukan disampel dan bukan didekati secara asimptotik.
+Nilai p terkecil yang dapat dicapai adalah 1/945 atau sekitar 0,00106, dan tidak
+ada satu sel pun yang melanggar batas tersebut. Koreksi Benjamini--Hochberg
+diterapkan per keluarga (bg, explainer).
+
+Statistik utama yang dilaporkan adalah korelasi peringkat Spearman berbobot
+magnitudo. Alasannya bersifat empiris. Pada seluruh 33 sel KernelSHAP tersampel,
+kesepakatan dalam-client berbobot bernilai sekurang-kurangnya 0,9726, sedangkan
+`floor_min` tanpa bobot berayun antara 0,8331 dan 0,9999. Ayunan tersebut bukan
+cerminan ketidakstabilan estimator melainkan konsekuensi dari urutan yang sembarang
+di antara fitur-fitur berkontribusi rendah yang nyaris berimbang; statistik tanpa
+bobot didominasi oleh ekor tersebut, sedangkan statistik berbobot tidak. Ukuran
+Jaccard\@5 dan indeks Kuncheva tetap dilaporkan sebagai pelengkap kontinuitas
+terhadap pengukuran sebelumnya, dan @fig-4-shap-jaccard-kuncheva memperlihatkan
+mengapa keduanya tidak dapat dipertukarkan: keduanya menyimpang seiring
+bertambahnya dimensi, yang merupakan pembenaran empiris bagi koreksi peluang
+menurut @nogueira2018stability.
 
 #figure(
   image("resources/fig-shap-jaccard-vs-kuncheva.png", width: 62%),
   caption: [Jaccard\@5 terhadap indeks Kuncheva per sel, ditandai menurut dataset dengan dimensionalitasnya (PaySim $d = 13$, ULB $d = 30$, BAF $d = 55$). Kedua ukuran menyimpang seiring bertambahnya dimensi — pembenaran empiris untuk koreksi peluang @nogueira2018stability.],
 ) <fig-4-shap-jaccard-kuncheva>
 
-Pertanyaan yang wajar diajukan adalah apakah menaikkan `nsamples` akan menyelesaikan
-persoalan resolusi tersebut. Nilai default pustaka SHAP adalah dua kali jumlah
-dimensi ditambah 2048, yakni 2158 untuk BAF yang berdimensi 55. Dari waktu komputasi
-terukur pada 500 sampel, yaitu sekitar 190 detik per client per run untuk FedXGBllr
-dan sekitar 142 detik untuk BERT, serta dari sifat KernelSHAP yang kira-kira linear
-terhadap `nsamples`, konfigurasi 2158 menuntut sekitar 4,3 kali waktu tersebut,
-sehingga satu sel dengan lima client menghabiskan sekitar 1,1 jam untuk FedXGBllr
-dan sekitar 0,9 jam untuk BERT, dan di seluruh cakupan KernelSHAP tambahan itu
-mencapai puluhan GPU-hour. Menaikkan `nsamples` memang mengecilkan selubung galat
-estimator sehingga secara prinsip sebaran antar client dapat menjadi terselesaikan,
-namun floor self-agreement pun ikut naik seiring bertambahnya sampel, dengan floor
-FedXGBllr yang telah naik sekitar 0,011 pada 1000 sampel, dan tidak ada jaminan
-bahwa sebaran sejati antar client melampaui selubung yang mengecil itu. Atas
-pertimbangan biaya dan manfaat tersebut, kenaikan `nsamples` tidak ditempuh, dan
-keterbatasan ini dilaporkan sebagai batas metode pada anggaran komputasi penelitian
-alih-alih sebagai kegagalan.
-
-Konsekuensi metodologisnya perlu dinyatakan tegas. Konsistensi feature importance
-antar client hanya dapat diukur pada explainer deterministik yang
-tidak memiliki floor sampling, yaitu LinearSHAP pada LR dan SVM serta TreeSHAP
-interventional pada GBM. Untuk ketiga model yang dijelaskan KernelSHAP, yang dapat
-dilaporkan adalah bahwa sebaran antar clientnya tidak dapat dibedakan dari noise
-estimator pada anggaran komputasi ini, dan pernyataan itu sendiri merupakan
-karakteristik yang bermakna: kelas model yang membutuhkan explainer berbasis
-sampling menuntut biaya verifikasi yang jauh lebih besar sebelum klaim
-interpretabilitas apa pun dapat dipertanggungjawabkan. XGB tidak memiliki sel
-federated karena hanya dievaluasi pada kondisi centralized, sehingga analisis
-stabilitas deterministik mencakup GBM, LR, dan SVM.
+Tiga penjaga melindungi pelaporan dari nilai kesepakatan yang bersifat artefak,
+sebagaimana diuraikan pada Subbab Implementasi Modul Evaluasi dan SHAP: penjaga
+degenerasi, penjaga keruntuhan sumbu client, dan penjaga regresi `l1_reg`. Audit
+tingkat kernel mencatat bahwa tidak ada satu sel pun yang masih memperlihatkan
+tanda tangan seleksi sepuluh fitur, dengan jumlah nonzero per baris minimum
+sebesar 13 di seluruh grid.
 
 === Konsistensi feature importance antar client
 
-Pada explainer deterministik, sebaran antar client mencerminkan perilaku model
-alih-alih noise estimator, sehingga perbandingan antar keluarga model dapat
-dilakukan secara langsung. Rerata indeks Kuncheva pada sel federated adalah 0,9433
-untuk SVM, 0,9112 untuk LR, dan 0,8219 untuk GBM dengan nilai minimum 0,544. Urutan
-tersebut menempatkan kedua model parametrik sebagai keluarga dengan interpretasi
-paling konsisten antar client, sedangkan model pohon paling tidak konsisten secara
-agregat. Rincian per dataset dan per model pada @tab-4-shap-kuncheva-det mengungkap
-bahwa urutan tersebut bukan properti model semata.
+Dengan lantai yang diukur per sel dan uji yang bersifat eksak, konsistensi feature
+importance antar client dapat dijawab untuk keenam model, bukan hanya untuk ketiga
+model dengan explainer deterministik. Sebanyak 29 dari 33 sel KernelSHAP tersampel
+membawa nilai stabilitas yang dapat dibedakan secara statistik dari lantai derau
+explainer-nya sendiri. Pada 19 sel di antaranya pemisahan bahkan bersifat lengkap,
+yakni setiap nilai dalam-client berada di atas setiap nilai antar-client, sehingga
+tidak memerlukan uji sama sekali untuk dibaca. @tab-4-shap-kernel merangkum ketiga
+keluarga model tersebut.
+
+#figure(
+  table(
+    columns: 5,
+    align: (left, center, center, center, center),
+    table.header([*Model*], [*Lantai (median)*], [*Antar-client (median)*],
+                 [*Rentang*], [*Dapat dibedakan*]),
+    [FFD], [0,9997], [0,963], [0,798 -- 0,992], [11 / 11],
+    [BERT], [0,9993], [0,952], [0,868 -- 0,995], [10 / 11],
+    [FedXGBllr], [0,9988], [0,958], [0,665 -- 0,986], [8 / 11],
+  ),
+  kind: table,
+  caption: [Lantai derau dan stabilitas antar client pada tingkat KernelSHAP tersampel (Spearman berbobot magnitudo, 11 sel federated per model)],
+) <tab-4-shap-kernel>
+
+Gambaran yang muncul berbeda secara mendasar dari pengukuran sebelumnya. Ketiga
+model berbasis sampling ternyata kira-kira sama terukurnya sekaligus kira-kira sama
+stabilnya pada kisaran 0,95, dan tidak ada satu pun di antaranya yang menonjol
+sebagai keluarga yang tidak stabil. Nilai FedXGBllr sebesar 0,775 yang dilaporkan
+pada pengukuran sebelumnya merupakan artefak dari nilai bawaan `l1_reg` dan bukan
+properti model. Sisi lain dari temuan ini adalah bahwa empat sel tetap tidak dapat
+dibedakan dari derau estimator, dan keempatnya dilaporkan sebagai tidak konklusif,
+bukan sebagai kesepakatan.
+
+Nilai-nilai tersebut dapat dibandingkan terhadap sebuah jangkar, namun jangkar
+itu harus dipilih dengan hati-hati. Satu-satunya jangkar yang sah adalah model
+yang bersifat eksak secara independen dari model yang sedang diperiksa, yaitu LR
+dan SVM dengan LinearSHAP serta GBM dengan TreeSHAP interventional; selisih
+maksimum antar-seed pada seluruh 53 sel keluarga tersebut terukur tepat nol.
+Tingkat eksak PaySim tidak dapat menjadi jangkar meskipun sama-sama bebas derau,
+sebab isinya adalah ketiga model KernelSHAP yang sama yang dijalankan ulang tanpa
+sampling; membandingkan tingkat tersampel terhadapnya berarti membandingkan
+sebuah estimator terhadap versi eksak dirinya sendiri, dan perbandingan semacam
+itu tidak mungkin gagal. Tingkat eksak karena itu dilaporkan sebagai tingkat
+tersendiri pada sub-subbab Tingkat eksak pada PaySim, bukan sebagai pembanding.
+
+Seluruh perbandingan berikut memakai statistik yang sama, yaitu Spearman berbobot
+magnitudo. Pada jangkar, sebaran antar client bergerak antara 0,9064 dan 0,9970
+untuk LR, antara 0,8980 dan 0,9989 untuk SVM, serta antara 0,8014 dan 0,9960 untuk
+GBM, sehingga nilai paling divergen pada keseluruhan jangkar adalah 0,8014 yang
+terjadi pada sel ULB GBM kondisi IID tanpa SMOTE. Dua dari 33 sel KernelSHAP
+tersampel berada di bawah nilai tersebut, yaitu PaySim FedXGBllr Dirichlet dengan
+SMOTE sebesar 0,6650 dan PaySim FFD Dirichlet tanpa SMOTE sebesar 0,7979.
+
+Kedua sel tersebut merupakan temuan, bukan pemeriksaan validitas, dan pembedaan
+itu perlu dinyatakan tegas. Keduanya bertahan pada tingkat eksak dengan nilai
+0,5965 dan 0,7979, sehingga posisinya bukan artefak sampling. Yang terbaca adalah
+bahwa pada partisi Dirichlet PaySim, kedua model berbasis sampling berselisih
+antar client lebih jauh daripada sel mana pun pada keluarga LR, SVM, dan GBM.
+Pengamatan tersebut terkonfound dengan keluarga model: model yang menerima
+explainer eksak juga merupakan model yang paling sederhana secara struktural,
+yakni koefisien linear dan prefix pohon dangkal, sehingga yang terukur adalah
+keluarga model mana yang terpengaruh dan bukan mekanisme yang menyebabkannya.
+@fig-4-rq3-stability menyajikan keseluruhan grid untuk keenam model.
+
+#figure(
+  image("resources/fig-4-rq3-stability.png", width: 100%),
+  caption: [Stabilitas feature importance antar client untuk keenam model (Spearman berbobot magnitudo, $K = 5$, arm background per-client). Warna menyandikan divergensi. Sel berarsir tidak dapat dibedakan dari lantai derau explainer-nya menurut uji exchangeability eksak dan karenanya tidak membawa klaim stabilitas. Titik pada sudut sel menandai sel PaySim yang nilainya berasal dari tingkat eksak.],
+) <fig-4-rq3-stability>
+
+Pada tingkat deterministik, rincian per dataset mengungkap bahwa urutan antar model
+bukan properti model semata. Rerata indeks Kuncheva pada sel federated adalah 0,9433
+untuk SVM, 0,9112 untuk LR, dan 0,8219 untuk GBM dengan nilai minimum 0,544.
 
 #figure(
   table(
@@ -3199,13 +3301,9 @@ bahwa urutan tersebut bukan properti model semata.
     [ULB], [0,742], [1,000], [0,964],
     [PaySim], [0,878], [0,789], [0,935],
   ),
-  caption: [Indeks Kuncheva per dataset dan model],
+  kind: table,
+  caption: [Indeks Kuncheva per dataset dan model pada tingkat deterministik],
 ) <tab-4-shap-kuncheva-det>
-
-#figure(
-  image("resources/fig-shap-heatmap-deterministic.png", width: 92%),
-  caption: [Peta panas indeks Kuncheva untuk explainer deterministik per sel (dataset/kondisi/arm). Baris GBM paling sering bernilai rendah; di sinilah sinyal stabilitas yang terukur berada.],
-) <fig-4-shap-heatmap>
 
 Pernyataan bahwa GBM merupakan model paling tidak stabil karena itu perlu
 diperhalus. GBM paling tidak stabil pada ULB dengan 0,742, yaitu justru pada dataset
@@ -3223,56 +3321,148 @@ nyaris terdistribusi identik antar client, sehingga LR mencapai 1,000 pada datas
 tersebut. Struktur split pada model pohon berinteraksi dengan densitas lokal dengan
 cara yang tidak dialami koefisien linear, sehingga GBM tetap sensitif terhadap
 heterogenitas bahkan pada data yang membuat model linear sepenuhnya stabil.
-@fig-4-shap-by-model merangkum distribusi ketiga ukuran per model, sekaligus
-membedakan explainer deterministik yang membawa sinyal dari model KernelSHAP yang
-berada di bawah floor-nya.
-
-#figure(
-  image("resources/fig-shap-by-model.png", width: 100%),
-  caption: [Distribusi Spearman, Kuncheva, dan Jaccard\@5 per model (sel federated). Warna biru menandai explainer deterministik yang membawa sinyal; warna merah menandai model KernelSHAP yang berada di bawah floor-nya (garis putus-putus pada panel Spearman).],
-) <fig-4-shap-by-model>
-
-Temuan ini terhubung langsung dengan analisis performa pada Subbab Perbandingan
-Performa Antar Paradigma Agregasi dan Subbab Pengaruh Non-IID dan SMOTE, dan
-hubungannya bersifat berlawanan arah. Paradigma best-model selection yang mendasari
-GBM merupakan paradigma paling robust dalam performa di bawah SMOTE dengan kehilangan
-AUPRC sebesar nol persen, namun justru paling tidak stabil dalam interpretasi.
-Robustnes performa dan stabilitas interpretasi karena itu merupakan dua properti yang
-berbeda, sebab sebuah paradigma dapat mempertahankan diskriminasi yang tinggi lintas
-kondisi sekaligus menghasilkan penjelasan yang bergeser antar distribusi lokal.
-Pernyataan ini merupakan salah satu kontribusi orisinal penelitian terhadap diskursus
-Explainable Federated Learning.
 
 === Stabilitas interpretasi di bawah kondisi Non-IID
 
-Stabilitas interpretasi di bawah kondisi Non-IID secara khusus perlu ditinjau
-tersendiri, dan bukti yang tersedia bersifat konvergen meskipun tidak langsung.
-Rincian
-indeks Kuncheva yang dipilah menurut kondisi partisi tidak disajikan sebagai tabel
-tersendiri, sehingga simpulan pada sub-subbab ini disusun dari tiga sumber bukti yang
-saling menguatkan dan dinyatakan sebagai indikasi alih-alih sebagai pengukuran
-langsung.
+Pengaruh heterogenitas distribusi terhadap stabilitas interpretasi diukur pada dua
+kanal yang terpisah, dan pemisahan itu diperlukan karena arm utama hanya
+memvariasikan satu masukan. Arm utama menahan baris yang dijelaskan tetap, yakni
+subset test terpusat yang identik bagi seluruh client, dan membiarkan background
+bervariasi per client; kanal yang terisolasi di sana adalah distribusi referensi.
+Arm background bersama melakukan kebalikannya: background disatukan menjadi satu
+background terpool, sementara setiap client menjelaskan sampel dari partisi lokalnya
+sendiri; kanal yang terisolasi di sana adalah wilayah data.
 
-Bukti pertama berasal dari letak nilai-nilai terendah. Nilai minimum indeks Kuncheva
-pada seluruh sel deterministik sebesar 0,544 dan nilai itu terjadi pada sel ULB GBM
-dengan partisi Dirichlet, bukan pada sel IID mana pun. Bukti kedua berasal dari satu
-pasangan yang dapat dibandingkan secara langsung, yaitu PaySim GBM pada arm tanpa
-SMOTE, yang mencapai stabilitas sempurna sebesar 1,000 pada kondisi IID namun turun
-menjadi 0,7725 pada kondisi Dirichlet. Bukti ketiga bersifat tidak langsung namun
-konsisten: kenaikan stabilitas akibat SMOTE kira-kira dua kali lipat lebih besar di
-bawah Dirichlet sebesar 0,085 dibandingkan di bawah IID sebesar 0,048, dan selisih
-itu menyiratkan bahwa titik awal di bawah Dirichlet memang lebih berjauhan antar
-client sehingga menyediakan lebih banyak ruang untuk dihomogenkan.
+Uji yang dipakai pada kedua kanal identik dan dinyatakan lengkap di sini agar
+hasilnya dapat direproduksi. Statistik yang diuji adalah Spearman berbobot
+magnitudo per sel, yaitu kolom `weighted_between` pada
+`results/shap_v2/shap_summary_v2.csv`, dan bukan selisihnya terhadap lantai derau;
+mengurangkan lantai per sel justru menambahkan suku pengganggu karena lantai itu
+sendiri berbeda antara arm Dirichlet dan arm IID. Ujinya adalah Wilcoxon
+signed-rank satu sisi dengan hipotesis alternatif bahwa nilai IID lebih besar
+daripada nilai Dirichlet. Pasangan dibentuk di dalam kombinasi (dataset, model,
+arm) untuk kanal pertama sehingga n sama dengan 15, dan di dalam kombinasi
+(model, arm) untuk kanal kedua yang hanya tersedia pada PaySim sehingga n sama
+dengan 6.
 
-Ketiga bukti tersebut mengarah pada simpulan yang sama, yaitu bahwa heterogenitas
-distribusi menurunkan konsistensi interpretasi antar client, dan penurunan itu paling
-tajam pada model pohon. Pola ini konsisten dengan mekanisme yang diuraikan pada
-sub-subbab sebelumnya: struktur split pohon dibentuk oleh densitas lokal data yang
-berbeda-beda antar client di bawah partisi Dirichlet, sedangkan koefisien model
-linear hanya menyerap perbedaan itu melalui rerata fitur yang jauh lebih tahan
-terhadap pergeseran distribusi. Verifikasi yang lebih kuat atas simpulan ini menuntut
-rincian indeks Kuncheva yang dipilah menurut kondisi partisi untuk masing-masing
-model, dan hal tersebut direkomendasikan sebagai perluasan analisis.
+#figure(
+  table(
+    columns: 3,
+    align: (left, left, left),
+    table.header([*Kanal*], [*Yang bervariasi antar client*], [*Hasil*]),
+    [1 — distribusi referensi],
+    [background per client, baris yang dijelaskan tetap],
+    [11 dari 15 pasangan; Wilcoxon p = 0,0042. Khusus PaySim 6 dari 6, p = 0,0156],
+    [2 — wilayah data],
+    [background terpool, baris per client],
+    [PaySim 5 dari 6 pasangan; Wilcoxon p = 0,0469],
+  ),
+  kind: table,
+  caption: [Dua kanal pengaruh heterogenitas terhadap divergensi interpretasi antar client (uji Wilcoxon signed-rank satu sisi berpasangan Dirichlet lawan IID)],
+) <tab-4-shap-channels>
+
+Selisih berpasangan rerata sebesar +0,054 pada kanal pertama dan +0,073 pada
+kanal kedua. Kedua besaran tersebut *tidak dapat dibandingkan satu sama lain*, dan
+hal ini perlu dinyatakan tegas agar tidak disalahtafsirkan sebagai perbandingan
+kekuatan kanal. Kedua arm berbeda pada sumber background, pada sumber baris yang
+dijelaskan, sekaligus pada apakah baris tersebut berasal dari data latih atau data
+uji. Yang absah hanyalah kontras Dirichlet lawan IID *di dalam* masing-masing kanal.
+
+Efek tersebut terkonsentrasi pada PaySim. Pada kanal pertama, keenam pasangan
+PaySim seluruhnya berpihak pada Dirichlet, sedangkan ULB berpihak pada empat dari
+enam pasangan dengan selisih yang kecil dan BAF hanya pada satu dari tiga pasangan
+dengan satu pasangan yang praktis berimbang. Konsentrasi tersebut sebaiknya dibaca
+sebagai gradien alih-alih sebagai saklar: PaySim pada $alpha$ sebesar 0,5 merupakan
+partisi paling degeneratif dalam penelitian ini dengan jumlah minoritas per client
+terendah sebesar 2, dibandingkan 3 pada BAF dan 4 pada ULB sebagaimana tercatat pada
+`results/analysis/minority_census.csv`. Divergensi interpretasi dengan demikian
+berskala mengikuti seberapa parah partisi mengeringkan client, dan pengamatan ini
+menautkan sub-subbab ini pada temuan heterogenitas di Subbab Pengaruh Heterogenitas
+Distribusi Data dan Penanganan Class Imbalance alih-alih membiarkannya berdiri
+sendiri.
+
+Bukti dari tingkat deterministik menunjuk ke arah yang sama. Nilai minimum indeks
+Kuncheva pada seluruh sel deterministik sebesar 0,544 dan terjadi pada sel ULB GBM
+dengan partisi Dirichlet, bukan pada sel IID mana pun. Satu pasangan yang dapat
+dibandingkan secara langsung, yaitu PaySim GBM pada arm tanpa SMOTE, mencapai
+stabilitas sempurna sebesar 1,000 pada kondisi IID namun turun menjadi 0,7725 pada
+kondisi Dirichlet.
+
+=== Tingkat eksak pada PaySim
+
+Seluruh angka pada kedua kanal di atas berasal dari estimator berbasis sampling,
+sehingga satu tingkat pengukuran tambahan dijalankan untuk memastikan bahwa
+kesimpulannya bukan artefak estimator. Tingkat ini berdiri sendiri dan tidak
+dipakai sebagai jangkar bagi tingkat tersampel, sebab isinya adalah ketiga model
+yang sama; perannya adalah menghapus derau estimator dari kontras Dirichlet lawan
+IID, bukan menyediakan pembanding yang independen. Dengan mengelompokkan kelima kolom one-hot
+`type` menjadi satu pemain Shapley, PaySim memiliki $M$ efektif sama dengan 9,
+sehingga `nsamples` sebesar $2^9 - 2 = 510$ mengenumerasi seluruh bobot kernel tanpa
+satu pun undian acak. Keeksakan tersebut diverifikasi alih-alih diandaikan: pada
+kedua belas sel federated tingkat ini, selisih maksimum absolut antara atribusi seed
+11 dan seed 22 terukur tepat 0,000, sementara selisih antara client 0 dan client 1
+bernilai tidak nol pada seluruh sel sehingga sumbu client tidak runtuh.
+
+#figure(
+  table(
+    columns: 4,
+    align: (left, left, center, center),
+    table.header([*Model*], [*Arm*], [*IID*], [*Dirichlet*]),
+    [FedXGBllr], [tanpa SMOTE], [1,000], [0,847],
+    [FedXGBllr], [SMOTE], [0,961], [0,597],
+    [FFD], [tanpa SMOTE], [0,874], [0,798],
+    [FFD], [SMOTE], [0,912], [0,843],
+    [BERT], [tanpa SMOTE], [0,998], [0,918],
+    [BERT], [SMOTE], [0,970], [0,939],
+  ),
+  kind: table,
+  caption: [Stabilitas antar client pada tingkat eksak PaySim (Spearman berbobot magnitudo, atribusi bebas derau estimator)],
+) <tab-4-shap-exact>
+
+Pada atribusi bebas derau tersebut, kondisi Dirichlet lebih rendah daripada kondisi
+IID pada keenam pasangan, dengan Wilcoxon p = 1/64 = 0,0156 yang merupakan
+nilai terkecil yang dapat dicapai pada $n = 6$.
+
+Klaim tersebut selanjutnya dikorroborasi tanpa mengandalkan satu pun pilihan
+metodologis yang dapat diperdebatkan. Ukuran berikut adalah selisih maksimum
+absolut antara vektor atribusi client 0 dan client 1 pada ruang atribusi itu
+sendiri: tanpa Spearman, tanpa lantai, tanpa uji permutasi, dan tanpa pembobotan.
+
+#figure(
+  table(
+    columns: 5,
+    align: (left, center, center, center, center),
+    table.header([*Model*], [*IID tanpa SMOTE*], [*Dirichlet tanpa SMOTE*],
+                 [*IID SMOTE*], [*Dirichlet SMOTE*]),
+    [BERT], [0,296], [1,740 (5,9 kali)], [0,623], [2,212 (3,6 kali)],
+    [FFD], [0,475], [2,677 (5,6 kali)], [0,963], [2,543 (2,6 kali)],
+    [FedXGBllr], [0,0045], [0,0878 (19,5 kali)], [0,0378], [0,100 (2,6 kali)],
+  ),
+  kind: table,
+  caption: [Selisih maksimum absolut atribusi antara client 0 dan client 1 pada tingkat eksak PaySim, beserta rasio Dirichlet terhadap IID],
+) <tab-4-shap-rawgap>
+
+Keenam pasangan bergerak ke arah yang sama dengan rasio antara 2,6 dan 19,5 kali.
+Karena setiap pilihan metodologis yang dapat diperdebatkan dilewati dan efeknya
+tetap bertahan, tabel tersebut merupakan bukti terkuat pada bab ini.
+
+Tingkat eksak sekaligus memungkinkan pengukuran langsung terhadap bias tingkat
+tersampel. Pada kedua belas sel PaySim yang sama, selisih rerata absolut antara
+nilai tersampel dan nilai eksak sebesar 0,028 dengan selisih maksimum 0,099 yang
+terjadi pada sel FFD IID tanpa SMOTE, yang turun dari 0,973 menjadi 0,874. Tujuh
+dari dua belas sel bergerak turun, satu sel berimbang tepat, dan empat sel bergerak
+naik, sehingga tingkat tersampel secara neto melebih-lebihkan stabilitas dan
+merendahkan divergensi; arah bias tersebut bersifat konservatif terhadap kesimpulan
+yang dilaporkan.
+
+Verdict statistik kedua tingkat sepakat pada sebelas dari dua belas sel.
+Pengecualiannya adalah sel BERT IID tanpa SMOTE, yang menghasilkan p = 0,001 pada
+tingkat tersampel namun p = 0,111 pada tingkat eksak. Sel tersebut merupakan
+positif palsu pada tingkat tersampel, dan pelaporannya bersifat wajib karena
+justru merupakan argumen terbaik mengenai alasan tingkat eksak dibangun. Untuk
+PaySim, seluruh angka yang dikutip pada subbab ini berasal dari tingkat eksak;
+angka tersampel dipertahankan sebagai pemeriksaan silang yang menetapkan besaran
+biasnya.
 
 === Pengaruh SMOTE terhadap stabilitas interpretasi
 
@@ -3303,6 +3493,7 @@ daripada kenaikan yang seragam.
     [Kenaikan rerata — IID], table.cell(colspan: 2, align: center)[$+0,048$],
     [Kenaikan rerata — Dirichlet], table.cell(colspan: 2, align: center)[$+0,085$],
   ),
+  kind: table,
   caption: [Indeks Kuncheva menurut arm SMOTE],
 ) <tab-4-shap-arm>
 
@@ -3340,6 +3531,7 @@ menyajikan tiga kasus yang telah diverifikasi.
       `BC`, dan `BE`, ditambah `has_other_cards`],
     )
   ],
+  kind: table,
   caption: [Pergeseran fitur top-5 antar arm SMOTE pada tiga sel Dirichlet],
 ) <tab-4-shap-shift>
 
@@ -3380,8 +3572,9 @@ klip pada 1e−6, sedangkan probabilitas PaySim FedXGBllr berada di sekitar 1e�
 berada di bawah batas klip tersebut, sehingga setiap prediksi jenuh pada satu
 konstanta dan setiap perturbasi fitur tidak menggeser luaran. Persoalan ini
 diperbaiki dengan mengekspos aktivasi pra-Sigmoid secara langsung, dan setelah
-perbaikan kedua sel tersebut memberikan Spearman 0,756 dan 0,818 yang merupakan nilai
-paling tidak stabil dalam keseluruhan studi. Degenerasi ini merupakan kompresi
+perbaikan kedua sel tersebut merupakan sel paling divergen dalam keseluruhan studi,
+dengan Spearman berbobot sebesar 0,822 pada arm tanpa SMOTE dan 0,665 pada arm
+dengan SMOTE. Degenerasi ini merupakan kompresi
 probabilitas yang sama yang membuat kalibrasi menjadi tidak terdefinisi pada Subbab
 Perbandingan Diskriminasi dan Kalibrasi, sehingga satu degenerasi yang sama
 menampakkan diri di dua tempat dan keduanya teratasi dengan bekerja pada skala
@@ -3403,6 +3596,53 @@ alih-alih merupakan sebuah kesalahan. Sel centralized hanya memiliki satu client
 sehingga tidak memiliki stabilitas antar client menurut definisi dan tidak masuk ke
 dalam agregat mana pun.
 
+=== Keterbatasan pengukuran interpretabilitas
+
+Tujuh keterbatasan membatasi jangkauan klaim pada subbab ini dan dinyatakan secara
+eksplisit agar tidak terbaca lebih luas daripada yang diukur.
+
+Pertama, seluruh pengukuran bersandar pada satu seed pelatihan, yaitu 42. Divergensi
+diukur pada satu model terlatih, bukan lintas undian model. Keterbatasan ini telah
+ada sebelumnya dan turut membatasi klaim ini.
+
+Kedua, empat sel KernelSHAP tersampel bersifat tidak konklusif alih-alih menunjukkan
+kesepakatan, yaitu ULB FedXGBllr pada kondisi IID dan Dirichlet tanpa SMOTE, PaySim
+FedXGBllr pada kondisi IID tanpa SMOTE, serta ULB BERT pada kondisi IID tanpa SMOTE.
+Tiga di antaranya berasal dari keluarga FedXGBllr yang sama, namun beberapa upaya
+menjelaskan keluarga tersebut melalui satu statistik ringkas — fraksi atribusi
+mendekati nol, entropi profil, maupun median magnitudo atribusi — seluruhnya gagal.
+Pola tersebut dilaporkan sebagai teramati, bukan sebagai terjelaskan.
+
+Ketiga, kanal kedua hanya tersedia pada PaySim. ULB dan BAF tidak memiliki arm
+background bersama.
+
+Keempat, kedua arm bukan rancangan satu faktor. Sumber background, sumber baris yang
+dijelaskan, dan asal baris tersebut dari data latih atau data uji seluruhnya berbeda
+antar arm, sehingga besaran kedua kanal tidak dapat dibandingkan. Rancangan satu
+faktor yang bersih menuntut arm ketiga yang memvariasikan baris per client sekaligus
+background per client, yakni kondisi yang sesungguhnya terjadi pada penerapan nyata;
+arm tersebut tidak dijalankan. Karena kedua kanal bertanda positif, kasus gabungannya
+sekurang-kurangnya sama besar, dan simpulan tersebut dinyatakan sebagai inferensi
+alih-alih sebagai hasil pengukuran.
+
+Kelima, arm background bersama menjelaskan baris data latih. Partisi client hanya
+mencakup `x_train` dan tidak tersedia split tertahan per client pada pipeline ini,
+sehingga SHAP menjelaskan fungsi yang telah dilatih dan bukan kemampuan
+generalisasinya.
+
+Keenam, tingkat eksak hanya tersedia pada PaySim dan hanya dalam bentuk terkelompok.
+ULB menuntut $2^30$ koalisi dan BAF menuntut $2^55$. Pengelompokan yang sama pada BAF
+tetap menghasilkan $M$ efektif antara 29 dan 34, sehingga pengelompokan di sana tidak
+membeli keeksakan melainkan hanya argumen kebenaran yang berdekatan dengan SMOTE-NC
+serta reduksi variansi.
+
+Ketujuh, rumusan masalah ketiga menanyakan konsistensi peringkat, sedangkan peringkat
+dan magnitudo tidak selalu bergerak bersama. Sel PaySim FedXGBllr pada kondisi IID
+tanpa SMOTE merupakan tempat perbedaan itu paling terasa: kedua client berbeda pada
+magnitudo atribusi sebesar 4,5e−3 yang bernilai sekitar sembilan kali median
+atribusi sel tersebut, sementara urutannya nyaris tidak berbeda dengan Spearman
+berbobot sebesar 0,999998.
+
 === Sintesis temuan interpretabilitas antar keluarga model
 
 Karakteristik explainability ketiga keluarga model berbeda pada dua tingkat yang
@@ -3419,30 +3659,33 @@ menentukan karakteristik explainability secara otomatis; yang menentukan adalah
 keseluruhan jalur komputasi termasuk komponen non-tree yang ditambahkan oleh skema
 agregasi federated.
 
-Pada tingkat konsistensi, hanya explainer deterministik yang menghasilkan pengukuran
-yang dapat diatribusikan pada perilaku model. Model parametrik paling konsisten dengan
-rerata indeks Kuncheva 0,9433 untuk SVM dan 0,9112 untuk LR, sedangkan model pohon
-paling tidak konsisten dengan 0,8219 dan minimum 0,544. Ketiga model yang dijelaskan
-KernelSHAP, yaitu FFD, BERT, dan FedXGBllr, menghasilkan sebaran antar client yang
-seluruhnya jatuh pada atau di bawah noise floor masing-masing, sehingga konsistensinya
-tidak dapat dibedakan dari varians estimator pada anggaran komputasi penelitian ini.
-Ketidakterukuran tersebut merupakan karakteristik yang bermakna dan bukan sekadar
-kekosongan data, sebab kelas model yang menuntut explainer berbasis sampling menuntut
-pula biaya verifikasi yang jauh lebih besar sebelum klaim interpretabilitas dapat
-dipertanggungjawabkan kepada auditor maupun regulator.
+Pada tingkat konsistensi, perbedaan admisibilitas tersebut ternyata tidak
+menghalangi pengukuran. Dengan lantai derau yang diukur per client dan per sel serta
+uji exchangeability yang bersifat eksak, konsistensi antar client terjawab untuk
+keenam model: 29 dari 33 sel KernelSHAP tersampel membawa nilai stabilitas yang
+dapat dibedakan dari lantai derau explainer-nya sendiri, dan ketiga model berbasis
+sampling menempati kisaran stabilitas yang kira-kira sama pada 0,95. Pernyataan
+sebelumnya bahwa konsistensi hanya terukur pada explainer deterministik merupakan
+konsekuensi dari lantai tunggal yang disiarkan ke seluruh dataset dan dari nilai
+bawaan `l1_reg` yang menihilkan sebagian besar vektor atribusi, bukan konsekuensi
+dari sifat estimator berbasis sampling.
 
-Perbedaan konsistensi antar keluarga model ternyata tidak bersifat mutlak melainkan
-merupakan interaksi dengan distribusi data. Model pohon paling tidak stabil pada ULB
-dengan 0,742 justru di tempat model linear mencapai 1,000, sedangkan model linear
-paling tidak stabil pada PaySim dengan 0,789 di tempat model pohon relatif baik dengan
-0,878. Mekanismenya terletak pada cara masing-masing explainer memakai data
-background: LinearSHAP hanya menyerap background melalui rerata fitur yang serupa antar
-client ketika distribusi fiturnya serupa, sedangkan struktur split pohon berinteraksi
-dengan densitas lokal secara langsung. Di bawah kondisi Non-IID, bukti yang tersedia
-mengarah pada penurunan konsistensi yang paling tajam pada model pohon, ditunjukkan
-oleh nilai minimum yang jatuh pada sel Dirichlet, oleh penurunan PaySim GBM dari 1,000
-menjadi 0,7725, dan oleh kebutuhan homogenisasi yang hampir dua kali lipat lebih besar
-di bawah Dirichlet.
+Perbedaan konsistensi antar keluarga model bersifat interaksi dengan distribusi data
+alih-alih properti mutlak. Model pohon paling tidak stabil pada ULB dengan 0,742
+justru di tempat model linear mencapai 1,000, sedangkan model linear paling tidak
+stabil pada PaySim dengan 0,789 di tempat model pohon relatif baik dengan 0,878.
+Mekanismenya terletak pada cara masing-masing explainer memakai data background:
+LinearSHAP hanya menyerap background melalui rerata fitur yang serupa antar client
+ketika distribusi fiturnya serupa, sedangkan struktur split pohon berinteraksi dengan
+densitas lokal secara langsung.
+
+Di bawah kondisi Non-IID, heterogenitas distribusi menaikkan divergensi interpretasi
+antar client pada kedua kanal yang diukur secara terpisah, dan kesimpulan itu
+bertahan pada atribusi yang sama sekali bebas derau estimator: pada tingkat eksak
+PaySim, keenam pasangan Dirichlet berada di bawah pasangan IID-nya, dan selisih
+atribusi mentah antar client membesar antara 2,6 dan 19,5 kali. Efeknya berskala
+mengikuti keparahan partisi alih-alih bersifat seragam, sehingga temuan ini terhubung
+langsung dengan temuan heterogenitas pada subbab sebelumnya.
 
 Simpulan terakhir menyangkut hubungan antara stabilitas interpretasi dan robustnes
 performa, yang ternyata tidak searah. Paradigma best-model selection yang mendasari

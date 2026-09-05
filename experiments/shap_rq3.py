@@ -39,6 +39,11 @@ What changes vs v1 (each item measured or verified before being adopted):
 * Deterministic explainers (Linear/interventional Tree) are re-run at two global
   seeds and their outputs verified bit-identical — the "exact tier" whose
   between-client spread carries zero estimator noise and anchors the kernel tier.
+* seed_delta_max is measured on EVERY cell, kernel included: max|delta phi| over
+  the raw attributions of the two coalition seeds. On a sampled kernel cell it is
+  the estimator error's magnitude in attribution units; on any cell the run calls
+  deterministic it must be exactly 0.0, and an exactness guard aborts the cell
+  otherwise. Nothing claims zero noise on an unmeasured field.
 * Two-background design (--stage twobg): each selected cell re-run with a SHARED
   background (pooled local backgrounds -> k-means) next to the per-client one.
   The difference separates "the model behaves differently on this client" from
@@ -50,7 +55,8 @@ What changes vs v1 (each item measured or verified before being adopted):
   Ungrouped exact (2^13 - 2 = 8190, 13 players, comparable to v1/v2 rankings) is
   ~16.4x the per-instance cost and therefore gated behind --include-ungrouped;
   the runner prints a measured per-client extrapolation before committing.
-  Acceptance for both: max|delta importance| across the two seeds == 0.0 exactly.
+  Acceptance for both is enforced by the exactness guard above, not checked by
+  hand: max|delta phi| across the two seeds == 0.0 exactly, or the run aborts.
 * Budget probe (--stage budget): on ONE real cell/client, measures the two-seed
   floor across (nsamples, n_explain) pairs at fixed model-eval budget, deciding
   where extra compute goes before any is committed.
@@ -120,16 +126,19 @@ def _c(x):  # csv cell: "undefined" for nan/None, else rounded
 def kernel_g(obj, bg_km, X, seed, nsamples):
     """One (client, seed) global importance vector on log-odds, l1_reg=False.
 
-    Returns (mean|phi| vector, max nonzeros per explained row). The nonzero count
-    is the l1_reg regression guard's input: under the num_features(10) default
-    every row has <= 10 nonzeros; with l1_reg=False a non-degenerate model yields
-    dense rows.
+    Returns (mean|phi| vector, max nonzeros per explained row, raw phi matrix).
+    The nonzero count is the l1_reg regression guard's input: under the
+    num_features(10) default every row has <= 10 nonzeros; with l1_reg=False a
+    non-degenerate model yields dense rows. The raw matrix is what the cross-seed
+    delta is measured on, so the exact tier's claim is made over the ATTRIBUTIONS
+    themselves and not over their per-feature means, which two opposite-signed
+    sampling errors could reconcile by accident.
     """
     import shap
     np.random.seed(seed)  # the CRN lever: same seed => same coalition draw
     ex = shap.KernelExplainer(obj, bg_km)
     sv = _sv2d(ex.shap_values(X, nsamples=nsamples, l1_reg=False, silent=True), len(X))
-    return np.abs(sv).mean(axis=0), int((sv != 0).sum(axis=1).max())
+    return np.abs(sv).mean(axis=0), int((sv != 0).sum(axis=1).max()), sv
 
 
 def det_g(obj, kind, bg, X):
@@ -296,16 +305,26 @@ def process_cell(art, bg_mode, X, dh, nsamples=NSAMPLES, groups=None, gnames=Non
                 # the array in place.
                 bg_sum = DenseData(np.asarray(bg_sum.data), list(gnames),
                                    list(groups), np.array(bg_sum.weights, float))
+            sv_prev, dd = None, float("nan")
             for s, seed in enumerate(SHAP_SEEDS):
                 t = time.time()
-                g_vec, nz = kernel_g(obj, bg_sum, X, seed, nsamples)
+                g_vec, nz, sv = kernel_g(obj, bg_sum, X, seed, nsamples)
                 if g_vec.shape[0] != d:
                     raise RuntimeError(
                         f"output width {g_vec.shape[0]} != {d} expected players — "
                         "DenseData grouping unsupported by this shap version?")
                 G[c, s] = g_vec
                 nz_max = max(nz_max, nz)
-                print(f"      client {c} seed {seed}: {time.time()-t:.1f}s")
+                # cross-seed delta on the raw attributions: exactly 0.0 once
+                # nsamples enumerates every coalition, and a measured magnitude
+                # of the estimator's own error below that.
+                if sv_prev is None:
+                    sv_prev = sv
+                else:
+                    dd = float(np.abs(sv - sv_prev).max())
+                    det_delta = dd if det_delta != det_delta else max(det_delta, dd)
+                print(f"      client {c} seed {seed}: {time.time()-t:.1f}s"
+                      + ("" if dd != dd else f" seed_delta={dd:.3g}"))
         else:
             t = time.time()
             g, dd = det_g(obj, kind, bg, X)
@@ -324,6 +343,20 @@ def process_cell(art, bg_mode, X, dh, nsamples=NSAMPLES, groups=None, gnames=Non
             f"M = {d}. KernelSHAP appears to be running under the "
             "num_features(10) default — l1_reg=False did not take effect.")
 
+    # ---- exactness guard: every cell this run calls deterministic claims zero
+    # estimator noise — the kernel tier by enumerating all 2^d - 2 coalitions,
+    # the linear/tree tier by construction. _det_stats hard-codes floor = 1.0 on
+    # exactly that premise, so measure it rather than assume it. NaN (never
+    # measured) fails the comparison too, which is the intent.
+    exact_kernel = kind == "kernel" and nsamples >= 2 ** d - 2
+    deterministic = kind != "kernel" or exact_kernel
+    if deterministic and K >= 1 and det_delta != 0.0:
+        raise RuntimeError(
+            f"cell claims zero estimator noise but max|delta phi| across seeds "
+            f"{SHAP_SEEDS} = {det_delta:.3g}, not 0.0"
+            + (f" (kernel, nsamples = {nsamples} enumerates all 2^{d} - 2 "
+               f"coalitions)" if exact_kernel else f" ({kind} explainer)"))
+
     stats = SI.cell_inference(G) if kind == "kernel" else _det_stats(G)
     wbw = (SI.weighted_between_within(G) if stats.get("status") == "ok" and K >= 2
            else {"weighted_between_mean": float("nan"), "weighted_within_mean": float("nan")})
@@ -333,7 +366,7 @@ def process_cell(art, bg_mode, X, dh, nsamples=NSAMPLES, groups=None, gnames=Non
     prov = {"dataset": art["dataset"], "model": art["model"],
             "condition": art["condition"], "arm": art["arm"], "bg": bg_mode,
             "explainer": explainer_tag or kind,
-            "deterministic": kind != "kernel" or groups is not None or nsamples >= 2 ** d - 2,
+            "deterministic": deterministic,
             "nsamples": nsamples if kind == "kernel" else "n/a",
             "l1_reg": False if kind == "kernel" else "n/a",
             "n_clients": K, "manifest_sha256": manifest_hash(art["dir"]),
@@ -615,8 +648,8 @@ def stage_budget(args):
         assert ns * ne == budget
         X = _explanation_subset_n(ds, ne, np.random.default_rng(SEED))
         t = time.time()
-        g1, _ = kernel_g(obj, bg_km, X, SHAP_SEEDS[0], ns)
-        g2, _ = kernel_g(obj, bg_km, X, SHAP_SEEDS[1], ns)
+        g1, _, _ = kernel_g(obj, bg_km, X, SHAP_SEEDS[0], ns)
+        g2, _, _ = kernel_g(obj, bg_km, X, SHAP_SEEDS[1], ns)
         rho = SI.spearman(g1, g2)
         jac = ST.jaccard_at_k([g1, g2], k=5)
         print(f"    nsamples={ns:>5} n_explain={ne:>5}: floor rho={rho:.4f} "
