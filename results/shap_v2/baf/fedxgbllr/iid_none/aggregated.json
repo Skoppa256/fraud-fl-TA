@@ -1,0 +1,79 @@
+{
+  "dataset": "baf",
+  "model": "fedxgbllr",
+  "condition": "iid",
+  "arm": "none",
+  "bg": "local",
+  "explainer": "kernel",
+  "deterministic": false,
+  "nsamples": 500,
+  "l1_reg": false,
+  "n_clients": 5,
+  "manifest_sha256": "528372ea4204ab73",
+  "data_hash": "b3e0d335cd39bbe7",
+  "partition_hash": "cd5b049a3e8a4b5f",
+  "near_zero_fraction": [
+    [
+      0.1091,
+      0.1091
+    ],
+    [
+      0.1273,
+      0.1273
+    ],
+    [
+      0.0727,
+      0.0727
+    ],
+    [
+      0.1273,
+      0.1273
+    ],
+    [
+      0.1273,
+      0.1273
+    ]
+  ],
+  "top10_features": [
+    [
+      "housing_status_BA",
+      0.007828217311655122
+    ],
+    [
+      "prev_address_months_count_missing",
+      0.007802710018214289
+    ],
+    [
+      "keep_alive_session",
+      0.007363328180268277
+    ],
+    [
+      "name_email_similarity",
+      0.006623618421610406
+    ],
+    [
+      "current_address_months_count",
+      0.0064441221976775445
+    ],
+    [
+      "device_os_windows",
+      0.006157145820190976
+    ],
+    [
+      "phone_home_valid",
+      0.005678448757522653
+    ],
+    [
+      "has_other_cards",
+      0.0055181440451140375
+    ],
+    [
+      "income",
+      0.005025821991260504
+    ],
+    [
+      "bank_branch_count_8w",
+      0.0048299955332693325
+    ]
+  ]
+}

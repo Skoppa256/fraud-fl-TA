@@ -1,0 +1,79 @@
+{
+  "dataset": "baf",
+  "model": "bert_fraud",
+  "condition": "dirichlet",
+  "arm": "smote",
+  "bg": "local",
+  "explainer": "kernel",
+  "deterministic": false,
+  "nsamples": 500,
+  "l1_reg": false,
+  "n_clients": 5,
+  "manifest_sha256": "9d881d4a3e7fbede",
+  "data_hash": "b3e0d335cd39bbe7",
+  "partition_hash": "2a1e43d2c0e3b2d5",
+  "near_zero_fraction": [
+    [
+      0.1091,
+      0.1091
+    ],
+    [
+      0.1273,
+      0.1273
+    ],
+    [
+      0.1273,
+      0.1273
+    ],
+    [
+      0.1273,
+      0.1273
+    ],
+    [
+      0.1091,
+      0.1091
+    ]
+  ],
+  "top10_features": [
+    [
+      "income",
+      2.267250072187945
+    ],
+    [
+      "zip_count_4w",
+      1.8366263301513506
+    ],
+    [
+      "housing_status_BA",
+      1.7109073725546629
+    ],
+    [
+      "housing_status_BE",
+      1.6840240785292582
+    ],
+    [
+      "proposed_credit_limit",
+      1.6219820970247265
+    ],
+    [
+      "has_other_cards",
+      1.5517390267629152
+    ],
+    [
+      "device_os_windows",
+      1.5078299919439615
+    ],
+    [
+      "prev_address_months_count_missing",
+      1.394759534411622
+    ],
+    [
+      "housing_status_BB",
+      1.3796115499240773
+    ],
+    [
+      "intended_balcon_amount",
+      1.1422438270820452
+    ]
+  ]
+}

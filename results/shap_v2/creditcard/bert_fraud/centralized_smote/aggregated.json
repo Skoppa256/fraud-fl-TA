@@ -1,0 +1,63 @@
+{
+  "dataset": "creditcard",
+  "model": "bert_fraud",
+  "condition": "centralized",
+  "arm": "smote",
+  "bg": "local",
+  "explainer": "kernel",
+  "deterministic": false,
+  "nsamples": 500,
+  "l1_reg": false,
+  "n_clients": 1,
+  "manifest_sha256": "57a0f0b5c5ad5534",
+  "data_hash": "529651a852144c96",
+  "partition_hash": "n/a (centralized",
+  "near_zero_fraction": [
+    [
+      0.0,
+      0.0
+    ]
+  ],
+  "top10_features": [
+    [
+      "V4",
+      1.58825137459239
+    ],
+    [
+      "V5",
+      0.9578095690711943
+    ],
+    [
+      "V8",
+      0.7201367022637142
+    ],
+    [
+      "V14",
+      0.5744831867303848
+    ],
+    [
+      "V17",
+      0.5147397493550345
+    ],
+    [
+      "V2",
+      0.4823274326083665
+    ],
+    [
+      "V18",
+      0.40502775943724745
+    ],
+    [
+      "Time",
+      0.3885086385544696
+    ],
+    [
+      "V1",
+      0.38361766503278427
+    ],
+    [
+      "V15",
+      0.3390297729529296
+    ]
+  ]
+}

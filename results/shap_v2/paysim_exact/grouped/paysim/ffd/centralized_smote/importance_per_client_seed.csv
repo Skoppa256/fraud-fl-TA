@@ -1,0 +1,10 @@
+feature,client_0_s11,client_0_s22,mean
+step,0.5666,0.5666,0.5666
+amount,3.54015,3.54015,3.54015
+oldbalanceOrg,1.38075,1.38075,1.38075
+newbalanceOrig,2.44743,2.44743,2.44743
+oldbalanceDest,2.29407,2.29407,2.29407
+newbalanceDest,6.31415,6.31415,6.31415
+errorBalanceOrig,6.34321,6.34321,6.34321
+errorBalanceDest,0.810226,0.810226,0.810226
+type,5.01952,5.01952,5.01952

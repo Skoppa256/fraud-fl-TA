@@ -1,0 +1,97 @@
+{
+  "dataset": "paysim",
+  "model": "ffd",
+  "condition": "iid",
+  "arm": "none",
+  "bg": "shared",
+  "explainer": "kernel",
+  "deterministic": false,
+  "nsamples": 500,
+  "l1_reg": false,
+  "n_clients": 5,
+  "manifest_sha256": "29cd2e588d36e7ad",
+  "data_hash": "dd257865dfff5b8f",
+  "partition_hash": "bca1e67969caa7a8",
+  "explanation_set": "per-client local partition",
+  "n_explained_per_client": [
+    500,
+    500,
+    500,
+    500,
+    500
+  ],
+  "near_zero_fraction": [
+    [
+      0.0,
+      0.0
+    ],
+    [
+      0.0,
+      0.0
+    ],
+    [
+      0.0,
+      0.0
+    ],
+    [
+      0.0,
+      0.0
+    ],
+    [
+      0.0,
+      0.0
+    ]
+  ],
+  "degenerate_client_seed": [],
+  "collapsed_seeds": [],
+  "status": "ok",
+  "reason": null,
+  "floor_mean": 0.9923076923076923,
+  "floor_min": 0.9780219780219779,
+  "between_mean": 0.9862637362637361,
+  "between_sd": 0.00917676787311884,
+  "delta": 0.0060439560439562445,
+  "obs": 0.006868131868131955,
+  "p_value": 0.025396825396825397,
+  "n_matchings": 945,
+  "disattenuated": 0.99390919158361,
+  "floor": [
+    1.0,
+    0.9835164835164836,
+    1.0,
+    0.9780219780219779,
+    1.0
+  ],
+  "between": [
+    0.9780219780219779,
+    0.9945054945054945,
+    0.9725274725274725,
+    0.9945054945054945,
+    0.9835164835164836,
+    0.9945054945054945,
+    0.9835164835164836,
+    0.9780219780219779,
+    1.0,
+    0.9780219780219779,
+    0.9945054945054945,
+    0.9945054945054945,
+    0.9835164835164836,
+    0.9945054945054945,
+    0.9835164835164836,
+    0.989010989010989,
+    0.9835164835164836,
+    0.9725274725274725,
+    1.0,
+    0.9725274725274725
+  ],
+  "shap_seeds": [
+    11,
+    22
+  ],
+  "max_nonzero_per_row": 13,
+  "seed_delta_max": null,
+  "jaccard_at5": 1.0,
+  "kuncheva": 1.0,
+  "weighted_between": 0.9879204552256402,
+  "weighted_within": 0.9925496965280427
+}

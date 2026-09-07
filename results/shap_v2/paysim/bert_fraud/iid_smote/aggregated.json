@@ -1,0 +1,79 @@
+{
+  "dataset": "paysim",
+  "model": "bert_fraud",
+  "condition": "iid",
+  "arm": "smote",
+  "bg": "local",
+  "explainer": "kernel",
+  "deterministic": false,
+  "nsamples": 500,
+  "l1_reg": false,
+  "n_clients": 5,
+  "manifest_sha256": "0cfb3769d2367eda",
+  "data_hash": "dd257865dfff5b8f",
+  "partition_hash": "bca1e67969caa7a8",
+  "near_zero_fraction": [
+    [
+      0.0,
+      0.0
+    ],
+    [
+      0.0,
+      0.0
+    ],
+    [
+      0.0,
+      0.0
+    ],
+    [
+      0.0,
+      0.0
+    ],
+    [
+      0.0,
+      0.0
+    ]
+  ],
+  "top10_features": [
+    [
+      "type_PAYMENT",
+      17.792119287805793
+    ],
+    [
+      "type_CASH_IN",
+      8.620739475413494
+    ],
+    [
+      "oldbalanceOrg",
+      2.606503857354668
+    ],
+    [
+      "errorBalanceDest",
+      1.1768515172547598
+    ],
+    [
+      "errorBalanceOrig",
+      1.1095566784304929
+    ],
+    [
+      "newbalanceOrig",
+      0.6774705389393231
+    ],
+    [
+      "step",
+      0.5899602573413578
+    ],
+    [
+      "oldbalanceDest",
+      0.4999490980632292
+    ],
+    [
+      "amount",
+      0.4931993869188476
+    ],
+    [
+      "newbalanceDest",
+      0.4127752216924339
+    ]
+  ]
+}

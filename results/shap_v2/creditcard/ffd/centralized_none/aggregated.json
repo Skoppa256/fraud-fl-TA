@@ -1,0 +1,63 @@
+{
+  "dataset": "creditcard",
+  "model": "ffd",
+  "condition": "centralized",
+  "arm": "none",
+  "bg": "local",
+  "explainer": "kernel",
+  "deterministic": false,
+  "nsamples": 500,
+  "l1_reg": false,
+  "n_clients": 1,
+  "manifest_sha256": "bca6c9245bd604f6",
+  "data_hash": "529651a852144c96",
+  "partition_hash": "n/a (centralized",
+  "near_zero_fraction": [
+    [
+      0.0,
+      0.0
+    ]
+  ],
+  "top10_features": [
+    [
+      "V14",
+      0.30746325805524066
+    ],
+    [
+      "V12",
+      0.3009704381210387
+    ],
+    [
+      "V13",
+      0.2887138906372367
+    ],
+    [
+      "V9",
+      0.24613005008932437
+    ],
+    [
+      "V15",
+      0.22880073460434341
+    ],
+    [
+      "V16",
+      0.20842170845367758
+    ],
+    [
+      "V11",
+      0.20775729291164263
+    ],
+    [
+      "V10",
+      0.18866521374195683
+    ],
+    [
+      "V4",
+      0.16873514551384033
+    ],
+    [
+      "V8",
+      0.12358275818843914
+    ]
+  ]
+}

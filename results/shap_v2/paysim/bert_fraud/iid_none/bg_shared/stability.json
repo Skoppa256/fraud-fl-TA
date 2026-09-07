@@ -1,0 +1,97 @@
+{
+  "dataset": "paysim",
+  "model": "bert_fraud",
+  "condition": "iid",
+  "arm": "none",
+  "bg": "shared",
+  "explainer": "kernel",
+  "deterministic": false,
+  "nsamples": 500,
+  "l1_reg": false,
+  "n_clients": 5,
+  "manifest_sha256": "3383f34942b5a41c",
+  "data_hash": "dd257865dfff5b8f",
+  "partition_hash": "bca1e67969caa7a8",
+  "explanation_set": "per-client local partition",
+  "n_explained_per_client": [
+    500,
+    500,
+    500,
+    500,
+    500
+  ],
+  "near_zero_fraction": [
+    [
+      0.0,
+      0.0
+    ],
+    [
+      0.0,
+      0.0
+    ],
+    [
+      0.0,
+      0.0
+    ],
+    [
+      0.0,
+      0.0
+    ],
+    [
+      0.0,
+      0.0
+    ]
+  ],
+  "degenerate_client_seed": [],
+  "collapsed_seeds": [],
+  "status": "ok",
+  "reason": null,
+  "floor_mean": 0.9956043956043956,
+  "floor_min": 0.989010989010989,
+  "between_mean": 0.9837912087912086,
+  "between_sd": 0.013035935590730307,
+  "delta": 0.011813186813186993,
+  "obs": 0.011813186813186882,
+  "p_value": 0.01164021164021164,
+  "n_matchings": 945,
+  "disattenuated": 0.9881346578366444,
+  "floor": [
+    0.989010989010989,
+    1.0,
+    0.9945054945054945,
+    0.9945054945054945,
+    1.0
+  ],
+  "between": [
+    0.9945054945054945,
+    0.9835164835164836,
+    0.967032967032967,
+    0.9945054945054945,
+    0.9945054945054945,
+    0.9725274725274725,
+    1.0,
+    0.9560439560439561,
+    0.9945054945054945,
+    0.9725274725274725,
+    0.9945054945054945,
+    0.9780219780219779,
+    0.9725274725274725,
+    0.9945054945054945,
+    0.9835164835164836,
+    0.989010989010989,
+    1.0,
+    0.9615384615384615,
+    0.9835164835164836,
+    0.989010989010989
+  ],
+  "shap_seeds": [
+    11,
+    22
+  ],
+  "max_nonzero_per_row": 13,
+  "seed_delta_max": null,
+  "jaccard_at5": 1.0,
+  "kuncheva": 1.0,
+  "weighted_between": 0.9922764269006554,
+  "weighted_within": 0.9980058853038145
+}

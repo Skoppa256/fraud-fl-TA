@@ -1,0 +1,76 @@
+{
+  "dataset": "creditcard",
+  "model": "lr",
+  "condition": "iid",
+  "arm": "none",
+  "bg": "local",
+  "explainer": "linear",
+  "deterministic": true,
+  "nsamples": "n/a",
+  "l1_reg": "n/a",
+  "n_clients": 5,
+  "manifest_sha256": "1b6e343cc4737cd2",
+  "data_hash": "529651a852144c96",
+  "partition_hash": "7b688054df33b633",
+  "near_zero_fraction": [
+    [
+      0.0,
+      0.0
+    ],
+    [
+      0.0,
+      0.0
+    ],
+    [
+      0.0,
+      0.0
+    ],
+    [
+      0.0,
+      0.0
+    ],
+    [
+      0.0,
+      0.0
+    ]
+  ],
+  "status": "ok",
+  "reason": null,
+  "floor_mean": 1.0,
+  "floor_min": 1.0,
+  "between_mean": 0.9965294771968856,
+  "between_sd": 0.0024261748664950703,
+  "delta": 0.0034705228031144397,
+  "p_value": null,
+  "n_matchings": 0,
+  "disattenuated": null,
+  "floor": [
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0
+  ],
+  "between": [
+    0.9968854282536151,
+    0.9977753058954394,
+    0.9955506117908787,
+    0.9955506117908787,
+    0.9946607341490545,
+    0.9991101223581758,
+    0.9991101223581758,
+    0.9933259176863181,
+    0.9933259176863181,
+    1.0
+  ],
+  "shap_seeds": [
+    11,
+    22
+  ],
+  "max_nonzero_per_row": "n/a",
+  "seed_delta_max": 0.0,
+  "jaccard_at5": 1.0,
+  "kuncheva": 1.0,
+  "weighted_between": 0.9968594573015194,
+  "weighted_within": 1.0
+}

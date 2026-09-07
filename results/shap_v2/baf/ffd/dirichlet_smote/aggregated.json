@@ -1,0 +1,79 @@
+{
+  "dataset": "baf",
+  "model": "ffd",
+  "condition": "dirichlet",
+  "arm": "smote",
+  "bg": "local",
+  "explainer": "kernel",
+  "deterministic": false,
+  "nsamples": 500,
+  "l1_reg": false,
+  "n_clients": 5,
+  "manifest_sha256": "e5f5362322729942",
+  "data_hash": "b3e0d335cd39bbe7",
+  "partition_hash": "2a1e43d2c0e3b2d5",
+  "near_zero_fraction": [
+    [
+      0.1091,
+      0.1091
+    ],
+    [
+      0.1273,
+      0.1273
+    ],
+    [
+      0.1273,
+      0.1273
+    ],
+    [
+      0.1273,
+      0.1273
+    ],
+    [
+      0.1091,
+      0.1091
+    ]
+  ],
+  "top10_features": [
+    [
+      "housing_status_BB",
+      2.3701833986571037
+    ],
+    [
+      "phone_home_valid",
+      1.899543828023867
+    ],
+    [
+      "housing_status_BC",
+      1.8296551544913737
+    ],
+    [
+      "email_is_free",
+      1.6132738321203024
+    ],
+    [
+      "device_os_other",
+      1.4090907101519006
+    ],
+    [
+      "has_other_cards",
+      1.3792923699886273
+    ],
+    [
+      "housing_status_BE",
+      1.1568450402075017
+    ],
+    [
+      "zip_count_4w",
+      1.1147262329157166
+    ],
+    [
+      "prev_address_months_count_missing",
+      1.054881962021018
+    ],
+    [
+      "keep_alive_session",
+      0.9994679070655932
+    ]
+  ]
+}

@@ -1,0 +1,47 @@
+{
+  "dataset": "creditcard",
+  "model": "bert_fraud",
+  "condition": "centralized",
+  "arm": "none",
+  "bg": "local",
+  "explainer": "kernel",
+  "deterministic": false,
+  "nsamples": 500,
+  "l1_reg": false,
+  "n_clients": 1,
+  "manifest_sha256": "b2c73bcb3126ccd1",
+  "data_hash": "529651a852144c96",
+  "partition_hash": "n/a (centralized",
+  "near_zero_fraction": [
+    [
+      0.0,
+      0.0
+    ]
+  ],
+  "degenerate_client_seed": [],
+  "status": "ok",
+  "reason": null,
+  "floor_mean": 0.9781979977753059,
+  "floor_min": 0.9781979977753059,
+  "between_mean": null,
+  "between_sd": null,
+  "delta": null,
+  "obs": null,
+  "p_value": null,
+  "n_matchings": 0,
+  "disattenuated": null,
+  "floor": [
+    0.9781979977753059
+  ],
+  "between": [],
+  "shap_seeds": [
+    11,
+    22
+  ],
+  "max_nonzero_per_row": 30,
+  "seed_delta_max": null,
+  "jaccard_at5": null,
+  "kuncheva": null,
+  "weighted_between": null,
+  "weighted_within": null
+}

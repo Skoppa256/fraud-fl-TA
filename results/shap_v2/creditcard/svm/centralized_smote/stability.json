@@ -1,0 +1,43 @@
+{
+  "dataset": "creditcard",
+  "model": "svm",
+  "condition": "centralized",
+  "arm": "smote",
+  "bg": "local",
+  "explainer": "linear",
+  "deterministic": true,
+  "nsamples": "n/a",
+  "l1_reg": "n/a",
+  "n_clients": 1,
+  "manifest_sha256": "0552f3ea8fbace37",
+  "data_hash": "529651a852144c96",
+  "partition_hash": "n/a (centralized",
+  "near_zero_fraction": [
+    [
+      0.0,
+      0.0
+    ]
+  ],
+  "status": "ok",
+  "reason": null,
+  "floor_mean": null,
+  "floor_min": null,
+  "between_mean": null,
+  "between_sd": null,
+  "delta": null,
+  "p_value": null,
+  "n_matchings": 0,
+  "disattenuated": null,
+  "floor": [],
+  "between": [],
+  "shap_seeds": [
+    11,
+    22
+  ],
+  "max_nonzero_per_row": "n/a",
+  "seed_delta_max": 0.0,
+  "jaccard_at5": null,
+  "kuncheva": null,
+  "weighted_between": null,
+  "weighted_within": null
+}

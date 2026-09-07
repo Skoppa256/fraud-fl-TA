@@ -1,0 +1,63 @@
+{
+  "dataset": "baf",
+  "model": "ffd",
+  "condition": "centralized",
+  "arm": "none",
+  "bg": "local",
+  "explainer": "kernel",
+  "deterministic": false,
+  "nsamples": 500,
+  "l1_reg": false,
+  "n_clients": 1,
+  "manifest_sha256": "2be379d06a02b50f",
+  "data_hash": "b3e0d335cd39bbe7",
+  "partition_hash": "n/a (centralized",
+  "near_zero_fraction": [
+    [
+      0.1091,
+      0.1091
+    ]
+  ],
+  "top10_features": [
+    [
+      "prev_address_months_count_missing",
+      0.5527549239529747
+    ],
+    [
+      "phone_home_valid",
+      0.41370570583778266
+    ],
+    [
+      "keep_alive_session",
+      0.3623364531442327
+    ],
+    [
+      "device_os_linux",
+      0.34608271071478136
+    ],
+    [
+      "email_is_free",
+      0.31108946247460345
+    ],
+    [
+      "has_other_cards",
+      0.2912409548863489
+    ],
+    [
+      "name_email_similarity",
+      0.2690036308482242
+    ],
+    [
+      "device_os_other",
+      0.26880564195262946
+    ],
+    [
+      "housing_status_BA",
+      0.23907922826638223
+    ],
+    [
+      "employment_status_CA",
+      0.21052611709686145
+    ]
+  ]
+}

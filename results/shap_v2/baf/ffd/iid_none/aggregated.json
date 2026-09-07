@@ -1,0 +1,79 @@
+{
+  "dataset": "baf",
+  "model": "ffd",
+  "condition": "iid",
+  "arm": "none",
+  "bg": "local",
+  "explainer": "kernel",
+  "deterministic": false,
+  "nsamples": 500,
+  "l1_reg": false,
+  "n_clients": 5,
+  "manifest_sha256": "97a54229f021c535",
+  "data_hash": "b3e0d335cd39bbe7",
+  "partition_hash": "cd5b049a3e8a4b5f",
+  "near_zero_fraction": [
+    [
+      0.1091,
+      0.1091
+    ],
+    [
+      0.1273,
+      0.1273
+    ],
+    [
+      0.0727,
+      0.0727
+    ],
+    [
+      0.1273,
+      0.1273
+    ],
+    [
+      0.1273,
+      0.1273
+    ]
+  ],
+  "top10_features": [
+    [
+      "prev_address_months_count_missing",
+      0.5179506176201703
+    ],
+    [
+      "phone_home_valid",
+      0.45726035995229886
+    ],
+    [
+      "has_other_cards",
+      0.36629965822915744
+    ],
+    [
+      "keep_alive_session",
+      0.36324302945575115
+    ],
+    [
+      "name_email_similarity",
+      0.3020579963500072
+    ],
+    [
+      "device_os_linux",
+      0.297692626428044
+    ],
+    [
+      "email_is_free",
+      0.2948953108096557
+    ],
+    [
+      "employment_status_CA",
+      0.23630506635276965
+    ],
+    [
+      "device_os_other",
+      0.2159092191900384
+    ],
+    [
+      "income",
+      0.18308405476800016
+    ]
+  ]
+}
