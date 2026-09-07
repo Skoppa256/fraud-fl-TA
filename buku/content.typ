@@ -1922,6 +1922,7 @@ komputasi yang spesifikasinya disajikan pada @tab-3-5.
     [Library numerik & DataFrame], [NumPy, Pandas, SciPy],
     [Library visualisasi], [Matplotlib, Seaborn],
     [Pelacakan eksperimen], [Weights & Biases (wandb 0.15.12)],
+    [Pengujian regresi], [pytest 9.1.1],
     [Version control], [Git + GitHub],
   ),
   caption: [Spesifikasi Lingkungan Pengembangan],

@@ -106,3 +106,43 @@ reinstated on much better evidence. Either way it is reported.
   noise by construction (verified per run via the bit-identity check); its
   between-client spread is the calibration anchor the kernel tier is read
   against.
+
+## Outcomes (recorded 2026-09-07, after the v2 grid was complete and frozen)
+
+The v2 re-run is finished: 124 cells in `results/shap_v2/`, all `status = ok`,
+audited by `analysis/verify_kernel_tier.py` (six legs, all PASS). All three
+predictions above stand.
+
+- **P1 — confirmed.** The floors rose for all three kernel models once
+  `l1_reg=False` removed the LARS keep-10 selection. On the pilot cell the
+  FedXGBllr floor went from 0.9730 to 0.9984; across the full grid every one of
+  the 33 multi-client kernel cells now carries a within-client floor ≥ 0.9726
+  weighted, against v1's single broadcast BAF numbers of 0.9730 / 0.9972 /
+  0.9966. Most of the noise v1 measured was the discontinuous feature selection,
+  not coalition sampling.
+
+- **P2 — confirmed.** The floors are approximately M-independent. Mean
+  within-client floor (magnitude-weighted) per model across PaySim (M = 13),
+  ULB (M = 30) and BAF (M = 55): FFD 0.9997 / 0.9996 / 0.9997, BERT 0.9992 /
+  0.9982 / 0.9996, FedXGBllr 0.9951 / 0.9861 / 0.9993. The spread across M is
+  at most 0.013 and is not monotone in M — BAF (M = 55) carries the *highest*
+  floor for two of the three models, which is the opposite of the
+  keep-10-driven M-dependence v1's single BAF number implied. The
+  low-bias-for-PaySim artifact is gone.
+
+- **P3 — confirmed.** The falsifiable one holds, and not narrowly: **29 of the
+  33** multi-client kernel cells show between-client disagreement exceeding
+  estimator noise under the exact exchangeability test (945 matchings at K = 5,
+  BH-adjusted), against the "majority" the prediction asked for. Per model:
+  FFD 11/11, BERT 10/11, FedXGBllr 8/11. The "at or below the floor" framing
+  from v1 did not survive, and the "RQ3 answerable for the deterministic tier
+  only" fallback is not reinstated.
+
+The direction of the between-client Spearman was explicitly not predicted, and
+it did not need to be: the floors and the between-client values did **not** rise
+in step, which is what opened the gaps.
+
+Two framing corrections came out of the review of this outcome and are recorded
+in `docs/rq3_method_notes.md` rather than here, because they are about how the
+result is read rather than about whether the prediction held: the floor is a
+**null**, not a detection threshold, and the exact-grouped tier is not an anchor.
