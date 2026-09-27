@@ -1,0 +1,68 @@
+<!doctype html><meta charset="utf-8">
+<title>Two-seed floor vs between-client gap</title>
+<style>
+:root{color-scheme:light;--surface:#fcfcfb;--plane:#f9f9f7;--ink:#0b0b0b;
+ --ink2:#52514e;--muted:#898781;--rule:#e1e0d9;--ring:rgba(11,11,11,.10);
+ --floor:#0d366b;--btwn:#3987e5;--band:rgba(13,54,107,.10)}
+@media (prefers-color-scheme:dark){:root:not([data-theme=light]){
+ --surface:#1a1a19;--plane:#0d0d0d;--ink:#fff;--ink2:#c3c2b7;--muted:#898781;
+ --rule:#2c2c2a;--ring:rgba(255,255,255,.10);--floor:#9ec5f4;--btwn:#3987e5;
+ --band:rgba(158,197,244,.12)}}
+[data-theme=dark]{--surface:#1a1a19;--plane:#0d0d0d;--ink:#fff;--ink2:#c3c2b7;
+ --muted:#898781;--rule:#2c2c2a;--ring:rgba(255,255,255,.10);--floor:#9ec5f4;
+ --btwn:#3987e5;--band:rgba(158,197,244,.12)}
+*{box-sizing:border-box}
+body{margin:0;padding:26px 22px;background:var(--plane);color:var(--ink);
+ font:14px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif}
+.card{max-width:760px;margin:0 auto;background:var(--surface);
+ border:1px solid var(--ring);border-radius:12px;padding:14px 16px 10px}
+svg{display:block;width:100%;height:auto;font-family:inherit}
+.bar{fill:var(--btwn)} .bar.s1{fill:var(--btwn);opacity:.55}
+.within{stroke:var(--floor);stroke-width:2;stroke-dasharray:4 4;fill:none}
+.wdot{fill:var(--surface);stroke:var(--floor);stroke-width:2}
+.btw{stroke:var(--btwn);stroke-width:2;fill:none;opacity:.8}
+.rowlab{fill:var(--ink2);font-size:16px;text-anchor:end}
+.collab{fill:var(--muted);font-size:14px;text-anchor:middle;
+ letter-spacing:.05em;text-transform:uppercase}
+.h{fill:var(--ink);font-size:19px;font-weight:600}
+.sub{fill:var(--ink2);font-size:15px}
+.axis{stroke:var(--rule);stroke-width:1.2}
+.tick{stroke:var(--rule);stroke-width:1.2}
+.ticklab{fill:var(--muted);font-size:14px;text-anchor:middle;
+ font-variant-numeric:tabular-nums}
+.band{fill:var(--band)}
+.fdot{fill:var(--floor)} .bdot{fill:var(--btwn);opacity:.85}
+.gap{stroke:var(--ink2);stroke-width:1.8;fill:none}
+.gaplab{fill:var(--ink2);font-size:16px;text-anchor:middle;font-weight:600}
+.lane{fill:var(--ink2);font-size:16px;text-anchor:end}
+.note{fill:var(--muted);font-size:13.5px}
+.eq{fill:var(--ink2);font-size:14.5px}
+.brk{fill:var(--ink2);font-size:15px;text-anchor:end}
+.brknote{fill:var(--muted);font-size:13px;text-anchor:end}
+.wlab{fill:var(--floor);font-size:14px;text-anchor:middle}
+</style>
+<div class="card">
+<svg viewBox="0 0 820 744" role="img"
+     aria-label="Two coalition seeds per client: the within-client floor and the
+     between-client comparison it is tested against.">
+  <text x="18" y="30" class="h">A &nbsp;Apa yang dibandingkan</text>
+  <text x="18" y="54" class="sub">5 client &#215; 2 seed koalisi = 10 vektor</text>
+  <text x="328" y="78" class="collab">seed 11</text>
+  <text x="496" y="78" class="collab">seed 22</text>
+  <path d="M357 112.0 H464" class="within"/><circle cx="412" cy="112.0" r="11" class="wdot"/><path d="M357 164.0 H464" class="within"/><circle cx="412" cy="164.0" r="11" class="wdot"/><path d="M357 216.0 H464" class="within"/><circle cx="412" cy="216.0" r="11" class="wdot"/><path d="M357 268.0 H464" class="within"/><circle cx="412" cy="268.0" r="11" class="wdot"/><path d="M357 320.0 H464" class="within"/><circle cx="412" cy="320.0" r="11" class="wdot"/><text x="412" y="78" class="wlab">floor</text><path d="M202 96 H192 V336 H202" class="btw"/><text x="184" y="210.0" class="brk">antar-client</text><text x="184" y="228.0" class="brknote">seed sama (CRN)</text><rect x="300" y="94.0" width="8" height="38.0" rx="1.5" class="bar s0"/><rect x="311" y="107.2" width="8" height="24.8" rx="1.5" class="bar s0"/><rect x="322" y="115.6" width="8" height="16.4" rx="1.5" class="bar s0"/><rect x="333" y="120.8" width="8" height="11.2" rx="1.5" class="bar s0"/><rect x="344" y="125.2" width="8" height="6.8" rx="1.5" class="bar s0"/><rect x="468" y="94.8" width="8" height="37.2" rx="1.5" class="bar s1"/><rect x="479" y="106.0" width="8" height="26.0" rx="1.5" class="bar s1"/><rect x="490" y="116.4" width="8" height="15.6" rx="1.5" class="bar s1"/><rect x="501" y="120.0" width="8" height="12.0" rx="1.5" class="bar s1"/><rect x="512" y="126.0" width="8" height="6.0" rx="1.5" class="bar s1"/><text x="282" y="117.0" class="rowlab">client 0</text><rect x="300" y="145.2" width="8" height="38.8" rx="1.5" class="bar s0"/><rect x="311" y="158.4" width="8" height="25.6" rx="1.5" class="bar s0"/><rect x="322" y="166.8" width="8" height="17.2" rx="1.5" class="bar s0"/><rect x="333" y="172.0" width="8" height="12.0" rx="1.5" class="bar s0"/><rect x="344" y="176.4" width="8" height="7.6" rx="1.5" class="bar s0"/><rect x="468" y="146.0" width="8" height="38.0" rx="1.5" class="bar s1"/><rect x="479" y="157.2" width="8" height="26.8" rx="1.5" class="bar s1"/><rect x="490" y="167.6" width="8" height="16.4" rx="1.5" class="bar s1"/><rect x="501" y="171.2" width="8" height="12.8" rx="1.5" class="bar s1"/><rect x="512" y="177.2" width="8" height="6.8" rx="1.5" class="bar s1"/><text x="282" y="169.0" class="rowlab">client 1</text><rect x="300" y="199.2" width="8" height="36.8" rx="1.5" class="bar s0"/><rect x="311" y="212.4" width="8" height="23.6" rx="1.5" class="bar s0"/><rect x="322" y="220.8" width="8" height="15.2" rx="1.5" class="bar s0"/><rect x="333" y="226.0" width="8" height="10.0" rx="1.5" class="bar s0"/><rect x="344" y="230.4" width="8" height="5.6" rx="1.5" class="bar s0"/><rect x="468" y="200.0" width="8" height="36.0" rx="1.5" class="bar s1"/><rect x="479" y="211.2" width="8" height="24.8" rx="1.5" class="bar s1"/><rect x="490" y="221.6" width="8" height="14.4" rx="1.5" class="bar s1"/><rect x="501" y="225.2" width="8" height="10.8" rx="1.5" class="bar s1"/><rect x="512" y="231.2" width="8" height="4.8" rx="1.5" class="bar s1"/><text x="282" y="221.0" class="rowlab">client 2</text><rect x="300" y="248.4" width="8" height="39.6" rx="1.5" class="bar s0"/><rect x="311" y="261.6" width="8" height="26.4" rx="1.5" class="bar s0"/><rect x="322" y="270.0" width="8" height="18.0" rx="1.5" class="bar s0"/><rect x="333" y="275.2" width="8" height="12.8" rx="1.5" class="bar s0"/><rect x="344" y="279.6" width="8" height="8.4" rx="1.5" class="bar s0"/><rect x="468" y="249.2" width="8" height="38.8" rx="1.5" class="bar s1"/><rect x="479" y="260.4" width="8" height="27.6" rx="1.5" class="bar s1"/><rect x="490" y="270.8" width="8" height="17.2" rx="1.5" class="bar s1"/><rect x="501" y="274.4" width="8" height="13.6" rx="1.5" class="bar s1"/><rect x="512" y="280.4" width="8" height="7.6" rx="1.5" class="bar s1"/><text x="282" y="273.0" class="rowlab">client 3</text><rect x="300" y="302.8" width="8" height="37.2" rx="1.5" class="bar s0"/><rect x="311" y="316.0" width="8" height="24.0" rx="1.5" class="bar s0"/><rect x="322" y="324.4" width="8" height="15.6" rx="1.5" class="bar s0"/><rect x="333" y="329.6" width="8" height="10.4" rx="1.5" class="bar s0"/><rect x="344" y="334.0" width="8" height="6.0" rx="1.5" class="bar s0"/><rect x="468" y="303.6" width="8" height="36.4" rx="1.5" class="bar s1"/><rect x="479" y="314.8" width="8" height="25.2" rx="1.5" class="bar s1"/><rect x="490" y="325.2" width="8" height="14.8" rx="1.5" class="bar s1"/><rect x="501" y="328.8" width="8" height="11.2" rx="1.5" class="bar s1"/><rect x="512" y="334.8" width="8" height="5.2" rx="1.5" class="bar s1"/><text x="282" y="325.0" class="rowlab">client 4</text>
+  <line x1="18" y1="380" x2="802" y2="380" class="axis"/>
+  <text x="18" y="454" class="h">B &nbsp;Sebaran kesepakatan pada satu sel</text>
+  <text x="18" y="478" class="sub">baf/bert_fraud/dirichlet_none</text>
+  <rect x="753.5" y="508" width="2.5" height="122" class="band"/><path d="M488.3 569.0 H754.5" class="gap"/><path d="M745.5 564.0 L754.5 569.0 L745.5 574.0" class="gap"/><text x="621.4" y="560.0" class="gaplab">&#916; = 0.044</text><circle cx="467.2" cy="604" r="7" class="bdot"/><circle cx="544.1" cy="604" r="7" class="bdot"/><circle cx="580.8" cy="604" r="7" class="bdot"/><circle cx="531.9" cy="604" r="7" class="bdot"/><circle cx="321.8" cy="604" r="7" class="bdot"/><circle cx="630.6" cy="604" r="7" class="bdot"/><circle cx="484.0" cy="604" r="7" class="bdot"/><circle cx="386.6" cy="604" r="7" class="bdot"/><circle cx="413.1" cy="604" r="7" class="bdot"/><circle cx="501.3" cy="604" r="7" class="bdot"/><circle cx="489.7" cy="604" r="7" class="bdot"/><circle cx="546.7" cy="604" r="7" class="bdot"/><circle cx="591.6" cy="604" r="7" class="bdot"/><circle cx="533.0" cy="604" r="7" class="bdot"/><circle cx="330.9" cy="604" r="7" class="bdot"/><circle cx="632.3" cy="604" r="7" class="bdot"/><circle cx="494.6" cy="604" r="7" class="bdot"/><circle cx="387.5" cy="604" r="7" class="bdot"/><circle cx="404.4" cy="604" r="7" class="bdot"/><circle cx="493.9" cy="604" r="7" class="bdot"/><circle cx="753.5" cy="534" r="7" class="fdot"/><circle cx="754.8" cy="534" r="7" class="fdot"/><circle cx="754.3" cy="534" r="7" class="fdot"/><circle cx="755.6" cy="534" r="7" class="fdot"/><circle cx="754.3" cy="534" r="7" class="fdot"/>
+  <line x1="250" y1="644" x2="780" y2="644" class="axis"/><line x1="277.4" y1="644" x2="277.4" y2="651" class="tick"/><text x="277.4" y="668" class="ticklab">0.92</text><line x1="397.1" y1="644" x2="397.1" y2="651" class="tick"/><text x="397.1" y="668" class="ticklab">0.94</text><line x1="516.7" y1="644" x2="516.7" y2="651" class="tick"/><text x="516.7" y="668" class="ticklab">0.96</text><line x1="636.4" y1="644" x2="636.4" y2="651" class="tick"/><text x="636.4" y="668" class="ticklab">0.98</text><line x1="756.1" y1="644" x2="756.1" y2="651" class="tick"/><text x="756.1" y="668" class="ticklab">1.00</text>
+  <text x="234" y="530" class="lane">floor</text>
+  <text x="234" y="550" class="note" text-anchor="end">client sama, 2 seed</text>
+  <text x="234" y="600" class="lane">antar-client</text>
+  <text x="234" y="620" class="note" text-anchor="end">seed sama (CRN)</text>
+  <text x="737.5" y="514" class="note" text-anchor="end">5 titik berimpit, 0.9996&#8211;0.9999</text>
+  <text x="18" y="702" class="eq">Di bawah H&#8320; kedua sebaran berimpit, sehingga
+  &#34;pada atau di bawah floor&#34; bukan kriteria deteksi.</text>
+  <text x="18" y="724" class="eq">Uji eksak menyusun ulang ke-10 vektor atas
+  seluruh 945 perfect matching: p = 0.001058.</text>
+</svg>
+</div>

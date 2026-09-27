@@ -55,6 +55,9 @@ outputs/
 multirun/
 *.log
 logs/
+# Keep the RQ3 v2 run logs: unreproducible, and the sole evidence for the
+# invocation sequence and the defect-#3 collapse (docs/rq3_method_notes.md).
+!results/shap_v2/*.log
 
 # =============================================================================
 # Model artifacts (trained weights / serialized models)

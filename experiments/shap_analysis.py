@@ -28,6 +28,24 @@ outputs (two-seed per-client floors, exchangeability test, l1_reg=False) and
 writes under results/shap_v2/. This script keeps l1_reg=False as well but still
 writes under results/shap/ — RE-RUNNING IT OVERWRITES THE v1 ARTIFACTS that the
 currently reported numbers came from; prefer shap_rq3.py.
+
+DO NOT RE-RUN THIS SCRIPT. One of the files it overwrites is unreproducible:
+
+    results/shap/production.log
+
+That log is the ONLY surviving record of the pre-repair run, and it is the
+primary source for a figure the thesis quotes in BAB 4 §4.3 — the FedXGBllr
+value 0,775, which is the mean of the 11 multi-client FedXGBllr cells it
+records, two of them all-zero. It cannot be regenerated at any cost: commit
+1d661ac (2026-08-07, "fix: shap on bert") removed LOGIT_EPS and replaced the
+FedXGBllr CNN head's Sigmoid with Identity, which fixed the clipped-logit
+saturation that produced those all-zero cells. The condition the log records no
+longer exists in this codebase. Re-running overwrites the evidence for a number
+already in the thesis, and no re-run can restore it.
+
+The log is covered by docs/frozen_manifest.sha256, so a `shasum -a 256 -c` of
+that manifest will detect the loss — after the fact. Prevention is not re-running
+this script.
 """
 
 from __future__ import annotations
@@ -63,17 +81,30 @@ CHEAP = {"lr", "svm", "gbm", "xgb"}
 EXPENSIVE_DATASET_ORDER = ["baf", "creditcard", "paysim"]
 KNOWN = ["bert_fraud", "fedxgbllr", "gbm", "ffd", "svm", "lr", "xgb"]
 
-# Measured KernelSHAP self-agreement floors (noise-floor probe, nsamples=500, on one
-# BAF-dirichlet client): the smallest cross-seed Spearman KernelSHAP reaches against
-# ITSELF. A production cross-client Spearman at or below a model's floor is within
-# estimator sampling noise and CANNOT be read as model instability. Each floor is
-# per-model and measured for that architecture (shap_noise_floor.py). The floor was
-# measured at N_EXPLAIN=250 while production uses 500, so each value is a LOWER BOUND.
-# Deterministic LinearSHAP has no sampling noise -> no floor ("n/a"); tree models now
-# use interventional KernelSHAP-style sampling but are exact per-background, so their
-# cross-client variation is real and they also carry no sampling floor ("n/a").
-#   TODO(box): replace ffd's interim value below with its OWN measured floor once
-#   shap_noise_floor.py reports it (it is now measured directly, not borrowed).
+# V1 ONLY — SUPERSEDED. Do not use for new analysis, and do not read this as a
+# detection threshold.
+#
+# These are the v1 broadcast noise floors: one cross-seed Spearman per model,
+# measured by shap_noise_floor.py at nsamples=500 on a SINGLE BAF-dirichlet client
+# and then applied to every dataset and cell. They are kept because they are what
+# produced results/shap/shap_summary.csv (the archived v1 record) and because
+# annotate_floor() below still writes the v1 `noise_floor` / `below_floor` columns
+# for that file. NOTHING in the v2 path reads them: experiments/shap_rq3.py imports
+# named helpers from this module but not NOISE_FLOOR or annotate_floor, and
+# results/shap_v2/** has no noise_floor or below_floor column.
+#
+# Two things about the v1 reading were wrong and are corrected in v2:
+#   1. A floor broadcast from one BAF client cannot stand in for the grid. v2
+#      measures a floor per client per cell (56 distinct values across the 33
+#      multi-client kernel cells, against the three constants here).
+#   2. The floor is a NULL, not a threshold. Under H0 (all clients share one true
+#      importance vector) the expected between-client agreement EQUALS the floor,
+#      so a value far below it is evidence AGAINST H0 — real disagreement — not
+#      "within sampling noise". The old wording here inverted that, which turned
+#      low power into apparent stability. v2 replaces the comparison with an exact
+#      exchangeability test (945 matchings at K=5, BH-adjusted) and finds 29 of 33
+#      cells distinguishable from their own floor.
+# See docs/rq3_method_notes.md and docs/shap_rq3_run.md.
 NOISE_FLOOR = {"fedxgbllr": 0.9730, "bert_fraud": 0.9972, "ffd": 0.9966}
 SUMMARY_COLS = ["dataset", "model", "condition", "arm", "explainer", "n_clients",
                 "manifest_sha256", "data_hash", "partition_hash",

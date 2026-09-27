@@ -27,6 +27,10 @@ import matplotlib.pyplot as plt  # noqa: E402
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 DEFAULT_ROOT = PROJECT_ROOT / "results" / "shap_v2"
+# Output is INDEPENDENT of --root on purpose. Deriving it from --root made this
+# script write into the tree it reads, and results/shap_v2/** is frozen; a freeze
+# rule broken by routine figure regeneration is a freeze rule nobody believes.
+DEFAULT_OUTDIR = PROJECT_ROOT / "results" / "visualizations" / "profiles"
 
 MODEL_LABEL = {"lr": "LR", "svm": "SVM", "gbm": "GBM", "xgb": "XGB",
                "ffd": "FFD", "bert_fraud": "BERT", "fedxgbllr": "FedXGBllr"}
@@ -126,9 +130,9 @@ def plot_overview(cells, outdir: Path):
 def main(argv=None):
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--root", type=Path, default=DEFAULT_ROOT)
-    ap.add_argument("--outdir", type=Path, default=None)
+    ap.add_argument("--outdir", type=Path, default=DEFAULT_OUTDIR)
     args = ap.parse_args(argv)
-    outdir = args.outdir or args.root / "figures" / "profiles"
+    outdir = args.outdir
     cells = list(discover_cells(args.root))
     if not cells:
         print(f"no profile.csv under {args.root} — run experiments/shap_rq3.py first.")

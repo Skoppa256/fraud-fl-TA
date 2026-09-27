@@ -146,3 +146,48 @@ Two framing corrections came out of the review of this outcome and are recorded
 in `docs/rq3_method_notes.md` rather than here, because they are about how the
 result is read rather than about whether the prediction held: the floor is a
 **null**, not a detection threshold, and the exact-grouped tier is not an anchor.
+
+---
+
+# Correction appended 2026-09-09 — the 54.0% figure in P2 is wrong
+
+**This is an appended note, not an edit.** Nothing above has been changed: this
+file is a pre-registration record and its value is that its original lines stand
+as written. Line 86 still reads "enumerates 54.0% of the kernel weight
+deterministically vs BAF's 22.3%". The 54.0% is wrong; the 22.3% is correct.
+
+**Corrected values** at `nsamples = 500`, shap 0.49.1:
+
+| dataset | features M | kernel weight enumerated deterministically |
+|---|---|---|
+| PaySim | 13 | **34.9%** (was stated as 54.0%) |
+| ULB | 30 | 26.1% (not stated here originally) |
+| BAF | 55 | 22.3% ✓ as stated |
+
+**Why the original was wrong.** The 54.0% came from a model of shap's coalition
+selection that used a pure budget-capacity test — "does `binom(M,s)` still fit in
+the remaining samples?" — which accepts subset size 2 at M = 13 (156 ≤ 474).
+`KernelExplainer.explain()` does not ask that. It asks whether the size's share
+of the remaining kernel weight justifies its cost,
+`num_samples_left * remaining_weight_vector[s-1] / nsubsets >= 1 - 1e-8`, which
+for size 2 at M = 13 evaluates to **0.889 < 1** and rejects. Only subset size 1
+(with its complement) is enumerated: **26 coalitions**, not 182.
+
+**Verified by two independent routes**, one of which counts rather than reads:
+shap's own logged `num_full_subsets = 1` / `weight_left = 0.6509`, and a direct
+count of completely-enumerated coalitions in `explainer.maskMatrix`. Both give
+34.9%. Full derivation in `docs/shap_rq3_run.md`, §"Kernel-weight enumeration per
+dataset".
+
+**Does this touch P2's outcome? No.** P2 predicted the *measured* floors would
+become approximately M-independent, and that was confirmed against measured
+per-cell floors, not against these percentages. The percentages appear in the
+prediction only as the rationale for expecting M-dependence under the old
+`l1_reg` default. Correcting PaySim from 54.0% to 34.9% narrows the spread across
+M (34.9 / 26.1 / 22.3 rather than 54 / 26 / 22) and so, if anything, makes the
+original P2 rationale weaker and the confirmed outcome no less surprising. No
+measured result, test, figure, or verdict depends on the value.
+
+**Also stated, not corrected here:** `buku/content.typ` §4.3 carries the same
+54% figure in prose ("PaySim mengenumerasi sekitar 54 persen bobot kernel").
+Flagged to the author; BAB 4 is not edited from this file.

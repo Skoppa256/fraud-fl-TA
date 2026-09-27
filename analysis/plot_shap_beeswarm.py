@@ -10,8 +10,11 @@ Kuncheva summaries. Scope:
     selection stays BAF (named housing_status_* features carry the §4.2 argument);
     the rest are analysis outputs / appendix.
   * Deterministic explainers only — LR/SVM (LinearSHAP), GBM (interventional TreeSHAP);
-    these are the only cells whose cross-client stability is resolvable (every
-    KernelSHAP cell sits at or below its own noise floor).
+    these carry zero estimator noise, so a per-client beeswarm shows model behaviour
+    directly with no floor correction needed. This is a scope choice for the figure,
+    NOT a claim that the KernelSHAP cells are unresolvable: RQ3 v2 measures a floor
+    per client per cell and distinguishes 29 of the 33 multi-client kernel cells from
+    it (docs/shap_rq3_run.md). The floor is a null, not a detection threshold.
   * Dirichlet alpha = 0.5, both arms, all five clients. 3 x 3 x 2 = 18 figures.
 
 It REUSES the exact experiments/shap_analysis.py pipeline (same explanation set, same
@@ -57,7 +60,10 @@ TOPK = 12          # features shown per beeswarm (shared consensus ordering)
 TOPK_BARS = 10     # features in the grouped-bar comparison
 VERIFY_ATOL = 2e-4  # importance_per_client.csv stores ~6 sig figs
 
-OUT = PROJECT_ROOT / "results" / "shap" / "figures" / "beeswarm"
+# Figures go to results/visualizations/ (the repo's generated-plot location, not
+# on the freeze list). They used to land in results/shap/figures/, which is the
+# frozen v1 tree — routine regeneration must not write into a frozen path.
+OUT = PROJECT_ROOT / "results" / "visualizations" / "beeswarm"
 RAW = PROJECT_ROOT / "results" / "shap" / "raw"
 plt.rcParams.update({"font.size": 8, "axes.titlesize": 9, "axes.labelsize": 8,
                      "xtick.labelsize": 7, "ytick.labelsize": 7, "figure.dpi": 150})

@@ -176,3 +176,92 @@ An anchor that includes the audited models cannot reject them.
 The practical rule this leaves: **when a result is unusually clean, that is the
 moment to derive what the number would be if the code were wrong.** If the
 answer is "the same", the number is not evidence.
+
+---
+
+## Appended 2026-09-10 — defect #3 is now evidenced by an artifact, not asserted
+
+The entry above states that the collapsed-client-axis output was caught and
+**deleted before the re-run rather than overwritten in place**. That was a
+recollection when written. `results/shap_v2/rq3_twobg.log` — force-added to git
+and covered by `docs/frozen_manifest.sha256` on 2026-09-10 — now evidences both
+halves of it. The existing entry is left as written; this note supplies the
+backing.
+
+**The log holds three `--stage twobg` invocations**, headers at lines 7, 94 and
+185, whose scope lines read `paysim x dirichlet` (6 cells), `paysim x iid` (6),
+and `paysim x dirichlet,iid` (12).
+
+**Half one — the collapse.** Every cell in passes 1 and 2 reports `between=1.0`:
+**12 occurrences of `between=1.0` across lines 7–184, and 0 in pass 3.** The same
+cell before and after the fix:
+
+```
+line  19:  [paysim/bert_fraud/dirichlet_none/shared] K=5 floor=1.0    between=1.0    delta=0.0    p=1.0    status=ok
+line 197:  [paysim/bert_fraud/dirichlet_none/shared] K=5 floor=0.9989 between=0.9354 delta=0.0635 p=0.0032 status=ok
+```
+
+`floor=1.0` alongside `between=1.0` is the full signature: with the background
+pooled and the explained rows shared, each client received byte-identical inputs,
+so both the within-client and between-client comparisons became identities. Note
+that `status=ok` throughout — nothing raised, nothing warned. This is the class of
+defect the file's closing section describes: the failure mode produced a
+*cleaner-looking* result than the truth.
+
+**Half two — deletion, not overwrite.** Pass 3 recomputed all 12 cells with
+**zero `skip (exists)` lines**. The runner skips any cell that already has a
+`stability.json`, so a pass finding 12 cells already on disk would have printed 12
+skips and recomputed nothing. Zero skips is only possible if the prior output had
+been removed first. That is the artifact-level confirmation that the invalid cells
+were deleted rather than silently overwritten — which matters, because an
+overwrite would have left no way to tell the two runs apart afterwards.
+
+**Generalisation, restated with the evidence in hand:** the reason this was
+recoverable at all is that the log survived. It survived by luck — it was
+untracked until 2026-09-10, hidden by `.gitignore`'s `*.log` rule, and one
+`git add -A` away from being unrecoverable. A defect record that depends on an
+unarchived artifact is a defect record with a half-life.
+
+---
+
+## Appended 2026-09-10 — the second standing rule
+
+The rule above is about how to *read* a number. This one is about what code is
+allowed to do when its input is missing, and it is appended rather than folded in
+because it was earned separately: four times in this repository, a code path that
+substituted stand-in data or skipped work reported success while doing so.
+
+> **No code path may substitute stand-in data, skip work, or swallow an error and
+> still report success. Missing or empty input must fail loudly, naming the path
+> it looked in.**
+
+The four instances, each of which produced well-formed output and exit code 0:
+
+1. **All-zero SHAP scoring perfect agreement** (defect #2 above). A constant
+   explained function gives an all-zero attribution vector; the stability metrics
+   then scored Jaccard 1.0 and Kuncheva 1.0 — "perfect agreement about nothing".
+   Fixed by the degenerate guard, which now writes `status = undefined` instead of
+   a metric.
+2. **The collapsed client axis** (defect #3 above). With inputs identical across
+   clients, `between = 1.0` was an arithmetic identity, logged as
+   `between=1.0 ... status=ok` for all 12 cells of the invalid passes — see the
+   appended evidence note above, quoting `results/shap_v2/rq3_twobg.log`.
+3. **LARS keeping 10 features** (defect #1 above). `l1_reg="num_features(10)"`
+   set 45 of 55 BAF attributions to exactly 0.0 — a 10-sparse projection returned
+   as though it were the Shapley values, indistinguishable from "these features do
+   not matter" without counting zeros.
+4. **The embedded snapshot** in `analysis/make_rq3_heatmap.py` and
+   `analysis/two_seeds_gap.py`. When the input glob came up empty, both
+   substituted a hardcoded snapshot of an earlier run, printed
+   `wrote <path> (... source: embedded snapshot)` and exited 0 — a publication-
+   shaped figure built from stale stand-in numbers. Removed 2026-09-10: both now
+   raise `SystemExit` naming the path searched, and the snapshot literals are
+   deleted.
+
+Note the asymmetry that makes this worth a rule of its own. The first standing
+rule requires someone to look at a number and be suspicious. This one does not
+require anybody to notice anything: it moves the failure from the output, where
+it is invisible, to the exit code, where a script or a CI job trips over it. The
+guards that now enforce it — the degenerate-cell guard, the collapsed-axis guard,
+the `l1_reg` regression guard, and these two `SystemExit`s — are all cheap, and
+each exists because the corresponding silent success cost real time to find.

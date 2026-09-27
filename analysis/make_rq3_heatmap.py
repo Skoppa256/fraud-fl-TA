@@ -1,13 +1,23 @@
 #!/usr/bin/env python3
 """RQ3 cross-client stability heatmap -> self-contained HTML.
 
-Run on the box:   python make_rq3_heatmap.py
-Reads results/shap_v2/**/stability.json when present; otherwise falls back to the
-embedded kernel-tier snapshot so the layout can be previewed without the data.
+    python analysis/make_rq3_heatmap.py [out.html]
+
+Reads results/shap_v2/**/stability.json, anchored to the repo root so the result
+does not depend on the working directory. Missing or unusable input is a FATAL
+error, never a substitution: this script used to fall back to an embedded
+snapshot and report success, which produced a well-formed figure from stand-in
+numbers. See the standing rules in docs/rq3_method_notes.md.
 """
 import glob, json, os, sys, html
 
-OUT = sys.argv[1] if len(sys.argv) > 1 else "rq3_stability.html"
+# Anchored to results/visualizations/ rather than the bare filename it used to
+# default to: a CWD-relative default drops the figure wherever the shell happens
+# to be. An explicit argv[1] still overrides, exactly as before.
+_PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+_DEFAULT_OUT = os.path.join(_PROJECT_ROOT, "results", "visualizations",
+                            "rq3_stability.html")
+OUT = sys.argv[1] if len(sys.argv) > 1 else _DEFAULT_OUT
 DS = {"baf": "BAF", "creditcard": "ULB", "paysim": "PaySim"}
 MODEL_ORDER = ["lr", "svm", "gbm", "ffd", "bert_fraud", "fedxgbllr"]
 MODEL_LABEL = {"lr": "LR", "svm": "SVM", "gbm": "GBM", "ffd": "FFD",
@@ -25,42 +35,6 @@ RAMP = ["#0d366b","#104281","#184f95","#1c5cab","#256abf","#2a78d6","#3987e5",
         "#5598e7","#6da7ec","#86b6ef","#9ec5f4","#b7d3f6","#cde2fb"]
 LO, HI = 0.65, 1.00
 
-FALLBACK = [  # kernel tier, bg=local, weighted between-client + exchangeability p
- ("creditcard","fedxgbllr","iid","none",0.9524,0.8772),
- ("creditcard","fedxgbllr","dirichlet","none",0.9821,0.6974),
- ("paysim","fedxgbllr","iid","none",0.9859,0.8381),
- ("creditcard","bert_fraud","iid","none",0.9949,0.3577),
- ("creditcard","ffd","iid","smote",0.9924,0.001058),
- ("paysim","ffd","iid","none",0.9732,0.001058),
- ("creditcard","ffd","dirichlet","none",0.9877,0.001058),
- ("creditcard","ffd","iid","none",0.9825,0.001058),
- ("creditcard","ffd","dirichlet","smote",0.9846,0.001058),
- ("baf","bert_fraud","iid","none",0.9435,0.001058),
- ("paysim","ffd","iid","smote",0.9307,0.002116),
- ("baf","fedxgbllr","dirichlet","smote",0.9679,0.001058),
- ("creditcard","bert_fraud","dirichlet","none",0.9801,0.001058),
- ("baf","ffd","dirichlet","none",0.9634,0.001058),
- ("baf","ffd","dirichlet","smote",0.9481,0.001058),
- ("paysim","bert_fraud","dirichlet","smote",0.9517,0.009524),
- ("baf","ffd","iid","none",0.9633,0.001058),
- ("baf","fedxgbllr","dirichlet","none",0.9723,0.001058),
- ("creditcard","bert_fraud","iid","smote",0.9583,0.001058),
- ("baf","fedxgbllr","iid","none",0.9650,0.001058),
- ("paysim","fedxgbllr","iid","smote",0.9482,0.001058),
- ("baf","bert_fraud","dirichlet","smote",0.8894,0.001058),
- ("creditcard","bert_fraud","dirichlet","smote",0.9475,0.001058),
- ("baf","bert_fraud","dirichlet","none",0.8682,0.001058),
- ("paysim","ffd","dirichlet","smote",0.8859,0.009524),
- ("creditcard","fedxgbllr","dirichlet","smote",0.9417,0.001058),
- ("paysim","bert_fraud","iid","none",0.9825,0.001058),
- ("paysim","bert_fraud","dirichlet","none",0.9410,0.002116),
- ("paysim","ffd","dirichlet","none",0.7979,0.001058),
- ("creditcard","fedxgbllr","iid","smote",0.9576,0.001058),
- ("paysim","bert_fraud","iid","smote",0.9722,0.001058),
- ("paysim","fedxgbllr","dirichlet","none",0.8216,0.002116),
- ("paysim","fedxgbllr","dirichlet","smote",0.6650,0.001058),
-]
-
 
 def load():
     """One value per (model, dataset, condition, arm), exact tier wins.
@@ -73,33 +47,45 @@ def load():
     sampled-vs-exact gap reaches 0.099 — and remember which cells that was so the
     figure can mark them.
     """
-    cells, src = {}, "embedded snapshot (kernel tier only)"
-    files = sorted(glob.glob("results/shap_v2/**/stability.json", recursive=True))
-    if files:
-        src, n = f"results/shap_v2/ ({len(files)} files)", 0
-        for f in files:
-            s = json.load(open(f))
-            if s.get("n_clients", 1) < 2 or s.get("bg", "local") != "local":
-                continue
-            key = (s["model"], s["dataset"], s["condition"], s["arm"])
-            if s.get("status") != "ok" or s.get("weighted_between") is None:
-                cells.setdefault(key, None)
-                continue
-            det = bool(s.get("deterministic"))
-            prev = cells.get(key)
-            if prev and prev[3] and not det:
-                continue                      # keep the exact measurement
-            # deterministic cells carry no exchangeability test: p is null there,
-            # and NaN keeps them out of the "not distinguishable" hatching below.
-            pv = s.get("p_value")
-            cells[key] = (float(s["weighted_between"]),
-                          float(pv) if pv is not None else float("nan"),
-                          float(s.get("weighted_within") or 0), det)
-            n += 1
-        if n:
-            return cells, src
-    for d, m, c, a, b, p in FALLBACK:
-        cells[(m, d, c, a)] = (b, p, None, False)
+    cells = {}
+    # Anchored to the repo root, not the CWD, and no substitution on failure:
+    # this used to fall back to an embedded snapshot, print a success line and
+    # exit 0 — a well-formed figure built from stale stand-in numbers.
+    _root = os.path.join(_PROJECT_ROOT, "results", "shap_v2")
+    files = sorted(glob.glob(os.path.join(_root, "**", "stability.json"), recursive=True))
+    if not files:
+        raise SystemExit(
+            f"FATAL: no stability.json found.\n"
+            f"  looked in: {_root}/**/stability.json\n"
+            f"  run experiments/shap_rq3.py first, or sync results/shap_v2/ from the box."
+        )
+    src, n = f"results/shap_v2/ ({len(files)} files)", 0
+    for f in files:
+        s = json.load(open(f))
+        if s.get("n_clients", 1) < 2 or s.get("bg", "local") != "local":
+            continue
+        key = (s["model"], s["dataset"], s["condition"], s["arm"])
+        if s.get("status") != "ok" or s.get("weighted_between") is None:
+            cells.setdefault(key, None)
+            continue
+        det = bool(s.get("deterministic"))
+        prev = cells.get(key)
+        if prev and prev[3] and not det:
+            continue                      # keep the exact measurement
+        # deterministic cells carry no exchangeability test: p is null there,
+        # and NaN keeps them out of the "not distinguishable" hatching below.
+        pv = s.get("p_value")
+        cells[key] = (float(s["weighted_between"]),
+                      float(pv) if pv is not None else float("nan"),
+                      float(s.get("weighted_within") or 0), det)
+        n += 1
+    if not n:
+        raise SystemExit(
+            f"FATAL: found {len(files)} stability.json file(s) under {_root}, "
+            f"but none is a scorable multi-client bg=local cell.\n"
+            f"  the tree is present but carries no plottable data — check that it "
+            f"is the RQ3 v2 tree and not a partial sync."
+        )
     return cells, src
 
 

@@ -679,6 +679,13 @@ align(right)[
   // Force correct Indonesian supplement for table figures
   show figure.where(kind: table): set figure(supplement: [Tabel], numbering: "1")
 
+  // Indonesian supplement for heading cross-references. Typst's default is the
+  // English "Section", which @sec-hasil-rq3 rendered as "Section 4.3". Every
+  // heading reference in this document targets a level-2 heading (a subbab), so
+  // a blanket supplement is safe; a level-1 target would render "Subbab 4",
+  // which is wrong. Re-check this if a level-1 heading is ever given a label.
+  set heading(supplement: [Subbab])
+
   // Extra vertical space above every figure/table (document-wide). Uses block
   // spacing so it collapses correctly at page tops instead of leaving orphan gaps.
   show figure: set block(above: 1.5em, below: 0.85em)
@@ -733,12 +740,17 @@ align(right)[
     pagebreak(weak: true)
     set align(center)
     set text(size: 14pt, weight: "bold")
-    // Reset figure counters to 0 at the start of each BAB chapter so that
-    // figure numbering restarts per chapter. Only for numbered chapter
-    // headings, not for front-matter headings like DAFTAR ISI / DAFTAR TABEL.
+    // Reset figure, table and equation counters to 0 at the start of each BAB
+    // chapter so that their numbering restarts per chapter. Only for numbered
+    // chapter headings, not for front-matter headings like DAFTAR ISI /
+    // DAFTAR TABEL. The equation reset matters because the numbering rule in
+    // content.typ takes the chapter from the heading counter but the ordinal
+    // from the equation counter; without this reset the first equation in a
+    // later chapter would continue the previous chapter's ordinal.
     if it.numbering != none {
       counter(figure.where(kind: image)).update(0)
       counter(figure.where(kind: table)).update(0)
+      counter(math.equation).update(0)
     }
     block[
       #if it.numbering != none [

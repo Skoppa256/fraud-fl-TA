@@ -19,26 +19,40 @@ falls back to the BAF/BERT/dirichlet_none values if the tree is absent.
 """
 import json, os, sys
 
-OUT = sys.argv[1] if len(sys.argv) > 1 else "two_seeds_gap.html"
+# Anchored to results/visualizations/ rather than the bare filename it used to
+# default to: a CWD-relative default drops the figure wherever the shell happens
+# to be. An explicit argv[1] still overrides, exactly as before.
+_PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+_DEFAULT_OUT = os.path.join(_PROJECT_ROOT, "results", "visualizations",
+                            "two_seeds_gap.html")
+OUT = sys.argv[1] if len(sys.argv) > 1 else _DEFAULT_OUT
 CELL = sys.argv[2] if len(sys.argv) > 2 else "baf/bert_fraud/dirichlet_none"
 SEEDS = (11, 22)
 
-FALLBACK = {
-    "floor": [0.9996, 0.9998, 0.9997, 0.9999, 0.9997],
-    "between": [0.9517, 0.9646, 0.9707, 0.9625, 0.9274, 0.9790, 0.9545, 0.9383,
-                0.9427, 0.9574, 0.9555, 0.9650, 0.9725, 0.9627, 0.9289, 0.9793,
-                0.9563, 0.9384, 0.9412, 0.9562],
-    "p_value": 0.0010582010582010583, "n_matchings": 945, "n_clients": 5,
-}
-
-
 def load():
-    p = os.path.join("results", "shap_v2", *CELL.split("/"), "stability.json")
-    if os.path.exists(p):
-        s = json.load(open(p))
-        if s.get("floor") and s.get("between"):
-            return s, p
-    return FALLBACK, "embedded snapshot"
+    """Read the cell's stability.json, or fail loudly naming the path.
+
+    This used to fall back to an embedded snapshot when the file was missing,
+    print a success line and exit 0 — a figure built from stand-in numbers,
+    indistinguishable from the real one at a glance. No substitution now: a
+    missing or incomplete input is an error.
+    """
+    p = os.path.join(_PROJECT_ROOT, "results", "shap_v2", *CELL.split("/"),
+                     "stability.json")
+    if not os.path.exists(p):
+        raise SystemExit(
+            f"FATAL: no stability.json for cell '{CELL}'.\n"
+            f"  looked in: {p}\n"
+            f"  pass a different cell as argv[2], or run experiments/shap_rq3.py first."
+        )
+    s = json.load(open(p))
+    missing = [k for k in ("floor", "between") if not s.get(k)]
+    if missing:
+        raise SystemExit(
+            f"FATAL: {p} is missing required key(s): {', '.join(missing)}.\n"
+            f"  the file exists but does not carry the two-seed measurement."
+        )
+    return s, p
 
 
 s, src = load()

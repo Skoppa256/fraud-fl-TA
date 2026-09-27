@@ -1,0 +1,582 @@
+/home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/torch/nn/modules/transformer.py:392: UserWarning: enable_nested_tensor is True, but self.use_nested_tensor is False because encoder_layer.norm_first was True
+  warnings.warn(
+/home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/ray/_private/parameter.py:4: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools<81.
+  import pkg_resources
+/home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/torch/nn/modules/transformer.py:392: UserWarning: enable_nested_tensor is True, but self.use_nested_tensor is False because encoder_layer.norm_first was True
+  warnings.warn(
+/home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/torch/nn/modules/transformer.py:392: UserWarning: enable_nested_tensor is True, but self.use_nested_tensor is False because encoder_layer.norm_first was True
+  warnings.warn(
+/home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/torch/nn/modules/transformer.py:392: UserWarning: enable_nested_tensor is True, but self.use_nested_tensor is False because encoder_layer.norm_first was True
+  warnings.warn(
+/home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/torch/nn/modules/transformer.py:392: UserWarning: enable_nested_tensor is True, but self.use_nested_tensor is False because encoder_layer.norm_first was True
+  warnings.warn(
+/home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/torch/nn/modules/transformer.py:392: UserWarning: enable_nested_tensor is True, but self.use_nested_tensor is False because encoder_layer.norm_first was True
+  warnings.warn(
+shap 0.49.1 | stage=paysim-exact l1_reg=False seeds=(11, 22) nsamples=500 bg=100->kmeans10 explain=500
+PaySim exact — grouped: 9 players, nsamples=510 (full enumeration).
+      client 0 seed 11: 41.8s
+      client 0 seed 22: 41.6s
+      client 1 seed 11: 41.7s
+      client 1 seed 22: 42.1s
+      client 2 seed 11: 42.2s
+      client 2 seed 22: 41.7s
+      client 3 seed 11: 42.2s
+      client 3 seed 22: 42.8s
+      client 4 seed 11: 47.1s
+      client 4 seed 22: 46.7s
+    [paysim/bert_fraud/dirichlet_none] K=5 floor=1.0 between=0.8917 delta=0.1083 p=0.0032 status=ok
+
+Summary -> /home/justin/fraud-fl-TA/results/shap_v2/shap_summary_v2.csv (109 rows; BH alpha=0.05 per (bg, explainer) family).
+      client 0 seed 11: 220.6s
+      client 0 seed 22: 220.1s
+      client 1 seed 11: 218.3s
+      client 1 seed 22: 216.4s
+      client 2 seed 11: 217.4s
+      client 2 seed 22: 215.9s
+      client 3 seed 11: 218.2s
+      client 3 seed 22: 217.0s
+      client 4 seed 11: 217.5s
+      client 4 seed 22: 215.3s
+    [paysim/fedxgbllr/dirichlet_smote] K=5 floor=1.0 between=0.6867 delta=0.3133 p=0.0011 status=ok
+
+Summary -> /home/justin/fraud-fl-TA/results/shap_v2/shap_summary_v2.csv (110 rows; BH alpha=0.05 per (bg, explainer) family).
+      client 0 seed 11: 41.3s
+      client 0 seed 22: 41.6s
+    [paysim/bert_fraud/centralized_none] K=1 floor=1.0 between=undefined delta=undefined p=undefined status=ok
+
+Summary -> /home/justin/fraud-fl-TA/results/shap_v2/shap_summary_v2.csv (111 rows; BH alpha=0.05 per (bg, explainer) family).
+      client 0 seed 11: 3.6s
+      client 0 seed 22: 3.7s
+    [paysim/ffd/centralized_smote] K=1 floor=1.0 between=undefined delta=undefined p=undefined status=ok
+
+Summary -> /home/justin/fraud-fl-TA/results/shap_v2/shap_summary_v2.csv (112 rows; BH alpha=0.05 per (bg, explainer) family).
+      client 0 seed 11: 215.9s
+      client 0 seed 22: 214.7s
+      client 1 seed 11: 214.5s
+      client 1 seed 22: 214.8s
+      client 2 seed 11: 216.1s
+      client 2 seed 22: 215.8s
+      client 3 seed 11: 215.2s
+      client 3 seed 22: 215.8s
+      client 4 seed 11: 215.9s
+      client 4 seed 22: 215.1s
+    [paysim/fedxgbllr/dirichlet_none] K=5 floor=1.0 between=0.7717 delta=0.2283 p=0.0011 status=ok
+
+Summary -> /home/justin/fraud-fl-TA/results/shap_v2/shap_summary_v2.csv (113 rows; BH alpha=0.05 per (bg, explainer) family).
+      client 0 seed 11: 3.7s
+      client 0 seed 22: 3.7s
+      client 1 seed 11: 3.8s
+      client 1 seed 22: 3.7s
+      client 2 seed 11: 3.6s
+      client 2 seed 22: 3.7s
+      client 3 seed 11: 3.6s
+      client 3 seed 22: 3.7s
+      client 4 seed 11: 3.6s
+      client 4 seed 22: 3.7s
+    [paysim/ffd/dirichlet_smote] K=5 floor=1.0 between=0.8833 delta=0.1167 p=0.0011 status=ok
+
+Summary -> /home/justin/fraud-fl-TA/results/shap_v2/shap_summary_v2.csv (114 rows; BH alpha=0.05 per (bg, explainer) family).
+      client 0 seed 11: 42.6s
+      client 0 seed 22: 43.4s
+      client 1 seed 11: 43.4s
+      client 1 seed 22: 43.9s
+      client 2 seed 11: 43.6s
+      client 2 seed 22: 43.6s
+      client 3 seed 11: 43.5s
+      client 3 seed 22: 44.0s
+      client 4 seed 11: 43.9s
+      client 4 seed 22: 48.0s
+    [paysim/bert_fraud/dirichlet_smote] K=5 floor=1.0 between=0.9033 delta=0.0967 p=0.0011 status=ok
+
+Summary -> /home/justin/fraud-fl-TA/results/shap_v2/shap_summary_v2.csv (115 rows; BH alpha=0.05 per (bg, explainer) family).
+      client 0 seed 11: 3.7s
+      client 0 seed 22: 3.9s
+    [paysim/ffd/centralized_none] K=1 floor=1.0 between=undefined delta=undefined p=undefined status=ok
+
+Summary -> /home/justin/fraud-fl-TA/results/shap_v2/shap_summary_v2.csv (116 rows; BH alpha=0.05 per (bg, explainer) family).
+      client 0 seed 11: 43.0s
+      client 0 seed 22: 43.7s
+      client 1 seed 11: 42.8s
+      client 1 seed 22: 42.4s
+      client 2 seed 11: 43.0s
+      client 2 seed 22: 43.1s
+      client 3 seed 11: 42.6s
+      client 3 seed 22: 41.9s
+      client 4 seed 11: 42.8s
+      client 4 seed 22: 47.2s
+    [paysim/bert_fraud/iid_smote] K=5 floor=1.0 between=0.93 delta=0.07 p=0.0011 status=ok
+
+Summary -> /home/justin/fraud-fl-TA/results/shap_v2/shap_summary_v2.csv (117 rows; BH alpha=0.05 per (bg, explainer) family).
+      client 0 seed 11: 42.1s
+      client 0 seed 22: 42.0s
+    [paysim/bert_fraud/centralized_smote] K=1 floor=1.0 between=undefined delta=undefined p=undefined status=ok
+
+Summary -> /home/justin/fraud-fl-TA/results/shap_v2/shap_summary_v2.csv (118 rows; BH alpha=0.05 per (bg, explainer) family).
+      client 0 seed 11: 239.6s
+      client 0 seed 22: 235.4s
+      client 1 seed 11: 236.2s
+      client 1 seed 22: 235.1s
+      client 2 seed 11: 235.3s
+      client 2 seed 22: 234.4s
+      client 3 seed 11: 235.9s
+      client 3 seed 22: 234.8s
+      client 4 seed 11: 235.8s
+      client 4 seed 22: 236.5s
+    [paysim/fedxgbllr/iid_none] K=5 floor=1.0 between=0.9933 delta=0.0067 p=0.1111 status=ok
+
+Summary -> /home/justin/fraud-fl-TA/results/shap_v2/shap_summary_v2.csv (119 rows; BH alpha=0.05 per (bg, explainer) family).
+      client 0 seed 11: 246.7s
+      client 0 seed 22: 249.3s
+      client 1 seed 11: 248.8s
+      client 1 seed 22: 248.8s
+      client 2 seed 11: 249.2s
+      client 2 seed 22: 247.4s
+      client 3 seed 11: 247.1s
+      client 3 seed 22: 246.9s
+      client 4 seed 11: 247.6s
+      client 4 seed 22: 246.3s
+    [paysim/fedxgbllr/iid_smote] K=5 floor=1.0 between=0.955 delta=0.045 p=0.0011 status=ok
+
+Summary -> /home/justin/fraud-fl-TA/results/shap_v2/shap_summary_v2.csv (120 rows; BH alpha=0.05 per (bg, explainer) family).
+      client 0 seed 11: 3.6s
+      client 0 seed 22: 3.7s
+      client 1 seed 11: 3.8s
+      client 1 seed 22: 3.6s
+      client 2 seed 11: 3.6s
+      client 2 seed 22: 3.8s
+      client 3 seed 11: 3.6s
+      client 3 seed 22: 3.8s
+      client 4 seed 11: 3.6s
+      client 4 seed 22: 3.8s
+    [paysim/ffd/dirichlet_none] K=5 floor=1.0 between=0.8867 delta=0.1133 p=0.0032 status=ok
+
+Summary -> /home/justin/fraud-fl-TA/results/shap_v2/shap_summary_v2.csv (121 rows; BH alpha=0.05 per (bg, explainer) family).
+      client 0 seed 11: 3.8s
+      client 0 seed 22: 3.8s
+      client 1 seed 11: 3.7s
+      client 1 seed 22: 3.9s
+      client 2 seed 11: 3.7s
+      client 2 seed 22: 3.7s
+      client 3 seed 11: 3.7s
+      client 3 seed 22: 3.7s
+      client 4 seed 11: 3.7s
+      client 4 seed 22: 3.7s
+    [paysim/ffd/iid_smote] K=5 floor=1.0 between=0.95 delta=0.05 p=0.0011 status=ok
+
+Summary -> /home/justin/fraud-fl-TA/results/shap_v2/shap_summary_v2.csv (122 rows; BH alpha=0.05 per (bg, explainer) family).
+      client 0 seed 11: 3.7s
+      client 0 seed 22: 3.7s
+      client 1 seed 11: 3.6s
+      client 1 seed 22: 3.5s
+      client 2 seed 11: 3.8s
+      client 2 seed 22: 3.7s
+      client 3 seed 11: 3.6s
+      client 3 seed 22: 3.8s
+      client 4 seed 11: 3.6s
+      client 4 seed 22: 3.8s
+    [paysim/ffd/iid_none] K=5 floor=1.0 between=0.9583 delta=0.0417 p=0.0032 status=ok
+
+Summary -> /home/justin/fraud-fl-TA/results/shap_v2/shap_summary_v2.csv (123 rows; BH alpha=0.05 per (bg, explainer) family).
+      client 0 seed 11: 44.8s
+      client 0 seed 22: 44.8s
+      client 1 seed 11: 45.1s
+      client 1 seed 22: 45.3s
+      client 2 seed 11: 45.0s
+      client 2 seed 22: 45.1s
+      client 3 seed 11: 45.2s
+      client 3 seed 22: 45.0s
+      client 4 seed 11: 45.2s
+      client 4 seed 22: 45.2s
+    [paysim/bert_fraud/iid_none] K=5 floor=1.0 between=0.9933 delta=0.0067 p=0.1111 status=ok
+
+Summary -> /home/justin/fraud-fl-TA/results/shap_v2/shap_summary_v2.csv (124 rows; BH alpha=0.05 per (bg, explainer) family).
+(ungrouped 8190 run skipped — pass --include-ungrouped after the grouped tier confirms the ranking.)
+Done. Nothing outside results/shap_v2/ was written; results/shap/ (v1) is untouched.
+/home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/torch/nn/modules/transformer.py:392: UserWarning: enable_nested_tensor is True, but self.use_nested_tensor is False because encoder_layer.norm_first was True
+  warnings.warn(
+/home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/ray/_private/parameter.py:4: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools<81.
+  import pkg_resources
+/home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/torch/nn/modules/transformer.py:392: UserWarning: enable_nested_tensor is True, but self.use_nested_tensor is False because encoder_layer.norm_first was True
+  warnings.warn(
+/home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/torch/nn/modules/transformer.py:392: UserWarning: enable_nested_tensor is True, but self.use_nested_tensor is False because encoder_layer.norm_first was True
+  warnings.warn(
+/home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/torch/nn/modules/transformer.py:392: UserWarning: enable_nested_tensor is True, but self.use_nested_tensor is False because encoder_layer.norm_first was True
+  warnings.warn(
+/home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/torch/nn/modules/transformer.py:392: UserWarning: enable_nested_tensor is True, but self.use_nested_tensor is False because encoder_layer.norm_first was True
+  warnings.warn(
+/home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/torch/nn/modules/transformer.py:392: UserWarning: enable_nested_tensor is True, but self.use_nested_tensor is False because encoder_layer.norm_first was True
+  warnings.warn(
+shap 0.49.1 | stage=paysim-exact l1_reg=False seeds=(11, 22) nsamples=500 bg=100->kmeans10 explain=500
+PaySim exact — grouped: 9 players, nsamples=510 (full enumeration).
+      client 0 seed 11: 41.9s
+      client 0 seed 22: 41.7s
+      client 1 seed 11: 41.2s
+      client 1 seed 22: 42.7s
+      client 2 seed 11: 47.3s
+      client 2 seed 22: 41.7s
+      client 3 seed 11: 47.7s
+      client 3 seed 22: 43.4s
+      client 4 seed 11: 47.4s
+      client 4 seed 22: 46.9s
+    [paysim/bert_fraud/dirichlet_none] K=5 floor=1.0 between=0.8917 delta=0.1083 p=0.0032 status=ok
+
+Summary -> /home/justin/fraud-fl-TA/results/shap_v2/shap_summary_v2.csv (124 rows; BH alpha=0.05 per (bg, explainer) family).
+      client 0 seed 11: 219.6s
+      client 0 seed 22: 219.3s
+      client 1 seed 11: 219.6s
+      client 1 seed 22: 218.6s
+      client 2 seed 11: 221.2s
+      client 2 seed 22: 218.4s
+      client 3 seed 11: 219.2s
+      client 3 seed 22: 220.1s
+      client 4 seed 11: 218.4s
+      client 4 seed 22: 219.6s
+    [paysim/fedxgbllr/dirichlet_smote] K=5 floor=1.0 between=0.6867 delta=0.3133 p=0.0011 status=ok
+
+Summary -> /home/justin/fraud-fl-TA/results/shap_v2/shap_summary_v2.csv (124 rows; BH alpha=0.05 per (bg, explainer) family).
+      client 0 seed 11: 42.0s
+      client 0 seed 22: 42.6s
+    [paysim/bert_fraud/centralized_none] K=1 floor=1.0 between=undefined delta=undefined p=undefined status=ok
+
+Summary -> /home/justin/fraud-fl-TA/results/shap_v2/shap_summary_v2.csv (124 rows; BH alpha=0.05 per (bg, explainer) family).
+      client 0 seed 11: 3.8s
+      client 0 seed 22: 3.9s
+    [paysim/ffd/centralized_smote] K=1 floor=1.0 between=undefined delta=undefined p=undefined status=ok
+
+Summary -> /home/justin/fraud-fl-TA/results/shap_v2/shap_summary_v2.csv (124 rows; BH alpha=0.05 per (bg, explainer) family).
+      client 0 seed 11: 217.4s
+      client 0 seed 22: 215.4s
+      client 1 seed 11: 217.5s
+      client 1 seed 22: 217.4s
+      client 2 seed 11: 218.1s
+      client 2 seed 22: 216.3s
+      client 3 seed 11: 215.6s
+      client 3 seed 22: 215.3s
+      client 4 seed 11: 213.6s
+      client 4 seed 22: 214.4s
+    [paysim/fedxgbllr/dirichlet_none] K=5 floor=1.0 between=0.7717 delta=0.2283 p=0.0011 status=ok
+
+Summary -> /home/justin/fraud-fl-TA/results/shap_v2/shap_summary_v2.csv (124 rows; BH alpha=0.05 per (bg, explainer) family).
+      client 0 seed 11: 3.7s
+      client 0 seed 22: 3.8s
+      client 1 seed 11: 3.8s
+      client 1 seed 22: 3.7s
+      client 2 seed 11: 3.7s
+      client 2 seed 22: 3.9s
+      client 3 seed 11: 3.8s
+      client 3 seed 22: 3.6s
+      client 4 seed 11: 4.1s
+      client 4 seed 22: 3.7s
+    [paysim/ffd/dirichlet_smote] K=5 floor=1.0 between=0.8833 delta=0.1167 p=0.0011 status=ok
+
+Summary -> /home/justin/fraud-fl-TA/results/shap_v2/shap_summary_v2.csv (124 rows; BH alpha=0.05 per (bg, explainer) family).
+      client 0 seed 11: 43.2s
+      client 0 seed 22: 44.1s
+      client 1 seed 11: 48.9s
+      client 1 seed 22: 43.4s
+      client 2 seed 11: 48.5s
+      client 2 seed 22: 44.7s
+      client 3 seed 11: 48.3s
+      client 3 seed 22: 43.7s
+      client 4 seed 11: 44.7s
+      client 4 seed 22: 44.7s
+    [paysim/bert_fraud/dirichlet_smote] K=5 floor=1.0 between=0.9033 delta=0.0967 p=0.0011 status=ok
+
+Summary -> /home/justin/fraud-fl-TA/results/shap_v2/shap_summary_v2.csv (124 rows; BH alpha=0.05 per (bg, explainer) family).
+      client 0 seed 11: 3.9s
+      client 0 seed 22: 3.9s
+    [paysim/ffd/centralized_none] K=1 floor=1.0 between=undefined delta=undefined p=undefined status=ok
+
+Summary -> /home/justin/fraud-fl-TA/results/shap_v2/shap_summary_v2.csv (124 rows; BH alpha=0.05 per (bg, explainer) family).
+      client 0 seed 11: 42.3s
+      client 0 seed 22: 47.3s
+      client 1 seed 11: 42.9s
+      client 1 seed 22: 42.7s
+      client 2 seed 11: 42.6s
+      client 2 seed 22: 42.0s
+      client 3 seed 11: 43.0s
+      client 3 seed 22: 42.8s
+      client 4 seed 11: 42.9s
+      client 4 seed 22: 46.9s
+    [paysim/bert_fraud/iid_smote] K=5 floor=1.0 between=0.93 delta=0.07 p=0.0011 status=ok
+
+Summary -> /home/justin/fraud-fl-TA/results/shap_v2/shap_summary_v2.csv (124 rows; BH alpha=0.05 per (bg, explainer) family).
+      client 0 seed 11: 46.5s
+      client 0 seed 22: 42.7s
+    [paysim/bert_fraud/centralized_smote] K=1 floor=1.0 between=undefined delta=undefined p=undefined status=ok
+
+Summary -> /home/justin/fraud-fl-TA/results/shap_v2/shap_summary_v2.csv (124 rows; BH alpha=0.05 per (bg, explainer) family).
+      client 0 seed 11: 237.5s
+      client 0 seed 22: 234.3s
+      client 1 seed 11: 234.4s
+      client 1 seed 22: 234.5s
+      client 2 seed 11: 233.0s
+      client 2 seed 22: 236.7s
+      client 3 seed 11: 236.2s
+      client 3 seed 22: 235.0s
+      client 4 seed 11: 235.9s
+      client 4 seed 22: 235.9s
+    [paysim/fedxgbllr/iid_none] K=5 floor=1.0 between=0.9933 delta=0.0067 p=0.1111 status=ok
+
+Summary -> /home/justin/fraud-fl-TA/results/shap_v2/shap_summary_v2.csv (124 rows; BH alpha=0.05 per (bg, explainer) family).
+      client 0 seed 11: 246.0s
+      client 0 seed 22: 247.4s
+      client 1 seed 11: 245.3s
+      client 1 seed 22: 245.8s
+      client 2 seed 11: 243.4s
+      client 2 seed 22: 242.6s
+      client 3 seed 11: 247.3s
+      client 3 seed 22: 247.4s
+      client 4 seed 11: 249.3s
+      client 4 seed 22: 249.0s
+    [paysim/fedxgbllr/iid_smote] K=5 floor=1.0 between=0.955 delta=0.045 p=0.0011 status=ok
+
+Summary -> /home/justin/fraud-fl-TA/results/shap_v2/shap_summary_v2.csv (124 rows; BH alpha=0.05 per (bg, explainer) family).
+      client 0 seed 11: 3.9s
+      client 0 seed 22: 3.9s
+      client 1 seed 11: 3.8s
+      client 1 seed 22: 3.9s
+      client 2 seed 11: 4.1s
+      client 2 seed 22: 4.0s
+      client 3 seed 11: 3.7s
+      client 3 seed 22: 3.7s
+      client 4 seed 11: 3.9s
+      client 4 seed 22: 4.0s
+    [paysim/ffd/dirichlet_none] K=5 floor=1.0 between=0.8867 delta=0.1133 p=0.0032 status=ok
+
+Summary -> /home/justin/fraud-fl-TA/results/shap_v2/shap_summary_v2.csv (124 rows; BH alpha=0.05 per (bg, explainer) family).
+      client 0 seed 11: 3.7s
+      client 0 seed 22: 3.8s
+      client 1 seed 11: 3.7s
+      client 1 seed 22: 4.0s
+      client 2 seed 11: 3.9s
+      client 2 seed 22: 3.8s
+      client 3 seed 11: 3.8s
+      client 3 seed 22: 4.0s
+      client 4 seed 11: 3.9s
+      client 4 seed 22: 3.8s
+    [paysim/ffd/iid_smote] K=5 floor=1.0 between=0.95 delta=0.05 p=0.0011 status=ok
+
+Summary -> /home/justin/fraud-fl-TA/results/shap_v2/shap_summary_v2.csv (124 rows; BH alpha=0.05 per (bg, explainer) family).
+      client 0 seed 11: 3.8s
+      client 0 seed 22: 3.9s
+      client 1 seed 11: 4.0s
+      client 1 seed 22: 4.0s
+      client 2 seed 11: 3.7s
+      client 2 seed 22: 3.9s
+      client 3 seed 11: 3.9s
+      client 3 seed 22: 4.0s
+      client 4 seed 11: 4.1s
+      client 4 seed 22: 3.9s
+    [paysim/ffd/iid_none] K=5 floor=1.0 between=0.9583 delta=0.0417 p=0.0032 status=ok
+
+Summary -> /home/justin/fraud-fl-TA/results/shap_v2/shap_summary_v2.csv (124 rows; BH alpha=0.05 per (bg, explainer) family).
+      client 0 seed 11: 46.5s
+      client 0 seed 22: 42.4s
+      client 1 seed 11: 42.6s
+      client 1 seed 22: 47.0s
+      client 2 seed 11: 42.9s
+      client 2 seed 22: 42.7s
+      client 3 seed 11: 43.6s
+      client 3 seed 22: 42.1s
+      client 4 seed 11: 42.4s
+      client 4 seed 22: 46.9s
+    [paysim/bert_fraud/iid_none] K=5 floor=1.0 between=0.9933 delta=0.0067 p=0.1111 status=ok
+
+Summary -> /home/justin/fraud-fl-TA/results/shap_v2/shap_summary_v2.csv (124 rows; BH alpha=0.05 per (bg, explainer) family).
+(ungrouped 8190 run skipped — pass --include-ungrouped after the grouped tier confirms the ranking.)
+Done. Nothing outside results/shap_v2/ was written; results/shap/ (v1) is untouched.
+/home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/torch/nn/modules/transformer.py:392: UserWarning: enable_nested_tensor is True, but self.use_nested_tensor is False because encoder_layer.norm_first was True
+  warnings.warn(
+/home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/ray/_private/parameter.py:4: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools<81.
+  import pkg_resources
+/home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/torch/nn/modules/transformer.py:392: UserWarning: enable_nested_tensor is True, but self.use_nested_tensor is False because encoder_layer.norm_first was True
+  warnings.warn(
+/home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/torch/nn/modules/transformer.py:392: UserWarning: enable_nested_tensor is True, but self.use_nested_tensor is False because encoder_layer.norm_first was True
+  warnings.warn(
+/home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/torch/nn/modules/transformer.py:392: UserWarning: enable_nested_tensor is True, but self.use_nested_tensor is False because encoder_layer.norm_first was True
+  warnings.warn(
+/home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/torch/nn/modules/transformer.py:392: UserWarning: enable_nested_tensor is True, but self.use_nested_tensor is False because encoder_layer.norm_first was True
+  warnings.warn(
+/home/justin/miniconda3/envs/fraud-fl-TA/lib/python3.10/site-packages/torch/nn/modules/transformer.py:392: UserWarning: enable_nested_tensor is True, but self.use_nested_tensor is False because encoder_layer.norm_first was True
+  warnings.warn(
+shap 0.49.1 | stage=paysim-exact l1_reg=False seeds=(11, 22) nsamples=500 bg=100->kmeans10 explain=500
+PaySim exact — grouped: 9 players, nsamples=510 (full enumeration).
+      client 0 seed 11: 42.0s
+      client 0 seed 22: 41.5s seed_delta=0
+      client 1 seed 11: 41.8s
+      client 1 seed 22: 42.3s seed_delta=0
+      client 2 seed 11: 42.4s
+      client 2 seed 22: 42.5s seed_delta=0
+      client 3 seed 11: 42.7s
+      client 3 seed 22: 42.8s seed_delta=0
+      client 4 seed 11: 47.7s
+      client 4 seed 22: 47.5s seed_delta=0
+    [paysim/bert_fraud/dirichlet_none] K=5 floor=1.0 between=0.8917 delta=0.1083 p=0.0032 status=ok
+
+Summary -> /home/justin/fraud-fl-TA/results/shap_v2/shap_summary_v2.csv (124 rows; BH alpha=0.05 per (bg, explainer) family).
+      client 0 seed 11: 220.9s
+      client 0 seed 22: 219.2s seed_delta=0
+      client 1 seed 11: 219.3s
+      client 1 seed 22: 218.9s seed_delta=0
+      client 2 seed 11: 219.4s
+      client 2 seed 22: 219.9s seed_delta=0
+      client 3 seed 11: 220.2s
+      client 3 seed 22: 219.0s seed_delta=0
+      client 4 seed 11: 220.0s
+      client 4 seed 22: 220.3s seed_delta=0
+    [paysim/fedxgbllr/dirichlet_smote] K=5 floor=1.0 between=0.6867 delta=0.3133 p=0.0011 status=ok
+
+Summary -> /home/justin/fraud-fl-TA/results/shap_v2/shap_summary_v2.csv (124 rows; BH alpha=0.05 per (bg, explainer) family).
+      client 0 seed 11: 41.5s
+      client 0 seed 22: 42.6s seed_delta=0
+    [paysim/bert_fraud/centralized_none] K=1 floor=1.0 between=undefined delta=undefined p=undefined status=ok
+
+Summary -> /home/justin/fraud-fl-TA/results/shap_v2/shap_summary_v2.csv (124 rows; BH alpha=0.05 per (bg, explainer) family).
+      client 0 seed 11: 3.8s
+      client 0 seed 22: 3.9s seed_delta=0
+    [paysim/ffd/centralized_smote] K=1 floor=1.0 between=undefined delta=undefined p=undefined status=ok
+
+Summary -> /home/justin/fraud-fl-TA/results/shap_v2/shap_summary_v2.csv (124 rows; BH alpha=0.05 per (bg, explainer) family).
+      client 0 seed 11: 214.6s
+      client 0 seed 22: 214.9s seed_delta=0
+      client 1 seed 11: 214.7s
+      client 1 seed 22: 214.2s seed_delta=0
+      client 2 seed 11: 215.8s
+      client 2 seed 22: 219.0s seed_delta=0
+      client 3 seed 11: 216.0s
+      client 3 seed 22: 215.4s seed_delta=0
+      client 4 seed 11: 216.6s
+      client 4 seed 22: 217.6s seed_delta=0
+    [paysim/fedxgbllr/dirichlet_none] K=5 floor=1.0 between=0.7717 delta=0.2283 p=0.0011 status=ok
+
+Summary -> /home/justin/fraud-fl-TA/results/shap_v2/shap_summary_v2.csv (124 rows; BH alpha=0.05 per (bg, explainer) family).
+      client 0 seed 11: 3.8s
+      client 0 seed 22: 3.8s seed_delta=0
+      client 1 seed 11: 3.7s
+      client 1 seed 22: 3.8s seed_delta=0
+      client 2 seed 11: 3.9s
+      client 2 seed 22: 3.7s seed_delta=0
+      client 3 seed 11: 3.6s
+      client 3 seed 22: 4.1s seed_delta=0
+      client 4 seed 11: 3.6s
+      client 4 seed 22: 3.8s seed_delta=0
+    [paysim/ffd/dirichlet_smote] K=5 floor=1.0 between=0.8833 delta=0.1167 p=0.0011 status=ok
+
+Summary -> /home/justin/fraud-fl-TA/results/shap_v2/shap_summary_v2.csv (124 rows; BH alpha=0.05 per (bg, explainer) family).
+      client 0 seed 11: 43.2s
+      client 0 seed 22: 43.5s seed_delta=0
+      client 1 seed 11: 44.5s
+      client 1 seed 22: 44.5s seed_delta=0
+      client 2 seed 11: 44.1s
+      client 2 seed 22: 44.2s seed_delta=0
+      client 3 seed 11: 43.9s
+      client 3 seed 22: 44.2s seed_delta=0
+      client 4 seed 11: 44.2s
+      client 4 seed 22: 43.8s seed_delta=0
+    [paysim/bert_fraud/dirichlet_smote] K=5 floor=1.0 between=0.9033 delta=0.0967 p=0.0011 status=ok
+
+Summary -> /home/justin/fraud-fl-TA/results/shap_v2/shap_summary_v2.csv (124 rows; BH alpha=0.05 per (bg, explainer) family).
+      client 0 seed 11: 3.9s
+      client 0 seed 22: 4.0s seed_delta=0
+    [paysim/ffd/centralized_none] K=1 floor=1.0 between=undefined delta=undefined p=undefined status=ok
+
+Summary -> /home/justin/fraud-fl-TA/results/shap_v2/shap_summary_v2.csv (124 rows; BH alpha=0.05 per (bg, explainer) family).
+      client 0 seed 11: 42.9s
+      client 0 seed 22: 43.4s seed_delta=0
+      client 1 seed 11: 42.9s
+      client 1 seed 22: 42.7s seed_delta=0
+      client 2 seed 11: 42.9s
+      client 2 seed 22: 43.1s seed_delta=0
+      client 3 seed 11: 42.9s
+      client 3 seed 22: 42.8s seed_delta=0
+      client 4 seed 11: 42.8s
+      client 4 seed 22: 43.5s seed_delta=0
+    [paysim/bert_fraud/iid_smote] K=5 floor=1.0 between=0.93 delta=0.07 p=0.0011 status=ok
+
+Summary -> /home/justin/fraud-fl-TA/results/shap_v2/shap_summary_v2.csv (124 rows; BH alpha=0.05 per (bg, explainer) family).
+      client 0 seed 11: 46.7s
+      client 0 seed 22: 42.5s seed_delta=0
+    [paysim/bert_fraud/centralized_smote] K=1 floor=1.0 between=undefined delta=undefined p=undefined status=ok
+
+Summary -> /home/justin/fraud-fl-TA/results/shap_v2/shap_summary_v2.csv (124 rows; BH alpha=0.05 per (bg, explainer) family).
+      client 0 seed 11: 235.6s
+      client 0 seed 22: 235.7s seed_delta=0
+      client 1 seed 11: 234.4s
+      client 1 seed 22: 235.3s seed_delta=0
+      client 2 seed 11: 234.6s
+      client 2 seed 22: 234.8s seed_delta=0
+      client 3 seed 11: 234.7s
+      client 3 seed 22: 234.3s seed_delta=0
+      client 4 seed 11: 235.3s
+      client 4 seed 22: 235.4s seed_delta=0
+    [paysim/fedxgbllr/iid_none] K=5 floor=1.0 between=0.9933 delta=0.0067 p=0.1111 status=ok
+
+Summary -> /home/justin/fraud-fl-TA/results/shap_v2/shap_summary_v2.csv (124 rows; BH alpha=0.05 per (bg, explainer) family).
+      client 0 seed 11: 247.7s
+      client 0 seed 22: 245.4s seed_delta=0
+      client 1 seed 11: 247.3s
+      client 1 seed 22: 247.6s seed_delta=0
+      client 2 seed 11: 246.7s
+      client 2 seed 22: 247.0s seed_delta=0
+      client 3 seed 11: 248.1s
+      client 3 seed 22: 246.7s seed_delta=0
+      client 4 seed 11: 246.8s
+      client 4 seed 22: 246.9s seed_delta=0
+    [paysim/fedxgbllr/iid_smote] K=5 floor=1.0 between=0.955 delta=0.045 p=0.0011 status=ok
+
+Summary -> /home/justin/fraud-fl-TA/results/shap_v2/shap_summary_v2.csv (124 rows; BH alpha=0.05 per (bg, explainer) family).
+      client 0 seed 11: 4.0s
+      client 0 seed 22: 3.7s seed_delta=0
+      client 1 seed 11: 3.8s
+      client 1 seed 22: 4.1s seed_delta=0
+      client 2 seed 11: 3.7s
+      client 2 seed 22: 3.9s seed_delta=0
+      client 3 seed 11: 3.5s
+      client 3 seed 22: 3.9s seed_delta=0
+      client 4 seed 11: 3.9s
+      client 4 seed 22: 3.7s seed_delta=0
+    [paysim/ffd/dirichlet_none] K=5 floor=1.0 between=0.8867 delta=0.1133 p=0.0032 status=ok
+
+Summary -> /home/justin/fraud-fl-TA/results/shap_v2/shap_summary_v2.csv (124 rows; BH alpha=0.05 per (bg, explainer) family).
+      client 0 seed 11: 3.9s
+      client 0 seed 22: 3.8s seed_delta=0
+      client 1 seed 11: 3.8s
+      client 1 seed 22: 3.6s seed_delta=0
+      client 2 seed 11: 4.0s
+      client 2 seed 22: 4.0s seed_delta=0
+      client 3 seed 11: 3.8s
+      client 3 seed 22: 3.6s seed_delta=0
+      client 4 seed 11: 3.9s
+      client 4 seed 22: 4.0s seed_delta=0
+    [paysim/ffd/iid_smote] K=5 floor=1.0 between=0.95 delta=0.05 p=0.0011 status=ok
+
+Summary -> /home/justin/fraud-fl-TA/results/shap_v2/shap_summary_v2.csv (124 rows; BH alpha=0.05 per (bg, explainer) family).
+      client 0 seed 11: 3.7s
+      client 0 seed 22: 3.9s seed_delta=0
+      client 1 seed 11: 3.6s
+      client 1 seed 22: 3.8s seed_delta=0
+      client 2 seed 11: 3.7s
+      client 2 seed 22: 4.2s seed_delta=0
+      client 3 seed 11: 3.8s
+      client 3 seed 22: 3.7s seed_delta=0
+      client 4 seed 11: 3.8s
+      client 4 seed 22: 3.8s seed_delta=0
+    [paysim/ffd/iid_none] K=5 floor=1.0 between=0.9583 delta=0.0417 p=0.0032 status=ok
+
+Summary -> /home/justin/fraud-fl-TA/results/shap_v2/shap_summary_v2.csv (124 rows; BH alpha=0.05 per (bg, explainer) family).
+      client 0 seed 11: 42.6s
+      client 0 seed 22: 42.4s seed_delta=0
+      client 1 seed 11: 42.3s
+      client 1 seed 22: 43.6s seed_delta=0
+      client 2 seed 11: 43.4s
+      client 2 seed 22: 43.0s seed_delta=0
+      client 3 seed 11: 42.5s
+      client 3 seed 22: 42.4s seed_delta=0
+      client 4 seed 11: 42.6s
+      client 4 seed 22: 42.8s seed_delta=0
+    [paysim/bert_fraud/iid_none] K=5 floor=1.0 between=0.9933 delta=0.0067 p=0.1111 status=ok
+
+Summary -> /home/justin/fraud-fl-TA/results/shap_v2/shap_summary_v2.csv (124 rows; BH alpha=0.05 per (bg, explainer) family).
+(ungrouped 8190 run skipped — pass --include-ungrouped after the grouped tier confirms the ranking.)
+Done. Nothing outside results/shap_v2/ was written; results/shap/ (v1) is untouched.
