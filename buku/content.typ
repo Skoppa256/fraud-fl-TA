@@ -32,8 +32,8 @@ Perkembangan transformasi digital sektor keuangan telah mendorong peningkatan
 volume transaksi elektronik sekaligus memperluas ancaman kecurangan finansial
 (financial fraud). Laporan Association of Certified Fraud Examiners (ACFE)
 menunjukkan bahwa organisasi global kehilangan rata-rata 5% dari pendapatan
-tahunan mereka akibat fraud, dengan kerugian median per kasus mencapai
-USD 145.000 @acfe2024. Di sisi lain, kompleksitas modus financial fraud terus
+tahunan mereka akibat fraud dengan kerugian median per kasus mencapai
+USD 145.000 @acfe2024. Di sisi lain, kompleksitas metode financial fraud terus
 berkembang sehingga pendekatan deteksi tradisional berbasis rule-based menjadi
 semakin tidak memadai karena keterbatasannya dalam menangkap pola anomali yang
 dinamis dan terus beradaptasi @hilal2022. Maka dari itu, pendekatan berbasis
@@ -53,7 +53,7 @@ Federated Learning (FL) muncul sebagai pendekatan alternatif yang memungkinkan
 beberapa pihak melatih model secara kolaboratif tanpa memindahkan data mentah
 dari masing-masing sumber @mcmahan2023fedavg. Dalam pendekatan ini, pelatihan
 model dilakukan secara lokal pada setiap client dan hanya parameter atau
-pembaruan model yang dipindahkan ke server pusat untuk diagregasi. Pendekatan
+model baru yang dipindahkan ke server pusat untuk diagregasi. Pendekatan
 ini relevan dalam sektor keuangan karena memungkinkan kolaborasi antar institusi
 dengan menghindari perpindahan data mentah selama pelatihan meskipun perpindahan
 parameter atau model tetap memerlukan perhatian terhadap kebocoran informasi
@@ -87,7 +87,7 @@ mendasar dimana pelatihan XGBoost konvensional dalam FL mengharuskan pertukaran
 gradient dan hessian per-node. Hal ini mengakibatkan risiko kebocoran privasi
 karena gradient dapat digunakan untuk merekonstruksi data mentah dan juga
 mengakibatkan frekuensi komunikasi yang sangat tinggi bergantung pada kedalaman
-dan jumlah @zhu2019deepleakage. Sebagai solusi,
+dan jumlah tree @zhu2019deepleakage. Sebagai solusi,
 #cite(<ma2023fedxgbllr>, form: "prose") memperkenalkan FedXGBllr (Federated
 XGBoost with Learnable Learning Rates), yaitu sebuah kerangka gradient-less yang
 mengagregasi tree ensembles antar client dan mempelajari bobot kontribusi setiap
@@ -109,9 +109,10 @@ selection belum membandingkan dengan kerangka tree-based modern seperti
 FedXGBllr.
 
 Selain model parametrik dan model berbasis tree, implementasi model deep
-learning pada FL juga dipertimbangkan untuk data tabular. Model FFD menggunakan
-arsitektur 1D Convolutional Neural Network sedangkan model tabular Transformer
-berbasis FT-Transformer yang disebut dengan BERT @gorishniy2021fttransformer.
+learning pada FL juga dipertimbangkan untuk financial fraud detection. Model deep
+learning yang digunakan adalah FFD yang menggunakan arsitektur 1D Convolutional
+Neural Network dan model tabular Transformer berbasis FT-Transformer yang disebut
+dengan BERT @gorishniy2021fttransformer.
 Penambahan kedua model tersebut memperluas perbandingan agar mencakup
 karakteristik model linear, model berbasis tree, dan model berbasis deep
 learning dalam menghadapi distribusi data yang heterogen dalam konteks financial
@@ -123,8 +124,9 @@ dapat dijelaskan kepada auditor, regulator, dan juga nasabah @bussmann2021.
 Shapley Additive exPlanations (SHAP) telah menjadi standar interpretasi model ML
 karena dasar game theory yang konsisten @lundberg2017shap. Namun, penerapan SHAP
 pada lingkungan FL menimbulkan pertanyaan terkait stabilitas hasil interpretasi
-antar client ketika model dilatih di bawah kondisi Non-IID dan pengaruh
-distribusi data antar client pada feature importance yang diperoleh.
+antar client ketika model dilatih di bawah kondisi data yang heterogen dan juga
+terkait pengaruh distribusi data antar client pada feature importance yang
+diperoleh.
 #cite(<aljunaid2025>, form: "prose") telah mempertimbangkan XAI pada FL namun
 belum menganalisis secara spesifik pengaruh mekanisme agregasi yang berbeda
 memengaruhi stabilitas interpretasi antar client di bawah heterogenitas data.
@@ -149,12 +151,7 @@ dataset Bank Account Fraud (BAF) @jesus2022baf, yaitu data sintetis yang
 dikembangkan berdasarkan data nyata dengan fitur bermakna sehingga memperkuat
 interpretabilitas. Skenario Non-IID dibentuk melalui partisi Dirichlet untuk
 merefleksikan heterogenitas data antar instirusi dan kerangka Flower
-@beutel2022flower digunakan sebagai infrastruktur simulasi FL. Dengan demikian,
-hasil penelitian ini diharapkan tidak hanya memperkaya literatur FL berbasis
-tree tetapi juga memberikan landasan praktis bagi industri perbankan, otoritas
-regulator seperti Otoritas Jasa Keuangan (OJK) dan Pusat Pelaporan dan Analisis
-Transaksi Keuangan (PPATK), serta pengembang sistem deteksi fraud yang harus
-menyeimbangkan akurasi, privasi, dan transparansi model.
+@beutel2022flower digunakan sebagai infrastruktur simulasi FL.
 
 == Rumusan Masalah
 
@@ -180,93 +177,34 @@ pertanyaan penelitian sebagai berikut:
 Agar penelitian ini terfokus, terarah, dan dapat dipertanggungjawabkan secara
 metodologis, ditetapkan sejumlah batasan masalah sebagai berikut:
 
-+ *Batasan Domain dan Dataset.* Penelitian ini dibatasi pada deteksi financial
-  fraud menggunakan tiga dataset publik, yaitu Financial Fraud Detection Dataset
-  yang merupakan turunan simulator PaySim @lopezrojas2016paysim, ULB Credit Card
-  Fraud Detection Dataset, dan Bank Account Fraud (BAF) varian Base
-  @jesus2022baf. Domain fraud lain seperti insurance fraud dan anti-money
-  laundering tidak dievaluasi. Perbandingan antar model dilakukan pada pembagian
-  data evaluasi yang sama dalam masing-masing dataset.
-+ *Batasan Model yang Dievaluasi.* Model yang dievaluasi dalam penelitian ini
-  terbatas pada enam algoritma, yaitu Logistic Regression (LR) dan Support
-  Vector Machine (SVM) sebagai representasi model parametrik dengan agregasi
-  FedAvg, Gradient Boosting Machine (GBM) sebagai representasi model tree-based
-  dengan agregasi best-model selection mengikuti skema
-  #cite(<aljunaid2025>, form: "prose"), Financial Fraud Detection network (FFD)
-  berupa 1D Convolutional Neural Network dan sebuah tabular Transformer
-  (FT-Transformer, dilabeli BERT) sebagai representasi model deep learning,
-  serta FedXGBllr @ma2023fedxgbllr sebagai representasi model tree-based dengan
-  agregasi tree ensemble berbasis learnable learning rates. Pada kondisi
-  terpusat, XGBoost digunakan sebagai pembanding bagi FedXGBllr, tanpa
-  menyamakannya dengan implementasi terpusat dari model gabungan FedXGBllr.
-  Model lain seperti Random Forest atau pendekatan berbasis Graph Neural Network
-  (GNN) tidak dievaluasi karena di luar fokus perbandingan paradigma agregasi
-  yang menjadi inti penelitian ini.
-+ *Batasan Skema Agregasi Federated Learning.* Skema agregasi yang digunakan
-  dalam penelitian ini terbatas pada empat mekanisme, yaitu FedAvg untuk model
-  parametrik (LR, SVM), best-model selection untuk GBM, accuracy-weighted FedAvg
-  untuk model deep learning (FFD, BERT), serta tree ensemble aggregation dengan
-  learnable learning rates untuk FedXGBllr. Pada accuracy-weighted FedAvg,
-  metrik kinerja lokal yang digunakan untuk pembobotan adalah AUPRC. Skema
-  agregasi lanjutan seperti FedProx, SCAFFOLD, FedAvgM, atau FedNova tidak
-  dievaluasi karena di luar ruang lingkup perbandingan dan akan memperluas
-  dimensi eksperimen melebihi kapasitas penelitian ini.
-+ *Batasan Skenario Heterogenitas Data.* Heterogenitas data antar client
-  disimulasikan melalui partisi Dirichlet sebagai representasi label
-  distribution skew. Eksperimen pelatihan utama membandingkan kondisi IID dengan
-  Non-IID pada $alpha$ = 0,5. Variasi $alpha$ pada sensus diagnostik partisi
-  tidak diperlakukan sebagai variasi eksperimen pelatihan utama. Feature
-  distribution skew, concept drift, dan quantity skew murni tidak dievaluasi
-  sebagai faktor eksperimen tersendiri.
-+ *Batasan Lingkungan Eksperimen.* Penelitian ini menggunakan simulasi Federated
-  Learning berbasis Flower @beutel2022flower dengan lima client dalam konteks
-  cross-silo FL. Implementasi FedXGBllr mengikuti baseline hfedxgboost pada
-  repositori resmi Flower. Validation set dan test set dipertahankan secara
-  terpusat sebagai penyederhanaan simulasi. Penelitian tidak mencakup
-  implementasi lintas institusi secara fisik, pengukuran latensi jaringan riil,
-  maupun evaluasi kegagalan perangkat yang heterogen. Client diasumsikan
-  mengikuti protokol pelatihan sedangkan serangan Byzantine, backdoor, dan model
-  poisoning tidak diuji. Eksperimen utama mencakup 96 konfigurasi dengan seed 42
-  sehingga hasil performa belum mencakup variasi antarseed pelatihan.
-+ *Batasan Mekanisme Privasi Tambahan.* Penelitian ini tidak mengintegrasikan
-  Differential Privacy (DP), Homomorphic Encryption (HE), maupun Secure
-  Multi-Party Computation (SMPC). Pembahasan privasi dibatasi pada mekanisme
-  pertukaran informasi dalam rancangan FL, termasuk karakteristik gradient-less
-  pada FedXGBllr. Penelitian tidak melakukan pengujian serangan privasi maupun
-  pengukuran jaminan privasi formal. Oleh karena itu, pembatasan perpindahan
-  data mentah selama pelatihan tidak diartikan sebagai bukti bahwa seluruh model
-  atau parameter yang dipertukarkan bebas dari risiko kebocoran informasi.
-+ *Batasan Penanganan Class Imbalance.* Teknik penanganan class imbalance yang
-  dibandingkan sebagai perlakuan eksperimen adalah SMOTE (Synthetic Minority
-  Oversampling Technique) dan tanpa SMOTE. SMOTE diterapkan pada data pelatihan
-  masing-masing client untuk skenario federated serta pada training set terpusat
-  untuk baseline. Target rasio minoritas terhadap mayoritas ditetapkan sebesar
-  1:100 dengan lima tetangga minoritas. Penerapannya dilewati apabila jumlah
-  minoritas kurang dari enam atau target rasio telah terpenuhi. Kondisi dengan
-  aturan SMOTE karena itu tidak selalu menghasilkan sampel tambahan pada setiap
-  client. Teknik lain seperti undersampling, cost-sensitive learning, focal
-  loss, dan Adaptive Synthetic Sampling (ADASYN) @he2008adasyn tidak diuji
-  sebagai perlakuan pembanding dalam studi ablasi ini.
-+ *Batasan Metrik Evaluasi.* Evaluasi performa menggunakan Area Under the
-  Precision-Recall Curve (AUPRC) sebagai metrik utama dan Recall\@5%FPR sebagai
-  metrik pelengkap untuk mengukur kemampuan deteksi pada batas false positive
-  rate tertentu. F1-score, Precision, dan Recall juga dicatat sebagai metrik
-  pelengkap. Accuracy tidak dijadikan acuan utama karena kurang merepresentasikan
-  kemampuan deteksi kelas minoritas pada data yang tidak seimbang.
-+ *Batasan Metode Explainability.* Analisis explainability dibatasi pada SHapley
-  Additive exPlanations (SHAP) @lundberg2017shap dengan fokus pada konsistensi
-  feature importance antar client dan stabilitasnya pada kondisi Non-IID.
-  Pengukuran utama menjelaskan model global akhir yang sama menggunakan
-  background lokal dan sampel penjelasan yang sama antar client. Variasi
-  estimator KernelSHAP diperiksa melalui pengulangan seed dan pemeriksaan
-  dilakukan secara post-hoc dalam lingkungan simulasi. Evaluasi utama tidak
-  membandingkan SHAP dengan Local Interpretable Model-agnostic Explanations
-  (LIME), Integrated Gradients, atau attention-based explanation.
-+ *Batasan Aspek Non-Teknis.* Aspek non-teknis seperti dampak regulasi spesifik,
-  biaya implementasi industri, integrasi dengan sistem core banking, serta
-  evaluasi kepuasan pengguna akhir (auditor atau analis fraud) tidak dibahas
-  dalam penelitian ini. Kontribusi praktis yang dirumuskan bersifat rekomendasi
-  metodologis dan implikasi teoretis, bukan rekomendasi implementasi produksi.
++ Penelitian ini dibatasi pada deteksi financial fraud dengan paradigma
+  pelatihan cross-silo Federated Learning (FL) yang disimulasikan dengan
+  menggunakan Framework Flower @beutel2022flower. Validation set dan test set
+  dipertahankan secara terpusat sebagai penyederhanaan simulasi dengan training
+  set dipartisikan kepada lima client.
++ Model yang dievaluasi dalam penelitian ini terbatas pada enam algoritma, yaitu
+  Logistic Regression (LR), Support Vector Machine (SVM), Gradient Boosting
+  Machine (GBM), Financial Fraud Detection network (FFD), dan tabular
+  Transformer (FT-Transformer, dilabeli BERT), serta FedXGBllr
+  @ma2023fedxgbllr.
++ Skema agregasi yang digunakan dalam penelitian ini terbatas pada empat
+  mekanisme, yaitu FedAvg untuk model parametrik (LR, SVM), best-model selection
+  untuk GBM, accuracy-weighted FedAvg untuk model deep learning (FFD, BERT),
+  serta tree ensemble aggregation dengan learnable learning rates untuk
+  FedXGBllr.
++ Heterogenitas data antar client disimulasikan melalui partisi Dirichlet dengan
+  eksperimen pelatihan utama membandingkan kondisi IID dengan Non-IID pada
+  $alpha$ = 0,5.
++ Teknik penanganan class imbalance yang dibandingkan sebagai perlakuan
+  eksperimen adalah SMOTE (Synthetic Minority Oversampling Technique) dan tanpa
+  SMOTE. SMOTE diterapkan pada data pelatihan masing-masing client untuk
+  skenario federated secara lokal serta pada training set terpusat untuk
+  baseline. Target rasio minoritas terhadap mayoritas ditetapkan sebesar 1:100
+  dengan K-Nearest Neighbors $k = 5$.
++ Analisis explainability dibatasi pada SHapley Additive exPlanations (SHAP)
+  @lundberg2017shap, lebih tepatnya LinearSHAP, TreeSHAP, dan KernelSHAP.
+  Variasi estimator KernelSHAP diperiksa melalui pengulangan seed dan
+  pemeriksaan dilakukan secara post-hoc dalam lingkungan simulasi.
 
 == Tujuan
 
@@ -275,27 +213,22 @@ tujuan utama yang saling terkait, yaitu:
 
 + Mengevaluasi dan membandingkan performa model Federated Learning berbasis tree
   (FedXGBllr) terhadap model berbasis gradient (Logistic Regression, Support
-  Vector Machine) dengan agregasi FedAvg, model Gradient Boosting Machine (GBM)
-  dengan agregasi best-model selection, serta model deep learning (FFD berbasis
-  1D-CNN dan BERT berbasis tabular Transformer) dengan agregasi
-  accuracy-weighted FedAvg dalam deteksi financial fraud pada dataset PaySim,
-  ULB Credit Card, dan BAF, menggunakan AUPRC dan Recall\@5%FPR sebagai dasar
-  utama pembahasan performa.
-+ Menganalisis pengaruh kondisi distribusi data IID dan Non-IID berbasis partisi
-  Dirichlet serta penerapan Synthetic Minority Oversampling Technique (SMOTE)
-  terhadap performa keenam model melalui perbandingan konfigurasi yang tersedia
-  pada masing-masing dataset.
-+ Menganalisis karakteristik explainability keenam model menggunakan SHapley
-  Additive exPlanations (SHAP), khususnya konsistensi feature importance antar
-  client dan stabilitas interpretasi di bawah kondisi Non-IID, dengan
-  mempertimbangkan variasi estimator pada pengukuran KernelSHAP.
+  Vector Machine) dengan agregasi FedAvg, model Gradient Boosting Machine dengan
+  agregasi best-model selection, serta model deep learning (FFD berbasis 1D-CNN
+  dan BERT berbasis tabular Transformer) dengan agregasi accuracy-weighted
+  FedAvg dalam mendeteksi fraud finansial.
++ Menganalisis pengaruh heterogenitas distribusi data (IID dan Non-IID) serta
+  penanganan class imbalance (SMOTE) terhadap performa model dalam federated
+  learning.
++ Menganalisis karakteristik explainability model FL berbasis tree, model
+  berbasis gradient, dan model deep learning, ditinjau dari konsistensi feature
+  importance berbasis SHAP antar client dan stabilitasnya di bawah kondisi
+  Non-IID.
 
 == Manfaat
 
 Penelitian ini diharapkan memberikan manfaat baik secara teoritis maupun praktis
 sebagai berikut:
-
-*A. Manfaat Teoritis*
 
 + Memperkaya literatur Federated Learning dengan menyediakan benchmark
   komparatif yang mencakup empat paradigma agregasi, yaitu FedAvg untuk model
@@ -315,30 +248,6 @@ sebagai berikut:
   pemeriksaan variasi estimator SHAP sebelum menarik kesimpulan mengenai
   perbedaan antar client.
 
-*B. Manfaat Praktis*
-
-+ Bagi industri perbankan dan lembaga jasa keuangan, penelitian ini memberikan
-  pertimbangan berbasis hasil eksperimen mengenai pemilihan konfigurasi model
-  dan agregasi FL untuk deteksi fraud kolaboratif. Pertimbangan tersebut
-  mencakup performa, pengaruh heterogenitas data, dan konsistensi interpretasi,
-  sebagai dasar kajian lanjutan sebelum penerapan pada lingkungan operasional.
-+ Bagi otoritas regulator seperti Otoritas Jasa Keuangan (OJK) dan Pusat
-  Pelaporan dan Analisis Transaksi Keuangan (PPATK), hasil penelitian ini dapat
-  menjadi referensi teknis dalam menyusun pedoman pemanfaatan teknologi
-  Federated Learning untuk pengawasan dan deteksi transaksi mencurigakan,
-  terutama dalam menjawab kebutuhan akan model yang akurat sekaligus transparan
-  dan dapat diaudit.
-+ Bagi pengembang sistem deteksi fraud, penelitian ini menyediakan panduan
-  praktis mengenai trade-off antara performa, ketahanan terhadap heterogenitas
-  data, dan interpretabilitas model dalam memilih arsitektur FL yang tepat
-  sesuai konteks operasional, termasuk implikasi penggunaan SMOTE pada skema
-  federated.
-+ Bagi komunitas akademik, hasil eksperimen dan implementasi penelitian ini
-  dapat menjadi baseline yang direplikasi untuk pengembangan riset lanjutan,
-  baik dalam pengujian skema agregasi alternatif (FedProx, SCAFFOLD), integrasi
-  mekanisme privasi tambahan (Differential Privacy), maupun ekstensi ke domain
-  keuangan lainnya.
-
 = TINJAUAN PUSTAKA
 
 == Hasil Penelitian Terdahulu
@@ -346,28 +255,26 @@ sebagai berikut:
 === Deteksi Financial Fraud Berbasis Machine Learning dan Deep Learning Terpusat
 
 Penelitian deteksi fraud secara terpusat telah berkembang pesat selama satu
-dekade terakhir yang terpusat pada arsitektur deep learning.
-#cite(<sharma2022>, form: "prose") mengembangkan pendekatan credit card fraud
-detection berbasis Auto-Encoder yang digabungkan dengan klasifikasi deep neural
-network. Auto-encoder digunakan untuk mempelajari representasi laten dari pola
-transaksi normal sedangkan transaksi yang menunjukkan rekonstruksi dengan error
-tinggi diklasifikasikan sebagai anomali. Pendekatan ini berhasil meningkatkan
-kemampuan deteksi pada data dengan ketidakseimbangan kelas namun tetap dalam
-kondisi terpusat seluruh data transaksi dapat dikumpulkan pada satu titik
-komputasi.
+dekade terakhir yang terpusat pada arsitektur deep
+learning. #cite(<sharma2022>, form: "prose") mengembangkan pendekatan credit
+card fraud detection berbasis Auto-Encoder yang digabungkan dengan klasifikasi
+deep neural network. Auto-encoder digunakan untuk mempelajari representasi
+laten dari pola transaksi normal sedangkan transaksi yang menunjukkan
+rekonstruksi dengan error tinggi diklasifikasikan sebagai anomali. Pendekatan
+ini berhasil meningkatkan kemampuan deteksi pada data dengan class imbalance
+namun tetap dalam kondisi terpusat dimana seluruh data transaksi dikumpulkan
+pada satu titik komputasi.
 
 Pengembangan lebih lanjut dilakukan oleh #cite(<baghdadi2024>, form: "prose")
 yang mengusulkan pendekatan ensemble learning yang menggabungkan energy-based
 Restricted Boltzmann Machine (RBM) dengan extended Long Short-Term Memory
 (xLSTM) untuk predictive analytics pada deteksi fraud kartu kredit. Hasil
-eksperimen menunjukkan bahwa kombinasi pembelajaran representasi berbasis energi
-dengan arsitektur sekuensial mampu menangkap pola temporal yang kompleks pada
-transaksi finansial. Meskipun kedua penelitian tersebut menunjukkan keunggulan
-performa, keduanya beroperasi dalam kondisi terpusat sehingga tidak menjawab
-persoalan privasi dan kepatuhan regulasi yang menjadi penting dalam konteks
-lintas institusi. Selain itu, model-model berbasis deep learning tersebut
-bersifat black-box sehingga aspek interpretabilitas menjadi sulit dipenuhi tanpa
-metode XAI tambahan.
+eksperimen menunjukkan bahwa kombinasi pembelajaran representasi berbasis
+energi dengan arsitektur sekuensial mampu menangkap pola temporal yang kompleks
+pada transaksi finansial. Meskipun kedua penelitian tersebut menunjukkan
+keunggulan performa, keduanya beroperasi dalam kondisi terpusat. Selain itu,
+model-model berbasis deep learning tersebut bersifat black-box sehingga aspek
+interpretabilitas menjadi sulit dipenuhi tanpa metode XAI tambahan.
 
 === Penerapan Federated Learning untuk Deteksi Financial Fraud
 
@@ -392,14 +299,13 @@ terhadap heterogenitas data.
 
 Perkembangan paling menjanjikan datang dari #cite(<tang2024>, form: "prose")
 yang mengusulkan kerangka federated graph learning untuk deteksi fraud kartu
-kredit. Penelitian tersebut memanfaatkan struktur graf untuk memodelkan hubungan
-antar entitas transaksi, kemudian melatih Graph Neural Network (GNN) secara
-federated di atas kerangka tersebut. Hasilnya menunjukkan bahwa pendekatan
-berbasis graf mampu menangkap pola fraud yang bersifat relasional yang sulit
-dideteksi oleh model konvensional. Walaupun demikian, pendekatan ini menambahkan
-kompleksitas komputasi yang signifikan dan tetap menggunakan paradigma agregasi
-berbasis gradient sehingga belum mengeksplorasi kemungkinan penggunaan model
-berbasis tree yang justru terbukti unggul untuk data tabular transaksional.
+kredit. Penelitian tersebut memanfaatkan struktur graf untuk memodelkan
+hubungan antar entitas transaksi kemudian melatih Graph Neural Network (GNN)
+secara federated di atas kerangka tersebut. Hasilnya menunjukkan bahwa
+pendekatan berbasis graf mampu menangkap pola fraud yang bersifat relasional
+yang sulit dideteksi oleh model konvensional. Walaupun demikian, pendekatan ini
+menambahkan kompleksitas komputasi yang signifikan dan belum mengeksplorasi
+kemungkinan penggunaan model berbasis tree.
 
 #cite(<aljunaid2025>, form: "prose") memberikan kontribusi penting dengan
 mengusulkan kerangka FL berbasis XAI untuk deteksi fraud perbankan. Penelitian
@@ -410,25 +316,25 @@ antara seluruh client. Hasilnya menunjukkan bahwa model GBM mencapai performa
 terbaik dan integrasi SHAP berhasil memberikan transparansi terhadap keputusan
 model. Meskipun pendekatan ini telah memperkenalkan dimensi explainability ke
 dalam FL, penelitian tersebut belum membandingkan hasilnya dengan model FL
-berbasis tree yang lebih modern seperti FedXGBllr, dan belum mengkaji secara
+berbasis tree yang lebih modern seperti FedXGBllr dan belum mengkaji secara
 spesifik bagaimana skema agregasi yang berbeda memengaruhi stabilitas
 interpretasi SHAP di bawah kondisi Non-IID.
 
 === Integrasi Model Berbasis Tree ke dalam Kerangka Federated Learning
 
-Eksplorasi model berbasis tree dalam ekosistem FL relatif terbatas dibandingkan
+Eksplorasi model berbasis tree dalam paradigma FL relatif terbatas dibandingkan
 model berbasis gradient. Hal ini disebabkan oleh karakteristik struktur pohon
-berupa aturan percabangan yang dapat berbeda antar client sehingga skema
-agregasi standar seperti FedAvg tidak dapat diterapkan secara langsung pada
-struktur tersebut. #cite(<ma2023fedxgbllr>, form: "prose") mengusulkan FedXGBllr
+yang dapat berbeda antar client sehingga skema agregasi standar seperti FedAvg
+tidak dapat diterapkan secara langsung pada struktur
+tersebut. #cite(<ma2023fedxgbllr>, form: "prose") mengusulkan FedXGBllr
 (Federated XGBoost with Learnable Learning Rates), sebuah kerangka pelatihan
 XGBoost secara federated dalam horizontal setting yang tidak bergantung pada
 pertukaran gradient dan hessian antar client. Setiap client melatih tree
-ensemble secara lokal, kemudian server mengagregasi seluruh tree ensemble dan
+ensemble secara lokal kemudian server mengagregasi seluruh tree ensemble dan
 melatih one-layer 1D Convolutional Neural Network (CNN) untuk mempelajari
 learning rate setiap pohon secara global. Pendekatan ini terbukti menurunkan
 communication overhead hingga 25--700 kali lipat dibandingkan metode sebelumnya
-seperti SimFL sekaligus menghilangkan risiko kebocoran privasi melalui gradient.
+sekaligus menghilangkan risiko kebocoran privasi melalui gradient.
 
 Pada tahap berikutnya, output dari kumpulan pohon tersebut menjadi input bagi
 one-layer 1D Convolutional Neural Network (CNN) untuk mempelajari kontribusi
@@ -442,118 +348,121 @@ berskala umum seperti HIGGS, SUSY, dan a9a yang tidak merefleksikan
 karakteristik domain finansial. Dataset-dataset tersebut tidak memiliki class
 imbalance ekstrem maupun struktur fitur transaksional yang khas pada deteksi
 fraud. Selain itu, evaluasi original menggunakan partisi data yang seimbang dan
-tidak menguji performa pada skenario Non-IID berbasis distribusi Dirichlet yang
-lebih realistis. Aspek explainability model juga belum dieksplorasi dalam
-penelitian #cite(<ma2023fedxgbllr>, form: "prose") dimana FedXGBllr memiliki
-potensi interpretasi melalui struktur pohon yang transparan dan bobot learning
-rate yang dapat dipelajari.
+tidak menguji performa pada skenario Non-IID. Aspek explainability model juga
+belum dieksplorasi dalam penelitian #cite(<ma2023fedxgbllr>, form: "prose")
+dimana FedXGBllr memiliki potensi interpretasi melalui struktur pohon yang
+transparan dan bobot learning rate yang dapat dipelajari.
 
 === Explainable AI untuk Deteksi Financial Fraud
 
 Aspek explainability menjadi krusial dalam domain keuangan karena keputusan
 model harus dapat dipertanggungjawabkan kepada auditor, regulator, dan nasabah
 yang terdampak. #cite(<doshivelez2017>, form: "prose") memberikan fondasi
-konseptual mengenai pentingnya interpretable machine learning dengan mengusulkan
-kerangka evaluasi yang sistematis untuk mengukur kualitas interpretasi. Mereka
-menekankan bahwa interpretabilitas tidak hanya bermanfaat untuk transparansi,
-tetapi juga untuk identifikasi bias, validasi domain pengetahuan, serta
-peningkatan kepercayaan pengguna terhadap sistem berbasis ML.
+konseptual mengenai pentingnya interpretable machine learning dengan
+mengusulkan kerangka evaluasi yang sistematis untuk mengukur kualitas
+interpretasi. Mereka menekankan bahwa interpretabilitas tidak hanya bermanfaat
+untuk transparansi, tetapi juga untuk identifikasi bias, validasi domain
+pengetahuan, serta peningkatan kepercayaan pengguna terhadap sistem berbasis
+ML.
 
 #cite(<bussmann2021>, form: "prose") mengaplikasikan kerangka tersebut pada
-manajemen risiko kredit dengan memanfaatkan SHAP (SHapley Additive exPlanations)
-untuk menjelaskan keputusan model XGBoost. Hasil penelitian mereka menunjukkan
-bahwa SHAP mampu memberikan feature importance yang konsisten dan dapat diaudit
-sehingga cocok untuk diadopsi pada domain finansial yang ketat regulasinya.
-Penelitian ini menjadi pijakan penting bahwa kombinasi model berbasis tree
-dengan SHAP merupakan pasangan yang efektif untuk skenario keuangan.
+manajemen risiko kredit dengan memanfaatkan SHAP (SHapley Additive
+exPlanations) untuk menjelaskan keputusan model XGBoost. Hasil penelitian
+mereka menunjukkan bahwa SHAP mampu memberikan feature importance yang
+konsisten dan dapat diaudit sehingga cocok untuk diadopsi pada domain
+finansial. Penelitian ini menjadi pijakan penting bahwa kombinasi model
+berbasis tree dengan SHAP merupakan pasangan yang efektif untuk skenario
+keuangan.
 
-#cite(<aljunaid2025>, form: "prose") telah memperkenalkan integrasi XAI ke dalam
-kerangka FL untuk deteksi fraud perbankan. Namun, analisis SHAP yang mereka
-lakukan masih bersifat agregat dan belum menganalisis bagaimana variasi
-distribusi data antar client memengaruhi konsistensi feature importance. Oleh
-karena itu, penelitian ini menganalisis stabilitas interpretasi SHAP pada
-kondisi IID dan Non-IID dengan membandingkan model parametrik, model berbasis
-tree, dan model deep learning. Perbandingan tersebut mencakup FedAvg untuk LR
-dan SVM, best-model selection untuk GBM, accuracy-weighted FedAvg untuk FFD dan
-BERT, serta tree ensemble aggregation dengan learnable learning rates untuk
-FedXGBllr.
+#cite(<aljunaid2025>, form: "prose") telah memperkenalkan integrasi XAI ke
+dalam kerangka FL untuk deteksi fraud perbankan. Namun, analisis SHAP yang
+mereka lakukan belum menganalisis bagaimana variasi distribusi data antar
+client memengaruhi konsistensi feature importance. Oleh karena itu, penelitian
+ini menganalisis stabilitas interpretasi SHAP pada kondisi IID dan Non-IID
+dengan membandingkan model parametrik, model berbasis tree, dan model deep
+learning. Perbandingan tersebut mencakup FedAvg untuk LR dan SVM, best-model
+selection untuk GBM, accuracy-weighted FedAvg untuk FFD dan BERT, serta tree
+ensemble aggregation dengan learnable learning rates untuk FedXGBllr.
 
 === Rangkuman Penelitian Terdahulu
 
 Berdasarkan kajian di atas, penelitian ini menganalisis penerapan FL untuk
 deteksi financial fraud dengan class imbalance ekstrem dan distribusi Non-IID,
 integrasi model berbasis tree, khususnya FedXGBllr yang bersifat gradient-less,
-ke dalam ekosistem FL untuk sektor keuangan, dan stabilitas interpretasi SHAP
-antar paradigma agregasi FL. @tab-2-1 merangkum hasil penelitian terdahulu yang
-dikaji beserta identifikasi celah riset yang menjadi dasar penelitian ini.
+dan stabilitas interpretasi SHAP antar paradigma agregasi FL. @tab-2-1
+merangkum hasil penelitian terdahulu yang dikaji beserta identifikasi celah
+riset yang menjadi dasar penelitian ini.
 
-#figure(
-  kind: table,
-  text(size: 8pt)[
-    #table(
-      columns: (auto, 1.4fr, 2fr, 1.7fr, 2fr, 2fr),
-      align: (center, left, left, left, left, left),
-      table.header(
-        [*No*], [*Peneliti (Tahun)*], [*Judul / Topik*], [*Metode*],
-        [*Hasil Utama*], [*Gap terhadap Penelitian Ini*],
-      ),
-      [1], [#cite(<sharma2022>, form: "prose")],
-      [Credit Card Fraud Detection Using Deep Learning Based on Auto-Encoder],
-      [Auto-Encoder + DNN, paradigma terpusat],
-      [Auto-encoder berhasil mempelajari representasi laten transaksi normal sehingga anomali terdeteksi via reconstruction error],
-      [Paradigma terpusat sehingga tidak menjawab privasi data; model bersifat black-box tanpa analisis explainability],
+#block(breakable: false, width: 100%)[
+  #figure(
+    kind: table,
+    text(size: 8pt)[
+      #table(
+        columns: (auto, 1.4fr, 2fr, 1.7fr, 2fr, 2fr),
+        align: (center, left, left, left, left, left),
+        inset: (x: 5pt, y: 2.2pt),
+        table.header(
+          [*No*], [*Peneliti (Tahun)*], [*Judul / Topik*], [*Metode*],
+          [*Hasil Utama*], [*Gap terhadap Penelitian Ini*],
+        ),
+        [1], [#cite(<sharma2022>, form: "prose")],
+        [Credit Card Fraud Detection Using Deep Learning Based on Auto-Encoder],
+        [Auto-Encoder + DNN, paradigma terpusat],
+        [Auto-encoder berhasil mempelajari representasi laten transaksi normal sehingga anomali terdeteksi via reconstruction error],
+        [Paradigma terpusat sehingga tidak menjawab privasi data; model bersifat black-box tanpa analisis explainability],
 
-      [2], [#cite(<baghdadi2024>, form: "prose")],
-      [Ensemble Learning Approach Using Energy-based RBM and xLSTM],
-      [Ensemble RBM + xLSTM, paradigma terpusat],
-      [Kombinasi pembelajaran representasi berbasis energi dengan arsitektur sekuensial menangkap pola temporal kompleks],
-      [Tidak mempertimbangkan skenario federated; tidak mengintegrasikan dimensi explainability],
+        [2], [#cite(<baghdadi2024>, form: "prose")],
+        [Ensemble Learning Approach Using Energy-based RBM and xLSTM],
+        [Ensemble RBM + xLSTM, paradigma terpusat],
+        [Kombinasi pembelajaran representasi berbasis energi dengan arsitektur sekuensial menangkap pola temporal kompleks],
+        [Tidak mempertimbangkan skenario federated; tidak mengintegrasikan dimensi explainability],
 
-      [3], [#cite(<suvarna2020>, form: "prose")],
-      [Credit Card Fraud Detection Using Federated Learning Techniques],
-      [FL dengan model konvensional + FedAvg],
-      [Mendemonstrasikan kelayakan FL untuk deteksi fraud dengan performa sebanding pelatihan terpusat],
-      [Belum mempertimbangkan distribusi Non-IID dan class imbalance ekstrem; belum mengeksplorasi model tree-based; tidak ada analisis XAI],
+        [3], [#cite(<suvarna2020>, form: "prose")],
+        [Credit Card Fraud Detection Using Federated Learning Techniques],
+        [FL dengan model konvensional + FedAvg],
+        [Mendemonstrasikan kelayakan FL untuk deteksi fraud dengan performa sebanding pelatihan terpusat],
+        [Belum mempertimbangkan distribusi Non-IID dan class imbalance ekstrem; belum mengeksplorasi model tree-based; tidak ada analisis XAI],
 
-      [4], [#cite(<venkatakrishna2024>, form: "prose")],
-      [Deep Learning-based Credit Card Fraud Detection in Federated Learning],
-      [Deep Learning + FedAvg],
-      [Mengintegrasikan deep learning ke dalam FL untuk meningkatkan akurasi deteksi],
-      [Mewarisi keterbatasan interpretabilitas deep learning; belum membandingkan dengan model tree-based; tidak menguji robustness terhadap Non-IID],
+        [4], [#cite(<venkatakrishna2024>, form: "prose")],
+        [Deep Learning-based Credit Card Fraud Detection in Federated Learning],
+        [Deep Learning + FedAvg],
+        [Mengintegrasikan deep learning ke dalam FL untuk meningkatkan akurasi deteksi],
+        [Mewarisi keterbatasan interpretabilitas deep learning; belum membandingkan dengan model tree-based; tidak menguji robustness terhadap Non-IID],
 
-      [5], [#cite(<tang2024>, form: "prose")],
-      [Credit Card Fraud Detection Based on Federated Graph Learning],
-      [Federated GNN dengan agregasi berbasis gradient],
-      [Pendekatan berbasis graf efektif menangkap pola fraud relasional],
-      [Kompleksitas komputasi tinggi; tetap berbasis agregasi gradient; belum mengeksplorasi model tree; tanpa analisis stabilitas XAI antar client],
+        [5], [#cite(<tang2024>, form: "prose")],
+        [Credit Card Fraud Detection Based on Federated Graph Learning],
+        [Federated GNN dengan agregasi berbasis gradient],
+        [Pendekatan berbasis graf efektif menangkap pola fraud relasional],
+        [Kompleksitas komputasi tinggi; tetap berbasis agregasi gradient; belum mengeksplorasi model tree; tanpa analisis stabilitas XAI antar client],
 
-      [6], [#cite(<aljunaid2025>, form: "prose")],
-      [Secure and Transparent Banking: Explainable AI-Driven FL for Financial Fraud Detection],
-      [LR, SVM, GBM dengan best-model selection; integrasi SHAP],
-      [GBM mencapai performa terbaik di antara model konvensional; SHAP berhasil memberikan transparansi keputusan],
-      [Belum membandingkan dengan FL berbasis tree modern (FedXGBllr); analisis SHAP bersifat agregat tanpa kajian stabilitas antar client di bawah Non-IID],
+        [6], [#cite(<aljunaid2025>, form: "prose")],
+        [Secure and Transparent Banking: Explainable AI-Driven FL for Financial Fraud Detection],
+        [LR, SVM, GBM dengan best-model selection; integrasi SHAP],
+        [GBM mencapai performa terbaik di antara model konvensional; SHAP berhasil memberikan transparansi keputusan],
+        [Belum membandingkan dengan FL berbasis tree modern (FedXGBllr); analisis SHAP bersifat agregat tanpa kajian stabilitas antar client di bawah Non-IID],
 
-      [7], [#cite(<ma2023fedxgbllr>, form: "prose")],
-      [Gradient-less Federated Gradient Boosting Trees with Learnable Learning Rates (FedXGBllr)],
-      [Tree ensemble aggregation + learnable learning rates via 1D CNN, gradient-less],
-      [Performa setara state-of-the-art dengan komunikasi 25–700× lebih efisien; menghilangkan kebutuhan berbagi gradient],
-      [Evaluasi pada dataset publik umum (HIGGS, SUSY, a9a); belum diuji pada konteks fraud finansial dengan class imbalance ekstrem dan Non-IID Dirichlet; tidak ada analisis explainability],
+        [7], [#cite(<ma2023fedxgbllr>, form: "prose")],
+        [Gradient-less Federated Gradient Boosting Trees with Learnable Learning Rates (FedXGBllr)],
+        [Tree ensemble aggregation + learnable learning rates via 1D CNN, gradient-less],
+        [Performa setara state-of-the-art dengan komunikasi 25–700× lebih efisien; menghilangkan kebutuhan berbagi gradient],
+        [Evaluasi pada dataset publik umum (HIGGS, SUSY, a9a); belum diuji pada konteks fraud finansial dengan class imbalance ekstrem dan Non-IID Dirichlet; tidak ada analisis explainability],
 
-      [8], [#cite(<doshivelez2017>, form: "prose")],
-      [Towards a Rigorous Science of Interpretable Machine Learning],
-      [Kerangka konseptual evaluasi interpretabilitas],
-      [Mengusulkan taksonomi evaluasi interpretabilitas (application-grounded, human-grounded, functionally-grounded)],
-      [Kerangka konseptual murni; menjadi fondasi untuk penelitian ini namun tidak memberikan implementasi konkret pada FL],
+        [8], [#cite(<doshivelez2017>, form: "prose")],
+        [Towards a Rigorous Science of Interpretable Machine Learning],
+        [Kerangka konseptual evaluasi interpretabilitas],
+        [Mengusulkan taksonomi evaluasi interpretabilitas (application-grounded, human-grounded, functionally-grounded)],
+        [Kerangka konseptual murni; menjadi fondasi untuk penelitian ini namun tidak memberikan implementasi konkret pada FL],
 
-      [9], [#cite(<bussmann2021>, form: "prose")],
-      [Explainable Machine Learning in Credit Risk Management],
-      [XGBoost terpusat + SHAP pada manajemen risiko kredit],
-      [SHAP konsisten dan dapat diaudit untuk model tree-based pada domain finansial],
-      [Paradigma terpusat; tidak mengkaji bagaimana skema federated memengaruhi stabilitas SHAP],
-    )
-  ],
-  caption: [Rangkuman Hasil Penelitian Terdahulu],
-) <tab-2-1>
+        [9], [#cite(<bussmann2021>, form: "prose")],
+        [Explainable Machine Learning in Credit Risk Management],
+        [XGBoost terpusat + SHAP pada manajemen risiko kredit],
+        [SHAP konsisten dan dapat diaudit untuk model tree-based pada domain finansial],
+        [Paradigma terpusat; tidak mengkaji bagaimana skema federated memengaruhi stabilitas SHAP],
+      )
+    ],
+    caption: [Rangkuman Hasil Penelitian Terdahulu],
+  ) <tab-2-1>
+]
 
 == Dasar Teori
 
@@ -736,7 +645,7 @@ melainkan hanya mengirimkan tree ensemble yang sudah jadi.
 
 #figure(
   image("resources/fig-2-2-fedxgbllr-architecture.jpg", width: 90%),
-  caption: [Arsitektur FedXGBllr. Sumber: #cite(<ma2023fedxgbllr>, form: "prose"). (a) tahap tree ensemble aggregation dari seluruh client dan (b) struktur one-layer 1D CNN untuk mempelajari learning rate setiap pohon.],
+  caption: [Arsitektur FedXGBllr. Sumber: #cite(<ma2023fedxgbllr>, form: "prose"). (a) tahap agregasi tree ensemble dari seluruh client dan (b) struktur one-layer 1D CNN untuk mempelajari learning rate setiap pohon.],
 ) <fig-2-2>
 
 Mekanismenya terdiri dari dua tahap utama. Tahap pertama, setiap client melatih
@@ -841,7 +750,8 @@ struktur kelas pada data.
 
 Proporsi kelas minoritas sendiri belum sepenuhnya menggambarkan kesulitan
 klasifikasi, karena dua dataset dengan rasio fraud yang serupa dapat memiliki
-tingkat tumpang tindih kelas yang berbeda.
+tingkat tumpang tindih kelas yang berbeda sehingga separabilitas kelasnya juga
+berbeda.
 #cite(<napierala2016types>, form: "prose") membedakan sampel minoritas menjadi
 safe, borderline, rare, dan outlier berdasarkan lingkungan lokalnya. Tipologi
 ini digunakan untuk memeriksa struktur kesulitan data yang tidak terlihat dari
@@ -1153,7 +1063,12 @@ abstraksi tingkat tinggi yang memungkinkan peneliti mengimplementasikan berbagai
 skema agregasi dan model dengan kompatibilitas terhadap backend populer seperti
 PyTorch, TensorFlow, dan scikit-learn. Penelitian ini menggunakan Flower sebagai
 infrastruktur simulasi FL dengan implementasi mengikuti baseline hfedxgboost
-pada repositori resmi Flower.
+pada repositori resmi Flower. Arsitektur Flower disajikan pada @fig-2-6.
+
+#figure(
+  image("resources/fig-2-6-arsitektur-flower.png", width: 80%),
+  caption: [Arsitektur Flower. Sumber: #cite(<beutel2022flower>, form: "prose").],
+) <fig-2-6>
 
 = METODOLOGI
 
@@ -1166,56 +1081,63 @@ hingga analisis explainability. Pendekatan ini dipilih karena karakteristik
 penelitian yang bertujuan membandingkan beberapa konfigurasi sistem Federated
 Learning (FL) secara end-to-end. Dengan demikian, kerangka metodologi disusun
 mengikuti alur kerja sistem yang reproducible dan dapat dievaluasi secara
-objektif pada setiap tahapnya. Pelaksanaan penelitian mengikuti alur yang
+objektif pada setiap tahapnya. Adapun pelaksanaan penelitian mengikuti alur yang
 disajikan pada @fig-3-1.
 
 #figure(
-  image("resources/fig-3-1-system-architecture.jpg", height: 40%),
-  caption: [Arsitektur umum sistem penelitian.],
+  image("resources/fig-3-1-alur-penelitian.png", width: 72%),
+  caption: [Alur pelaksanaan penelitian.],
 ) <fig-3-1>
 
-Pipeline pelaksanaan penelitian terdiri dari enam tahap teknis yang berurutan.
-Tahap pertama adalah data acquisition dan preprocessing terhadap dataset PaySim,
-ULB Credit Card, dan Bank Account Fraud (BAF). Data dibagi menjadi training set,
-validation set, dan test set dengan proporsi 70:15:15, kemudian diproses sesuai
-karakteristik fitur masing-masing dataset. Parameter preprocessing yang
-dipelajari dari data ditentukan menggunakan training set agar informasi
-validation set dan test set tidak digunakan dalam pembentukan transformasi.
+#pagebreak()
 
-Tahap kedua adalah client partitioning, yaitu pembagian training set ke lima
-client melalui skema IID atau Non-IID berbasis distribusi Dirichlet dengan
-$alpha$ = 0,5. Tahap ketiga adalah local training dan imbalance handling dengan
-membandingkan pelatihan tanpa SMOTE dan pelatihan yang menerapkan aturan SMOTE
-lokal. Tahap keempat adalah federated aggregation melalui empat paradigma, yaitu
-FedAvg untuk LR dan SVM, best-model selection untuk GBM, accuracy-weighted
-FedAvg untuk FFD dan BERT, serta tree ensemble aggregation dengan learnable
-learning rates untuk FedXGBllr.
+Penelitian dimulai dengan studi literatur terutama pada bidang Federated
+Learning untuk Financial Fraud Detection. Studi literatur diawali dengan
+meninjau penelitian seputar Federated Learning secara umum terutama model serta
+paradigma agregasi terbaru dalam lingkungan FL, seperti FedXGBllr. Setelah
+proses ini, dilakukan identifikasi celah dan rumusan masalah dimana ditemukan
+belum adanya perbandingan komprehensif antar model dan paradigma agregasi pada
+lingkungan FL untuk Financial Fraud Detection. Selain itu, penelitian terkait
+Explainability dalam lingkungan FL juga masih minim sehingga juga menjadi celah
+yang dapat ditelusuri.
 
-Tahap kelima adalah pelaksanaan skenario eksperimen pada kondisi terpusat,
-federated IID, dan federated Non-IID. Kondisi terpusat digunakan sebagai
-pembanding performa dan bukan sebagai batas atas yang harus selalu melampaui
-hasil federated. Tahap keenam adalah evaluation dan explainability analysis yang
-mencakup pengukuran performa deteksi, diagnosis karakteristik data, serta
-pengukuran konsistensi feature importance antar client menggunakan SHAP.
+Kemudian perancangan eksperimen dilakukan dengan menentukan model-model yang
+akan dievaluasi, kondisi heterogenitas data, penanganan class imbalance, dan
+dataset yang akan digunakan dalam eksperimen. Setelah itu dilakukan implementasi
+model-model yang akan digunakan dengan menggunakan framework simulasi cross-silo
+FL yang sama agar hasil evaluasi dapat dibandingkan. Persiapan data yang
+digunakan dalam pelatihan dimulai dengan akuisisi data dari dataset yang
+digunakan dan dibagi menjadi training set, validation set, dan test set dengan
+proporsi 70:15:15. Data tersebut kemudian diproses sesuai dengan karakteristik
+fitur masing-masing dataset.
+
+Pelatihan utamanya dilakukan secara federated tetapi juga secara terpusat
+sebagai perbandingan. Pelatihan secara federated dilakukan menggunakan data dari
+training set yang dipartisikan kepada client-client berbeda. Evaluasi performa
+deteksi dilakukan terhadap kedua pelatihan terpusat dan juga federated sedangkan
+evaluasi explainability (SHAP) hanya dilakukan terhadap pelatihan federated.
+
+Pembahasan dilakukan terhadap hasil performa deteksi maupun hasil analisis
+explainability tiap-tiap model pada tiap dataset dan skenario penelitian.
+Analisis dan pembahasan ini disusun dengan menjawab rumusan masalah yang telah
+ditentukan pada tahap awal penelitian. Setelah menjawab rumusan masalah yang
+ada, penelitian ditutup dengan penarikan kesimpulan terhadap eksperimen yang
+telah dilakukan serta saran untuk penelitian selanjutnya.
 
 == Dataset yang Digunakan
 
 Penelitian ini menggunakan tiga dataset deteksi fraud finansial dengan
-karakteristik domain yang berbeda untuk menguji generalisasi metode lintas
-domain. Dataset utama adalah Financial Fraud Detection Dataset yang merupakan
+karakteristik domain yang berbeda. Dataset utama adalah Financial Fraud Detection Dataset yang merupakan
 turunan simulator PaySim, yaitu simulasi transaksi mobile money. Dataset kedua
 adalah ULB Credit Card Fraud Detection Dataset, yaitu transaksi kartu kredit
 riil yang fiturnya telah dianonimkan melalui Principal Component Analysis (PCA).
 Dataset ketiga adalah Bank Account Fraud (BAF), yaitu data sintetis aplikasi
 pembukaan rekening bank yang berbeda dengan kedua dataset lainnya karena
-menyediakan fitur bernama dan bermakna semantik. PaySim berperan sebagai
-benchmark utama karena skala dan karakteristik fiturnya, sementara ULB Credit
-Card dan BAF digunakan sebagai dataset pembanding untuk menilai generalisasi
-model pada domain fraud yang berbeda. Penggunaan ketiga dataset memungkinkan
-perbandingan hasil pada beberapa kondisi data meskipun tidak dengan sendirinya
-membuktikan bahwa suatu model dapat digeneralisasikan ke seluruh domain fraud.
-Ketiga dataset diproses melalui antarmuka pipeline yang identik sehingga seluruh
-model, skema agregasi, dan metrik evaluasi dapat diterapkan tanpa modifikasi.
+menyediakan fitur bernama dan bermakna semantik. Penggunaan ketiga dataset
+memungkinkan perbandingan hasil pada beberapa kondisi data namun tidak berarti
+bahwa suatu model dapat digeneralisasikan ke seluruh domain fraud.
+
+#pagebreak()
 
 === Karakteristik Dataset PaySim
 
@@ -1272,7 +1194,7 @@ Deskripsi setiap fitur disajikan pada @tab-3-2
 
 === Karakteristik Dataset ULB Credit Card
 
-Dataset kedua penelitian ini adalah Credit Card Fraud Detection Dataset yang
+Dataset kedua pada penelitian ini adalah Credit Card Fraud Detection Dataset yang
 dipublikasikan pada platform Kaggle oleh Machine Learning Group Université Libre
 de Bruxelles (ULB). Dataset tersebut berisi transaksi kartu kredit riil nasabah
 di Eropa selama dua hari pada September 2013. Berbeda dengan PaySim yang
@@ -1281,22 +1203,25 @@ nyata sehingga berfungsi sebagai pembanding untuk menilai generalisasi model
 pada domain fraud yang berbeda. Karakteristik utama dataset disajikan pada
 @tab-3-3.
 
-#figure(
-  kind: table,
-  table(
-    columns: (5cm, 1fr),
-    align: (left, left),
-    table.header([*Atribut*], [*Nilai*]),
-    [Sumber], [Kaggle (mlg-ulb/creditcardfraud, ULB)],
-    [Jenis data], [Transaksi kartu kredit tabular (fitur ter-PCA)],
-    [Jumlah baris], [284.807 transaksi],
-    [Jumlah kolom mentah], [31 kolom (30 fitur + 1 label)],
-    [Label target], [Class (biner: 0 = normal, 1 = fraud)],
-    [Rasio fraud], [± 0,17% (492 transaksi fraud)],
-    [Tipe fitur], [Numerik (Time, Amount, dan V1–V28 hasil PCA)],
-  ),
-  caption: [Karakteristik Dataset ULB Credit Card],
-) <tab-3-3>
+#block(breakable: false, width: 100%)[
+  #figure(
+    kind: table,
+    table(
+      columns: (5cm, 1fr),
+      align: (left, left),
+      inset: (x: 5pt, y: 2.2pt),
+      table.header([*Atribut*], [*Nilai*]),
+      [Sumber], [Kaggle (mlg-ulb/creditcardfraud, ULB)],
+      [Jenis data], [Transaksi kartu kredit tabular (fitur ter-PCA)],
+      [Jumlah baris], [284.807 transaksi],
+      [Jumlah kolom mentah], [31 kolom (30 fitur + 1 label)],
+      [Label target], [Class (biner: 0 = normal, 1 = fraud)],
+      [Rasio fraud], [± 0,17% (492 transaksi fraud)],
+      [Tipe fitur], [Numerik (Time, Amount, dan V1–V28 hasil PCA)],
+    ),
+    caption: [Karakteristik Dataset ULB Credit Card],
+  ) <tab-3-3>
+]
 
 Struktur fitur dataset ini berbeda secara fundamental dari PaySim. Fitur V1
 hingga V28 merupakan komponen hasil transformasi PCA yang telah dianonimkan
@@ -1322,23 +1247,25 @@ dibangkitkan berdasarkan data nyata sehingga tidak diperlakukan sebagai
 publikasi langsung atas catatan nasabah asli. Karakteristik utama dataset
 disajikan pada @tab-baf-char.
 
-#figure(
-  kind: table,
-  table(
-    columns: (5cm, 1fr),
-    align: (left, left),
-    table.header([*Atribut*], [*Nilai*]),
-    [Sumber], [Feedzai, varian Base; diakses melalui Kaggle (sgpjesus/bank-account-fraud-dataset-neurips-2022)],
-    [Jenis data], [Data sintetis aplikasi pembukaan rekening bank, dibangkitkan berdasarkan data nyata],
-    [Jumlah baris], [1.000.000 aplikasi],
-    [Jumlah kolom mentah], [32 kolom (31 fitur + 1 label)],
-    [Label target], [fraud_bool (biner: 0 = normal, 1 = fraud)],
-    [Rasio fraud], [± 1,10% (11.029 aplikasi fraud)],
-    [Tipe fitur], [Numerik dan kategorikal, dengan nama fitur yang bermakna semantik],
-    [Dimensi masukan setelah preprocessing], [55 fitur],
-  ),
-  caption: [Karakteristik Dataset Bank Account Fraud (BAF)],
-) <tab-baf-char>
+#block(breakable: false, width: 100%)[
+  #figure(
+    kind: table,
+    table(
+      columns: (5cm, 1fr),
+      align: (left, left),
+      table.header([*Atribut*], [*Nilai*]),
+      [Sumber], [Feedzai, varian Base; diakses melalui Kaggle (sgpjesus/bank-account-fraud-dataset-neurips-2022)],
+      [Jenis data], [Data sintetis aplikasi pembukaan rekening bank, dibangkitkan berdasarkan data nyata],
+      [Jumlah baris], [1.000.000 aplikasi],
+      [Jumlah kolom mentah], [32 kolom (31 fitur + 1 label)],
+      [Label target], [fraud_bool (biner: 0 = normal, 1 = fraud)],
+      [Rasio fraud], [± 1,10% (11.029 aplikasi fraud)],
+      [Tipe fitur], [Numerik dan kategorikal, dengan nama fitur yang bermakna semantik],
+      [Dimensi masukan setelah preprocessing], [55 fitur],
+    ),
+    caption: [Karakteristik Dataset Bank Account Fraud (BAF)],
+  ) <tab-baf-char>
+]
 
 Berbeda dengan PaySim yang memiliki sedikit fitur dan ULB yang fiturnya
 teranonimkan melalui PCA, BAF menyediakan fitur bernama yang bermakna secara
@@ -1352,16 +1279,18 @@ merupakan catatan nasabah yang sebenarnya. Dataset ini memuat lima fitur
 kategorikal (`payment_type`, `employment_status`, `housing_status`, `source`,
 dan `device_os`) dan selebihnya merupakan fitur numerik.
 
+#pagebreak()
+
 == Perancangan Sistem
 
-Sistem yang dirancang dalam penelitian ini terdiri dari empat lapisan logis yang
-saling terkait, yaitu lapisan data dan preprocessing, lapisan partisi dan client
-orchestration, lapisan pelatihan model dengan empat paradigma agregasi FL, dan
-lapisan evaluasi yang mencakup pengukuran performa dan analisis explainability.
-Arsitektur umum sistem disajikan pada @fig-3-2.
+Sistem yang dirancang dalam penelitian ini terdiri dari lima lapisan logis yang
+saling terkait, yaitu lapisan data dan preprocessing, lapisan partisi client,
+lapisan penanganan class imbalance, lapisan pelatihan model dengan masing-masing
+paradigma agregasi FL, dan lapisan evaluasi yang mencakup pengukuran performa
+dan analisis explainability. Arsitektur umum sistem disajikan pada @fig-3-2.
 
 #figure(
-  image("resources/fig-3-2-logical-layers.png", height: 42%),
+  image("resources/fig-3-2-lapisan-sistem.png", width: 58%),
   caption: [Lapisan logis sistem penelitian.],
 ) <fig-3-2>
 
@@ -1393,15 +1322,14 @@ ambang klasifikasi tersebut.
 Pembagian global dilakukan sebelum penentuan parameter preprocessing yang
 bergantung pada data. Nilai imputasi dan parameter scaling dipelajari hanya dari
 training set kemudian digunakan untuk mentransformasikan validation set dan test
-set tanpa menghitung ulang parameternya. Ketentuan ini mencegah informasi dari
-data validasi dan pengujian memengaruhi pembentukan representasi fitur.
-Sementara itu, operasi yang menggunakan aturan tetap seperti penghapusan kolom
-yang telah ditentukan dan pembentukan fitur berdasarkan rumus per transaksi
+set tanpa menghitung ulang parameternya. Sementara itu, operasi yang
+menggunakan aturan tetap seperti penghapusan fitur yang telah ditentukan dan
+pembentukan fitur berdasarkan rumus per transaksi
 tidak memerlukan estimasi parameter dari keseluruhan dataset.
 
-Pada PaySim, preprocessing mencakup penghapusan kolom `nameOrig` dan `nameDest`
+Pada PaySim, preprocessing mencakup penghapusan fitur `nameOrig` dan `nameDest`
 yang merupakan identifier akun dan `isFlaggedFraud` yang merupakan flag dari
-aturan deteksi sebelumnya, serta kolom label `isFraud` dipisahkan sebagai target.
+aturan deteksi sebelumnya, serta fitur label `isFraud` dipisahkan sebagai target.
 Selanjutnya, dilakukan feature engineering dengan membentuk `errorBalanceOrig`
 yang didefinisikan sebagai newbalanceOrig − oldbalanceOrg + amount, dan
 `errorBalanceDest` yang didefinisikan sebagai oldbalanceDest + amount −
@@ -1409,7 +1337,7 @@ newbalanceDest. Kedua fitur tersebut digunakan untuk merepresentasikan
 ketidaksesuaian antara perubahan saldo dan nominal transaksi.
 
 Fitur kategorikal `type` kemudian diubah menggunakan one-hot encoding menjadi
-lima kolom biner berdasarkan jenis transaksi. Seluruh matriks fitur
+lima fitur biner berdasarkan jenis transaksi. Seluruh matriks fitur
 ditransformasikan menggunakan StandardScaler yang di-fit hanya pada training
 set. Meskipun model berbasis pohon seperti GBM tidak mensyaratkan scaling,
 transformasi yang sama tetap digunakan untuk menjaga konsistensi representasi
@@ -1423,25 +1351,25 @@ training set. Fitur V1--V28 dipertahankan sebagaimana tersedia dalam dataset
 karena telah melalui transformasi PCA oleh penyedia data. Hasil dari keseluruhan
 preprocessing ULB menghasilkan 30 fitur masukan.
 
-Pada BAF, preprocessing mencakup penghapusan kolom, encoding fitur kategorikal,
-penanganan nilai yang tidak tersedia, dan scaling. Kolom `device_fraud_count`
-dihapus karena bernilai konstan nol. Kolom `month` dikeluarkan dari himpunan
+Pada BAF, preprocessing mencakup penghapusan fitur, encoding fitur kategorikal,
+penanganan nilai yang tidak tersedia, dan scaling. Fitur `device_fraud_count`
+dihapus karena bernilai konstan nol. Fitur `month` dikeluarkan dari himpunan
 fitur dan dipertahankan sebagai informasi pendamping. Keputusan ini membatasi
 pemanfaatan informasi bulan yang berkaitan dengan perubahan prevalensi fraud
 mengingat pembagian data menggunakan stratified-random split dan bukan pembagian
 temporal. Lima fitur kategorikal, yaitu `payment_type`, `employment_status`,
 `housing_status`, `source`, dan `device_os` diubah menggunakan one-hot encoding
-dengan daftar kategori tetap agar susunan kolom konsisten pada seluruh subset
+dengan daftar kategori tetap agar susunan fitur konsisten pada seluruh subset
 dan client.
 
-Penanganan nilai yang tidak tersedia pada BAF diterapkan pada lima kolom yang
+Penanganan nilai yang tidak tersedia pada BAF diterapkan pada lima fitur yang
 menggunakan nilai −1, yaitu `prev_address_months_count`, `bank_months_count`,
 `current_address_months_count`, `session_length_in_minutes`, dan
-`device_distinct_emails_8w`. Pada setiap kolom, ditambahkan indikator biner
+`device_distinct_emails_8w`. Pada setiap fitur, ditambahkan indikator biner
 missing untuk mempertahankan informasi mengenai ketidaktersediaan nilai. Nilai
 −1 kemudian diganti menjadi nilai kosong dan diimputasi menggunakan median dari
 training set. Perlu dicatat bahwa `prev_address_months_count` memiliki tingkat
-ketidaktersediaan sekitar 71%, sehingga setelah imputasi median kolom tersebut
+ketidaktersediaan sekitar 71%, sehingga setelah imputasi median fitur tersebut
 menjadi hampir konstan dan sebagian besar sinyalnya justru terkandung pada
 indikator missing-nya; hal ini merupakan properti data yang diketahui, bukan
 anomali. Sebaliknya, nilai negatif pada `intended_balcon_amount`, `velocity_6h`,
@@ -1449,26 +1377,7 @@ dan `credit_risk_score` dipertahankan karena tidak diperlakukan sebagai penanda
 data yang tidak tersedia. Setelah encoding dan imputasi, seluruh matriks fitur
 ditransformasikan menggunakan StandardScaler yang di-fit hanya pada training
 set. Representasi akhir BAF terdiri dari 55 fitur, yaitu 24 fitur numerik, 5
-indikator missing, dan 26 kolom hasil one-hot encoding.
-
-Pada tingkat kedua, training set yang telah melalui preprocessing dipartisi ke
-seluruh client menggunakan skema IID atau Dirichlet Non-IID. Setiap client $k$
-memperoleh subset lokal $D_k$ yang digunakan untuk pelatihan model lokal. Subset
-tersebut tidak dipecah lagi menjadi local validation set karena fungsi validasi
-telah diakomodasi oleh validation set terpusat. Pada konfigurasi yang
-menggunakan SMOTE, pembentukan sampel sintetis dilakukan secara lokal pada $D_k$
-setelah partisi client dan sebelum pelatihan. Validation set dan test set tidak
-menerima penambahan sampel sintetis.
-
-Penggunaan parameter preprocessing bersama serta validation set dan test set
-terpusat merupakan bagian dari rancangan simulasi. Pengaturan ini menyediakan
-ruang fitur dan distribusi evaluasi yang konsisten untuk membandingkan keenam
-model serta skema agregasinya. Evaluasi akhir mencakup AUPRC, Recall\@5%FPR,
-F1-score, Precision, dan Recall, serta evaluasi probabilitas pada model yang
-menyediakan keluaran probabilitas. Setelah model akhir ditetapkan, sampel dari
-test set juga digunakan sebagai data penjelasan SHAP tanpa memperbarui parameter
-model. Dengan demikian, data pelatihan, validasi, dan pengujian memiliki fungsi
-yang terpisah sepanjang pipeline penelitian.
+indikator missing, dan 26 fitur hasil one-hot encoding.
 
 === Perancangan Skema Partisi Client
 
@@ -1493,7 +1402,7 @@ membentuk kondisi distribusi data yang heterogen. Hubungan antara pembagian
 global dan partisi client disajikan pada @fig-3-3.
 
 #figure(
-  image("resources/fig-3-3-two-level-split.jpg", width: 85%),
+  image("resources/fig-3-3-pembagian-dua-tingkat.png", width: 100%),
   caption: [Skema pembagian data dua tingkat.],
 ) <fig-3-3>
 
@@ -1508,24 +1417,33 @@ agregasi yang digunakan.
 === Perancangan Skema Class Imbalance Handling
 
 Penanganan class imbalance dirancang dalam dua konfigurasi, yaitu tanpa SMOTE
-sebagai baseline dan dengan SMOTE sebagai intervensi yang diuji. Pada skenario
-federated, SMOTE diterapkan secara lokal setelah partisi client dan sebelum
-pelatihan sehingga pembentukan sampel sintetis tidak memerlukan penggabungan
-data mentah antar client. Pada baseline terpusat, aturan yang sama diterapkan
-pada training set terpusat. Validation set dan test set tidak menerima
-penambahan sampel sintetis agar distribusi kelas pada data evaluasi tetap
-dipertahankan.
+sebagai baseline dan dengan SMOTE. Pada skenario federated, SMOTE diterapkan
+secara lokal setelah partisi client dan sebelum pelatihan sehingga pembentukan
+sampel sintetis tidak memerlukan penggabungan data mentah antar client. Pada
+baseline terpusat, aturan yang sama diterapkan pada training set terpusat.
+Validation set dan test set tidak menerima penambahan sampel sintetis agar
+distribusi kelas pada data evaluasi tetap dipertahankan.
 
-Ketiga dataset menggunakan parameter `sampling_strategy` sebesar 0,01 dan
-`k_neighbors` sebesar 5. Nilai `sampling_strategy` tersebut menetapkan target
-rasio jumlah sampel minoritas terhadap mayoritas sebesar 1:100 dan bukan
-penyeimbangan penuh menjadi 1:1. Target ini dipilih untuk membatasi jumlah
-sampel sintetis yang ditambahkan terutama pada dataset dengan ketimpangan kelas
-yang ekstrem. Parameter dipertahankan sama pada seluruh dataset agar
-perbandingan menggunakan aturan penanganan yang konsisten tanpa penyetelan
-khusus per dataset. Namun, kesamaan parameter tidak berarti jumlah maupun
-proporsi penambahan sampel sintetis akan sama karena distribusi kelas awal
-berbeda antar dataset dan client.
+Parameter SMOTE yang digunakan pada ketiga dataset dirangkum pada @tab-3-smote.
+Parameter dipertahankan sama pada seluruh dataset agar perbandingan menggunakan
+aturan penanganan yang konsisten tanpa penyetelan khusus per dataset. Namun,
+kesamaan parameter tidak berarti jumlah maupun proporsi penambahan sampel
+sintetis akan sama karena distribusi kelas awal berbeda antar dataset dan
+client.
+
+#figure(
+  kind: table,
+  table(
+    columns: (auto, auto, 1fr),
+    align: (left, left, left),
+    table.header([*Parameter*], [*Nilai*], [*Keterangan*]),
+    [`sampling_strategy`], [0,01], [Target rasio jumlah sampel minoritas terhadap mayoritas sebesar 1:100 dan bukan penyeimbangan penuh menjadi 1:1. Target ini dipilih untuk membatasi jumlah sampel sintetis yang ditambahkan terutama pada dataset dengan ketimpangan kelas yang ekstrem],
+    [`k_neighbors`], [5], [Jumlah tetangga minoritas terdekat yang digunakan untuk membentuk sampel sintetis melalui interpolasi],
+    [`random_state`], [42 + indeks client], [Diturunkan dari seed global 42 dan dibedakan antar client agar pembentukan sampel sintetis dapat direproduksi sekaligus tidak identik pada setiap client],
+    [`enabled`], [`True` / `False`], [Saklar utama yang membentuk dua konfigurasi pembanding, yaitu dengan SMOTE dan tanpa SMOTE],
+  ),
+  caption: [Konfigurasi Parameter SMOTE],
+) <tab-3-smote>
 
 Penerapan SMOTE diawali dengan pemeriksaan jumlah sampel minoritas dan rasio
 kelas pada data pelatihan yang menerima perlakuan. Dengan `k_neighbors` sebesar
@@ -1539,19 +1457,13 @@ karakteristik kelas minoritas.
 
 Pada skenario Non-IID, pemeriksaan dilakukan secara terpisah untuk setiap
 client. Akibatnya, konfigurasi dengan SMOTE dapat mencakup client yang menerima
-sampel sintetis dan client yang tidak mengalami perubahan data. Status
-penerapan, alasan pelewatan, serta jumlah sampel sebelum dan sesudah SMOTE
-dicatat untuk menunjukkan perlakuan yang benar-benar diterima setiap client.
-Pencatatan ini diperlukan karena konfigurasi dengan SMOTE menunjukkan penggunaan
-aturan oversampling dan bukan bahwa seluruh client selalu memperoleh tambahan
-sampel.
-
-Pengaruh SMOTE dievaluasi dengan membandingkan konfigurasi dengan dan tanpa
-SMOTE pada dataset, model, dan skema partisi yang sama. Pembagian data,
-parameter model, serta prosedur evaluasi dipertahankan sama pada pasangan
-konfigurasi tersebut. Dengan demikian, perbandingan diarahkan untuk mengamati
-perubahan performa yang berkaitan dengan penerapan aturan SMOTE, dengan tetap
-memperhatikan status penerapannya pada setiap client.
+sampel sintetis dan client yang tidak mengalami perubahan data. Pengaruh SMOTE
+dievaluasi dengan membandingkan konfigurasi dengan dan tanpa SMOTE pada
+dataset, model, dan skema partisi yang sama. Pembagian data, parameter model,
+serta prosedur evaluasi dipertahankan sama pada pasangan konfigurasi tersebut.
+Dengan demikian, perbandingan diarahkan untuk mengamati perubahan performa yang
+berkaitan dengan penerapan aturan SMOTE, dengan tetap memperhatikan status
+penerapannya pada setiap client.
 
 === Perancangan Pelatihan Model dan Skema Agregasi
 
@@ -1560,7 +1472,7 @@ Regression (LR), Support Vector Machine (SVM), Gradient Boosting Machine (GBM),
 FFD, BERT, dan FedXGBllr. Setiap model menggunakan skema agregasi yang
 disesuaikan dengan bentuk parameter dan arsitekturnya. Empat skema yang
 digunakan meliputi FedAvg, best-model selection, accuracy-weighted FedAvg, serta
-agregasi ensemble pohon yang dilanjutkan dengan pelatihan parameter pembobotan
+agregasi tree ensemble yang dilanjutkan dengan pelatihan parameter pembobotan
 melalui jaringan 1D CNN.
 
 Pada LR dan SVM linear, setiap client melatih model menggunakan data lokal
@@ -1603,23 +1515,25 @@ arsitektur sekaligus skema pelatihan dan tidak ditafsirkan semata-mata sebagai
 pengaruh federasi. Pemetaan model, skema agregasi, dan pembanding terpusat
 disajikan pada @tab-3-4.
 
-#figure(
-  kind: table,
-  text(size: 9pt)[
-    #table(
-    columns: (auto, auto, auto, auto),
-    align: (left, left, left, left),
-    table.header([*Model federated*], [*Kategori*], [*Skema Agregasi*], [*Pembanding terpusat*]),
-    [Logistic Regression (LR)], [Parametrik], [FedAvg], [LR],
-    [Support Vector Machine (SVM)], [Parametrik (linear)], [FedAvg], [SVM linear],
-    [Gradient Boosting Machine (GBM)], [Tree ensemble (histogram-based)], [Best-Model Selection], [GBM],
-    [FFD], [Deep learning (1D-CNN)], [Accuracy-Weighted FedAvg], [FFD],
-    [BERT (FT-Transformer)], [Deep learning (Transformer tabular)], [Accuracy-Weighted FedAvg], [BERT (FT-Transformer)],
-    [FedXGBllr], [Tree ensemble + CNN], [Tree Ensemble Aggregation + Learnable LR], [XGBoost],
-    )
-  ],
-  caption: [Pemetaan Model dengan Skema Agregasi Federated Learning dan Model Pembanding Terpusat],
-) <tab-3-4>
+#block(breakable: false, width: 100%)[
+  #figure(
+    kind: table,
+    text(size: 9pt)[
+      #table(
+      columns: (auto, auto, auto, auto),
+      align: (left, left, left, left),
+      table.header([*Model federated*], [*Kategori*], [*Skema Agregasi*], [*Pembanding terpusat*]),
+      [Logistic Regression (LR)], [Parametrik], [FedAvg], [LR],
+      [Support Vector Machine (SVM)], [Parametrik (linear)], [FedAvg], [SVM linear],
+      [Gradient Boosting Machine (GBM)], [Tree ensemble (histogram-based)], [Best-Model Selection], [GBM],
+      [FFD], [Deep learning (1D-CNN)], [Accuracy-Weighted FedAvg], [FFD],
+      [BERT (FT-Transformer)], [Deep learning (Transformer tabular)], [Accuracy-Weighted FedAvg], [BERT (FT-Transformer)],
+      [FedXGBllr], [Tree ensemble + CNN], [Tree ensemble aggregation + Learnable LR], [XGBoost],
+      )
+    ],
+    caption: [Pemetaan Model dengan Skema Agregasi Federated Learning dan Model Pembanding Terpusat],
+  ) <tab-3-4>
+]
 
 Seluruh konfigurasi pelatihan utama menggunakan random seed sebesar 42. Batas
 maksimum putaran federated ditetapkan sebesar 20 untuk LR, SVM, GBM, FFD, dan
@@ -1719,84 +1633,74 @@ berfokus pada peringkat dan kesepakatan fitur dan bukan pada kesamaan magnitudo
 atribusi.
 
 Pada setiap client, nilai SHAP diringkas menjadi vektor feature importance
-melalui rerata nilai absolut atribusi pada seluruh explanation data. Untuk fitur
-$j$ pada client $c$, perhitungannya mengikuti @eq-gcj. Vektor tersebut kemudian
-dihimpun untuk menghasilkan ringkasan kepentingan fitur dan ukuran kesepakatan
-antar client.
+melalui rerata nilai absolut atribusi pada seluruh explanation data. Untuk
+fitur $j$ pada client $c$, perhitungannya dinyatakan sebagaimana
+pada @eq-3-gcj.
 
-Terdapat empat ringkasan utama yang digunakan dalam analisis. Pertama, rata-rata
-feature importance antar client menunjukkan fitur yang secara umum memberikan
-kontribusi terbesar terhadap prediksi. Kedua, rata-rata Spearman rank
-correlation pada seluruh pasangan client mengukur kesesuaian urutan kepentingan
-fitur. Ketiga, Jaccard similarity pada lima fitur teratas mengukur kesamaan
-himpunan fitur yang dianggap paling penting. Keempat, indeks Kuncheva digunakan
-untuk mengoreksi kesamaan himpunan fitur terhadap peluang pemilihan secara acak.
-Koreksi ini diperlukan karena ketiga dataset memiliki jumlah fitur yang berbeda
-sehingga nilai Jaccard\@5 tidak langsung digunakan sebagai dasar perbandingan
-lintas dataset.
+$ g_(c,j) = 1 / N sum_(i=1)^N |phi_(c,j) (x_i)|, $ <eq-3-gcj>
+
+dengan $N$ sebagai jumlah sampel yang dijelaskan dan $phi_(c,j) (x_i)$ sebagai
+atribusi fitur $j$ pada sampel $x_i$ berdasarkan background client $c$. Vektor
+tersebut kemudian dihimpun untuk menghasilkan ringkasan kepentingan fitur dan
+ukuran kesepakatan antar client.
+
+Terdapat empat ringkasan utama yang digunakan dalam analisis. Pertama,
+rata-rata feature importance antar client menunjukkan fitur yang secara umum
+memberikan kontribusi terbesar terhadap prediksi. Kedua, rata-rata Spearman
+rank correlation pada seluruh pasangan client mengukur kesesuaian urutan
+kepentingan fitur. Ketiga, Jaccard similarity pada lima fitur teratas mengukur
+kesamaan himpunan fitur yang dianggap paling penting. Keempat, indeks Kuncheva
+digunakan untuk mengoreksi kesamaan himpunan fitur terhadap peluang pemilihan
+secara acak. Koreksi ini diperlukan karena ketiga dataset memiliki jumlah fitur
+yang berbeda sehingga nilai Jaccard\@5 tidak langsung digunakan sebagai dasar
+perbandingan lintas dataset.
 
 Analisis tambahan dilakukan dengan menghitung indeks Kuncheva pada berbagai
 ukuran himpunan fitur teratas. Profil tersebut digunakan untuk mengamati
-perubahan kesepakatan ketika semakin banyak fitur disertakan. Korelasi peringkat
-berbobot magnitudo juga dilaporkan untuk mengurangi dominasi fitur dengan
-atribusi mendekati nol dalam pengukuran peringkat penuh. Apabila vektor
-importance konstan atau seluruhnya nol, korelasi dinyatakan tidak terdefinisi dan
-konfigurasi ditandai untuk pemeriksaan lebih lanjut dan bukan diberi nilai
+perubahan kesepakatan ketika semakin banyak fitur disertakan. Korelasi
+peringkat berbobot magnitudo juga dilaporkan untuk mengurangi dominasi fitur
+dengan atribusi mendekati nol dalam pengukuran peringkat penuh. Apabila vektor
+importance konstan atau seluruhnya nol, korelasi dinyatakan tidak terdefinisi
+dan konfigurasi ditandai untuk pemeriksaan lebih lanjut dan bukan diberi nilai
 kesepakatan nol atau satu.
 
 Ketidakpastian KernelSHAP diperiksa melalui dua pengulangan seed koalisi pada
-setiap client dengan model, background, dan explanation data yang tetap.
-Korelasi antara kedua vektor importance dari client yang sama digunakan sebagai
-acuan reliabilitas estimator yang dalam analisis disebut noise floor. Pengukuran
-ini dilakukan pada setiap konfigurasi agar variasi estimator tidak diwakili oleh
-satu nilai acuan yang diterapkan ke seluruh dataset. Perbandingan antar client
-menggunakan seed koalisi yang sama pada setiap pengulangan sebagai bentuk common
-random numbers.
-
-Untuk membandingkan kesepakatan dalam-client dan antar-client, sepuluh vektor
-importance dari lima client dan dua seed dianalisis melalui enumerasi seluruh
-945 perfect matching, yaitu seluruh cara membentuk lima pasangan dari sepuluh
-vektor. Statistik yang digunakan adalah selisih antara rata-rata korelasi pada
-lima pasangan dalam suatu matching dan rata-rata korelasi pada 40 pasangan di
-luarnya. Pemasangan asli menghubungkan dua pengulangan dari client yang sama.
-Nilai p dihitung dari proporsi matching dengan statistik sekurang-kurangnya
-sebesar statistik pemasangan asli. Statistik ini dibedakan dari ringkasan
-kesepakatan antar client yang dihitung menggunakan 20 pasangan dengan seed yang
-sama.
-
-Interpretasi nilai p tersebut bergantung pada asumsi exchangeability, yaitu
-bahwa distribusi bersama vektor tetap sama ketika pemasangannya dipertukarkan di
-bawah hipotesis nol. Kesamaan importance yang mendasari seluruh client tidak
-dengan sendirinya menjamin asumsi tersebut, terutama apabila variansi estimator
-berbeda antar client atau penggunaan seed bersama membentuk ketergantungan
-tertentu. Oleh karena itu, enumerasi lengkap diperlakukan sebagai perhitungan
-eksak terhadap distribusi matching yang ditetapkan sedangkan validitas
-inferensinya tetap bergantung pada kesesuaian asumsi pengujian. Koreksi
-Benjamini--Hochberg diterapkan pada kelompok pengujian KernelSHAP multi-client
-dengan batas nilai p terkoreksi sebesar 0,05. Hasil yang tidak signifikan tidak
-ditafsirkan sebagai bukti bahwa interpretasi antar client identik atau stabil.
-
-Skema pengukuran dua seed diringkas pada @fig-3-two-seeds-gap. Ringkasan setiap
-konfigurasi memuat reliabilitas dalam-client, kesepakatan antar-client, selisih
-keduanya, nilai p, dan nilai p terkoreksi. Rasio kesepakatan antar-client
-terhadap noise floor digunakan sebagai indikator tambahan. Dengan pengaturan
-ini, nilai antar-client yang berada di bawah noise floor tidak langsung
-dikategorikan sebagai ketidakstabilan tanpa mempertimbangkan hasil pengujian dan
-besarnya perbedaan.
+setiap client dengan model, background lokal, dan explanation data yang tetap.
+Rata-rata korelasi Spearman pada lima pasangan dalam-client digunakan sebagai
+acuan reliabilitas estimator atau noise floor. Kesepakatan antar-client
+dihitung dari 20 pasangan, yaitu sepuluh pasangan client pada setiap seed.
+Kedua ukuran dihitung pada setiap konfigurasi agar variasi estimator diperiksa
+sesuai kondisi model dan data yang dievaluasi. Skema pengukuran tersebut
+disajikan pada @fig-3-4.
 
 #figure(
-  image("resources/fig-3-two-seeds-gap.png", width: 82%),
-  caption: [Skema pengukuran dua-seed. Panel A: setiap client menghasilkan dua vektor importance pada dua seed koalisi, sehingga kesepakatan dalam-client menjadi floor dan perbandingan antar-client dipasangkan pada seed yang sama (common random numbers). Panel B: sebaran kedua ukuran pada satu sel nyata (BAF BERT Non-IID tanpa SMOTE). Di bawah hipotesis nol kedua sebaran berimpit, sehingga floor tidak dapat dipakai sebagai ambang deteksi dan digantikan oleh uji exchangeability eksak atas seluruh 945 perfect matching.],
-) <fig-3-two-seeds-gap>
+  image("resources/fig-3-4-skema-dua-seed.png", width: 100%),
+  caption: [Skema pengukuran dua-seed.],
+) <fig-3-4>
 
-Hasil evaluasi explainability dilaporkan untuk setiap kombinasi model, skema
-partisi, dan konfigurasi SMOTE. Rata-rata importance digunakan untuk menjelaskan
-fitur yang dominan sedangkan Spearman, Jaccard, dan Kuncheva digunakan untuk
-mengukur kesepakatan interpretasi. Perubahan antara kondisi IID dan Non-IID
-ditafsirkan sesuai pengaturan analisisnya sebagai sensitivitas terhadap
-background lokal. Penafsiran tersebut juga mempertimbangkan ketidakpastian
-estimator agar variasi komputasi tidak langsung dianggap sebagai perbedaan
-interpretasi antar client.
+Perbedaan kesepakatan diuji menggunakan sepuluh vektor importance melalui
+enumerasi seluruh 945 perfect matching. Setiap matching membentuk lima pasangan
+dengan statistik berupa selisih antara rata-rata korelasi kelima pasangan
+tersebut dan rata-rata korelasi pada 40 pasangan di luarnya. Statistik ini
+dibedakan dari ringkasan kesepakatan antar-client yang menggunakan 20 pasangan
+dengan seed yang sama. Pemasangan asli menghubungkan dua pengulangan dari
+client yang sama sedangkan nilai p dihitung sebagai proporsi matching dengan
+statistik sekurang-kurangnya sebesar statistik pemasangan asli. Koreksi
+Benjamini--Hochberg diterapkan pada kelompok pengujian KernelSHAP multi-client
+dengan batas nilai p terkoreksi sebesar 0,05.
+
+Enumerasi tersebut menghasilkan perhitungan eksak terhadap distribusi matching
+yang ditetapkan, sedangkan validitas inferensinya tetap bergantung pada asumsi
+exchangeability. Interpretasi hasil mempertimbangkan selisih kesepakatan
+dalam-client dan antar-client serta nilai p terkoreksi. Noise floor digunakan
+sebagai acuan reliabilitas estimator dan bukan sebagai ambang langsung untuk
+menentukan ketidakstabilan, sedangkan hasil yang tidak signifikan tidak
+membuktikan bahwa interpretasi antar client identik atau stabil. Hasil
+dilaporkan untuk setiap kombinasi dataset, model, skema partisi, dan
+konfigurasi SMOTE. Perubahan antara kondisi IID dan Non-IID dianalisis dengan
+mempertimbangkan perbedaan background lokal serta ketidakpastian estimator agar
+variasi komputasi tidak langsung dianggap sebagai perbedaan interpretasi antar
+client.
 
 == Implementasi Perancangan Sistem
 
@@ -1841,20 +1745,20 @@ dan digunakan kembali pada kedua subset lainnya tanpa dilakukan fitting ulang.
 Dengan demikian, statistik dari data validasi dan pengujian tidak digunakan
 untuk menentukan parameter preprocessing.
 
-Pada PaySim, tahapan implementasi meliputi penghapusan kolom yang tidak
+Pada PaySim, tahapan implementasi meliputi penghapusan fitur yang tidak
 digunakan, pembentukan fitur `errorBalanceOrig` dan `errorBalanceDest`, one-hot
 encoding pada jenis transaksi, serta scaling terhadap seluruh matriks fitur.
 Pada ULB Credit Card, StandardScaler hanya diterapkan pada fitur Time dan
 Amount, sedangkan V1--V28 dipertahankan sebagaimana tersedia. Pada BAF,
-implementasi mencakup penghapusan kolom yang telah ditentukan, penggantian nilai
+implementasi mencakup penghapusan fitur yang telah ditentukan, penggantian nilai
 sentinel menjadi nilai kosong, pembentukan indikator missing, imputasi median,
 one-hot encoding fitur kategorikal, dan scaling.
 
 Hasil transformasi digunakan sebagai masukan bersama bagi seluruh model pada
 dataset yang sama sehingga dimensi dan urutan fitur tetap konsisten. Nama fitur
 turut disimpan untuk menghubungkan atribusi SHAP dengan fitur yang dijelaskan.
-Matriks fitur akhir memiliki 13 kolom pada PaySim, 30 kolom pada ULB Credit
-Card, dan 55 kolom pada BAF.
+Matriks fitur akhir memiliki 13 fitur pada PaySim, 30 fitur pada ULB Credit
+Card, dan 55 fitur pada BAF.
 
 === Implementasi Modul Partisi Client
 
@@ -1987,52 +1891,65 @@ algoritma, arsitektur, dan aturan agregasi.
 Konfigurasi hyperparameter ditetapkan melalui pencarian terbatas dan penggunaan
 nilai acuan dari pustaka atau implementasi baseline. Optimasi ekstensif tidak
 dilakukan agar ruang lingkup eksperimen tetap berfokus pada perbandingan
-konfigurasi pelatihan dan agregasi. Nilai yang digunakan disajikan pada
-@tab-3-6.
+konfigurasi pelatihan dan agregasi. Konfigurasi umum yang berlaku bagi seluruh
+model disajikan pada @tab-3-hp-umum, sedangkan konfigurasi yang spesifik bagi
+setiap model disajikan pada @tab-3-6.
+
+#block(breakable: false, width: 100%)[
+  #figure(
+    kind: table,
+    text(size: 9pt)[
+      #table(
+        columns: (1.3fr, 1fr),
+        align: (left, left),
+        table.header([*Parameter*], [*Nilai*]),
+        [Jumlah client (K)], [5],
+        [Global rounds (R)], [20 untuk LR, SVM, GBM, FFD, dan BERT; FedXGBllr 20 pada PaySim serta 50 pada ULB dan BAF, mengikuti baseline hfedxgboost Flower],
+        [Dirichlet $alpha$], [0,5 pada pelatihan utama; 0,5 / 1,0 / 5,0 pada sensus diagnostik partisi],
+        [Random seed], [42],
+        [SMOTE: `k_neighbors`], [5],
+        [SMOTE: `sampling_strategy`], [0,01 (1:100), seragam untuk PaySim, ULB, dan BAF],
+      )
+    ],
+    caption: [Konfigurasi Umum Eksperimen],
+  ) <tab-3-hp-umum>
+]
 
 #figure(
   kind: table,
   text(size: 9pt)[
     #table(
-      columns: (1.3fr, 1fr),
-      align: (left, left),
-      table.header([*Parameter*], [*Nilai*]),
-      table.cell(colspan: 2)[_Umum (seluruh model)_],
-      [Jumlah client (K)], [5],
-      [Global rounds (R)], [20 untuk LR, SVM, GBM, FFD, dan BERT; FedXGBllr 20 pada PaySim serta 50 pada ULB dan BAF, mengikuti baseline hfedxgboost Flower],
-      [Dirichlet $alpha$], [0,5 pada pelatihan utama; 0,5 / 1,0 / 5,0 pada sensus diagnostik partisi],
-      [Random seed], [42],
-      [SMOTE: `k_neighbors`], [5],
-      [SMOTE: `sampling_strategy`], [0,01 (1:100), seragam untuk PaySim, ULB, dan BAF],
-
-      table.cell(colspan: 2)[_Logistic Regression (LR)_],
+      columns: (auto, 1.15fr, 1fr),
+      align: (left, left, left),
+      table.header([*Model*], [*Parameter*], [*Nilai*]),
+      table.cell(rowspan: 3)[Logistic Regression (LR)],
       [Local epochs (E)], [1],
       [C], [1,0],
       [max_iter], [1000],
 
-      table.cell(colspan: 2)[_Support Vector Machine (SVM, SGDClassifier)_],
+      table.cell(rowspan: 3)[Support Vector Machine (SVM, SGDClassifier)],
       [Local epochs (E) / max_iter per putaran], [5],
       [alpha (regularisasi L2)], [0,0001],
       [loss], [hinge (linear SVM)],
 
-      table.cell(colspan: 2)[_Gradient Boosting Machine (GBM, HistGBM)_],
+      table.cell(rowspan: 4)[Gradient Boosting Machine (GBM, HistGBM)],
       [max_iter (n_estimators)], [100],
       [learning_rate], [0,1],
       [max_depth], [6],
       [Seleksi iterasi], [Validation-set (prefix pemaksimum AUPRC, $k^* lt.eq 100$)],
 
-      table.cell(colspan: 2)[_FFD (1D-CNN)_],
+      table.cell(rowspan: 3)[FFD (1D-CNN)],
       [Local epochs (E)], [5],
       [batch_size], [80],
       [learning rate], [0,01],
 
-      table.cell(colspan: 2)[_BERT (FT-Transformer)_],
+      table.cell(rowspan: 4)[BERT (FT-Transformer)],
       [Local epochs (E)], [3],
       [d_model / nhead / num_layers], [64 / 4 / 2],
       [dim_feedforward / dropout], [256 / 0,1],
       [batch_size / learning rate / weight_decay], [64 / 0,001 / 0,0001],
 
-      table.cell(colspan: 2)[_FedXGBllr_],
+      table.cell(rowspan: 6)[FedXGBllr],
       [Jumlah pohon per-client], [50],
       [XGBoost: max_depth / learning_rate], [6 / 0,1],
       [XGBoost: subsample / alpha / gamma], [0,8 / 5 / 5],
@@ -2041,7 +1958,7 @@ konfigurasi pelatihan dan agregasi. Nilai yang digunakan disajikan pada
       [Iterasi CNN per putaran], [50],
     )
   ],
-  caption: [Konfigurasi Hyperparameter Eksperimen],
+  caption: [Konfigurasi Hyperparameter Eksperimen per Model],
 ) <tab-3-6>
 
 === Implementasi Modul Evaluasi dan SHAP
@@ -2146,7 +2063,7 @@ kemampuan model mendeteksi fraud pada satu kondisi operasional tertentu.
 
 #figure(
   kind: table,
-  text(size: 8pt)[
+  text(size: 12pt)[
     #table(
       columns: (auto, auto, auto, auto, auto, auto, auto),
       align: (left, right, right, right, right, right, right),
@@ -2169,31 +2086,33 @@ kemampuan model mendeteksi fraud pada satu kondisi operasional tertentu.
   caption: [AUPRC test pada ULB],
 ) <tab-4-auprc-ulb>
 
-#figure(
-  kind: table,
-  text(size: 8pt)[
-    #table(
-      columns: (auto, auto, auto, auto, auto),
-      align: (left, right, right, right, right),
-      table.header(
-        [*Model*], [*Centralized (none)*], [*Dirichlet none*],
-        [*Dirichlet SMOTE*], [*IID (none)*],
-      ),
-      [LR], [0,144], [0,139], [0,097], [0,144],
-      [SVM], [0,144], [0,119], [0,081], [0,085],
-      [GBM], [0,161], [0,162], [0,162], [0,137],
-      [FFD], [0,159], [0,157], [0,045], [0,158],
-      [BERT], [0,169], [0,167], [0,045], [0,167],
-      [FedXGBllr], [—], [0,151], [0,137], [0,141],
-      [XGBoost], [0,157], [—], [—], [—],
-    )
-  ],
-  caption: [AUPRC test pada BAF],
-) <tab-4-auprc-baf>
+#block(breakable: false, width: 100%)[
+  #figure(
+    kind: table,
+    text(size: 12pt)[
+      #table(
+        columns: (auto, auto, auto, auto, auto),
+        align: (left, right, right, right, right),
+        table.header(
+          [*Model*], [*Centralized (none)*], [*Dirichlet none*],
+          [*Dirichlet SMOTE*], [*IID (none)*],
+        ),
+        [LR], [0,144], [0,139], [0,097], [0,144],
+        [SVM], [0,144], [0,119], [0,081], [0,085],
+        [GBM], [0,161], [0,162], [0,162], [0,137],
+        [FFD], [0,159], [0,157], [0,045], [0,158],
+        [BERT], [0,169], [0,167], [0,045], [0,167],
+        [FedXGBllr], [—], [0,151], [0,137], [0,141],
+        [XGBoost], [0,157], [—], [—], [—],
+      )
+    ],
+    caption: [AUPRC test pada BAF],
+  ) <tab-4-auprc-baf>
+]
 
 #figure(
   kind: table,
-  text(size: 8pt)[
+  text(size: 12pt)[
     #table(
       columns: (auto, auto, auto, auto, auto, auto, auto),
       align: (left, right, right, right, right, right, right),
@@ -2236,34 +2155,36 @@ dari itu, efek federated terhadap performa dapat dipahami bergantung pada intera
 beberapa variabel sekaligus, yakni model dan dataset yang digunakan serta kondisi
 partisinya.
 
-#figure(
-  kind: table,
-  text(size: 8pt)[
-    #table(
-      columns: (auto, auto, auto, auto, auto, auto, auto),
-      align: (left, right, right, right, right, right, right),
-      table.header(
-        table.cell(rowspan: 2)[*Model*],
-        table.cell(colspan: 2)[*Centralized*],
-        table.cell(colspan: 2)[*Dirichlet $alpha$ = 0,5*],
-        table.cell(colspan: 2)[*IID*],
-        [none], [SMOTE], [none], [SMOTE], [none], [SMOTE],
-      ),
-      [LR], [0,878], [0,878], [0,878], [0,878], [0,878], [0,865],
-      [SVM], [0,878], [0,878], [0,892], [0,892], [0,892], [0,892],
-      [GBM], [0,851], [0,865], [0,824], [0,865], [0,770], [0,905],
-      [FFD], [0,865], [0,878], [0,865], [0,919], [0,865], [0,892],
-      [BERT], [0,878], [0,878], [0,892], [0,878], [0,851], [0,905],
-      [FedXGBllr], [—], [—], [0,851], [0,878], [0,878], [0,878],
-      [XGBoost], [0,892], [0,892], [—], [—], [—], [—],
-    )
-  ],
-  caption: [Recall\@5%FPR test pada ULB],
-) <tab-4-rfpr-ulb>
+#block(breakable: false, width: 100%)[
+  #figure(
+    kind: table,
+    text(size: 12pt)[
+      #table(
+        columns: (auto, auto, auto, auto, auto, auto, auto),
+        align: (left, right, right, right, right, right, right),
+        table.header(
+          table.cell(rowspan: 2)[*Model*],
+          table.cell(colspan: 2)[*Centralized*],
+          table.cell(colspan: 2)[*Dirichlet $alpha$ = 0,5*],
+          table.cell(colspan: 2)[*IID*],
+          [none], [SMOTE], [none], [SMOTE], [none], [SMOTE],
+        ),
+        [LR], [0,878], [0,878], [0,878], [0,878], [0,878], [0,865],
+        [SVM], [0,878], [0,878], [0,892], [0,892], [0,892], [0,892],
+        [GBM], [0,851], [0,865], [0,824], [0,865], [0,770], [0,905],
+        [FFD], [0,865], [0,878], [0,865], [0,919], [0,865], [0,892],
+        [BERT], [0,878], [0,878], [0,892], [0,878], [0,851], [0,905],
+        [FedXGBllr], [—], [—], [0,851], [0,878], [0,878], [0,878],
+        [XGBoost], [0,892], [0,892], [—], [—], [—], [—],
+      )
+    ],
+    caption: [Recall\@5%FPR test pada ULB],
+  ) <tab-4-rfpr-ulb>
+]
 
 #figure(
   kind: table,
-  text(size: 8pt)[
+  text(size: 12pt)[
     #table(
       columns: (auto, auto, auto, auto, auto),
       align: (left, right, right, right, right),
@@ -2285,7 +2206,7 @@ partisinya.
 
 #figure(
   kind: table,
-  text(size: 8pt)[
+  text(size: 12pt)[
     #table(
       columns: (auto, auto, auto, auto, auto, auto, auto),
       align: (left, right, right, right, right, right, right),
@@ -2323,6 +2244,68 @@ yang ditandai oleh nilai Recall\@5%FPR yang cukup baik. Hal ini dapat terjadi
 karena kombinasi antara model dan dataset dapat menghasilkan nilai keseluruhan yang
 baik namun buruk pada wilayah presisi tinggi atau sebaliknya. Oleh karena perbedaan
 ini maka kedua metrik digunakan secara berdampingan.
+
+Sebagai pelengkap kedua metrik utama, @tab-4-cal-slope menyajikan calibration
+slope pada seluruh konfigurasi yang dievaluasi.
+
+#figure(
+  kind: table,
+  text(size: 12pt)[
+    #table(
+      columns: (auto, auto, auto, auto, auto, auto, auto),
+      align: (left, right, right, right, right, right, right),
+      inset: (x: 5pt, y: 2.2pt),
+      table.header([*Kondisi*], [*LR*], [*GBM*], [*FFD*], [*BERT*],
+        [*FedXGBllr*], [*XGBoost*]),
+      table.cell(colspan: 7, align: left)[*ULB*],
+      [Centralized, none], [0,95], [0,48], [0,93], [0,78], [—], [1,17],
+      [Centralized, SMOTE], [0,83], [0,72], [0,92], [0,66], [—], [1,12],
+      [Non-IID ($alpha$ = 0,5), none], [0,92], [0,45], [0,90], [0,65], [0,93], [—],
+      [Non-IID ($alpha$ = 0,5), SMOTE], [0,82], [0,70], [0,88], [0,53], [14,06], [—],
+      [IID, none], [0,93], [0,45], [0,93], [0,81], [0,92], [—],
+      [IID, SMOTE], [0,78], [0,56], [0,93], [0,61], [12,34], [—],
+      table.cell(colspan: 7, align: left)[*BAF*],
+      [Centralized, none], [1,04], [1,02], [1,02], [1,29], [—], [1,23],
+      [Non-IID ($alpha$ = 0,5), none], [1,86], [1,03], [0,96], [0,90], [9,19], [—],
+      [Non-IID ($alpha$ = 0,5), SMOTE], [0,58], [1,03], [0,28], [0,29], [12,21], [—],
+      [IID, none], [1,04], [0,94], [1,01], [1,00], [24,68], [—],
+      table.cell(colspan: 7, align: left)[*PaySim*],
+      [Centralized, none], [1,00], [0,91], [0,95], [0,92], [—], [1,47],
+      [Centralized, SMOTE], [0,97], [1,78], [0,97], [1,28], [—], [1,44],
+      [Non-IID ($alpha$ = 0,5), none], [1,36], [1,00], [1,42], [0,79], [n/d], [—],
+      [Non-IID ($alpha$ = 0,5), SMOTE], [1,39], [1,46], [1,32], [1,06], [n/d], [—],
+      [IID, none], [1,00], [1,05], [1,03], [1,22], [35,08], [—],
+      [IID, SMOTE], [0,97], [1,82], [1,03], [0,96], [23,76], [—],
+    )
+  ],
+  caption: [Calibration slope test per model dan kondisi pada ketiga dataset],
+) <tab-4-cal-slope>
+
+Metrik kalibrasi pendukung menunjukkan pola yang berbeda dari kedua metrik
+utama AUPRC dan Recall\@5%FPR. Calibration slope FedXGBllr yang relatif tinggi
+di beberapa kondisi dengan nilai maksimum mencapai 35,08 terhadap nilai ideal 1
+menunjukkan bahwa probabilitas prediksi FedXGBllr kurang bervariasi. Berbeda
+dengan nilai AUPRC, hal ini menunjukkan bahwa perbedaan probabilitas tiap
+transaksi yang dideteksi oleh FedXGBllr terlalu sempit dibandingkan risiko
+sebenarnya. Maka dari itu, AUPRC yang tinggi menunjukkan bahwa model ini mampu
+menempatkan transaksi yang benar-benar fraud pada urutan risiko yang lebih
+tinggi daripada transaksi normal namun nilai calibration slope menunjukkan
+bahwa angka probabilitas yang dihasilkan belum dapat langsung dipercaya sebagai
+besarnya peluang fraud.
+
+Adapun model federated lainnya, yaitu LR, GBM, FFD, dan BERT, memperoleh median
+calibration slope antara 0,86 dan 0,97 sedangkan XGBoost terpusat memperoleh
+1,23. Nilai yang relatif lebih dekat dengan nilai ideal 1 tersebut menunjukkan
+bahwa variasi probabilitas prediksi secara umum lebih sesuai dengan perbedaan
+risiko fraud yang sebenarnya. Pengecualian terjadi pada FFD dan BERT di BAF
+kondisi Non-IID dengan SMOTE yang memperoleh slope sebesar 0,28 dan 0,29 yang
+menunjukkan bahwa perbedaan probabilitas prediksi terlalu ekstrem dibandingkan
+perbedaan risiko yang teramati. Kedua konfigurasi tersebut juga mengalami
+penurunan AUPRC sebesar 71,0% dan 73,2% setelah SMOTE sehingga kemampuan
+mengurutkan transaksi berdasarkan risiko melemah bersamaan dengan buruknya
+kalibrasi probabilitas. Hal ini menunjukkan bahwa penilaian model perlu
+mempertimbangkan kemampuan mengurutkan risiko dan ketepatan probabilitas secara
+terpisah.
 
 === Performa antar Paradigma Agregasi
 
@@ -2376,25 +2359,27 @@ hasil AUPRC pada dataset BAF yang sama disajikan pada @tab-4-baf-auprc-bench
 
 #figure(
   kind: table,
-  text(size: 9pt)[
+  text(size: 12pt)[
     #table(
-      columns: (auto, auto, auto),
-      align: (left, right, left),
-      table.header([*Model*], [*AUPRC*], [*Setting*]),
-      [TabTransformer @dong2026fcorr], [0,1080], [terpusat],
-      [FFN @dong2026fcorr], [0,1234], [terpusat],
-      [LightGBM @dong2026fcorr], [0,1442], [terpusat],
-      [FCorrTransformer @dong2026fcorr], [0,1458], [terpusat],
-      [FT-Transformer + CAR @dong2026fcorr], [0,1602], [terpusat],
-      [FT-Transformer @dong2026fcorr], [0,1607], [terpusat],
+      columns: (auto, auto, auto, auto),
+      align: (left, left, right, left),
+      table.header([*Studi*], [*Model*], [*AUPRC*], [*Keterangan*]),
+      table.cell(rowspan: 6, align: left + horizon)[#cite(<dong2026fcorr>, form: "prose")],
+      [TabTransformer], [0,1080], [terpusat],
+      [FFN], [0,1234], [terpusat],
+      [LightGBM], [0,1442], [terpusat],
+      [FCorrTransformer], [0,1458], [terpusat],
+      [FT-Transformer + CAR], [0,1602], [terpusat],
+      [FT-Transformer], [0,1607], [terpusat],
       table.hline(),
-      [BERT (studi ini)], [*0,1670*], [federated, Dirichlet $alpha$ = 0,5],
-      [GBM (studi ini)], [0,1620], [federated, Dirichlet $alpha$ = 0,5],
-      [FFD (studi ini)], [0,1581], [federated, IID],
-      [FedXGBllr (studi ini)], [0,1515], [federated, Dirichlet $alpha$ = 0,5],
-      [LR (studi ini)], [0,1440], [federated, IID],
-      [SVM (studi ini)], [0,1194], [federated, Dirichlet $alpha$ = 0,5],
-      [XGBoost (studi ini)], [0,1569], [n/a (terpusat)],
+      table.cell(rowspan: 7, align: left + horizon)[Studi ini],
+      [BERT], [*0,1670*], [federated, Dirichlet $alpha$ = 0,5],
+      [GBM], [0,1620], [federated, Dirichlet $alpha$ = 0,5],
+      [FFD], [0,1581], [federated, IID],
+      [FedXGBllr], [0,1515], [federated, Dirichlet $alpha$ = 0,5],
+      [LR], [0,1440], [federated, IID],
+      [SVM], [0,1194], [federated, Dirichlet $alpha$ = 0,5],
+      [XGBoost], [0,1569], [n/a (terpusat)],
     )
   ],
   caption: [Perbandingan AUPRC test pada BAF Base],
@@ -2424,14 +2409,12 @@ tipologi contoh minoritas sebagaimana pada @fig-typology dan @tab-typology @napi
 
 #figure(
   image("resources/fig-4-2-minority-typology.png", width: 92%),
-  caption: [Distribusi tipe contoh minoritas (k = 5 tetangga terdekat) per dataset.
-  Kelas minoritas BAF hampir seluruhnya *rare* dan *outlier*, sedangkan ULB
-  didominasi *safe*.],
+  caption: [Distribusi tipe contoh minoritas (k = 5 tetangga terdekat) per dataset.],
 ) <fig-typology>
 
 #figure(
   kind: table,
-  text(size: 9pt)[
+  text(size: 12pt)[
     #table(
       columns: (auto, auto, auto, auto, auto, auto, auto),
       align: (left, right, right, right, right, right, right),
@@ -2455,6 +2438,43 @@ terisolasi. Pada hal ini, perbandingan dilakukan pada @tab-4-auprc-ulb, @tab-4-a
 dan @tab-4-auprc-paysim kolom IID none dan Non-IID none.
 Perbandingan ini menunjukkan bahwa heterogenitas distribusi data tidak secara
 langsung menurunkan performa bahkan dalam beberapa kondisi justru sebaliknya.
+Ringkasan kedua kolom tersebut disajikan pada @tab-4-iid-noniid.
+
+#block(breakable: false, width: 100%)[
+  #figure(
+    kind: table,
+    text(size: 12pt)[
+      #table(
+        columns: (auto, auto, auto, auto, auto),
+        align: (left, left, right, right, right),
+        table.header([*Dataset*], [*Model*], [*IID none*], [*Non-IID none*],
+          [*$Delta$ Non-IID*]),
+        table.cell(rowspan: 6, align: left + horizon)[ULB],
+        [LR], [0,758], [0,757], [−0,2%],
+        [SVM], [0,741], [0,743], [+0,2%],
+        [GBM], [0,698], [0,726], [+4,0%],
+        [FFD], [0,802], [0,814], [+1,5%],
+        [BERT], [0,818], [0,779], [−4,7%],
+        [FedXGBllr], [0,712], [0,724], [+1,7%],
+        table.cell(rowspan: 6, align: left + horizon)[BAF],
+        [LR], [0,144], [0,139], [−3,1%],
+        [SVM], [0,085], [0,119], [+40,8%],
+        [GBM], [0,137], [0,162], [+18,1%],
+        [FFD], [0,158], [0,157], [−0,8%],
+        [BERT], [0,167], [0,167], [+0,1%],
+        [FedXGBllr], [0,141], [0,151], [+7,5%],
+        table.cell(rowspan: 6, align: left + horizon)[PaySim],
+        [LR], [0,612], [0,601], [−1,9%],
+        [SVM], [0,311], [0,577], [+85,4%],
+        [GBM], [0,995], [0,996], [+0,1%],
+        [FFD], [0,756], [0,647], [−14,4%],
+        [BERT], [0,858], [0,660], [−23,0%],
+        [FedXGBllr], [0,996], [0,996], [0,0%],
+      )
+    ],
+    caption: [Perbandingan AUPRC test kondisi IID dan Non-IID tanpa SMOTE],
+  ) <tab-4-iid-noniid>
+]
 
 Pengaruh heterogenitas distribusi data terhadap performa AUPRC pada model
 parametrik LR dan SVM serta GBM sama terhadap ketiga dataset dimana performa AUPRC
@@ -2462,7 +2482,8 @@ LR menurun pada kondisi Non-IID dan sebaliknya performa AUPRC SVM dan GBM mening
 pada kondisi Non-IID. Adapun model FedXGBllr mengalami peningkatan performa AUPRC
 dalam kondisi Non-IID pada dataset ULB dan BAF serta tidak mengalami perubahan pada
 dataset PaySim. Adapun model berbasis Deep Learning cenderung mengalami penurunan
-performa AUPRC dalam kondisi Non-IID kecuali FFD pada dataset ULB.
+performa AUPRC dalam kondisi Non-IID kecuali FFD pada dataset ULB dan BERT pada
+dataset BAF.
 
 Pengaruh paling signifikan terhadap performa AUPRC ditunjukkan pada dataset PaySim
 dimana peningkatan performa model SVM dari 0,311 dalam kondisi IID menjadi 0,577
@@ -2489,20 +2510,20 @@ SMOTE pada kondisi IID untuk dataset ULB dan PaySim.
 
 #figure(
   kind: table,
-  text(size: 9pt)[
+  text(size: 12pt)[
     #table(
-      columns: (auto, auto, auto, auto),
-      align: (left, right, right, right),
-      table.header([*Model*], [*IID none*], [*IID SMOTE*],
+      columns: (auto, auto, auto, auto, auto),
+      align: (left, left, right, right, right),
+      table.header([*Dataset*], [*Model*], [*IID none*], [*IID SMOTE*],
         [*$Delta$ SMOTE (IID)*]),
-      table.cell(colspan: 4, align: left)[*ULB*],
+      table.cell(rowspan: 6, align: left + horizon)[ULB],
       [LR], [0,758], [0,768], [+1,3%],
       [SVM], [0,741], [0,734], [−1,0%],
       [GBM], [0,698], [0,811], [+16,3%],
       [FFD], [0,802], [0,809], [+0,8%],
       [BERT], [0,818], [0,823], [+0,6%],
       [FedXGBllr], [0,712], [0,806], [+13,1%],
-      table.cell(colspan: 4, align: left)[*PaySim*],
+      table.cell(rowspan: 6, align: left + horizon)[PaySim],
       [LR], [0,612], [0,656], [+7,1%],
       [SVM], [0,311], [0,632], [+103,2%],
       [GBM], [0,995], [0,996], [+0,1%],
@@ -2523,24 +2544,28 @@ akibat SMOTE. Efek negatif SMOTE untuk dataset BAF-pun beragam namun efeknya dap
 dikelompokkan per paradigma agregasi. @tab-4-baf-smote menyajikan efek SMOTE pada
 kondisi Non IID untuk dataset BAF dikelompokkan menurut paradigma agregasi.
 
-#figure(
-  kind: table,
-  text(size: 9pt)[
-    #table(
-      columns: (auto, auto, auto, auto, auto),
-      align: (left, left, right, right, right),
-      table.header([*Paradigma agregasi*], [*Model*], [*no-SMOTE*],
-        [*SMOTE*], [*$Delta$*]),
-      [Best-model selection], [GBM], [0,162], [0,162], [0,0%],
-      [Tree ensemble aggregation], [FedXGBllr], [0,151], [0,137], [−9,3%],
-      [FedAvg], [LR], [0,139], [0,097], [−30,5%],
-      [FedAvg], [SVM], [0,119], [0,081], [−31,9%],
-      [Accuracy-weighted FedAvg], [FFD], [0,157], [0,045], [−71,0%],
-      [Accuracy-weighted FedAvg], [BERT], [0,167], [0,045], [−73,2%],
-    )
-  ],
-  caption: [Efek SMOTE terhadap AUPRC pada kondisi Non-IID untuk dataset BAF],
-) <tab-4-baf-smote>
+#block(breakable: false, width: 100%)[
+  #figure(
+    kind: table,
+    text(size: 12pt)[
+      #table(
+        columns: (auto, auto, auto, auto, auto),
+        align: (left, left, right, right, right),
+        table.header([*Paradigma agregasi*], [*Model*], [*no-SMOTE*],
+          [*SMOTE*], [*$Delta$*]),
+        [Best-model selection], [GBM], [0,162], [0,162], [0,0%],
+        [Tree ensemble aggregation], [FedXGBllr], [0,151], [0,137], [−9,3%],
+        table.cell(rowspan: 2, align: left + horizon)[FedAvg],
+        [LR], [0,139], [0,097], [−30,5%],
+        [SVM], [0,119], [0,081], [−31,9%],
+        table.cell(rowspan: 2, align: left + horizon)[Accuracy-weighted FedAvg],
+        [FFD], [0,157], [0,045], [−71,0%],
+        [BERT], [0,167], [0,045], [−73,2%],
+      )
+    ],
+    caption: [Efek SMOTE terhadap AUPRC pada kondisi Non-IID untuk dataset BAF],
+  ) <tab-4-baf-smote>
+]
 
 Model GBM dengan agregasi Best-model selection tidak mengalami penurunan performa
 setelah SMOTE. Adapun agregasi tree ensemble mengalami penurunan 9,3% yang
@@ -2554,7 +2579,7 @@ efek SMOTE juga bergantung pada agregasi model Federated Learning.
 
 #figure(
   kind: table,
-  text(size: 9pt)[
+  text(size: 12pt)[
     #table(
       columns: (auto, auto, auto, auto, auto),
       align: (left, left, right, right, right),
@@ -2562,10 +2587,12 @@ efek SMOTE juga bergantung pada agregasi model Federated Learning.
         [*SMOTE*], [*$Delta$*]),
       [Best-model selection], [GBM], [0,560], [0,560], [0,0%],
       [Tree ensemble aggregation], [FedXGBllr], [0,537], [0,506], [−5,7%],
-      [FedAvg], [LR], [0,521], [0,430], [−17,3%],
-      [FedAvg], [SVM], [0,477], [0,389], [−18,5%],
-      [Accuracy-weighted FedAvg], [FFD], [0,550], [0,253], [−53,9%],
-      [Accuracy-weighted FedAvg], [BERT], [0,574], [0,271], [−52,8%],
+      table.cell(rowspan: 2, align: left + horizon)[FedAvg],
+      [LR], [0,521], [0,430], [−17,3%],
+      [SVM], [0,477], [0,389], [−18,5%],
+      table.cell(rowspan: 2, align: left + horizon)[Accuracy-weighted FedAvg],
+      [FFD], [0,550], [0,253], [−53,9%],
+      [BERT], [0,574], [0,271], [−52,8%],
     )
   ],
   caption: [Efek SMOTE terhadap Recall\@5%FPR pada kondisi Non-IID untuk dataset BAF],
@@ -2610,24 +2637,34 @@ lainnya pada kumpulan konfigurasi yang dievaluasi. Namun, konsistensi tersebut
 tidak membentuk urutan yang selalu sama pada seluruh dataset. Model berbasis tree
 maupun deep learning juga dapat menghasilkan kesamaan interpretasi yang tinggi
 tetapi memiliki variasi yang lebih besar pada kondisi tertentu.
-@tab-4-rq3-corr menyajikan median dan rentang korelasi peringkat berbobot antar
-client pada pengukuran utama.
+@tab-4-rq3-corr menyajikan median dan rentang korelasi peringkat berbobot serta
+median korelasi tanpa bobot antar client pada pengukuran utama.
 
-#figure(
-  kind: table,
-  table(
-    columns: (auto, auto, auto, auto),
-    align: (left, right, right, right),
-    table.header([*Model*], [*Median*], [*Minimum*], [*Maksimum*]),
-    [LR], [0,9845], [0,9064], [0,9970],
-    [SVM], [0,9895], [0,8980], [0,9989],
-    [GBM], [0,9774], [0,8014], [0,9960],
-    [FFD], [0,9634], [0,7979], [0,9924],
-    [BERT], [0,9517], [0,8682], [0,9949],
-    [FedXGBllr], [0,9576], [0,6650], [0,9859],
-  ),
-  caption: [Korelasi peringkat berbobot antar client pada pengukuran utama],
-) <tab-4-rq3-corr>
+#block(breakable: false, width: 100%)[
+  #figure(
+    kind: table,
+    text(size: 12pt)[
+      #table(
+        columns: (auto, auto, auto, auto, auto),
+        align: (left, right, right, right, right),
+        table.header(
+          table.cell(rowspan: 2)[*Model*],
+          table.cell(colspan: 3)[*Berbobot*],
+          table.cell(rowspan: 2)[*Median tanpa bobot*],
+          [Median], [Minimum], [Maksimum],
+        ),
+        [LR], [0,9845], [0,9064], [0,9970], [0,9865],
+        [SVM], [0,9895], [0,8980], [0,9989], [0,9897],
+        [GBM], [0,9774], [0,8014], [0,9960], [0,9870],
+        [FFD], [0,9634], [0,7979], [0,9924], [0,9723],
+        [BERT], [0,9517], [0,8682], [0,9949], [0,9555],
+        [FedXGBllr], [0,9576], [0,6650], [0,9859], [0,9560],
+      )
+    ],
+    caption: [Korelasi peringkat berbobot dan tanpa bobot antar client pada
+      pengukuran utama],
+  ) <tab-4-rq3-corr>
+]
 
 Model LR dan SVM memperoleh median korelasi sebesar 0,9845 dan 0,9895, diikuti
 GBM sebesar 0,9774. Adapun FFD, BERT, dan FedXGBllr memperoleh median sebesar
@@ -2636,7 +2673,11 @@ kepentingan fitur masih memiliki kesamaan yang tinggi antar client. Namun, media
 yang tinggi belum menggambarkan seluruh kondisi sebagaimana terlihat pada
 FedXGBllr yang memiliki rentang dari 0,6650 hingga 0,9859. Maka dari itu,
 karakteristik interpretabilitas perlu dilihat bersama dengan variasinya antar
-dataset dan kondisi partisi.
+dataset dan kondisi partisi. Median korelasi tanpa bobot berbeda paling banyak
+sebesar 0,0096 dari median berbobot sehingga kesimpulan pada tingkat pusat tidak
+berubah, sedangkan selisih terbesar muncul pada sel yang fitur beratribusi
+besarnya tidak sepakat meskipun ekornya sepakat, misalnya GBM di ULB kondisi IID
+tanpa SMOTE yang memperoleh 0,8014 berbobot dibandingkan 0,9870 tanpa bobot.
 
 Kesamaan lima fitur terpenting menunjukkan pola yang searah pada kelompok LR,
 SVM, dan GBM. Rata-rata indeks Kuncheva mencapai 0,9433 pada SVM, 0,9112 pada LR,
@@ -2646,15 +2687,25 @@ berlaku pada seluruh kondisi.
 
 #figure(
   kind: table,
-  table(
-    columns: (auto, auto, auto, auto),
-    align: (left, right, right, right),
-    table.header([*Dataset*], [*LR*], [*SVM*], [*GBM*]),
-    [BAF], [0,956], [0,927], [0,853],
-    [ULB], [1,000], [0,964], [0,742],
-    [PaySim], [0,789], [0,935], [0,878],
-  ),
-  caption: [Rerata indeks Kuncheva lima fitur terpenting per dataset],
+  text(size: 12pt)[
+    #table(
+      columns: (auto, auto, auto, auto, auto, auto, auto),
+      align: (left, right, right, right, right, right, right),
+      table.header(
+        table.cell(rowspan: 2)[*Dataset*],
+        table.cell(colspan: 2)[*LR*],
+        table.cell(colspan: 2)[*SVM*],
+        table.cell(colspan: 2)[*GBM*],
+        [Kuncheva], [Jaccard\@5], [Kuncheva], [Jaccard\@5],
+        [Kuncheva], [Jaccard\@5],
+      ),
+      [BAF], [0,956], [0,933], [0,927], [0,889], [0,853], [0,778],
+      [ULB], [1,000], [1,000], [0,964], [0,950], [0,742], [0,677],
+      [PaySim], [0,789], [0,783], [0,935], [0,933], [0,878], [0,875],
+    )
+  ],
+  caption: [Rerata indeks Kuncheva dan Jaccard\@5 lima fitur terpenting per
+    dataset],
 ) <tab-4-rq3-kuncheva>
 
 Pada ULB, LR menghasilkan indeks Kuncheva sebesar 1,000 dibandingkan GBM sebesar
@@ -2663,7 +2714,10 @@ daripada LR sebesar 0,789. Hasil ini menunjukkan bahwa model linear tidak selalu
 menghasilkan kesamaan fitur terpenting yang lebih tinggi daripada model tree.
 Nilai 1,000 pada LR di ULB menunjukkan bahwa himpunan lima fitur terpenting sama
 antar client tetapi tidak berarti urutan maupun besaran atribusi seluruh fiturnya
-identik.
+identik. Adapun Jaccard\@5 berada di bawah indeks Kuncheva pada seluruh sel dan
+selisihnya melebar ketika kesepakatan menurun, sebagaimana terlihat pada GBM di
+ULB yang memperoleh 0,742 dibandingkan 0,677, sehingga koreksi terhadap peluang
+pemilihan tetap diperlukan sebagai dasar perbandingan lintas dataset.
 
 Adapun pengaruh kondisi partisi menunjukkan bahwa interpretasi cenderung lebih
 konsisten pada kondisi IID. Pada FFD, BERT, dan FedXGBllr, korelasi peringkat
@@ -2699,17 +2753,19 @@ penurunannya berbeda antar model dan kondisi SMOTE sebagaimana disajikan pada
 
 #figure(
   kind: table,
-  table(
-    columns: (auto, auto, auto, auto),
-    align: (left, left, right, right),
-    table.header([*Model*], [*Kondisi SMOTE*], [*IID*], [*Non-IID*]),
-    [FedXGBllr], [Tanpa SMOTE], [0,986], [0,822],
-    [FedXGBllr], [Dengan SMOTE], [0,948], [0,665],
-    [FFD], [Tanpa SMOTE], [0,973], [0,798],
-    [FFD], [Dengan SMOTE], [0,931], [0,886],
-    [BERT], [Tanpa SMOTE], [0,983], [0,941],
-    [BERT], [Dengan SMOTE], [0,972], [0,952],
-  ),
+  text(size: 12pt)[
+    #table(
+      columns: (auto, auto, auto, auto),
+      align: (left, left, right, right),
+      table.header([*Model*], [*Kondisi SMOTE*], [*IID*], [*Non-IID*]),
+      [FedXGBllr], [Tanpa SMOTE], [0,986], [0,822],
+      [FedXGBllr], [Dengan SMOTE], [0,948], [0,665],
+      [FFD], [Tanpa SMOTE], [0,973], [0,798],
+      [FFD], [Dengan SMOTE], [0,931], [0,886],
+      [BERT], [Tanpa SMOTE], [0,983], [0,941],
+      [BERT], [Dengan SMOTE], [0,972], [0,952],
+    )
+  ],
   caption: [Korelasi peringkat berbobot antar client pada PaySim menggunakan
   KernelSHAP tersampel],
 ) <tab-4-rq3-paysim>
@@ -2746,11 +2802,12 @@ meningkat dari 0,868 menjadi 1,000.
 
 #figure(
   kind: table,
-  text(size: 9pt)[
+  text(size: 12pt)[
     #set par(justify: false)
     #table(
-      columns: (auto, auto, auto, 1.5fr),
+      columns: (2.4cm, 2.3cm, 2.3cm, 1fr),
       align: (left, right, right, left),
+      inset: (x: 4pt, y: 2.2pt),
       table.header([*Dataset dan model*], [*Kuncheva tanpa SMOTE*],
         [*Kuncheva dengan SMOTE*], [*Perubahan fitur penting*]),
       [ULB -- GBM], [0,544], [0,904],
@@ -2808,7 +2865,7 @@ client yang sama digunakan untuk mengukur besarnya variasi pengukuran tersebut.
 
 #figure(
   kind: table,
-  text(size: 9pt)[
+  text(size: 12pt)[
     #table(
       columns: (auto, auto, auto, auto),
       align: (left, right, right, right),
@@ -2853,63 +2910,111 @@ perubahan peringkatnya, serta keterandalan pengukurannya. Temuan ini berlaku pad
 model akhir yang dievaluasi dalam penelitian dan belum mengukur kestabilan
 interpretasi lintas pengulangan pelatihan.
 
-= PENUTUP
+= KESIMPULAN DAN SARAN
 
-// TODO: BAB 5 belum ada di Proposal TA v2.1. Isi dengan Kesimpulan (menjawab
-// ketiga rumusan masalah) dan Saran untuk penelitian lanjutan.
+== Kesimpulan
 
-// ===========================================================================
-// DRAF SARAN — disisipkan atas instruksi eksplisit penulis. Kesimpulan (yang
-// menjawab rumusan masalah) BELUM ditulis karena Bab 4 belum ada; blok ini
-// TIDAK memuat hasil, angka, atau temuan eksperimen. Tingkat keyakinan tiap
-// butir sengaja dibedakan — jangan diratakan. Tinjau ulang setelah Bab 4.
-// ===========================================================================
+Berdasarkan hasil pengujian dan analisis yang telah dilakukan, diperoleh
+kesimpulan sebagai berikut:
 
-== Saran (draf — menunggu hasil Bab 4)
++ Perbandingan performa menunjukkan bahwa FedXGBllr belum menghasilkan
+  keunggulan yang berlaku pada seluruh dataset dan kondisi pengujian. Pada
+  PaySim, FedXGBllr memperoleh AUPRC sekitar 0,996 yang relatif bertahan pada
+  kondisi IID maupun Non-IID dan sebanding dengan GBM. Apabila dibandingkan
+  berdasarkan capaian AUPRC terbaik setiap model dalam kondisi federated,
+  FedXGBllr melampaui LR dan SVM pada ketiga dataset. Namun, pada ULB dan BAF,
+  capaian terbaik FedXGBllr masih berada di bawah GBM, FFD, dan BERT. Pada BAF,
+  AUPRC terbaik FedXGBllr sebesar 0,1515 dibandingkan GBM sebesar 0,1620, FFD
+  sebesar 0,1581, dan BERT sebesar 0,1670. Dengan demikian, FedXGBllr
+  menunjukkan kemampuan deteksi yang kompetitif dan ketahanan pada sejumlah
+  kondisi heterogen, sedangkan model deep learning dapat memberikan performa
+  lebih tinggi pada kondisi tertentu. Pemilihan model perlu mempertimbangkan
+  karakteristik dataset dan kondisi distribusi data karena tidak terdapat satu
+  model yang selalu memberikan performa terbaik.
++ Heterogenitas distribusi data dan penanganan class imbalance dengan SMOTE
+  memberikan pengaruh yang bergantung pada interaksi antara model, distribusi
+  data setiap client, dan aturan agregasi. Kondisi Non-IID tidak selalu
+  menurunkan performa. Pada PaySim tanpa SMOTE, AUPRC SVM meningkat dari 0,311
+  menjadi 0,577, sedangkan BERT menurun dari 0,858 menjadi 0,660. Penerapan
+  SMOTE pada kondisi IID umumnya meningkatkan atau mempertahankan performa pada
+  ULB dan PaySim, tetapi manfaat tersebut tidak berlaku pada seluruh kondisi
+  Non-IID. Pada BAF kondisi Non-IID, SMOTE menurunkan AUPRC FFD dan BERT
+  masing-masing sebesar 71,0% dan 73,2%, sedangkan FedXGBllr mengalami
+  penurunan sebesar 9,3% dan GBM relatif tidak berubah. Hasil tersebut
+  menunjukkan bahwa penambahan sampel sintetis belum menjamin peningkatan
+  kemampuan deteksi. Ketersediaan sampel minoritas asli, distribusinya pada
+  setiap client, serta pembobotan kontribusi client dalam agregasi perlu
+  dipertimbangkan bersama dalam penerapan SMOTE pada federated learning.
++ Konsistensi feature importance berbasis SHAP bergantung pada model, dataset,
+  dan kondisi distribusi data. LR dan SVM cenderung menghasilkan konsistensi
+  antar client yang lebih tinggi, dengan median korelasi peringkat berbobot
+  masing-masing sebesar 0,9845 dan 0,9895, meskipun keunggulan tersebut tidak
+  berlaku pada seluruh dataset maupun ukuran kesamaan fitur. Pada FFD, BERT,
+  dan FedXGBllr, korelasi peringkat berbobot menurun dari IID ke Non-IID pada
+  11 dari 15 pasangan yang dibandingkan, dengan rata-rata penurunan sebesar
+  0,054. Pada PaySim tanpa SMOTE, korelasi FedXGBllr menurun dari 0,986 menjadi
+  0,822 meskipun AUPRC tetap sekitar 0,996. Selain itu, SMOTE dapat
+  meningkatkan kesamaan fitur terpenting tanpa memperbaiki kemampuan deteksi,
+  sebagaimana pada LR di BAF kondisi Non-IID yang mengalami peningkatan indeks
+  Kuncheva dari 0,868 menjadi 1,000 disertai penurunan AUPRC dari sekitar 0,139
+  menjadi 0,097. Dengan demikian, ketahanan performa deteksi tidak menjamin
+  konsistensi interpretasi antar client, sedangkan kesamaan interpretasi yang
+  tinggi belum menunjukkan kualitas deteksi yang lebih baik.
 
-Blok berikut merupakan draf arah penelitian lanjutan pada tingkat keyakinan yang
-berbeda-beda, disusun sebelum hasil eksperimen tersedia dan perlu ditinjau ulang
-setelah Bab 4 rampung.
+== Saran
 
-+ *Gerbang oversampling berdasarkan jumlah minoritas nyata minimum per client.*
-  Mengikuti @blagus2013smote dan @elreedy2019smote yang menunjukkan degradasi
-  SMOTE pada jumlah minoritas kecil, namun ini merupakan inferensi penelitian ini
-  sendiri: belum ada penelitian terdahulu yang mengusulkan gerbang semacam itu
-  untuk FL, dan tidak ada ambang numerik yang dapat disitasi.
+Berdasarkan hasil penelitian dan keterbatasan yang telah diuraikan, terdapat
+beberapa saran untuk pengembangan penelitian selanjutnya sebagai berikut.
 
-+ *Random undersampling sebagai alternatif.* Paling didukung untuk regime ini —
-  @blagus2013smote membandingkannya secara langsung dan mengunggulkannya pada data
-  berdimensi tinggi. Teknik ini dikecualikan dari penelitian ini sesuai Batasan
-  Masalah.
++ Penelitian selanjutnya disarankan mengulang pelatihan menggunakan beberapa
+  random seed dan melaporkan variasi hasil serta interval kepercayaan. Pengujian
+  juga perlu diperluas pada beberapa nilai konsentrasi Dirichlet dan jumlah
+  client agar ketahanan performa maupun interpretasi dapat dinilai pada tingkat
+  heterogenitas yang berbeda. Pengulangan tersebut diperlukan karena pengulangan
+  seed pada SHAP dalam penelitian ini hanya memeriksa variasi estimator dan belum
+  mewakili variasi pelatihan model.
 
-+ *Pelatihan lokal berbasis biaya (cost-sensitive).* Masuk akal namun masih
-  diperdebatkan. Literatur FL cenderung menempuh penanganan pada level fungsi loss
-  (@wang2021fedimbalance, @duan2019astraea), tetapi @weiss2007costsensitive tidak
-  menemukan pemenang yang konsisten antara cost-sensitive learning dan sampling
-  (pada venue minor). Arah ini terbuka dan belum tuntas.
++ Pengaruh aturan agregasi perlu diuji secara terpisah dari arsitektur model
+  melalui studi ablasi pada model yang sama. Pada FFD dan BERT, pembobotan
+  berdasarkan ukuran data dapat dibandingkan dengan pembobotan yang turut
+  menggunakan AUPRC lokal. Ukuran data sebelum dan sesudah SMOTE juga perlu
+  dibandingkan sebagai dasar pembobotan. Pengujian ini dapat memperjelas
+  kontribusi perubahan bobot client terhadap penurunan performa setelah
+  oversampling pada kondisi Non-IID.
 
-+ *Migrasi ke SMOTE-NC* untuk data bertipe campuran, sebagaimana diperkenalkan
-  #cite(<chawla2002smote>, form: "prose"), guna menghindari nilai pecahan pada
-  kolom kategorikal hasil one-hot. Rekomendasi ini kini memiliki dukungan empiris,
-  bukan sekadar sitasi: pada @sec-hasil-rq3 di bawah SMOTE atribusi BAF SVM
-  terkonsentrasi pada empat kolom `housing_status_*` sekaligus, konsekuensi teramati
-  dari interpolasi kontinu SMOTE standar melintasi blok one-hot yang saling eksklusif.
++ Penanganan class imbalance sebaiknya mempertimbangkan jumlah sampel minoritas
+  asli dan struktur lingkungan lokalnya sebelum melakukan oversampling. Batas
+  minimum untuk menjalankan SMOTE belum menunjukkan kecukupan informasi kelas
+  minoritas, sehingga aturan kelayakan dan target rasio perlu diuji secara
+  empiris. Penelitian lanjutan dapat membandingkan SMOTE dengan random
+  undersampling, cost-sensitive learning, serta SMOTE-NC pada data bertipe
+  campuran. Perbandingan tersebut perlu memeriksa validitas sampel sintetis dan
+  perubahan fitur penting, tanpa mengasumsikan bahwa salah satu metode selalu
+  lebih baik.
 
-+ *Jangan memakai kesepakatan SHAP antar-client sebagai bukti struktur yang
-  dipelajari* tanpa mengontrol oversampling. Pada @sec-hasil-rq3 SMOTE lokal
-  menaikkan kesepakatan interpretasi antar-client sekaligus menggeser fitur yang
-  disepakati, sehingga kenaikan kesepakatan dapat termanufaktur alih-alih
-  mencerminkan struktur bersama yang benar-benar dipelajari model federated.
++ Evaluasi explainability perlu diperluas dengan memisahkan pengaruh perubahan
+  model dari pengaruh background. Perbandingan dapat dilakukan dengan
+  mempertahankan model ketika background diubah, serta mempertahankan background
+  ketika model hasil pelatihan dibandingkan. Jumlah pengulangan KernelSHAP juga
+  dapat ditambah untuk memeriksa variasi estimator dan kesesuaian asumsi
+  pengujian. Selain penjelasan yang mengikuti proporsi kelas, analisis khusus
+  pada sampel fraud diperlukan agar ringkasan feature importance tidak terutama
+  merepresentasikan transaksi non-fraud.
 
-+ *Melaporkan kalibrasi berdampingan dengan diskriminasi* pada penelitian
-  imbalance FL selanjutnya, mengikuti @goorbergh2022harm.
++ Evaluasi performa selanjutnya disarankan menguji ambang klasifikasi yang
+  ditetapkan pada validation set. Hal ini diperlukan karena Recall\@5%FPR dalam
+  penelitian ini merupakan ringkasan titik operasi pada kurva test set. Pengujian
+  dengan pembagian data berdasarkan waktu juga dapat digunakan untuk menilai
+  perubahan performa ketika model menghadapi data yang lebih baru dan pola fraud
+  yang berubah.
 
-Varian SMOTE yang membatasi seed pada perbatasan (@han2005borderline,
-@bunkhumpornpat2009safelevel) serta hibrida pembersihan (@batista2004balancing)
-diperkirakan tidak membantu pada kondisi sekitar 21 seed, karena mayoritas seed
-akan tergolong sebagai *danger* atau *noise* — hal ini merupakan konsekuensi dari
-definisi algoritma-algoritma tersebut, bukan hasil yang telah diuji secara
-empiris.
++ Pengembangan menuju lingkungan lintas institusi perlu menguji preprocessing dan
+  evaluasi yang tidak bergantung pada pengumpulan data terpusat sebagaimana
+  penyederhanaan simulasi penelitian ini. Pengukuran biaya komunikasi, waktu
+  pelatihan, serta risiko kebocoran informasi dari model yang dipertukarkan juga
+  diperlukan. Mekanisme privasi tambahan dapat dievaluasi bersama dampaknya
+  terhadap performa dan explainability sebelum hasil penelitian digunakan sebagai
+  dasar penerapan operasional.
 
 //=============================================================================
 // REFERENSI SINTAKS (contoh dikomentari — jangan dihapus, bukan bagian isi)

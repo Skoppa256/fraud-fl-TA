@@ -31,6 +31,8 @@ decision by the author — it is never a step inside another task.
 | `results/logs/**` | per-run round logs backing the above |
 | `results/models/**` | persisted model artifacts the sweep produced |
 | `results/shap_v2/**` | **RQ3 v2, final.** Read-only. Regenerating requires an explicit decision, not a re-run. |
+| `results/analysis/**` | **Derived analysis of record.** `minority_census.csv` holds the per-client minority census and the `synthesis_multiplier` that BAB 3 §3.4.3 says are recorded. Frozen 2026-09-29 because a thesis claim rests on it. |
+| `analysis/separability/**` | **Derived analysis of record — a different tree from `results/analysis/`.** `separability_summary.csv` is the source for the minority-typology table and the 93,1% that BAB 5 restates. Frozen 2026-09-29 (6 tracked files) for the same reason: a thesis claim rests on it. |
 | `results/shap/**` | **v1 SHAP tree — superseded, but load-bearing.** `production.log` is the only surviving record of the pre-repair run, in which two PaySim FedXGBllr cells scored `spearman=0.0000 kuncheva=1.0000`; it cannot be regenerated (commit `1d661ac`, 2026-08-07, fixed the clipped-logit saturation that produced it). No figure from this log is cited in `buku/` — the v1 `0,775` this row previously claimed for BAB 4 §4.3 appears nowhere in `content.typ`. The log is kept as the record of the pre-repair state, not as a source for prose. `experiments/shap_analysis.py` still writes this directory — do not re-run it. |
 
 `docs/frozen_manifest.sha256` records SHA-256 for the frozen trees. For files
@@ -40,7 +42,7 @@ only as a portable, git-independent check.
 Coverage is **partial**: `results/models/**` is not in the manifest, because the
 persisted artifacts exist only on the GPU box and the manifest was generated on
 the laptop. A green `shasum -a 256 -c docs/frozen_manifest.sha256` therefore
-attests to four of the five frozen rows and says nothing about the model
+attests to seven of the eight frozen rows and says nothing about the model
 artifacts. Run `analysis/append_model_manifest.sh` on the box to close it.
 
 Note on `.gitignore`: the results rule is now `results/*` (ignore the
@@ -76,6 +78,24 @@ behaviour/config/dependency change") rather than skipping the question silently.
 - Figure and table counters reset per BAB (`template.typ` resets both at each
   numbered level-1 heading), so numbers are per-chapter and shift whenever a
   figure or table is inserted earlier in the same chapter.
+- **`template.typ` sets `set heading(supplement: [Subbab])`** so a heading
+  cross-reference renders "Subbab 4.3" rather than Typst's English default
+  "Section 4.3". A supplement set on `heading` applies at **every level**, so this
+  is safe only while every labelled heading is level 2 or deeper — a level-1 label
+  would render "Subbab 4", which is wrong. Before adding a label to any heading,
+  run:
+
+  ```bash
+  grep -nE '^(=+) .*<[A-Za-z0-9_-]+>$' buku/content.typ   # every labelled heading
+  ```
+
+  and confirm none is level 1.
+- **Splice a `#figure` block by walking back from its label, never by line
+  range.** Find the line matching `) <label>`, walk backwards to the nearest
+  `#figure(`, and assert on **both** the first and the last line of the block
+  before moving it. A line-range grab once carried a whole trailing paragraph of
+  prose into a replacement; the build was clean and the PDF looked right, and only
+  a token-level diff against the source caught it.
 
 ## Where to update — code change → thesis location
 
@@ -94,27 +114,30 @@ Tables:
 | Tabel 3.2 | `<tab-3-2>` | Deskripsi Fitur Dataset PaySim |
 | Tabel 3.3 | `<tab-3-3>` | Karakteristik Dataset ULB Credit Card |
 | Tabel 3.4 | `<tab-baf-char>` | Karakteristik Dataset Bank Account Fraud (BAF) |
-| Tabel 3.5 | `<tab-3-4>` | Pemetaan Model dengan Skema Agregasi Federated Learning |
-| Tabel 3.6 | `<tab-3-5>` | Spesifikasi Lingkungan Pengembangan |
-| Tabel 3.7 | `<tab-smote-geometry>` | Geometri sintesis SMOTE pada client terburuk BAF |
-| Tabel 3.8 | `<tab-minority-census>` | Sensus minoritas per-client |
-| Tabel 3.9 | `<tab-3-6>` | Konfigurasi Hyperparameter Eksperimen |
+| Tabel 3.5 | `<tab-3-smote>` | Konfigurasi Parameter SMOTE |
+| Tabel 3.6 | `<tab-3-4>` | Pemetaan Model dengan Skema Agregasi Federated Learning dan Model Pembanding Terpusat |
+| Tabel 3.7 | `<tab-3-explainer>` | Pemetaan explainer per model |
+| Tabel 3.8 | `<tab-3-5>` | Spesifikasi Lingkungan Pengembangan |
+| Tabel 3.9 | `<tab-3-hp-umum>` | Konfigurasi Umum Eksperimen |
+| Tabel 3.10 | `<tab-3-6>` | Konfigurasi Hyperparameter Eksperimen per Model |
 | Tabel 4.1 | `<tab-4-auprc-ulb>` | AUPRC test pada ULB |
 | Tabel 4.2 | `<tab-4-auprc-baf>` | AUPRC test pada BAF |
 | Tabel 4.3 | `<tab-4-auprc-paysim>` | AUPRC test pada PaySim |
-| Tabel 4.4 | `<tab-4-rfpr-ulb>` | Recall@5%FPR test pada ULB |
-| Tabel 4.5 | `<tab-4-rfpr-baf>` | Recall@5%FPR test pada BAF |
-| Tabel 4.6 | `<tab-4-rfpr-paysim>` | Recall@5%FPR test pada PaySim |
-| Tabel 4.7 | `<tab-4-baf-auprc-bench>` | Perbandingan AUPRC test pada BAF Base |
-| Tabel 4.8 | `<tab-typology>` | Tipologi contoh minoritas |
-| Tabel 4.9 | `<tab-4-iid-smote>` | Efek SMOTE terhadap AUPRC pada kondisi IID untuk dataset ULB dan Paysim |
-| Tabel 4.10 | `<tab-4-baf-smote>` | Efek SMOTE terhadap AUPRC pada kondisi Non-IID untuk dataset BAF |
-| Tabel 4.11 | `<tab-4-baf-smote-rfpr>` | Efek SMOTE terhadap Recall@5%FPR pada kondisi Non-IID untuk dataset BAF |
-| Tabel 4.12 | `<tab-4-rq3-corr>` | Korelasi peringkat berbobot antar client pada pengukuran utama |
-| Tabel 4.13 | `<tab-4-rq3-kuncheva>` | Rerata indeks Kuncheva lima fitur terpenting per dataset |
-| Tabel 4.14 | `<tab-4-rq3-paysim>` | Korelasi peringkat berbobot antar client pada PaySim menggunakan KernelSHAP tersampel |
-| Tabel 4.15 | `<tab-4-rq3-smote>` | Perubahan konsistensi dan fitur penting setelah SMOTE pada beberapa konfigurasi Non-IID |
-| Tabel 4.16 | `<tab-4-rq3-seeds>` | Kesepakatan pengulangan dan kesepakatan antar client pada KernelSHAP tersampel |
+| Tabel 4.4 | `<tab-4-rfpr-ulb>` | Recall\@5%FPR test pada ULB |
+| Tabel 4.5 | `<tab-4-rfpr-baf>` | Recall\@5%FPR test pada BAF |
+| Tabel 4.6 | `<tab-4-rfpr-paysim>` | Recall\@5%FPR test pada PaySim |
+| Tabel 4.7 | `<tab-4-cal-slope>` | Calibration slope test per model dan kondisi pada ketiga dataset |
+| Tabel 4.8 | `<tab-4-baf-auprc-bench>` | Perbandingan AUPRC test pada BAF Base |
+| Tabel 4.9 | `<tab-typology>` | Tipologi contoh minoritas |
+| Tabel 4.10 | `<tab-4-iid-noniid>` | Perbandingan AUPRC test kondisi IID dan Non-IID tanpa SMOTE |
+| Tabel 4.11 | `<tab-4-iid-smote>` | Efek SMOTE terhadap AUPRC pada kondisi IID untuk dataset ULB dan PaySim |
+| Tabel 4.12 | `<tab-4-baf-smote>` | Efek SMOTE terhadap AUPRC pada kondisi Non-IID untuk dataset BAF |
+| Tabel 4.13 | `<tab-4-baf-smote-rfpr>` | Efek SMOTE terhadap Recall\@5%FPR pada kondisi Non-IID untuk dataset BAF |
+| Tabel 4.14 | `<tab-4-rq3-corr>` | Korelasi peringkat berbobot dan tanpa bobot antar client pada pengukuran utama |
+| Tabel 4.15 | `<tab-4-rq3-kuncheva>` | Rerata indeks Kuncheva dan Jaccard\@5 lima fitur terpenting per dataset |
+| Tabel 4.16 | `<tab-4-rq3-paysim>` | Korelasi peringkat berbobot antar client pada PaySim menggunakan KernelSHAP tersampel |
+| Tabel 4.17 | `<tab-4-rq3-smote>` | Perubahan konsistensi dan fitur penting setelah SMOTE pada beberapa konfigurasi Non-IID |
+| Tabel 4.18 | `<tab-4-rq3-seeds>` | Kesepakatan pengulangan dan kesepakatan antar client pada KernelSHAP tersampel |
 
 Figures:
 
@@ -122,52 +145,90 @@ Figures:
 |---|---|---|
 | Gambar 2.1 | `<fig-2-1>` | Arsitektur umum Federated Learning |
 | Gambar 2.2 | `<fig-2-2>` | Arsitektur FedXGBllr |
-| Gambar 2.3 | `<fig-2-3>` | Visualisasi pengaruh parameter α pada distribusi label antar client |
+| Gambar 2.3 | `<fig-2-3>` | Visualisasi pengaruh parameter $alpha$ pada distribusi label antar client |
 | Gambar 2.4 | `<fig-2-4>` | Ilustrasi mekanisme SMOTE |
 | Gambar 2.5 | `<fig-2-5>` | Contoh visualisasi SHAP dalam bentuk summary plot |
-| Gambar 3.1 | `<fig-3-1>` | Arsitektur umum sistem penelitian |
-| Gambar 3.2 | `<fig-3-2>` | Lapisan logis sistem penelitian |
-| Gambar 3.3 | `<fig-3-3>` | Skema pembagian data dua tingkat |
-| Gambar 3.4 | `<fig-3-two-seeds-gap>` | Skema pengukuran dua-seed (sel contoh: BAF BERT Non-IID tanpa SMOTE) |
-| Gambar 3.5 | `<fig-3-4-smote-geometry>` | Geometri sintesis SMOTE pada client terburuk BAF (seed 42, Dirichlet α = 0,5) |
-| Gambar 4.1 | `<fig-typology>` | Distribusi tipe contoh minoritas per dataset |
+| Gambar 2.6 | `<fig-2-6>` | Arsitektur Flower |
+| Gambar 3.1 | `<fig-3-1>` | Alur pelaksanaan penelitian. |
+| Gambar 3.2 | `<fig-3-2>` | Lapisan logis sistem penelitian. |
+| Gambar 3.3 | `<fig-3-3>` | Skema pembagian data dua tingkat. |
+| Gambar 3.4 | `<fig-3-4>` | Skema pengukuran dua-seed. |
+| Gambar 4.1 | `<fig-typology>` | Distribusi tipe contoh minoritas (k = 5 tetangga terdekat) per dataset. Kelas minoritas BAF hampir seluruhnya *rare* dan *outlier*, sedangkan ULB didominasi *safe*. |
 
-Note the label/number skew this table exists to prevent: `<tab-3-6>` renders as
-**Tabel 3.9**, `<tab-3-4>` as **Tabel 3.5**, `<tab-3-5>` as **Tabel 3.6**, and
-`<fig-3-4-smote-geometry>` as **Gambar 3.5**. Cite with `@label`; never write a
-literal number into prose.
+Note the label/number skew this table exists to prevent: `<tab-3-4>` renders as
+**Tabel 3.6**, `<tab-3-explainer>` as **Tabel 3.7**, `<tab-3-5>` as **Tabel 3.8**,
+`<tab-3-hp-umum>` as **Tabel 3.9**, and `<tab-3-6>` as **Tabel 3.10**. The skew
+widened by one on 2026-10-05 when `<tab-3-smote>` was inserted in §3.3.3. Cite with `@label`; never write a literal number
+into prose — a `@label` reference follows a renumber, a literal does not. As of
+2026-09-29 `content.typ` contains **zero** literal "Tabel N.N" in prose; keep it
+that way.
 
 | Code area changed | Thesis location to update |
 |---|---|
-| Hyperparameters / any `conf/*.yaml` / `registry.yaml` values | Tabel «Konfigurasi Hyperparameter Eksperimen» `<tab-3-6>` |
+| Hyperparameters / any `conf/*.yaml` / `registry.yaml` values | Per-model values: Tabel «Konfigurasi Hyperparameter Eksperimen per Model» `<tab-3-6>`. Values shared by every model (K, rounds, α, seed, SMOTE): Tabel «Konfigurasi Umum Eksperimen» `<tab-3-hp-umum>` |
 | Dependencies / versions (`requirements.txt`, `pyproject.toml`) | Tabel «Spesifikasi Lingkungan Pengembangan» `<tab-3-5>` |
 | Preprocessing (`preprocessing/paysim.py`, dropped cols, features, encoding, scaling, split) | **§3.3.1** and **§3.4.1** |
 | Client partitioning (`partitioning/dirichlet.py`, IID/Dirichlet, α set, K) | **§3.3.2** and **§3.4.2** |
-| Oversampling / SMOTE / ADASYN (`preprocessing/smote.py`, `adasyn.py`, `oversampling.py`) | **§3.3.3** and **§3.4.3** |
+| Oversampling / SMOTE / ADASYN (`preprocessing/smote.py`, `adasyn.py`, `oversampling.py`) | Tabel «Konfigurasi Parameter SMOTE» `<tab-3-smote>` (`sampling_strategy`, `k_neighbors`, `random_state`, `enabled`), **§3.3.3** and **§3.4.3** |
 | Models & aggregation strategies (`models/*/`, any `strategy.py`) | Tabel «Pemetaan Model dengan Skema Agregasi» `<tab-3-4>`, **§3.3.4**, **§3.4.4** |
 | Evaluation metrics & SHAP (`evaluation/`, `experiments/shap_*.py`) | **§3.3.5** and **§3.4.5** |
 | Dataset facts (row/feature count, fraud ratio, columns) | `<tab-3-1>` / `<tab-3-2>` (PaySim), `<tab-3-3>` (ULB), `<tab-baf-char>` (BAF) |
-| Pipeline restructuring (stage order/count) | **Gambar 3.1** (regenerate the figure) — and **Gambar 3.2** if the logical-layer / model / scheme counts change |
+| Pipeline restructuring (stage order/count) | **Gambar 3.1** — and **Gambar 3.2** if the logical-layer / model / scheme counts change. Both are hand-drawn: flag it for the author, there is no regeneration step |
 | New method or paper referenced | **`bibliography.bib`** + the citing sentence |
 
-Figures in `buku/resources/` (e.g. `fig-3-1-*`, `fig-3-2-*`) are raster images
-ported from the proposal. If a pipeline/architecture change makes one stale, flag
-it for the author to redraw — do not leave a diagram that contradicts the code.
+BAB 3/4 figures split into two kinds, and `analysis/figures/make_all.py`
+enforces that every one of them is accounted for (`--check` fails on a figure
+that is in neither set):
+
+- **Generated** (`GENERATORS`) — Gambar 4.1 only, built from the experiment
+  CSVs. Do not hand-edit that PNG: change the script, or the data, and rebuild.
+- **Authored by hand** (`EXTERNAL`) — the method diagrams Gambar 3.1–3.4. As of
+  the 2026-10-04 revision (3.1–3.3) and 2026-10-05 (3.4) the author draws these
+  in an external tool and delivers them in `TATATA.docx`; `fig_3_1_pipeline.py`,
+  `fig_3_2_logical_layers.py`, `fig_3_3_two_level_split.py` and
+  `fig_3_4_two_seeds_gap.py` are kept but no longer own anything the thesis
+  renders. **Nothing rebuilds these**, and unlike the generated versions they
+  superseded they carry no row counts, fraud shares, per-client counts, K or α —
+  so a pipeline change that moves those numbers will not reach them, and cannot
+  silently contradict them either. A method change means asking the author for a
+  redrawn diagram.
+
+  **Gambar 3.4 is the one that cost something.** It replaced a *generated*
+  figure, not a hand-drawn draft, so the swap dropped a data-bearing panel: the
+  old `fig-3-two-seeds-gap.png` plotted a real cell (BAF BERT Non-IID tanpa
+  SMOTE) from the RQ3 CSVs, and its caption stated that finding. The replacement
+  is structural only. The superseded PNG is still in `resources/` and is now
+  unreferenced — flagged, not deleted, per the rule below.
+
+BAB 2 figures are external/illustrative and are not generated.
 Not every PNG in `resources/` is referenced: some are from dropped drafts. An
 unreferenced file is not automatically dead — flag it, do not delete it.
 
-## Chapters 4 and 5 are off-limits
+## What is frozen in `buku/content.typ`
 
-BAB 4 (Hasil dan Pembahasan) and BAB 5 (Penutup) contain **authored results
-prose**; §4.3 (`<sec-hasil-rq3>`) in particular is complete and cites the frozen
-`results/shap_v2/**` tree. They are off-limits: **do not write, alter, or "sync"
-results, findings, numbers, tables, or conclusions in them** without an explicit
-instruction from the author. If you find experiment outputs (`results/`,
-`outputs/`, `wandb/`, notebooks, checkpoints), do **not** narrate them into the
-thesis; mention them to the author instead. If a code or methodology change
-makes a BAB 4/5 statement stale (e.g. a re-run supersedes a reported number),
-**flag the exact location to the author** — never edit it yourself. Keep BAB 4/5
-byte-identical unless told otherwise.
+All five chapters are now the author's own words, applied over 2026-09-24…27.
+What is frozen is no longer "BAB 4 and 5" but the following:
+
+| region | status |
+|---|---|
+| BAB 1, BAB 2, BAB 3 | the author's text. Change only on his instruction. |
+| BAB 4 preamble, §4.1, §4.2 | **frozen, byte-identical**, with §4.1.1 and §4.2.1 re-frozen as of 2026-10-05. §4.2.1 gained one sentence and `<tab-4-iid-noniid>` on the author's instruction; its three paragraphs are otherwise untouched. Its history: it was unfrozen for a supplementary-metrics insertion, then revised again on the author's instruction — the three `<tab-4-supp-*>` tables were replaced by the single `<tab-4-cal-slope>` (calibration slope only; F1/Precision/Recall/FPR aktual/Brier/CITL are no longer reported anywhere), and the closing two paragraphs are now the author's own text. |
+| BAB 4 §4.3 (`<sec-hasil-rq3>`) | the author's replaced text. **It cites nothing** — no `@key`, no author-year. |
+| BAB 5 (KESIMPULAN DAN SARAN) | the author's replaced text. **Cites nothing.** |
+
+`<sec-hasil-rq3>` currently has a definition and **zero references** — BAB 3's and
+BAB 5's went with their replacements. That is harmless and the label stays.
+
+**Do not write, alter, or "sync" results, findings, numbers, tables, or
+conclusions** without an explicit instruction from the author. If you find
+experiment outputs (`results/`, `outputs/`, `wandb/`, notebooks, checkpoints), do
+**not** narrate them into the thesis; mention them to the author instead. If a
+code or methodology change makes a statement stale (e.g. a re-run supersedes a
+reported number), **flag the exact location** — never edit it yourself.
+
+Open items against the finished document are tracked in `docs/bab4_open.md`,
+`docs/bab4_audit.md` and `docs/bab4_commitments.md`. Read them before proposing a
+change to any chapter.
 
 Likewise, do not rewrite the author's research questions (§1.2), objectives
 (§1.4), contributions/manfaat (§1.5), or literature review (BAB 2) as part of a

@@ -139,11 +139,7 @@
 
 #heading("HALAMAN PERSEMBAHAN", numbering: none)
 
-// TODO: tulis halaman persembahan (tidak ada di Proposal TA v2.1; diisi saat penyusunan buku Tugas Akhir).
-#v(1em)
-#align(left)[
-  Dengan penuh rasa syukur atas selesainya Tugas Akhir ini, penulis mempersembahkan karya ini kepada kedua orang tua, keluarga, serta seluruh pihak yang telah memberikan dukungan dan doa.
-]
+// Body intentionally left empty — title only, per the author (2026-10-05).
 
 #pagebreak()
 
@@ -156,12 +152,12 @@
 // Typst 0.13+ doesn't support par(indent: ...)
 // For abstracts, we can leave paragraphs without indent or use #par.leading
 
-#v(1em)
+#v(0.5em)
 #align(center, text(size: 12pt, weight: "bold")[
   #upper(title.id)
 ])
 
-#v(1em)
+#v(0.5em)
 #par(first-line-indent: 0pt)[
   Nama Mahasiswa / NRP #tab-to(4.4cm, [Nama Mahasiswa / NRP]): #author / #nrp \
   Departemen #tab-to(4.4cm, [Departemen]): #program.department \
@@ -169,13 +165,13 @@
   Dosen Ko-pembimbing #tab-to(4.4cm, [Dosen Ko-pembimbing]): #supervisors.at(1).name
 ]
 
-#v(2em)
+#v(1em)
 #block(align(left, text(size: 13pt, weight: "bold")[Abstrak]))
 
-#v(1em)
-Digitalisasi sektor keuangan telah meningkatkan risiko financial fraud yang semakin kompleks, sementara pendekatan deteksi berbasis machine learning terpusat menghadapi keterbatasan privasi dan kepatuhan regulasi. Federated Learning (FL) menawarkan alternatif kolaborasi antar institusi tanpa berbagi data mentah, namun eksplorasi model berbasis tree dalam FL untuk deteksi fraud masih terbatas dan belum terdapat perbandingan sistematis dengan model berbasis gradient di bawah kondisi Non-IID dan class imbalance ekstrem. Penelitian ini mengevaluasi performa serta menganalisis explainability dari enam model FL dengan empat paradigma agregasi yang berbeda, yaitu Logistic Regression dan Support Vector Machine dengan FedAvg, Gradient Boosting Machine dengan best-model selection, FFD (1D-CNN) dan BERT (tabular Transformer) dengan accuracy-weighted FedAvg, serta FedXGBllr dengan tree ensemble aggregation. Eksperimen dilakukan menggunakan tiga dataset, yaitu PaySim sebagai benchmark utama, ULB Credit Card sebagai pembanding lintas domain, dan Bank Account Fraud (BAF) sebagai dataset berfitur riil bermakna yang memperkuat analisis interpretabilitas, pada simulasi cross-silo berbasis kerangka kerja Flower, dengan partisi Dirichlet untuk memodelkan heterogenitas data antar client dan penerapan SMOTE lokal untuk menangani class imbalance. Evaluasi menggunakan AUPRC sebagai metrik utama, didukung F1-score, Precision, dan Recall, sementara analisis explainability dilakukan melalui SHAP values per-client untuk mengukur stabilitas feature importance di bawah kondisi Non-IID. Penelitian ini diharapkan menghasilkan benchmark sistematis pertama yang mengintegrasikan empat paradigma agregasi FL pada konteks deteksi fraud finansial, bukti empiris pertama mengenai performa FedXGBllr pada kondisi class imbalance ekstrem dan Non-IID, serta kontribusi awal pada kajian Explainable Federated Learning melalui analisis stabilitas interpretasi SHAP antar paradigma model.
+#v(0.5em)
+Digitalisasi sektor keuangan tidak hanya meningkatkan risiko financial fraud namun juga kompleksitasnya. Walaupun financial fraud detection telah berkembang dengan menggunakan centralized machine learning, metode ini memiliki keterbatasan privasi yang merupakan aspek penting dalam sektor keuangan. Federated Learning (FL) menyediakan alternatif untuk kolaborasi antar institusi tanpa adanya perpindahan data mentah. Namun, eksplorasi model berbasis tree dalam FL untuk financial fraud detection masih terbatas dan juga penelitian yang membandingkan berbagai model di bawah kondisi Non-IID dan class imbalance ekstrem beserta analisis explainability-nya masih minim. Penelitian ini mengevaluasi performa serta menganalisis explainability dari enam model FL dengan empat paradigma agregasi yang berbeda, yaitu Logistic Regression (LR) dan Support Vector Machine (SVM) dengan FedAvg, Gradient Boosting Machine (GBM) dengan best-model selection, FFD dan BERT dengan accuracy-weighted FedAvg, serta FedXGBllr dengan tree ensemble aggregation. Penelitian dilakukan menggunakan tiga dataset, yaitu Paysim, ULB Credit Card, dan Bank Account Fraud (BAF) pada simulasi cross-silo FL berbasis kerangka kerja Flower dengan partisi Dirichlet untuk simulasi kondisi Non-IID dan penerapan SMOTE lokal untuk menangani class imbalance. Evaluasi menggunakan AUPRC sebagai metrik utama sementara analisis explainability dilakukan menggunakan SHAP values per-client untuk mengukur stabilitas feature importance. Hasil penelitian FL menunjukkan AUPRC maksimal dengan nilai 0,996 dan AUPRC minimal dengan nilai 0,311 pada dataset PaySim. Adapun hasil evaluasi keseluruhan menunjukkan bahwa terdapat banyak faktor yang dapat memengaruhi hasil performa. Lebih dari itu, dampak penurunan performa paling signifikan disebabkan oleh interaksi antara suatu paradigma agregasi, kondisi heterogenitas data, dan juga penanganan class imbalance.
 
-#v(1em)
+#v(0.6em)
 #par(first-line-indent: 0pt)[
   #text(weight: "bold")[Kata Kunci:] Federated Learning, Financial Fraud Detection, FedXGBllr, Explainable AI, SHAP, Non-IID.
 ]
@@ -205,7 +201,7 @@ Digitalisasi sektor keuangan telah meningkatkan risiko financial fraud yang sema
 #block(align(left, text(size: 13pt, weight: "bold")[Abstract]))
 
 #v(1em)
-The digitalization of the financial sector has heightened the risk of increasingly complex financial fraud, while centralized machine learning approaches face limitations regarding privacy and regulatory compliance. Federated Learning (FL) offers an alternative for cross-institutional collaboration without sharing raw data; however, the exploration of tree-based models in FL for fraud detection remains limited, and no systematic comparison exists between gradient-based and tree-based models under Non-IID conditions and extreme class imbalance. This study evaluates the performance and analyzes the explainability of six FL models built upon four different aggregation paradigms, namely Logistic Regression and Support Vector Machine with FedAvg, Gradient Boosting Machine with best-model selection, FFD (1D-CNN) and BERT (tabular Transformer) with accuracy-weighted FedAvg, and FedXGBllr with tree ensemble aggregation. Experiments are conducted using three datasets, namely PaySim as the primary benchmark, ULB Credit Card as a cross-domain comparison, and Bank Account Fraud (BAF) as a dataset with real, semantically meaningful features that strengthens the interpretability analysis, in a cross-silo simulation on the Flower framework, with Dirichlet partitioning to model data heterogeneity across clients and local application of SMOTE to address class imbalance. Evaluation employs AUPRC as the primary metric, supported by F1-score, Precision, and Recall, while explainability analysis is conducted through per-client SHAP values to measure feature importance stability under Non-IID conditions. This study is expected to deliver the first systematic benchmark integrating four FL aggregation paradigms in financial fraud detection, the first empirical evidence of FedXGBllr performance under extreme class imbalance and Non-IID conditions, and an initial contribution to Explainable Federated Learning through stability analysis of SHAP interpretations across model paradigms.
+The digitalization of the financial sector has increased not only the risk of financial fraud but also its complexity. Although financial fraud detection has advanced through centralized machine learning, this approach is constrained by privacy considerations that are critical in the financial sector. Federated Learning (FL) offers an alternative for cross-institutional collaboration without any movement of raw data. However, the exploration of tree-based models in FL for financial fraud detection remains limited, and studies comparing a range of models under Non-IID conditions and extreme class imbalance, together with their explainability analysis, are still scarce. This study evaluates the performance and analyzes the explainability of six FL models built upon four different aggregation paradigms, namely Logistic Regression (LR) and Support Vector Machine (SVM) with FedAvg, Gradient Boosting Machine (GBM) with best-model selection, FFD and BERT with accuracy-weighted FedAvg, and FedXGBllr with tree ensemble aggregation. The experiments are conducted on three datasets, namely PaySim, ULB Credit Card, and Bank Account Fraud (BAF), in a cross-silo FL simulation on the Flower framework, with Dirichlet partitioning to simulate Non-IID conditions and local application of SMOTE to address class imbalance. Evaluation uses AUPRC as the primary metric, while the explainability analysis uses per-client SHAP values to measure feature importance stability. The federated results show a maximum AUPRC of 0.996 and a minimum AUPRC of 0.311 on the PaySim dataset. The overall evaluation indicates that many factors can affect the resulting performance. Beyond that, the most significant performance degradation stems from the interaction between a given aggregation paradigm, the data heterogeneity condition, and the class imbalance handling.
 
 #v(1em)
 #par(first-line-indent: 0pt)[
@@ -220,39 +216,7 @@ The digitalization of the financial sector has heightened the risk of increasing
 
 #heading("KATA PENGANTAR", numbering: none)
 
-// Typst 0.13+ removed par(indent: ...)
-// Use explicit first-line indentation if needed: #indent[content]
-
-#v(1.5em)
-
-*Assalamu'alaikum warahmatullahi wabarakatuh.*
-
-Puji dan syukur ke hadirat Allah SWT atas segala limpahan nikmat dan
-rahmat-Nya sehingga penulis dapat menyelesaikan Tugas Akhir ini dengan judul "#title.id" sebagai salah satu syarat
-untuk memperoleh gelar #program.title di #program.department, #program.university.
-
-Penulisan Tugas Akhir ini tidak akan terlaksana dengan baik tanpa bimbingan, dukungan, dan motivasi dari berbagai pihak. Oleh karena itu, penulis ingin menyampaikan ucapan terima kasih yang sebesar-besarnya kepada:
-
-+ *Bapak/Ibu Dosen Pembimbing 1* dan *Bapak/Ibu Dosen Pembimbing 2* atas bimbingan, saran, serta kesabaran dalam mengarahkan penulis selama proses penyusunan Tugas Akhir ini.
-+ *Bapak/Ibu Penguji Sidang* yang telah memberikan masukan, kritik, dan saran konstruktif demi perbaikan karya ini.
-+ Seluruh *partisipan penguji aplikasi* yang telah meluangkan waktu dan memberikan feedback berharga untuk pengembangan sistem ini.
-+ Keluarga, teman-teman, dan rekan-rekan seperjuangan yang selalu memberikan dukungan moral dan semangat kepada penulis.
-
-Penulis sangat menyadari bahwa penulisan Tugas Akhir ini masih jauh dari sempurna, oleh karena itu penulis mengharapkan kritik dan saran yang membangun untuk perbaikan di masa mendatang. Semoga hasil penelitian ini dapat bermanfaat bagi perkembangan ilmu pengetahuan dan teknologi.
-
-Akhir kata, penulis mengharapkan semoga hasil dari penulisan dan penelitian
-ini dapat memberikan informasi yang bermanfaat bagi para pembaca.
-
-*Wassalamu'alaikum warahmatullahi wabarakatuh.*
-
-#v(2em)
-#align(right)[
-  Surabaya, #dates.writingPeriod \
-  \
-  \
-  \
-  Penulis
-]
+// Body intentionally left empty — title only, per the author (2026-10-05).
 
 #pagebreak()
 
@@ -322,8 +286,7 @@ ini dapat memberikan informasi yang bermanfaat bagi para pembaca.
 
 #heading(upper("Lampiran A. Konfigurasi Eksperimen"), numbering: none)
 
-// TODO: lengkapi lampiran dengan konfigurasi eksperimen final (hyperparameter, seed, environment) saat penyusunan buku Tugas Akhir.
-Lampiran ini akan memuat rincian konfigurasi eksperimen, termasuk daftar hyperparameter lengkap, random seed, serta spesifikasi lingkungan komputasi yang digunakan dalam penelitian.
+// Body intentionally left empty — title only, per the author (2026-10-05).
 
 #pagebreak()
 
@@ -333,21 +296,4 @@ Lampiran ini akan memuat rincian konfigurasi eksperimen, termasuk daftar hyperpa
 
 #heading("BIOGRAFI PENULIS", numbering: none)
 
-// TODO: tulis biografi penulis (tidak ada di Proposal TA v2.1; diisi saat penyusunan buku Tugas Akhir).
-#grid(
-  columns: (1fr, 2fr),
-  column-gutter: 1em,
-  block()[
-    #image("resources/profile-picture.jpg")
-  ],
-  [
-    *Amadeo Yesa*, lahir dan menempuh pendidikan sarjana di Program Studi S1 Teknik
-    Informatika, Departemen Teknik Informatika, Fakultas Teknologi Elektro dan Informatika
-    Cerdas, Institut Teknologi Sepuluh Nopember (ITS), Surabaya. Penulis memiliki minat pada
-    bidang machine learning, federated learning, dan explainable artificial intelligence.
-  ]
-)
-#block(
-  inset: (left: 0em, top: -0.5em),
-  [Penulis dapat dihubungi melalui surel untuk keperluan diskusi terkait Tugas Akhir ini.]
-)
+// Body intentionally left empty — title only, per the author (2026-10-05).

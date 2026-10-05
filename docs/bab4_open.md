@@ -440,3 +440,128 @@ longer referenced, the SMOTE geometry diagnostic having been removed.
 
 Two of those seven were orphaned by this programme (`fig-4-rq3-stability.png` in
 B1, `fig-3-4-smote-geometry-baf.png` here); the other five predate it.
+
+---
+
+# BAB 5 applied — the thesis is complete
+
+Appended 2026-09-27, when BAB 5 was replaced with the author's text
+(`naskah-bab-5.md`). **All five chapters are now the author's own words.** The
+five-phase programme is closed.
+
+One authorised deviation from the naskah, by the author's ruling: the four BAF
+figures in §5.1's first claim were rounded from four decimals to three
+(0,1670 → 0,167 · 0,1620 → 0,162 · 0,1581 → 0,158 · 0,1515 → 0,151), matching
+Tabel 4.2 as rendered and the author's own ULB figures one sentence earlier.
+`naskah-bab-5.md` was updated to match so source and chapter do not drift.
+Old SHA-256 `3b2c50d762258181…`, new `e151dd1c3ee513c7…`.
+
+---
+
+## 17. The three inherited claims — ALL CLOSED
+
+Entries 6 and 11 tracked three BAB 5 claims left unsupported by the author's
+chapters 1–4. **The author's own BAB 5 resolves all three by not making them.**
+Searched `naskah-bab-5.md`:
+
+1. **The "21 seed" figure** — zero occurrences of `21`, `danger`, `noise`,
+   `geometri`, `wireframe`, `segmen`. The claim is gone; nothing now depends on
+   the removed SMOTE geometry diagnostic.
+2. **The one-hot fractional-value premise** — zero occurrences of `pecahan`,
+   `one-hot`, `housing_status`, `bukan sekadar sitasi`, `interpolasi kontinu`,
+   `eksklusif`. The new Saran item 3 names SMOTE-NC as one option to compare,
+   with no mechanism claim attached, so it needs no support from the removed
+   §2.2.6.2.
+3. **The SMOTE variant survey** — zero occurrences of `borderline`,
+   `safe-level`, `hibrida`, `pembersihan`, `perbatasan`. The three variant
+   citations are no longer made.
+
+**Entries 6 and 11 are closed.** Nothing in the finished thesis rests on material
+the author removed.
+
+---
+
+## 18. Final bibliography orphan count
+
+The old BAB 5 cited 12 keys; 3 of those (`chawla2002smote`, `ma2023fedxgbllr`,
+`mcmahan2023fedavg`) are also cited in chapters 1–4 and survive. **The new BAB 5
+cites nothing at all** — zero `@key`, zero author-year parentheticals, zero
+`#cite`.
+
+**Nine keys became orphaned with this replacement**, exactly as predicted:
+
+`batista2004balancing` · `blagus2013smote` · `bunkhumpornpat2009safelevel` ·
+`duan2019astraea` · `elreedy2019smote` · `goorbergh2022harm` ·
+`han2005borderline` · `wang2021fedimbalance` · `weiss2007costsensitive`
+
+**Final state: 36 of 65 keys cited, 29 uncited** — the eleven from entry 12, these
+nine, and nine that were already unused before this programme began.
+
+`buku/thesis.typ:314` sets **`full: false`**, so an uncited key never reaches
+DAFTAR PUSTAKA. Confirmed in the finished document. Every key stays in
+`bibliography.bib`; nothing was removed.
+
+**Two methods are named in Saran item 3 without attribution** — **SMOTE-NC** and
+**cost-sensitive learning** (also **random undersampling**). The old items cited
+`chawla2002smote`, `blagus2013smote` and `weiss2007costsensitive` for these. The
+author's call whether to restore citations; **none was added.**
+
+---
+
+## 19. Saran item 4's premise — supported, but not quantified
+
+Item 4 ends: *"Selain penjelasan yang mengikuti proporsi kelas, analisis khusus
+pada sampel fraud diperlukan agar ringkasan feature importance tidak terutama
+merepresentasikan transaksi non-fraud."*
+
+**The premise holds.** The author's BAB 3 says it twice — §3.3.5: *"Pengambilan
+sampel mengikuti proporsi kelas pada test set sejauh dimungkinkan oleh ukuran
+subset. Jumlah fraud yang benar-benar terpilih turut dicatat karena prevalensi
+yang rendah dapat menghasilkan sangat sedikit sampel fraud dalam explanation
+data."* And §3.4.5: *"pemilihan explanation data mengikuti proporsi kelas dengan
+ketentuan sedikitnya satu sampel fraud."*
+
+**What is absent is the magnitude.** The floor is `max(1, round(500 × prevalence))`
+(`experiments/shap_rq3.py:619`, `experiments/shap_analysis.py:198`), which gives:
+
+| dataset | prevalence | fraud rows in the 500 |
+|---|---|---|
+| PaySim | 0,00129 | **1** |
+| ULB | 0,00173 | **1** |
+| BAF | 0,01103 | **6** |
+
+So *"sangat sedikit"* means **exactly one** on two of three datasets. **The
+author's call whether to state the counts.** Nothing changed.
+
+---
+
+## 20. Saran item 6 needs nothing — CLOSED
+
+Item 6 refers to *"penyederhanaan simulasi penelitian ini"*. The federated-
+evaluation caveat that stated this was in old §3.2.4, which the author's BAB 3
+dropped — but chapters 1–4 establish the centralisation in three places:
+
+- **BAB 1 §1.3** — *"Validation set dan test set dipertahankan secara terpusat
+  sebagai **penyederhanaan simulasi**."* The exact phrase item 6 echoes.
+- **BAB 3 §3.3.1** — validation and test sets *"dipertahankan secara terpusat di
+  server simulasi"*; and *"Pembagian global dilakukan sebelum penentuan parameter
+  preprocessing… Nilai imputasi dan parameter scaling dipelajari hanya dari
+  training set"* — the scaler is fit before partitioning, so preprocessing is
+  centralised too.
+- **BAB 3 §3.3.5** — *"Evaluasi performa dilakukan menggunakan test set terpusat
+  yang sama untuk seluruh konfigurasi."*
+
+Only the old caveat's *normative* half is gone — that production FL should
+evaluate in a distributed way. **Item 6 supplies that itself.** Closed.
+
+---
+
+## 21. `<sec-hasil-rq3>` now has zero references
+
+The label is defined on §4.3's heading (`content.typ:2603`) and referenced
+**nowhere**: BAB 3's reference went with the B3 replacement, and BAB 5's two went
+with this one.
+
+**Harmless** — Typst does not warn on an unreferenced label, and the compile is
+clean. **The label was not removed**, and §4.3 is frozen in any case. It costs
+nothing and would be needed again if any chapter later cross-references §4.3.

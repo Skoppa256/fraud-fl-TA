@@ -1,0 +1,51 @@
+diff --git a/analysis/figures/_common.py b/analysis/figures/_common.py
+index d8100ac..53e44c4 100644
+--- a/analysis/figures/_common.py
++++ b/analysis/figures/_common.py
+@@ -65,7 +65,7 @@ PARADIGM_LABEL = {
+     "FedAvg": "FedAvg",
+     "best-model-selection": "Best-model selection",
+     "accuracy-weighted-FedAvg": "Accuracy-weighted FedAvg",
+-    "tree-ensemble+CNN-FedAvg": "Tree ensemble aggregation + learnable LR",
++    "tree-ensemble+CNN-FedAvg": "Tree ensemble aggregation + Learnable LR",
+ }
+ PARADIGM_ORDER = ["FedAvg", "best-model-selection", "accuracy-weighted-FedAvg",
+                   "tree-ensemble+CNN-FedAvg"]
+diff --git a/analysis/figures/fig_4_1_minority_typology.py b/analysis/figures/fig_4_1_minority_typology.py
+index caf65e8..1d3bd91 100644
+--- a/analysis/figures/fig_4_1_minority_typology.py
++++ b/analysis/figures/fig_4_1_minority_typology.py
+@@ -26,6 +26,8 @@ import numpy as np
+ import _common as C
+ 
+ TYPES = ["safe", "borderline", "rare", "outlier"]
++# bottom-to-top order of the existing figure: PaySim, ULB, BAF (BAF on top)
++ORDER = ["PaySim", "ULB", "BAF"]
+ TABLE_LABEL = "<tab-typology>"
+ 
+ 
+@@ -61,8 +63,6 @@ def table_values() -> dict:
+         C.fail(f"{content}: {TABLE_LABEL} rows found for {sorted(out)}, "
+                f"expected {ORDER}")
+     return out
+-# bottom-to-top order of the existing figure: PaySim, ULB, BAF (BAF on top)
+-ORDER = ["PaySim", "ULB", "BAF"]
+ 
+ 
+ def main() -> None:
+diff --git a/buku/template.typ b/buku/template.typ
+index 830cb63..de4311c 100644
+--- a/buku/template.typ
++++ b/buku/template.typ
+@@ -783,7 +783,10 @@ align(right)[
+   ]
+ 
+   //? Image
+-  show figure.where(kind: image): it => context [
++  // Wrapped in a non-breakable block: without it the image and its caption are
++  // plain flow content, and a long caption can split onto the next page away
++  // from its figure. (Tables keep the old rule so long tables can still break.)
++  show figure.where(kind: image): it => context block(breakable: false, width: 100%)[
+     #set text(size: 10pt)
+     #it.body
+     Gambar #counter(heading.where(level: 1)).display("1").#it.counter.display(it.numbering). #it.caption.body

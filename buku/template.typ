@@ -273,19 +273,19 @@
     gutter: 1em,
     align: left,
     [Dosen Penguji], [Dosen Pembimbing],
-    [#image(examiners.at(0).sign, width: 3cm)],
-    [#image(supervisors.at(0).sign, width: 3cm)],
+    [#box(width: 3cm, height: 1.55cm)],
+    [#box(width: 3cm, height: 1.55cm)],
     [#examiners.at(0).name],
     [#supervisors.at(0).name],
     [NIP: #examiners.at(0).nip],
     [NIP: #supervisors.at(0).nip],
-    [#image(examiners.at(1).sign, width: 3cm)],
-    [#image(supervisors.at(1).sign, width: 3cm)],
+    [#box(width: 3cm, height: 1.55cm)],
+    [#box(width: 3cm, height: 1.55cm)],
     [#examiners.at(1).name],
     [#supervisors.at(1).name],
     [NIP: #examiners.at(1).nip],
     [NIP: #supervisors.at(1).nip],
-    [#image(examiners.at(2).sign, width: 3cm)],
+    [#box(width: 3cm, height: 1.55cm)],
     [],
     [#examiners.at(2).name],
     [],
@@ -447,7 +447,7 @@
       #set par(leading: 0.6em)
       #program.city, #dates.writing \
       Mahasiswa \
-      #image(sign, width: 3cm)
+      #box(width: 3cm, height: 1.55cm) \
       #author \
       NRP: #nrp
     ]
@@ -463,7 +463,7 @@
     align: center,
     [Dosen Pembimbing],
     [Dosen Ko-pembimbing],
-    [#image(supervisors.at(0).sign, width: 3cm)], [#image(supervisors.at(1).sign, width: 3cm)],
+    [#box(width: 3cm, height: 1.55cm)], [#box(width: 3cm, height: 1.55cm)],
     [#supervisors.at(0).name \ NIP: #supervisors.at(0).nip],
     [#supervisors.at(1).name \ NIP: #supervisors.at(1).nip],
   )
@@ -515,7 +515,7 @@
       #set par(leading: 0.6em)
       #program.city, #dates.writing \
       Student \
-      #image(sign, width: 3cm)
+      #box(width: 3cm, height: 1.55cm) \
       #author \
       NRP: #nrp
     ]
@@ -531,7 +531,7 @@
     align: center,
     [Advisor],
     [Co-advisor],
-    [#image(supervisors.at(0).sign, width: 3cm)], [#image(supervisors.at(1).sign, width: 3cm)],
+    [#box(width: 3cm, height: 1.55cm)], [#box(width: 3cm, height: 1.55cm)],
     [#supervisors.at(0).name \ NIP: #supervisors.at(0).nip],
     [#supervisors.at(1).name \ NIP: #supervisors.at(1).nip],
   )
@@ -776,6 +776,12 @@ align(right)[
 
   // ---- 3. Figure-caption style ----
   //? Table
+  // A table taller than one page must be able to split, or its caption pushes it
+  // past the bottom margin and rows run off the page (seen with <tab-4-rq3-smote>,
+  // 686pt). Tables that must stay whole are wrapped in #block(breakable: false)
+  // at the call site, and that wrapper still wins over this.
+  show figure.where(kind: table): set block(breakable: true)
+
   show figure.where(kind: table): it => context [
     #set text(size: 10pt)
     Tabel #counter(heading.where(level: 1)).display("1").#it.counter.display(it.numbering). #it.caption.body
@@ -783,7 +789,10 @@ align(right)[
   ]
 
   //? Image
-  show figure.where(kind: image): it => context [
+  // Wrapped in a non-breakable block: without it the image and its caption are
+  // plain flow content, and a long caption can split onto the next page away
+  // from its figure. (Tables keep the old rule so long tables can still break.)
+  show figure.where(kind: image): it => context block(breakable: false, width: 100%)[
     #set text(size: 10pt)
     #it.body
     Gambar #counter(heading.where(level: 1)).display("1").#it.counter.display(it.numbering). #it.caption.body

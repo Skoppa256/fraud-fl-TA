@@ -1,0 +1,226 @@
+diff --git a/analysis/figures/_common.py b/analysis/figures/_common.py
+index 4b9003b..d8100ac 100644
+--- a/analysis/figures/_common.py
++++ b/analysis/figures/_common.py
+@@ -65,7 +65,7 @@ PARADIGM_LABEL = {
+     "FedAvg": "FedAvg",
+     "best-model-selection": "Best-model selection",
+     "accuracy-weighted-FedAvg": "Accuracy-weighted FedAvg",
+-    "tree-ensemble+CNN-FedAvg": "Tree ensemble aggregation",
++    "tree-ensemble+CNN-FedAvg": "Tree ensemble aggregation + learnable LR",
+ }
+ PARADIGM_ORDER = ["FedAvg", "best-model-selection", "accuracy-weighted-FedAvg",
+                   "tree-ensemble+CNN-FedAvg"]
+@@ -200,9 +200,10 @@ def resolved_font() -> str:
+ 
+ 
+ def apply_style() -> None:
++    font = resolved_font()
+     plt.rcParams.update({
+         "font.family": "sans-serif",
+-        "font.sans-serif": [resolved_font()],
++        "font.sans-serif": [font],
+         "font.size": 9,
+         "axes.titlesize": 9.5,
+         "axes.labelsize": 9,
+@@ -219,6 +220,15 @@ def apply_style() -> None:
+         "savefig.dpi": 300,
+         "svg.fonttype": "none",
+         "pdf.fonttype": 42,
++        # mathtext ($H_0$, ...) in the body font instead of DejaVu, so a
++        # subscript never depends on the font having U+2080-style glyphs
++        "mathtext.fontset": "custom",
++        "mathtext.rm": font,
++        "mathtext.it": f"{font}:italic",
++        "mathtext.bf": f"{font}:bold",
++        "mathtext.sf": font,
++        "mathtext.cal": font,   # unused; set so matplotlib stops hunting for 'cursive'
++        "mathtext.tt": "DejaVu Sans Mono",
+     })
+ 
+ 
+@@ -238,9 +248,27 @@ def save(fig, name: str) -> Path:
+         "Source": "; ".join(f"{p} sha256:{h}" for p, h in sorted(_SOURCES.items())),
+         "Generator": rel(Path(sys.argv[0])) if sys.argv and sys.argv[0] else "",
+     }
+-    fig.savefig(out, dpi=300, bbox_inches="tight", pad_inches=0.04,
+-                facecolor="white", metadata=meta)
++    # A glyph the font lacks is drawn as an empty box ("tofu") and matplotlib
++    # only warns. Which glyphs exist depends on the machine's font (Liberation
++    # Sans has U+2080, Arial does not), so this is checked on every save and a
++    # missing glyph is a hard error, never a degraded figure reported as written.
++    import warnings
++    with warnings.catch_warnings(record=True) as caught:
++        warnings.simplefilter("always")
++        fig.savefig(out, dpi=300, bbox_inches="tight", pad_inches=0.04,
++                    facecolor="white", metadata=meta)
++    missing = sorted({str(w.message) for w in caught
++                      if "missing from font" in str(w.message)})
+     plt.close(fig)
++    if missing:
++        out.unlink(missing_ok=True)
++        fail(f"{name}: font {plt.rcParams['font.sans-serif'][0]!r} lacks glyph(s) "
++             f"used in the figure, which would render as empty boxes:\n  "
++             + "\n  ".join(missing)
++             + f"\n  {out} was not written; replace the character (e.g. use "
++               f"mathtext $H_0$) or install a font that has it.")
++    for w in caught:   # anything else matplotlib warned about stays visible
++        warnings.warn_explicit(w.message, w.category, w.filename, w.lineno)
+     print(f"wrote {rel(out)}")
+     for p, h in sorted(_SOURCES.items()):
+         print(f"  from {p}  (sha256 {h})")
+diff --git a/analysis/figures/fig_3_4_two_seeds_gap.py b/analysis/figures/fig_3_4_two_seeds_gap.py
+index bfe5b2f..589e72a 100644
+--- a/analysis/figures/fig_3_4_two_seeds_gap.py
++++ b/analysis/figures/fig_3_4_two_seeds_gap.py
+@@ -190,7 +190,7 @@ def main() -> None:
+     axB.set_xlabel("Spearman ρ", fontsize=8)
+ 
+     fig.text(0.004, 0.035,
+-             "Di bawah H₀ kedua sebaran berimpit, sehingga “pada atau di bawah "
++             "Di bawah $H_0$ kedua sebaran berimpit, sehingga “pada atau di bawah "
+              "floor” bukan kriteria deteksi.\nUji eksak menyusun ulang "
+              f"ke-{2 * K} vektor atas seluruh {nm} perfect matching: "
+              f"p = {C.idn(p, 6)}.", fontsize=7.6, color=C.INK2, va="bottom",
+diff --git a/analysis/figures/fig_4_1_minority_typology.py b/analysis/figures/fig_4_1_minority_typology.py
+index 4bd0d2e..caf65e8 100644
+--- a/analysis/figures/fig_4_1_minority_typology.py
++++ b/analysis/figures/fig_4_1_minority_typology.py
+@@ -9,7 +9,9 @@ Typst source stays byte-identical).
+ Source: analysis/separability/separability_summary.csv, written by
+ analysis/separability/separability_analysis.py (Napierala & Stefanowski typology,
+ k = 5). The four shares per dataset must sum to 100% (to the CSV's 2-dp rounding)
+-and must agree with rare_plus_outlier_pct, or the script aborts.
++and must agree with rare_plus_outlier_pct, or the script aborts. The segment labels
++(one decimal, round-half-even) must also equal the values printed in BAB 4's
++<tab-typology>, which this figure sits next to; content.typ is only read.
+ 
+ The bar labels carry the dataset's dimensionality (`dimensionality` column) rather
+ than a minority count: the count the typology was computed on is not in the CSV
+@@ -24,6 +26,41 @@ import numpy as np
+ import _common as C
+ 
+ TYPES = ["safe", "borderline", "rare", "outlier"]
++TABLE_LABEL = "<tab-typology>"
++
++
++def pct1(x: float) -> str:
++    """One decimal, round-half-even on the CSV's decimal text (6.65 -> 6,6), the
++    rule that reproduces every value typed into <tab-typology>."""
++    from decimal import ROUND_HALF_EVEN, Decimal
++    return C.idn(float(Decimal(repr(float(x))).quantize(Decimal("0.1"),
++                                                         ROUND_HALF_EVEN)), 1)
++
++
++def table_values() -> dict:
++    """The four shares per dataset as printed in BAB 4's <tab-typology>
++    (read-only), keyed by dataset -> [safe, borderline, rare, outlier]."""
++    import re
++    content = C.PROJECT_ROOT / "buku" / "content.typ"
++    if not content.is_file():
++        C.fail(f"thesis source not found.\n  looked in: {content}")
++    lines = content.read_text(encoding="utf-8").splitlines()
++    end = next((i for i, l in enumerate(lines) if TABLE_LABEL in l), None)
++    if end is None:
++        C.fail(f"{TABLE_LABEL} not found in {content}")
++    start = max(i for i in range(end) if lines[i].lstrip().startswith("#figure("))
++    out = {}
++    for l in lines[start:end]:
++        m = re.match(r"\s*\[(\w+)\],\s*\[\d+\],(.*)", l)
++        if m and m.group(1) in ORDER:
++            cells = re.findall(r"\[\*?([0-9]+,[0-9])%\*?\]", m.group(2))
++            if len(cells) != 5:
++                C.fail(f"{content}: cannot parse {TABLE_LABEL} row: {l.strip()}")
++            out[m.group(1)] = cells[:4]
++    if set(out) != set(ORDER):
++        C.fail(f"{content}: {TABLE_LABEL} rows found for {sorted(out)}, "
++               f"expected {ORDER}")
++    return out
+ # bottom-to-top order of the existing figure: PaySim, ULB, BAF (BAF on top)
+ ORDER = ["PaySim", "ULB", "BAF"]
+ 
+@@ -47,6 +84,15 @@ def main() -> None:
+             C.fail(f"{d}: rare+outlier ({r['rare_pct'] + r['outlier_pct']:.2f}) "
+                    f"!= rare_plus_outlier_pct ({r['rare_plus_outlier_pct']})")
+ 
++    # The figure sits next to <tab-typology> in BAB 4; the two must print the
++    # same numbers. A mismatch means the CSV or the table moved: stop and say so.
++    tab = table_values()
++    for d in ORDER:
++        mine = [pct1(df.loc[d, c]) for c in cols]
++        if mine != tab[d]:
++            C.fail(f"{d}: figure labels {mine} disagree with {TABLE_LABEL} {tab[d]} "
++                   f"(source {C.SEPARABILITY}); fix the table or the data, not this check.")
++
+     fig, ax = plt.subplots(figsize=(C.TEXT_WIDTH_IN, 2.05))
+     y = np.arange(len(ORDER))
+     left = np.zeros(len(ORDER))
+@@ -55,11 +101,10 @@ def main() -> None:
+         ax.barh(y, v, left=left, height=0.72, color=C.TYPOLOGY_COLORS[t],
+                 edgecolor="white", linewidth=0.8, label=t)
+         for yi, (l, w) in enumerate(zip(left, v)):
+-            # Whole percents, as in the figure this replaces: one decimal would
+-            # need a tie rule (BAF borderline is 6.65 in the CSV) and could
+-            # disagree with the 1-dp values typed into <tab-typology>.
+-            if w >= 4:
+-                ax.text(l + w / 2, yi, f"{C.idn(w, 0)}%", ha="center", va="center",
++            # one decimal, same rounding as <tab-typology> (checked above);
++            # segments under 5% are too narrow to hold a label
++            if w >= 5:
++                ax.text(l + w / 2, yi, f"{pct1(w)}%", ha="center", va="center",
+                         fontsize=7.8, color="white", fontweight="bold")
+         left += v
+     ax.set_yticks(y)
+diff --git a/analysis/figures/make_all.py b/analysis/figures/make_all.py
+index 5440339..feae608 100644
+--- a/analysis/figures/make_all.py
++++ b/analysis/figures/make_all.py
+@@ -35,20 +35,27 @@ GENERATORS = {
+ # every figure these two chapters render today is built from experiment data.
+ EXTERNAL: set = set()
+ 
+-CHAPTER_START = "= METODOLOGI"
+-CHAPTER_END = "= PENUTUP"
++# BAB 3 and BAB 4 are found by POSITION, not by title: they are the 3rd and 4th
++# level-1 headings (`= ...`) in content.typ, and BAB 4 ends at the 5th heading or
++# at end of file. Matching on titles broke as soon as BAB 5 was renamed
++# ("= PENUTUP" -> "= KESIMPULAN DAN SARAN"), and the guard then failed on every
++# run without ever reaching the coverage check.
++FIRST_BAB, LAST_BAB = 3, 4
+ 
+ 
+ def chapter_images() -> list:
+     if not CONTENT.is_file():
+         raise SystemExit(f"FATAL: thesis source not found.\n  looked in: {CONTENT}")
+     lines = CONTENT.read_text(encoding="utf-8").splitlines()
+-    try:
+-        a = next(i for i, l in enumerate(lines) if l.strip() == CHAPTER_START)
+-        b = next(i for i, l in enumerate(lines) if l.strip() == CHAPTER_END)
+-    except StopIteration:
+-        raise SystemExit(f"FATAL: could not find '{CHAPTER_START}' / '{CHAPTER_END}' "
+-                         f"headings in {CONTENT}")
++    heads = [i for i, l in enumerate(lines) if re.match(r"= \S", l)]
++    if len(heads) < LAST_BAB:
++        raise SystemExit(f"FATAL: found {len(heads)} level-1 headings in {CONTENT}; "
++                         f"need at least {LAST_BAB} to locate BAB {FIRST_BAB}-{LAST_BAB}.")
++    a = heads[FIRST_BAB - 1]
++    b = heads[LAST_BAB] if len(heads) > LAST_BAB else len(lines)
++    end_name = lines[b].strip() if b < len(lines) else "end of file"
++    print(f"scanning BAB {FIRST_BAB}-{LAST_BAB}: '{lines[a].strip()}' "
++          f"(line {a + 1}) up to '{end_name}'")
+     out = []
+     for l in lines[a:b]:
+         if l.lstrip().startswith("//"):
+diff --git a/buku/content.typ b/buku/content.typ
+index b4b3df5..e2e6523 100644
+--- a/buku/content.typ
++++ b/buku/content.typ
+@@ -1361,7 +1361,7 @@ lapisan evaluasi yang mencakup pengukuran performa dan analisis explainability.
+ Arsitektur umum sistem disajikan pada @fig-3-2.
+ 
+ #figure(
+-  image("resources/fig-3-2-logical-layers.png", width: 88%),
++  image("resources/fig-3-2-logical-layers.png", width: 100%),
+   caption: [Lapisan logis sistem penelitian.],
+ ) <fig-3-2>
+ 
