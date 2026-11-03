@@ -35,6 +35,11 @@
   inside: 3.0cm,
   outside: 2.0cm,
 )
+// Text area of an A4 page under standard-margin.
+#let text-area = (
+  width: 21cm - standard-margin.inside - standard-margin.outside,
+  height: 29.7cm - standard-margin.top - standard-margin.bottom,
+)
 #let tz = (offset: "+07", iana: "Asia/Jakarta")
 
 //=============================================================================
@@ -775,25 +780,39 @@ align(right)[
   }
 
   // ---- 3. Figure-caption style ----
+  // All figure and table design lives here. In content.typ a table passes only
+  // its columns, cells and caption, and an image only its path and caption.
   //? Table
-  // A table taller than one page must be able to split, or its caption pushes it
-  // past the bottom margin and rows run off the page (seen with <tab-4-rq3-smote>,
-  // 686pt). Tables that must stay whole are wrapped in #block(breakable: false)
-  // at the call site, and that wrapper still wins over this.
-  show figure.where(kind: table): set block(breakable: true)
-
-  show figure.where(kind: table): it => context [
-    #set text(size: 10pt)
-    Tabel #counter(heading.where(level: 1)).display("1").#it.counter.display(it.numbering). #it.caption.body
-    #it.body
-  ]
+  // A table stays whole with its caption. Only one taller than a page may split,
+  // because a whole block that size runs off the bottom margin; its table.header
+  // then repeats on the next page. Rows never split, and code identifiers may
+  // wrap at an underscore so a long one cannot overflow into the next column.
+  // Cells are not justified, which stretches narrow columns, but still hyphenate
+  // so that a long word stays inside its cell.
+  show figure.where(kind: table): it => context {
+    let body = [
+      #set text(size: 10pt, hyphenate: true)
+      #set par(justify: false)
+      #set table.cell(breakable: false)
+      #show table.cell.where(y: 0): strong
+      #show raw: code => {
+        show "_": "_" + sym.zws
+        code
+      }
+      Tabel #counter(heading.where(level: 1)).display("1").#it.counter.display(it.numbering). #it.caption.body
+      #it.body
+    ]
+    set block(breakable: measure(width: text-area.width, body).height > text-area.height)
+    block(width: 100%, body)
+  }
 
   //? Image
   // Wrapped in a non-breakable block: without it the image and its caption are
   // plain flow content, and a long caption can split onto the next page away
-  // from its figure. (Tables keep the old rule so long tables can still break.)
+  // from its figure.
   show figure.where(kind: image): it => context block(breakable: false, width: 100%)[
     #set text(size: 10pt)
+    #set image(width: 80%)
     #it.body
     Gambar #counter(heading.where(level: 1)).display("1").#it.counter.display(it.numbering). #it.caption.body
   ]

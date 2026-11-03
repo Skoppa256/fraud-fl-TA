@@ -75,6 +75,22 @@ behaviour/config/dependency change") rather than skipping the question silently.
   the table outline. This has bitten once. Every table in `content.typ` carries
   `kind: table` — copy an existing one rather than writing a `#figure` from
   scratch.
+- **All figure and table design lives in `buku/template.typ`, never at the call
+  site** (author's instruction, 2026-10-31). A table passes only `kind: table`,
+  `columns` (all `auto`), its cells (`table.header`, `rowspan`, `colspan`), a
+  caption and a label. An image passes only its path, a caption and a label. No
+  `text(size:)`, `align`, `inset`, `stroke`, `fill`, `width`, `#set`,
+  `table.hline`, `#block` wrapper or manual `#pagebreak()` inside a chapter. The
+  template supplies 10pt text, a bold first header row, centred non-justified
+  cells that still hyphenate, rows that never split, code identifiers that wrap
+  at `_`, images at 80% width, and tables that stay whole with their caption
+  unless taller than a page, in which case they split and repeat their header.
+  If one table or figure renders badly, change the global rule or raise it with
+  the author; do not style that element. Bold on a single data cell
+  (`<tab-4-cal-slope>` group rows, `<tab-4-baf-auprc-bench>`, `<tab-typology>`)
+  is content emphasis and stays. The same rule covers the front matter: ABSTRAK
+  and ABSTRACT use the template's spacing, so a long abstract runs onto a second
+  page rather than being squeezed.
 - Figure and table counters reset per BAB (`template.typ` resets both at each
   numbered level-1 heading), so numbers are per-chapter and shift whenever a
   figure or table is inserted earlier in the same chapter.
@@ -96,6 +112,70 @@ behaviour/config/dependency change") rather than skipping the question silently.
   before moving it. A line-range grab once carried a whole trailing paragraph of
   prose into a replacement; the build was clean and the PDF looked right, and only
   a token-level diff against the source caught it.
+
+## Writing consistency — one term, one form
+
+The thesis text must be consistent throughout (author's instruction, 2026-10-31):
+a term is written **identically everywhere it renders**, in prose, tables,
+captions and headings. Capitalization varies only where position requires it: the
+first word of a sentence or table cell, and title-case headings.
+
+| write | not | note |
+|---|---|---|
+| `PaySim` | `Paysim`, `PAYSIM` | Lowercase `paysim` is fine only in labels and citation keys, which never render. |
+| `terpusat` (`Terpusat` at the start of a table cell) | `centralized`, `Centralized` | See the exception below. |
+| `IID` / `Non-IID` for a data condition | `non-IID`, `Non IID`, `Dirichlet` as a label | `Dirichlet` stays only for the method or distribution itself (`partisi Dirichlet`, `distribusi Dirichlet`, the parameter row in `<tab-3-hp-umum>`). Where α matters: `Non-IID ($alpha$ = 0,5)`. |
+| `SMOTE` / `Tanpa SMOTE` for an imbalance condition | `none`, `no-SMOTE`, `Non-SMOTE`, `tanpa oversampling`, `Dengan SMOTE` as a label | `tanpa` is lowercase mid-cell (`IID tanpa SMOTE`). Prose may say `dengan SMOTE` where the sentence needs it; table labels say `SMOTE`. |
+| `Federated Learning` | `federated learning` | `federated` alone, as an adjective, stays lowercase. |
+| `deep learning` | `Deep Learning`, `DL` | Mid-sentence. `DL` is never defined; `ML` is, in §1.1. |
+| `financial fraud detection` | `Financial Fraud Detection` | Mid-sentence. |
+| `best-model selection`, `accuracy-weighted FedAvg` | `Best-Model Selection`, `Accuracy-Weighted FedAvg` | Mid-sentence. A table cell may capitalize its first word only. |
+| `antar client`, `dalam client`, `antar kelas` | `antar-client`, `dalam-client`, `antarkelas` | |
+| `dua seed`, `per-client` | `dua-seed`, `per client` | |
+| `1D CNN`, `F1-score`, `validation set`, `non-linear`, `gradient` | `1D-CNN`, `F1` alone, `Validation-set`, `nonlinier`, `gradien` | |
+| `di mana`, `di antara` | `dimana`, `diantara` | KBBI spelling. |
+
+**The `terpusat` exception is language.** `centralized` stays only where English is
+needed: the ABSTRACT, the author's `centralized machine learning` in ABSTRAK, and
+the two glosses that introduce the English term, `terpusat (centralized)` in §1.1
+and `terpusat atau centralized` in §2.1.2.
+
+**Never unify these, because they are names:** paper titles in `<tab-2-1>`, dataset
+names (`Financial Fraud Detection Dataset`, `Credit Card Fraud Detection Dataset`),
+FFD's expansion (`Financial Fraud Detection network`), package and class names
+(`shap`, `LogisticRegression`, `hfedxgboost`), Kaggle slugs, and labels and citation
+keys.
+
+**Check after any change to thesis text.** The only expected hits are the two
+abstracts and the two glosses above:
+
+```bash
+grep -nE 'Paysim|PAYSIM|[Cc]entralized|Non IID|non-IID|[Dd]imana|diantara|[Nn]o-SMOTE|[Nn]on-SMOTE|\bnone\]|Dirichlet (none|SMOTE|\$alpha\$ =)|[Dd]engan SMOTE\]|[Tt]anpa [Oo]versampling' \
+  buku/content.typ buku/thesis.typ | grep -v '^[^:]*:[0-9]*: *//'
+```
+
+**Grep cannot see inside images.** Check any new drawing by eye. Gambar 3.2 and 3.3
+say `PaySim` as of 2026-10-31; a term changed later will not reach the hand-drawn
+figures without a redraw by the author.
+
+**Pairs the author has not ruled on.** These are different words for one idea, so
+choosing is the author's call. Do not unify them without asking, and move a pair
+into the table above once decided:
+
+- `paradigma agregasi` / `skema agregasi` / `aturan agregasi`
+- `explainability` / `interpretabilitas`
+- `stabilitas` / `kestabilan` / `konsistensi` for what RQ3 measures
+- `feature importance` / `kepentingan fitur`
+- `berbasis tree` / `tree-based` / `berbasis pohon`, and `tree ensemble` / `ensemble pohon`
+- `sampel minoritas` / `contoh minoritas`
+- `penelitian ini` / `studi ini`
+- `putaran` / `Global rounds`
+- `performa` / `kinerja`
+- `sel` / `konfigurasi`
+- `pembanding terpusat` / `baseline terpusat`
+- `learnable learning rates` / `Learnable LR` (in `<tab-3-4>`, where `LR` also means Logistic Regression)
+- Title case or sentence case for table captions
+- Decimal places for one metric across tables (`0,167` in `<tab-4-auprc-baf>`, `0,1670` in `<tab-4-baf-auprc-bench>`)
 
 ## Where to update — code change → thesis location
 
@@ -120,24 +200,27 @@ Tables:
 | Tabel 3.8 | `<tab-3-5>` | Spesifikasi Lingkungan Pengembangan |
 | Tabel 3.9 | `<tab-3-hp-umum>` | Konfigurasi Umum Eksperimen |
 | Tabel 3.10 | `<tab-3-6>` | Konfigurasi Hyperparameter Eksperimen per Model |
-| Tabel 4.1 | `<tab-4-auprc-ulb>` | AUPRC test pada ULB |
-| Tabel 4.2 | `<tab-4-auprc-baf>` | AUPRC test pada BAF |
-| Tabel 4.3 | `<tab-4-auprc-paysim>` | AUPRC test pada PaySim |
-| Tabel 4.4 | `<tab-4-rfpr-ulb>` | Recall\@5%FPR test pada ULB |
-| Tabel 4.5 | `<tab-4-rfpr-baf>` | Recall\@5%FPR test pada BAF |
-| Tabel 4.6 | `<tab-4-rfpr-paysim>` | Recall\@5%FPR test pada PaySim |
-| Tabel 4.7 | `<tab-4-cal-slope>` | Calibration slope test per model dan kondisi pada ketiga dataset |
-| Tabel 4.8 | `<tab-4-baf-auprc-bench>` | Perbandingan AUPRC test pada BAF Base |
-| Tabel 4.9 | `<tab-typology>` | Tipologi contoh minoritas |
-| Tabel 4.10 | `<tab-4-iid-noniid>` | Perbandingan AUPRC test kondisi IID dan Non-IID tanpa SMOTE |
-| Tabel 4.11 | `<tab-4-iid-smote>` | Efek SMOTE terhadap AUPRC pada kondisi IID untuk dataset ULB dan PaySim |
-| Tabel 4.12 | `<tab-4-baf-smote>` | Efek SMOTE terhadap AUPRC pada kondisi Non-IID untuk dataset BAF |
-| Tabel 4.13 | `<tab-4-baf-smote-rfpr>` | Efek SMOTE terhadap Recall\@5%FPR pada kondisi Non-IID untuk dataset BAF |
-| Tabel 4.14 | `<tab-4-rq3-corr>` | Korelasi peringkat berbobot dan tanpa bobot antar client pada pengukuran utama |
-| Tabel 4.15 | `<tab-4-rq3-kuncheva>` | Rerata indeks Kuncheva dan Jaccard\@5 lima fitur terpenting per dataset |
-| Tabel 4.16 | `<tab-4-rq3-paysim>` | Korelasi peringkat berbobot antar client pada PaySim menggunakan KernelSHAP tersampel |
-| Tabel 4.17 | `<tab-4-rq3-smote>` | Perubahan konsistensi dan fitur penting setelah SMOTE pada beberapa konfigurasi Non-IID |
-| Tabel 4.18 | `<tab-4-rq3-seeds>` | Kesepakatan pengulangan dan kesepakatan antar client pada KernelSHAP tersampel |
+| Tabel 4.1 | `<tab-4-fitur-paysim>` | Fitur dan tipe data PaySim setelah preprocessing |
+| Tabel 4.2 | `<tab-4-fitur-ulb>` | Fitur dan tipe data ULB setelah preprocessing |
+| Tabel 4.3 | `<tab-4-fitur-baf>` | Fitur dan tipe data BAF setelah preprocessing |
+| Tabel 4.4 | `<tab-4-auprc-ulb>` | AUPRC test pada ULB tanpa SMOTE |
+| Tabel 4.5 | `<tab-4-auprc-baf>` | AUPRC test pada BAF tanpa SMOTE |
+| Tabel 4.6 | `<tab-4-auprc-paysim>` | AUPRC test pada PaySim tanpa SMOTE |
+| Tabel 4.7 | `<tab-4-rfpr-ulb>` | Recall\@5%FPR test pada ULB tanpa SMOTE |
+| Tabel 4.8 | `<tab-4-rfpr-baf>` | Recall\@5%FPR test pada BAF tanpa SMOTE |
+| Tabel 4.9 | `<tab-4-rfpr-paysim>` | Recall\@5%FPR test pada PaySim tanpa SMOTE |
+| Tabel 4.10 | `<tab-4-cal-slope>` | Calibration slope test per model dan kondisi pada ketiga dataset |
+| Tabel 4.11 | `<tab-4-baf-auprc-bench>` | Perbandingan AUPRC test pada BAF Base |
+| Tabel 4.12 | `<tab-typology>` | Tipologi contoh minoritas |
+| Tabel 4.13 | `<tab-4-iid-noniid>` | Perbandingan AUPRC test kondisi IID dan Non-IID tanpa SMOTE |
+| Tabel 4.14 | `<tab-4-iid-smote>` | Efek SMOTE terhadap AUPRC pada kondisi IID untuk dataset ULB dan PaySim |
+| Tabel 4.15 | `<tab-4-baf-smote>` | Efek SMOTE terhadap AUPRC pada kondisi Non-IID untuk dataset BAF |
+| Tabel 4.16 | `<tab-4-baf-smote-rfpr>` | Efek SMOTE terhadap Recall\@5%FPR pada kondisi Non-IID untuk dataset BAF |
+| Tabel 4.17 | `<tab-4-rq3-corr>` | Korelasi peringkat berbobot dan tanpa bobot antar client pada pengukuran utama |
+| Tabel 4.18 | `<tab-4-rq3-kuncheva>` | Rerata indeks Kuncheva dan Jaccard\@5 lima fitur terpenting per dataset |
+| Tabel 4.19 | `<tab-4-rq3-paysim>` | Korelasi peringkat berbobot antar client pada PaySim menggunakan KernelSHAP tersampel |
+| Tabel 4.20 | `<tab-4-rq3-smote>` | Perubahan konsistensi dan fitur penting setelah SMOTE pada beberapa konfigurasi Non-IID |
+| Tabel 4.21 | `<tab-4-rq3-seeds>` | Kesepakatan pengulangan dan kesepakatan antar client pada KernelSHAP tersampel |
 
 Figures:
 
@@ -150,9 +233,9 @@ Figures:
 | Gambar 2.5 | `<fig-2-5>` | Contoh visualisasi SHAP dalam bentuk summary plot |
 | Gambar 2.6 | `<fig-2-6>` | Arsitektur Flower |
 | Gambar 3.1 | `<fig-3-1>` | Alur pelaksanaan penelitian. |
-| Gambar 3.2 | `<fig-3-2>` | Lapisan logis sistem penelitian. |
+| Gambar 3.2 | `<fig-3-2>` | Arsitektur Umum Sistem. |
 | Gambar 3.3 | `<fig-3-3>` | Skema pembagian data dua tingkat. |
-| Gambar 3.4 | `<fig-3-4>` | Skema pengukuran dua-seed. |
+| Gambar 3.4 | `<fig-3-4>` | Skema pengukuran dua seed. |
 | Gambar 4.1 | `<fig-typology>` | Distribusi tipe contoh minoritas (k = 5 tetangga terdekat) per dataset. Kelas minoritas BAF hampir seluruhnya *rare* dan *outlier*, sedangkan ULB didominasi *safe*. |
 
 Note the label/number skew this table exists to prevent: `<tab-3-4>` renders as
@@ -167,7 +250,7 @@ that way.
 |---|---|
 | Hyperparameters / any `conf/*.yaml` / `registry.yaml` values | Per-model values: Tabel «Konfigurasi Hyperparameter Eksperimen per Model» `<tab-3-6>`. Values shared by every model (K, rounds, α, seed, SMOTE): Tabel «Konfigurasi Umum Eksperimen» `<tab-3-hp-umum>` |
 | Dependencies / versions (`requirements.txt`, `pyproject.toml`) | Tabel «Spesifikasi Lingkungan Pengembangan» `<tab-3-5>` |
-| Preprocessing (`preprocessing/paysim.py`, dropped cols, features, encoding, scaling, split) | **§3.3.1** and **§3.4.1** |
+| Preprocessing (`preprocessing/paysim.py`, dropped cols, features, encoding, scaling, split) | **§3.3.1**, **§3.4.1**, and the feature tables `<tab-4-fitur-paysim>`, `<tab-4-fitur-ulb>`, `<tab-4-fitur-baf>` with their intro paragraph in the BAB 4 preamble |
 | Client partitioning (`partitioning/dirichlet.py`, IID/Dirichlet, α set, K) | **§3.3.2** and **§3.4.2** |
 | Oversampling / SMOTE / ADASYN (`preprocessing/smote.py`, `adasyn.py`, `oversampling.py`) | Tabel «Konfigurasi Parameter SMOTE» `<tab-3-smote>` (`sampling_strategy`, `k_neighbors`, `random_state`, `enabled`), **§3.3.3** and **§3.4.3** |
 | Models & aggregation strategies (`models/*/`, any `strategy.py`) | Tabel «Pemetaan Model dengan Skema Agregasi» `<tab-3-4>`, **§3.3.4**, **§3.4.4** |
@@ -212,7 +295,7 @@ What is frozen is no longer "BAB 4 and 5" but the following:
 | region | status |
 |---|---|
 | BAB 1, BAB 2, BAB 3 | the author's text. Change only on his instruction. |
-| BAB 4 preamble, §4.1, §4.2 | **frozen, byte-identical**, with §4.1.1 and §4.2.1 re-frozen as of 2026-10-05. §4.2.1 gained one sentence and `<tab-4-iid-noniid>` on the author's instruction; its three paragraphs are otherwise untouched. Its history: it was unfrozen for a supplementary-metrics insertion, then revised again on the author's instruction — the three `<tab-4-supp-*>` tables were replaced by the single `<tab-4-cal-slope>` (calibration slope only; F1/Precision/Recall/FPR aktual/Brier/CITL are no longer reported anywhere), and the closing two paragraphs are now the author's own text. |
+| BAB 4 preamble, §4.1, §4.2 | **frozen**, with §4.1.1 and §4.2.1 re-frozen as of 2026-10-05. **No longer byte-identical since 2026-10-31**, on the author's two instructions of that date: table design moved to `template.typ`, and wording unified under «Writing consistency». Both changed no number, cell value or claim. The preamble also gained an intro paragraph and three feature tables (`<tab-4-fitur-paysim>`, `<tab-4-fitur-ulb>`, `<tab-4-fitur-baf>`) on the author's instruction (2026-10-31), which moved every other BAB 4 table number up by three. The six AUPRC and Recall\@5%FPR tables (`<tab-4-auprc-*>`, `<tab-4-rfpr-*>`) were reduced to their tanpa SMOTE columns, also on the author's instruction (2026-10-31); the removed values remain in `results/clean_summary.csv`, and prose quoting them is flagged to the author, not rewritten. §4.2.1 gained one sentence and `<tab-4-iid-noniid>` on the author's instruction; its three paragraphs are otherwise untouched. Its history: it was unfrozen for a supplementary-metrics insertion, then revised again on the author's instruction — the three `<tab-4-supp-*>` tables were replaced by the single `<tab-4-cal-slope>` (calibration slope only; F1/Precision/Recall/FPR aktual/Brier/CITL are no longer reported anywhere), and the closing two paragraphs are now the author's own text. |
 | BAB 4 §4.3 (`<sec-hasil-rq3>`) | the author's replaced text. **It cites nothing** — no `@key`, no author-year. |
 | BAB 5 (KESIMPULAN DAN SARAN) | the author's replaced text. **Cites nothing.** |
 
@@ -248,6 +331,8 @@ in.** Read that section before adding a fallback, a default, or a broad `except`
 Run `typst compile buku/thesis.typ buku/thesis.pdf` and confirm **zero errors and
 zero warnings** before you call a change done. A code change that breaks the
 thesis build is an incomplete change.
+
+For a change to thesis text, also run the grep under «Writing consistency».
 
 For anything touching the RQ3 SHAP path, also run:
 
