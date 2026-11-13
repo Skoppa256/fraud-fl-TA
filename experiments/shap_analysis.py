@@ -45,7 +45,9 @@ already in the thesis, and no re-run can restore it.
 
 The log is covered by docs/frozen_manifest.sha256, so a `shasum -a 256 -c` of
 that manifest will detect the loss — after the fact. Prevention is not re-running
-this script.
+this script, and since 2026-11-13 main() enforces it: it refuses to start,
+because OUT is inside a frozen folder (evaluation/results_paths.py). The helpers
+below stay importable — experiments/shap_rq3.py uses them.
 """
 
 from __future__ import annotations
@@ -144,8 +146,13 @@ def detect_model(run_name):
     return None
 
 
-def discover():
-    root = PROJECT_ROOT / "results" / "models"
+def discover(root=None, seed=None):
+    """Persisted artifacts under ``root`` (default: the seed-42 results/models/).
+
+    With ``seed``, only that training seed's runs are returned — every run name
+    ends in ``_seed<N>`` — so models of two seeds can never share a cell.
+    """
+    root = PROJECT_ROOT / "results" / "models" if root is None else Path(root)
     arts = []
     for mani in root.glob("*/*/manifest.json"):
         d = mani.parent
@@ -153,6 +160,8 @@ def discover():
         if not model:
             continue
         rn = d.name
+        if seed is not None and not rn.endswith(f"_seed{int(seed)}"):
+            continue
         cond = ("centralized" if rn.startswith("centralized_")
                 else "dirichlet" if "dirichlet" in rn else "iid" if "iid" in rn else "?")
         arm = "smote" if "_smote_" in rn else "none"
@@ -422,6 +431,13 @@ def main(argv=None):
     args = ap.parse_args(argv)
     datasets = set(args.datasets.split(","))
     models = set(args.models.split(","))
+    # OUT is the frozen v1 tree (see the module docstring): refuse before any work.
+    from evaluation.results_paths import assert_writable
+    try:
+        assert_writable(OUT)
+    except RuntimeError as e:
+        raise SystemExit(f"{e}\nThis v1 runner always writes {OUT}; for RQ3 use "
+                         "experiments/shap_rq3.py --seed N.") from None
 
     try:
         import shap

@@ -7,6 +7,14 @@ came out. `results/shap_v2/**` is a frozen artifact (see the freeze list in
 so it can be repeated. Re-running any of them is an explicit decision by the
 author, never a step inside another task.
 
+**Another training seed (2026-11-13).** The runner now takes a required
+`--seed N` and reads and writes only `results/seeds/seed<N>/`. The commands
+below are the seed-42 invocations as recorded, from before `--seed` existed;
+typed today they stop with a usage error, which is intended, since
+`results/shap_v2/` is frozen. For seed N the same three stages are
+`--seed N --stage main`, `--seed N --stage twobg --conditions dirichlet,iid` and
+`--seed N --stage paysim-exact`.
+
 Everything ran on the GPU box in tmux session `TA_Deo`, under **shap 0.49.1**
 (now pinned exactly in `requirements.txt`). The runner is sequential (no Ray —
 the FedXGBllr OOM history is why), reads models/cache read-only, and writes

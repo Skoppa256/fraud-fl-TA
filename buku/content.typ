@@ -2159,12 +2159,27 @@ kemampuan model mendeteksi fraud pada satu kondisi operasional tertentu.
 
 @tab-4-auprc-ulb, @tab-4-auprc-baf, dan @tab-4-auprc-paysim menyajikan hasil AUPRC
 pada dataset ULB, BAF, dan PaySim secara berurutan. Sebagaimana dijelaskan
-sebelumnya, nilai-nilai antar dataset tidak dapat langsung dibandingkan karena
-AUPRC pada dataset berbeda memiliki batas bawah berbeda. Namun, secara umum,
-apabila diambil nilai terbaik dari masing-masing dataset dan dibandingkan dengan
-batas bawahnya diperoleh dataset dengan hasil terbaik, yaitu PaySim dengan nilai
-terbaik 773 kali batas bawah dengan SMOTE, ULB dengan nilai terbaik 484 kali batas bawah, dan
-BAF dengan nilai terbaik 15 kali batas bawah.
+sebelumnya, nilai AUPRC antar dataset tidak dapat langsung dibandingkan karena
+masing-masing dataset memiliki tingkat prevalensi fraud dan batas bawah AUPRC
+yang berbeda. Oleh karena itu, @fig-4-auprc-boxplot menyajikan distribusi nilai
+AUPRC seluruh konfigurasi pada masing-masing dataset untuk memberikan gambaran
+yang lebih umum mengenai variasi hasil yang diperoleh.
+
+Berdasarkan @fig-4-auprc-boxplot, PaySim menunjukkan rentang hasil yang paling
+lebar, dengan nilai AUPRC pada beberapa konfigurasi mendekati 1,0, tetapi juga
+mengalami penurunan hingga sekitar 0,3 pada konfigurasi tertentu. ULB menunjukkan
+hasil yang relatif lebih konsisten dengan sebagian besar nilai AUPRC berada pada
+kisaran 0,7–0,8. Sementara itu, BAF memiliki nilai AUPRC yang secara numerik
+lebih rendah dan terkonsentrasi pada kisaran 0,1–0,16. Perbedaan tersebut tidak
+secara langsung menunjukkan bahwa suatu dataset lebih mudah atau lebih sulit
+dibandingkan dataset lainnya hanya berdasarkan nilai AUPRC, tetapi menunjukkan
+bahwa karakteristik data dan tingkat kesulitan deteksi fraud pada masing-masing
+dataset menghasilkan pola performa yang berbeda.
+
+#figure(
+  image("resources/fig-4-auprc-boxplot.png"),
+  caption: [Distribusi AUPRC test seluruh konfigurasi per dataset],
+) <fig-4-auprc-boxplot>
 
 Dari hasil tersebut dapat dilihat bahwa pengaruh federated terhadap performa tidak
 mutlak melainkan utamanya bergantung pada model yang digunakan serta dataset dan
@@ -2606,29 +2621,18 @@ lainnya pada kumpulan konfigurasi yang dievaluasi. Namun, konsistensi tersebut
 tidak membentuk urutan yang selalu sama pada seluruh dataset. Model berbasis tree
 maupun deep learning juga dapat menghasilkan kesamaan interpretasi yang tinggi
 tetapi memiliki variasi yang lebih besar pada kondisi tertentu.
-@tab-4-rq3-corr menyajikan median dan rentang korelasi peringkat berbobot serta
-median korelasi tanpa bobot antar client pada pengukuran utama.
+@fig-4-rq3-spearman dan @fig-4-rq3-weighted menyajikan sebaran korelasi
+peringkat tanpa bobot dan berbobot antar client untuk setiap model.
 
 #figure(
-  kind: table,
-  table(
-    columns: (auto, auto, auto, auto, auto),
-    table.header(
-      table.cell(rowspan: 2)[Model],
-      table.cell(colspan: 3)[Berbobot],
-      table.cell(rowspan: 2)[Median tanpa bobot],
-      [Median], [Minimum], [Maksimum],
-    ),
-    [LR], [0,9845], [0,9064], [0,9970], [0,9865],
-    [SVM], [0,9895], [0,8980], [0,9989], [0,9897],
-    [GBM], [0,9774], [0,8014], [0,9960], [0,9870],
-    [FFD], [0,9634], [0,7979], [0,9924], [0,9723],
-    [BERT], [0,9517], [0,8682], [0,9949], [0,9555],
-    [FedXGBllr], [0,9576], [0,6650], [0,9859], [0,9560],
-  ),
-  caption: [Korelasi peringkat berbobot dan tanpa bobot antar client pada
-    pengukuran utama],
-) <tab-4-rq3-corr>
+  image("resources/fig-4-rq3-spearman-boxplot.png"),
+  caption: [Korelasi peringkat tanpa bobot antar client],
+) <fig-4-rq3-spearman>
+
+#figure(
+  image("resources/fig-4-rq3-weighted-boxplot.png"),
+  caption: [Korelasi peringkat berbobot antar client],
+) <fig-4-rq3-weighted>
 
 Model LR dan SVM memperoleh median korelasi sebesar 0,9845 dan 0,9895, diikuti
 GBM sebesar 0,9774. Adapun FFD, BERT, dan FedXGBllr memperoleh median sebesar
@@ -2637,11 +2641,7 @@ kepentingan fitur masih memiliki kesamaan yang tinggi antar client. Namun, media
 yang tinggi belum menggambarkan seluruh kondisi sebagaimana terlihat pada
 FedXGBllr yang memiliki rentang dari 0,6650 hingga 0,9859. Maka dari itu,
 karakteristik interpretabilitas perlu dilihat bersama dengan variasinya antar
-dataset dan kondisi partisi. Median korelasi tanpa bobot berbeda paling banyak
-sebesar 0,0096 dari median berbobot sehingga kesimpulan pada tingkat pusat tidak
-berubah, sedangkan selisih terbesar muncul pada sel yang fitur beratribusi
-besarnya tidak sepakat meskipun ekornya sepakat, misalnya GBM di ULB kondisi IID
-tanpa SMOTE yang memperoleh 0,8014 berbobot dibandingkan 0,9870 tanpa bobot.
+dataset dan kondisi partisi.
 
 Kesamaan lima fitur terpenting menunjukkan pola yang searah pada kelompok LR,
 SVM, dan GBM. Rata-rata indeks Kuncheva mencapai 0,9433 pada SVM, 0,9112 pada LR,
@@ -2665,7 +2665,7 @@ berlaku pada seluruh kondisi.
     [ULB], [1,000], [1,000], [0,964], [0,950], [0,742], [0,677],
     [PaySim], [0,789], [0,783], [0,935], [0,933], [0,878], [0,875],
   ),
-  caption: [Rerata indeks Kuncheva dan Jaccard\@5 lima fitur terpenting per
+  caption: [Rata-rata indeks Kuncheva dan Jaccard\@5 lima fitur terpenting per
     dataset],
 ) <tab-4-rq3-kuncheva>
 
@@ -2675,18 +2675,7 @@ daripada LR sebesar 0,789. Hasil ini menunjukkan bahwa model linear tidak selalu
 menghasilkan kesamaan fitur terpenting yang lebih tinggi daripada model tree.
 Nilai 1,000 pada LR di ULB menunjukkan bahwa himpunan lima fitur terpenting sama
 antar client tetapi tidak berarti urutan maupun besaran atribusi seluruh fiturnya
-identik. Adapun Jaccard\@5 berada di bawah indeks Kuncheva pada seluruh sel dan
-selisihnya melebar ketika kesepakatan menurun, sebagaimana terlihat pada GBM di
-ULB yang memperoleh 0,742 dibandingkan 0,677, sehingga koreksi terhadap peluang
-pemilihan tetap diperlukan sebagai dasar perbandingan lintas dataset.
-
-Adapun pengaruh kondisi partisi menunjukkan bahwa interpretasi cenderung lebih
-konsisten pada kondisi IID. Pada FFD, BERT, dan FedXGBllr, korelasi peringkat
-berbobot menurun pada kondisi Non-IID dalam 11 dari 15 pasangan yang dapat
-dibandingkan. Pola tersebut paling konsisten pada PaySim di mana seluruh enam
-pasangan menunjukkan penurunan. Namun, arah yang sama tidak ditemukan pada
-seluruh model dan dataset sehingga Non-IID tidak dipahami sebagai penyebab
-penurunan yang bersifat mutlak.
+identik.
 
 Secara keseluruhan, model parametrik cenderung memiliki konsistensi feature
 importance yang tinggi sedangkan model tree, deep learning, dan tree ensemble
@@ -2700,63 +2689,172 @@ penjelasan yang sama pada seluruh client.
 
 === Pengaruh Heterogenitas Distribusi Data dan SMOTE terhadap Interpretasi
 
-Pengaruh heterogenitas distribusi data pada FFD, BERT, dan FedXGBllr menunjukkan
-penurunan rata-rata korelasi peringkat berbobot sebesar 0,054 dari kondisi IID ke
-Non-IID pada pengukuran utama. Penurunan terjadi pada 11 dari 15 pasangan, dengan
-nilai p sebesar 0,0042 berdasarkan uji Wilcoxon berpasangan satu sisi. Hasil ini
+Pengaruh heterogenitas distribusi data menunjukkan penurunan rata-rata korelasi
+peringkat berbobot sebesar 0,033 dari kondisi IID ke Non-IID di mana penurunan
+terjadi pada 20 dari 30 pasangan, dengan nilai p sebesar 0,0078 berdasarkan uji
+Wilcoxon berpasangan satu sisi. Hasil ini
 menunjukkan kecenderungan penurunan kesamaan interpretasi meskipun arah perubahan
 pada setiap konfigurasi tidak selalu sama.
 
-Pengaruh paling konsisten ditemukan pada PaySim, di mana seluruh enam pasangan
-menunjukkan korelasi yang lebih rendah pada kondisi Non-IID. Namun, besar
-penurunannya berbeda antar model dan kondisi SMOTE sebagaimana disajikan pada
-@tab-4-rq3-paysim.
+Pengaruh tersebut paling konsisten ditemukan pada PaySim, di mana 11 dari 12
+pasangan menunjukkan korelasi yang lebih rendah pada kondisi Non-IID dengan
+rata-rata penurunan sebesar 0,084. Sebaliknya, pada ULB dan BAF penurunan hanya
+terjadi pada setengah dari pasangan. Besar perubahan pada setiap model dan
+kondisi disajikan pada @tab-4-rq3-noniid dan @tab-4-rq3-noniid-smote.
 
 #figure(
   kind: table,
   table(
-    columns: (auto, auto, auto, auto),
-    table.header([Model], [Kondisi SMOTE], [IID], [Non-IID]),
-    [FedXGBllr], [Tanpa SMOTE], [0,986], [0,822],
-    [FedXGBllr], [SMOTE], [0,948], [0,665],
-    [FFD], [Tanpa SMOTE], [0,973], [0,798],
-    [FFD], [SMOTE], [0,931], [0,886],
-    [BERT], [Tanpa SMOTE], [0,983], [0,941],
-    [BERT], [SMOTE], [0,972], [0,952],
+    columns: (auto, auto, auto, auto, auto),
+    table.header([Dataset], [Model], [IID], [Non-IID], [$Delta$]),
+    table.cell(rowspan: 6)[BAF],
+    [LR], [0,989], [0,985], [−0,004],
+    [SVM], [0,898], [0,990], [+0,092],
+    [GBM], [0,991], [0,977], [−0,014],
+    [FFD], [0,963], [0,963], [0,000],
+    [BERT], [0,944], [0,868], [−0,076],
+    [FedXGBllr], [0,965], [0,972], [+0,007],
+    table.cell(rowspan: 6)[ULB],
+    [LR], [0,997], [0,997], [0,000],
+    [SVM], [0,999], [0,993], [−0,006],
+    [GBM], [0,801], [0,825], [+0,024],
+    [FFD], [0,983], [0,988], [+0,005],
+    [BERT], [0,995], [0,980], [−0,015],
+    [FedXGBllr], [0,952], [0,982], [+0,030],
+    table.cell(rowspan: 6)[PaySim],
+    [LR], [0,970], [0,906], [−0,064],
+    [SVM], [0,950], [0,943], [−0,007],
+    [GBM], [0,979], [0,898], [−0,081],
+    [FFD], [0,973], [0,798], [−0,175],
+    [BERT], [0,983], [0,941], [−0,042],
+    [FedXGBllr], [0,986], [0,822], [−0,164],
   ),
-  caption: [Korelasi peringkat berbobot antar client pada PaySim menggunakan
-  KernelSHAP tersampel],
-) <tab-4-rq3-paysim>
+  caption: [Korelasi peringkat berbobot antar client pada kondisi IID dan
+  Non-IID tanpa SMOTE],
+) <tab-4-rq3-noniid>
 
-Penurunan terbesar terjadi pada FedXGBllr dengan SMOTE, yaitu dari 0,948 pada
-kondisi IID menjadi 0,665 pada kondisi Non-IID. Tanpa SMOTE, nilainya juga
-menurun dari 0,986 menjadi 0,822. Adapun FFD tanpa SMOTE mengalami penurunan dari
-0,973 menjadi 0,798 sedangkan BERT menunjukkan perubahan yang lebih kecil pada
-kedua kondisi SMOTE. Hasil ini menunjukkan bahwa ketiga model memiliki
-sensitivitas interpretasi yang berbeda terhadap heterogenitas data meskipun
-seluruhnya menggunakan metode penjelasan yang sama.
+#figure(
+  kind: table,
+  table(
+    columns: (auto, auto, auto, auto, auto),
+    table.header([Dataset], [Model], [IID], [Non-IID], [$Delta$]),
+    table.cell(rowspan: 6)[ULB],
+    [LR], [0,997], [0,996], [−0,001],
+    [SVM], [0,999], [0,999], [0,000],
+    [GBM], [0,972], [0,987], [+0,015],
+    [FFD], [0,992], [0,985], [−0,007],
+    [BERT], [0,958], [0,948], [−0,010],
+    [FedXGBllr], [0,958], [0,942], [−0,016],
+    table.cell(rowspan: 6)[PaySim],
+    [LR], [0,925], [0,947], [+0,022],
+    [SVM], [0,991], [0,901], [−0,090],
+    [GBM], [0,996], [0,943], [−0,053],
+    [FFD], [0,931], [0,886], [−0,045],
+    [BERT], [0,972], [0,952], [−0,020],
+    [FedXGBllr], [0,948], [0,665], [−0,283],
+  ),
+  caption: [Korelasi peringkat berbobot antar client pada kondisi IID dan
+  Non-IID dengan SMOTE],
+) <tab-4-rq3-noniid-smote>
+
+Penurunan terbesar terjadi pada FedXGBllr di PaySim dengan SMOTE, yaitu dari
+0,948 pada kondisi IID menjadi 0,665 pada kondisi Non-IID. Tanpa SMOTE, nilainya
+juga menurun dari 0,986 menjadi 0,822. Adapun FFD di PaySim tanpa SMOTE mengalami
+penurunan dari 0,973 menjadi 0,798, sedangkan BERT menurun pada seluruh lima
+pasangan meskipun dengan besaran yang lebih kecil. Pada model dengan explainer
+deterministik, penurunan cenderung lebih kecil. Rata-rata penurunan pada LR, SVM,
+dan GBM sebesar 0,011 dengan penurunan pada 9 dari 15 pasangan, dibandingkan
+0,054 dengan penurunan pada 11 dari 15 pasangan pada FFD, BERT, dan FedXGBllr.
+Kenaikan terbesar justru terjadi pada SVM di BAF tanpa SMOTE, yaitu dari 0,898
+menjadi 0,990. Hasil ini menunjukkan bahwa sensitivitas interpretasi terhadap
+heterogenitas data berbeda antar model, termasuk di antara model yang
+menggunakan metode SHAP yang sama.
 
 Perubahan tersebut tidak selalu searah dengan perubahan performa deteksi. Pada
 PaySim tanpa SMOTE, AUPRC FedXGBllr tetap sekitar 0,996 pada kondisi IID maupun
 Non-IID sedangkan kesamaan interpretasinya menurun. Dengan demikian, kemampuan
 model mempertahankan performa deteksi tidak menjamin bahwa peringkat fitur yang
-dianggap penting akan tetap konsisten antar client. Dalam pengukuran ini,
-penurunan konsistensi menunjukkan bahwa penjelasan model global menjadi lebih
-sensitif terhadap perbedaan background lokal.
+dianggap penting akan tetap konsisten antar client. Karena model global dan
+sampel yang dijelaskan sama bagi seluruh client, penurunan konsistensi ini
+menunjukkan bahwa penjelasan terhadap model yang sama menjadi lebih berbeda antar
+client ketika background lokal berasal dari partisi Non-IID.
 
-Pengaruh Non-IID juga ditemukan pada model dengan explainer deterministik. Pada
-GBM di PaySim tanpa SMOTE, indeks Kuncheva menurun dari 1,000 pada kondisi IID
-menjadi 0,7725 pada kondisi Non-IID. Pada ULB tanpa SMOTE, nilainya menurun dari
-0,688 menjadi 0,544. Namun, LR di ULB tetap memiliki indeks Kuncheva 1,000 pada
-kedua kondisi. Maka dari itu, heterogenitas tidak selalu mengubah himpunan lima
-fitur terpenting dan pengaruhnya tetap bergantung pada model serta dataset.
+Pengaruh Non-IID juga terlihat pada kesamaan lima fitur terpenting. Indeks
+Kuncheva menurun dari kondisi IID ke Non-IID pada 17 dari 30 pasangan, meningkat
+pada 8 pasangan, dan tidak berubah pada 5 pasangan, dengan rata-rata penurunan
+sebesar 0,052. Sebagaimana pada korelasi peringkat berbobot, penurunan paling
+konsisten terjadi pada PaySim, yaitu pada 9 dari 12 pasangan dengan rata-rata
+penurunan sebesar 0,122. Penurunan terbesar terjadi pada FedXGBllr di PaySim tanpa SMOTE, yaitu dari
+1,000 menjadi 0,643, diikuti GBM pada kondisi yang sama dari 1,000 menjadi
+0,773. Pada GBM di ULB tanpa SMOTE, nilainya juga menurun dari 0,688 menjadi
+0,544. Sebaliknya, FFD dan SVM di ULB tanpa SMOTE meningkat masing-masing dari
+0,664 dan 0,856 menjadi 1,000, sedangkan LR di ULB tetap memiliki indeks
+Kuncheva 1,000 pada kedua kondisi.
 
-Penanganan class imbalance dengan SMOTE turut memengaruhi konsistensi
-interpretasi. Pada kelompok LR, SVM, dan GBM, rata-rata kenaikan indeks Kuncheva
-setelah SMOTE sebesar 0,048 pada enam pasangan IID dan 0,085 pada sembilan
-pasangan Non-IID. Salah satu peningkatan terbesar terjadi pada GBM di ULB kondisi
-Non-IID, yaitu dari 0,544 menjadi 0,904. Adapun LR dan SVM di BAF kondisi Non-IID
-meningkat dari 0,868 menjadi 1,000.
+Berbeda dengan korelasi peringkat berbobot, rata-rata penurunan indeks Kuncheva
+pada FFD, BERT, dan FedXGBllr sebesar 0,058 tidak jauh berbeda dari LR, SVM, dan
+GBM sebesar 0,047. Perbedaan yang lebih besar justru terlihat antar model, di
+mana FedXGBllr mengalami rata-rata penurunan terbesar sebesar 0,162, sedangkan
+FFD mengalami rata-rata kenaikan sebesar 0,042. Maka dari itu, heterogenitas
+tidak selalu mengubah himpunan lima fitur terpenting dan pengaruhnya tetap
+bergantung pada model serta dataset. Indeks Kuncheva pada setiap model dan
+kondisi disajikan pada @tab-4-rq3-kuncheva-noniid dan
+@tab-4-rq3-kuncheva-noniid-smote.
+
+#figure(
+  kind: table,
+  table(
+    columns: (auto, auto, auto, auto, auto),
+    table.header([Dataset], [Model], [IID], [Non-IID], [$Delta$]),
+    table.cell(rowspan: 6)[BAF],
+    [LR], [1,000], [0,868], [−0,132],
+    [SVM], [0,912], [0,868], [−0,044],
+    [GBM], [0,868], [0,824], [−0,044],
+    [FFD], [0,824], [0,912], [+0,088],
+    [BERT], [0,714], [0,626], [−0,088],
+    [FedXGBllr], [0,780], [0,824], [+0,044],
+    table.cell(rowspan: 6)[ULB],
+    [LR], [1,000], [1,000], [0,000],
+    [SVM], [0,856], [1,000], [+0,144],
+    [GBM], [0,688], [0,544], [−0,144],
+    [FFD], [0,664], [1,000], [+0,336],
+    [BERT], [1,000], [0,880], [−0,120],
+    [FedXGBllr], [1,000], [0,856], [−0,144],
+    table.cell(rowspan: 6)[PaySim],
+    [LR], [0,740], [0,773], [+0,033],
+    [SVM], [1,000], [0,870], [−0,130],
+    [GBM], [1,000], [0,773], [−0,227],
+    [FFD], [1,000], [0,870], [−0,130],
+    [BERT], [1,000], [0,870], [−0,130],
+    [FedXGBllr], [1,000], [0,643], [−0,357],
+  ),
+  caption: [Indeks Kuncheva antar client pada kondisi IID dan Non-IID
+  tanpa SMOTE],
+) <tab-4-rq3-kuncheva-noniid>
+
+#figure(
+  kind: table,
+  table(
+    columns: (auto, auto, auto, auto, auto),
+    table.header([Dataset], [Model], [IID], [Non-IID], [$Delta$]),
+    table.cell(rowspan: 6)[ULB],
+    [LR], [1,000], [1,000], [0,000],
+    [SVM], [1,000], [1,000], [0,000],
+    [GBM], [0,832], [0,904], [+0,072],
+    [FFD], [0,832], [0,880], [+0,048],
+    [BERT], [0,736], [0,808], [+0,072],
+    [FedXGBllr], [0,904], [0,712], [−0,192],
+    table.cell(rowspan: 6)[PaySim],
+    [LR], [0,870], [0,773], [−0,097],
+    [SVM], [1,000], [0,870], [−0,130],
+    [GBM], [0,870], [0,870], [0,000],
+    [FFD], [0,805], [0,675], [−0,130],
+    [BERT], [1,000], [1,000], [0,000],
+    [FedXGBllr], [0,805], [0,643], [−0,162],
+  ),
+  caption: [Indeks Kuncheva antar client pada kondisi IID dan Non-IID
+  dengan SMOTE],
+) <tab-4-rq3-kuncheva-noniid-smote>
 
 #figure(
   kind: table,
@@ -2782,8 +2880,9 @@ meningkat dari 0,868 menjadi 1,000.
   konfigurasi Non-IID],
 ) <tab-4-rq3-smote>
 
-Peningkatan konsistensi tersebut disertai perubahan fitur yang dianggap penting.
-Pada GBM di ULB, `V7` yang sebelumnya berada pada peringkat kedua seluruh client
+Penanganan class imbalance dengan SMOTE dapat meningkatkan kesamaan lima fitur
+terpenting sekaligus mengubah fitur yang dianggap penting, sebagaimana disajikan
+pada @tab-4-rq3-smote. Pada GBM di ULB, `V7` yang sebelumnya berada pada peringkat kedua seluruh client
 tidak lagi termasuk dalam lima fitur terpenting setelah SMOTE. Sebaliknya, `V3`
 masuk pada peringkat ketiga seluruh client. Pada LR di BAF, fitur dominan berubah
 dari indikator ketidaktersediaan riwayat alamat menjadi kategori status tempat
@@ -2899,10 +2998,13 @@ kesimpulan sebagai berikut:
   dan kondisi distribusi data. LR dan SVM cenderung menghasilkan konsistensi
   antar client yang lebih tinggi, dengan median korelasi peringkat berbobot
   masing-masing sebesar 0,9845 dan 0,9895, meskipun keunggulan tersebut tidak
-  berlaku pada seluruh dataset maupun ukuran kesamaan fitur. Pada FFD, BERT,
-  dan FedXGBllr, korelasi peringkat berbobot menurun dari IID ke Non-IID pada
-  11 dari 15 pasangan yang dibandingkan, dengan rata-rata penurunan sebesar
-  0,054. Pada PaySim tanpa SMOTE, korelasi FedXGBllr menurun dari 0,986 menjadi
+  berlaku pada seluruh dataset maupun ukuran kesamaan fitur. Korelasi
+  peringkat berbobot antar client menurun dari IID ke Non-IID pada 20 dari 30
+  pasangan yang dibandingkan, dengan rata-rata penurunan sebesar 0,033 dan
+  nilai p sebesar 0,0078. Penurunan tersebut terutama terjadi pada PaySim,
+  yaitu pada 11 dari 12 pasangan, dan lebih besar pada FFD, BERT, dan FedXGBllr
+  dengan rata-rata 0,054 dibandingkan LR, SVM, dan GBM dengan rata-rata 0,011.
+  Pada PaySim tanpa SMOTE, korelasi FedXGBllr menurun dari 0,986 menjadi
   0,822 meskipun AUPRC tetap sekitar 0,996. Selain itu, SMOTE dapat
   meningkatkan kesamaan fitur terpenting tanpa memperbaiki kemampuan deteksi,
   sebagaimana pada LR di BAF kondisi Non-IID yang mengalami peningkatan indeks

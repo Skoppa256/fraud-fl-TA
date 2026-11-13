@@ -3,18 +3,27 @@
 
 Run on the box from the repo root. Read-only. Six independent legs — each one
 prints PASS/FAIL on its own, so a reader can reject any single leg and see what
-survives.
+survives. Audits results/shap_v2/ (seed 42), or with --seed N the tree
+results/seeds/seed<N>/shap_v2/.
 """
-import glob, json
+import argparse, glob, json
 import numpy as np, pandas as pd
 
+ap = argparse.ArgumentParser(description=__doc__)
+ap.add_argument("--seed", type=int, default=None,
+                help="audit results/seeds/seed<N>/shap_v2/ instead of the seed-42 record")
+args = ap.parse_args()
+base = "results/shap_v2" if args.seed is None else f"results/seeds/seed{args.seed}/shap_v2"
+
 rows = []
-for f in sorted(glob.glob("results/shap_v2/**/stability.json", recursive=True)):
+for f in sorted(glob.glob(f"{base}/**/stability.json", recursive=True)):
     s = json.load(open(f))
     s["_multi"] = s.get("n_clients", 1) > 1
     s["_bg"] = s.get("bg", "local")
     s["_dir"] = f.rsplit("/", 1)[0]
     rows.append(s)
+if not rows:
+    raise SystemExit(f"no stability.json under {base}/ (run from the repo root)")
 d = pd.DataFrame(rows)
 k = d[(d.explainer == "kernel") & d._multi & (d._bg == "local") & (d.status == "ok")]
 # The anchor must be exact INDEPENDENTLY of the models being audited. That is

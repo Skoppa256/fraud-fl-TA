@@ -435,6 +435,8 @@ Every run — federated or centralized — emits the same structured output:
 | Per-round CSV | `results/logs/<model>/<run_name>_rounds.csv` | `round, val_auprc, val_f1, val_precision, val_recall, train_loss` (FL only) |
 | W&B run | `https://wandb.ai/<entity>/fraud-fl-TA/runs/<id>` | Per-round loss/AUPRC curves + run summary |
 
+**Where outputs land (since 2026-11-13).** `results/` itself holds the frozen seed-42 record, so the writers refuse to create anything in its `logs/`, `models/`, `sweep/` or `shap_v2/`. `experiments/run_sweep.py` writes every run into `results/seeds/seed<N>/`, which has the layout above. To run an entry point by hand, point it at a tree first: `export SWEEP_RESULTS_ROOT="$PWD/results/seeds/seed123"`. See [evaluation/results_paths.py](evaluation/results_paths.py).
+
 The summary schema is defined once in [evaluation/results_writer.py](evaluation/results_writer.py) and every model calls into it. The canonical `<run_name>` is:
 
 | Kind | Format |

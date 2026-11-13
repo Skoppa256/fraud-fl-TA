@@ -7,11 +7,16 @@ data cache from earlier commits.
 
     python experiments/run_sweep.py \
       --datasets paysim,creditcard,baf --models all \
-      --conditions centralized,iid,noniid --alpha 0.5 --seeds 42 \
+      --conditions centralized,iid,noniid --alpha 0.5 --seeds 123 \
       --smote-arms both --gpu-fraction 1.0 [--dry-run|--resume|--offline|--timing-probe]
 
 Running with NO arguments prints the dry-run manifest (it never launches jobs by
 accident).
+
+Every run writes into its seed's tree, ``results/seeds/seed<N>/`` (``sweep/``,
+``logs/``, ``models/``) — seed 42 included, because ``results/`` itself is the
+frozen seed-42 record. The data cache stays shared; see
+evaluation/results_paths.py.
 
 IMPORTANT — launch under a session that survives SSH drop:
     tmux new -s sweep 'python experiments/run_sweep.py ... 2>&1 | tee sweep.out'
@@ -45,6 +50,7 @@ sys.path.insert(0, str(PROJECT_ROOT))
 from experiments import data_cache, resources  # noqa: E402
 from experiments import sweep_preflight  # noqa: E402
 from evaluation import model_persistence as _mp  # noqa: E402
+from evaluation.results_paths import RESULTS_ROOT_ENV, assert_writable, seed_root  # noqa: E402
 
 # --- Experiment constants (mirror the model configs; uniform across datasets). --
 SAMPLING_STRATEGY = 0.01
@@ -70,11 +76,20 @@ _CENTRAL_SCRIPT = {
     "ffd": "run_ffd", "bert_fraud": "run_bert_fraud", "fedxgbllr": "run_xgb",
 }
 
-SWEEP_DIR = PROJECT_ROOT / "results" / "sweep"
-MASTER_CSV = SWEEP_DIR / "sweep_master.csv"
-WANDB_OFFLINE_DIR = SWEEP_DIR / "wandb_offline"
-
 PYEXE = sys.executable
+
+
+# One sweep/ per seed tree, results/seeds/seed<N>/ — never the frozen results/sweep/.
+def _sweep_dir(seed: int) -> Path:
+    return seed_root(seed) / "sweep"
+
+
+def _master_csv(seed: int) -> Path:
+    return _sweep_dir(seed) / "sweep_master.csv"
+
+
+def _wandb_dir(seed: int) -> Path:
+    return _sweep_dir(seed) / "wandb_offline"
 
 
 @dataclass
@@ -105,8 +120,13 @@ class RunSpec:
         return f"{self.group}_a{self.alpha_label}_s{self.seed}"
 
     @property
+    def root(self) -> Path:
+        """This run's output tree, results/seeds/seed<N>/, handed to the child."""
+        return seed_root(self.seed)
+
+    @property
     def run_dir(self) -> Path:
-        return SWEEP_DIR / self.run_name
+        return _sweep_dir(self.seed) / self.run_name
 
 
 # --------------------------------------------------------------------------- #
@@ -207,6 +227,9 @@ def build_command(spec: RunSpec, gpu_available: bool, use_wandb: bool) -> Tuple[
             f"dataset={spec.dataset}", f"clients={spec.dataset}_5_clients",
             f"dataset.oversampling.method={ov}",
             f"dataset.oversampling.sampling_strategy={SAMPLING_STRATEGY}",
+            # SMOTE seed follows the run seed, as in every other entry point. The
+            # dataset YAMLs pin base_seed: 42, which only matched the seed-42 sweep.
+            f"dataset.oversampling.base_seed={spec.seed}",
             f"XGBoost.device={xgb_device}",  # override (device now exists in base.yaml; not +append)
             f"random_seed={spec.seed}", f"use_wandb={wb}",
         ]
@@ -243,11 +266,17 @@ def build_env(spec: RunSpec, offline: bool, use_wandb: bool,
         env[var] = n
     # Ensure children (esp. fedxgbllr under a different cwd) import repo packages.
     env["PYTHONPATH"] = str(PROJECT_ROOT) + os.pathsep + env.get("PYTHONPATH", "")
+    # The child writes its logs/ and models/ into this run's seed tree. Absolute,
+    # for the same reason as PYTHONPATH: fedxgbllr runs under a different cwd.
+    env[RESULTS_ROOT_ENV] = str(spec.root)
     if use_wandb:
         env["WANDB_RUN_GROUP"] = spec.group
         env["WANDB_NAME"] = spec.run_name
         env["WANDB_TAGS"] = ",".join([spec.dataset, spec.model, spec.condition])
-        env["WANDB_DIR"] = str(WANDB_OFFLINE_DIR)
+        # wandb silently falls back to the system temp dir when WANDB_DIR does
+        # not exist, so create it.
+        _wandb_dir(spec.seed).mkdir(parents=True, exist_ok=True)
+        env["WANDB_DIR"] = str(_wandb_dir(spec.seed))
         env["WANDB_MODE"] = "offline" if offline else "online"
         # Extra config fields merged into wandb.config (no entry-point edit).
         # wandb's dict_from_config_file expects the NESTED form
@@ -396,7 +425,7 @@ def _child_run_name(spec: RunSpec) -> str:
 
 
 def _artifact_dir(spec: RunSpec) -> Path:
-    return PROJECT_ROOT / "results" / "models" / spec.dataset / _child_run_name(spec)
+    return spec.root / "models" / spec.dataset / _child_run_name(spec)
 
 
 # FedXGBllr trees per client (conf/base.yaml n_estimators_client) — used only for
@@ -472,7 +501,7 @@ def _rounds_completed(spec: RunSpec) -> object:
     scheme = "iid" if spec.condition == "iid" else "dirichlet"
     a = "-" if spec.condition == "iid" else f"{spec.alpha:g}"
     child = f"{subdir}_{scheme}_alpha{a}_{spec.oversampling}_seed{spec.seed}_rounds.csv"
-    p = PROJECT_ROOT / "results" / "logs" / spec.dataset / subdir / child
+    p = spec.root / "logs" / spec.dataset / subdir / child
     if p.is_file():
         try:
             return max(0, sum(1 for _ in open(p)) - 1)  # minus header
@@ -483,6 +512,7 @@ def _rounds_completed(spec: RunSpec) -> object:
 
 def execute_run(spec: RunSpec, gpu_available: bool, offline: bool,
                 use_wandb: bool, data_hash: str, partition_hash: str) -> dict:
+    assert_writable(spec.root)
     spec.run_dir.mkdir(parents=True, exist_ok=True)
     logf = spec.run_dir / "run.log"
     argv, cwd = build_command(spec, gpu_available, use_wandb)
@@ -600,10 +630,13 @@ _MASTER_COLUMNS = [
 
 def _append_master(rec: dict) -> None:
     """Atomic-ish append: single sequential writer, flush+fsync per row so a
-    crash mid-sweep leaves a complete prefix, never a corrupt line."""
-    SWEEP_DIR.mkdir(parents=True, exist_ok=True)
-    new = not MASTER_CSV.is_file()
-    with open(MASTER_CSV, "a", newline="") as f:
+    crash mid-sweep leaves a complete prefix, never a corrupt line. One master
+    per seed, in that seed's tree."""
+    master = _master_csv(int(rec["seed"]))
+    assert_writable(master)
+    master.parent.mkdir(parents=True, exist_ok=True)
+    new = not master.is_file()
+    with open(master, "a", newline="") as f:
         w = csv.DictWriter(f, fieldnames=_MASTER_COLUMNS, extrasaction="ignore")
         if new:
             w.writeheader()
@@ -659,6 +692,8 @@ def print_manifest(specs: List[RunSpec], gpu_available: bool) -> None:
     print("=== DRY-RUN MANIFEST ===")
     print(f"planned cells: {len(specs)} | to run: {len(to_run)} | "
           f"skipped SMOTE no-ops: {len(skipped)}")
+    trees = sorted({os.path.relpath(s.root, PROJECT_ROOT) for s in specs})
+    print(f"output tree(s): {', '.join(trees)}")
     print(f"\nper-model resource allocation (gpu_available={gpu_available}, "
           f"gpu_fraction default={resources.gpu_fraction_default()}):")
     for m in sorted({s.model for s in specs}):
@@ -799,7 +834,8 @@ def main(argv=None) -> int:
 
     print(f"\n=== SWEEP DONE === completed={completed} failed={failed} skipped={skipped}")
     if use_wandb and args.offline:
-        print(f"[wandb] offline runs in {WANDB_OFFLINE_DIR} — sync later with `wandb sync`")
+        for seed in sorted({s.seed for s in specs}):
+            print(f"[wandb] offline runs in {_wandb_dir(seed)} — sync later with `wandb sync`")
     return 0 if failed == 0 else 1
 
 
@@ -822,8 +858,7 @@ def _summary_csv_path(spec: RunSpec) -> Path:
         subdir = "centralized"
     else:
         subdir = "fedxgbllr" if spec.model == "fedxgbllr" else spec.model
-    return (PROJECT_ROOT / "results" / "logs" / spec.dataset / subdir /
-            f"{_child_run_name(spec)}.csv")
+    return spec.root / "logs" / spec.dataset / subdir / f"{_child_run_name(spec)}.csv"
 
 
 def _summary_row_complete(path: Path) -> Tuple[bool, List[str]]:
@@ -847,6 +882,8 @@ def _summary_row_complete(path: Path) -> Tuple[bool, List[str]]:
 #      early-stopping capture, two-stage persistence, and CNN-probability
 #      calibration. This one early-stops (~round 12) so it also guards the
 #      last-executed-round persistence capture (~4 min).
+# Both are seed 42, so they land in results/seeds/seed42/, never on the frozen
+# seed-42 record — the gate is safe to re-run.
 _SMOKE_CELLS: Tuple[RunSpec, ...] = (
     RunSpec("creditcard", "lr", "no-smote", "centralized", seed=42, alpha=None),
     RunSpec("creditcard", "fedxgbllr", "no-smote", "iid", seed=42, alpha=None),

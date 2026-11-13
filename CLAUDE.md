@@ -33,7 +33,7 @@ decision by the author — it is never a step inside another task.
 | `results/shap_v2/**` | **RQ3 v2, final.** Read-only. Regenerating requires an explicit decision, not a re-run. |
 | `results/analysis/**` | **Derived analysis of record.** `minority_census.csv` holds the per-client minority census and the `synthesis_multiplier` that BAB 3 §3.4.3 says are recorded. Frozen 2026-09-29 because a thesis claim rests on it. |
 | `analysis/separability/**` | **Derived analysis of record — a different tree from `results/analysis/`.** `separability_summary.csv` is the source for the minority-typology table and the 93,1% that BAB 5 restates. Frozen 2026-09-29 (6 tracked files) for the same reason: a thesis claim rests on it. |
-| `results/shap/**` | **v1 SHAP tree — superseded, but load-bearing.** `production.log` is the only surviving record of the pre-repair run, in which two PaySim FedXGBllr cells scored `spearman=0.0000 kuncheva=1.0000`; it cannot be regenerated (commit `1d661ac`, 2026-08-07, fixed the clipped-logit saturation that produced it). No figure from this log is cited in `buku/` — the v1 `0,775` this row previously claimed for BAB 4 §4.3 appears nowhere in `content.typ`. The log is kept as the record of the pre-repair state, not as a source for prose. `experiments/shap_analysis.py` still writes this directory — do not re-run it. |
+| `results/shap/**` | **v1 SHAP tree — superseded, but load-bearing.** `production.log` is the only surviving record of the pre-repair run, in which two PaySim FedXGBllr cells scored `spearman=0.0000 kuncheva=1.0000`; it cannot be regenerated (commit `1d661ac`, 2026-08-07, fixed the clipped-logit saturation that produced it). No figure from this log is cited in `buku/` — the v1 `0,775` this row previously claimed for BAB 4 §4.3 appears nowhere in `content.typ`. The log is kept as the record of the pre-repair state, not as a source for prose. `experiments/shap_analysis.py` targets this directory; since 2026-11-13 its `main()` refuses to start (the write guard below). |
 
 `docs/frozen_manifest.sha256` records SHA-256 for the frozen trees. For files
 that are tracked in git it is redundant with git's own object hashes; keep it
@@ -50,6 +50,30 @@ directory's *contents*) rather than `results` (ignore the *directory*), because
 a directory-level ignore cannot be undone by a negation on a path inside it.
 That change is what allowed `results/shap_v2/**` to be re-included and
 committed. Results that were already tracked are unaffected by the switch.
+
+**Per-seed trees — `results/seeds/seed<N>/**` (2026-11-13), not frozen.** The
+multi-seed re-run writes here, one tree per training seed, each with the frozen
+layout (`sweep/`, `logs/`, `models/`, `shap_v2/`, `clean_summary.csv`).
+`experiments/run_sweep.py` sends every run to its seed's tree, seed 42 included,
+so a launch — or the smoke gate — can no longer land on the seed-42 record.
+`experiments/shap_rq3.py` requires `--seed N` and reads and writes only inside
+that tree; `verify_hashes`, `analysis/verify_kernel_tier.py` and
+`analysis/rq3_wilcoxon.py` read one with `--seed N`, and
+`experiments/build_seed_summary.py --seed N` builds its `clean_summary.csv` with
+the recipe that reproduces the frozen one. `results/cache/` stays shared: its
+entries are named by seed. The tree is ignored by the `results/*` rule, so
+nothing in it reaches git until the author decides to un-ignore it.
+
+`evaluation/results_paths.py` holds the paths and a write guard: the shared
+writers (`results_writer`, `model_persistence`), the runner and `shap_rq3.py`
+refuse any path inside a frozen folder under `results/`. An entry point run by
+hand therefore fails loudly unless `SWEEP_RESULTS_ROOT` (absolute) names a tree.
+Regenerating a frozen artifact means editing the guard's `FROZEN` tuple — an
+explicit decision, deliberately not a flag. The guard does **not** cover the
+one-off scripts that wrote the frozen trees with their own writers —
+`experiments/backfill_recall_at_fpr.py`, `experiments/migrate_rounds_schema.py`,
+`notebooks/minority_census.py`, `analysis/separability/separability_analysis.py`
+— so the rule above still applies to them: do not re-run them.
 
 ## Documentation ships with the code — same change, not later
 
@@ -216,11 +240,13 @@ Tables:
 | Tabel 4.14 | `<tab-4-iid-smote>` | Efek SMOTE terhadap AUPRC pada kondisi IID untuk dataset ULB dan PaySim |
 | Tabel 4.15 | `<tab-4-baf-smote>` | Efek SMOTE terhadap AUPRC pada kondisi Non-IID untuk dataset BAF |
 | Tabel 4.16 | `<tab-4-baf-smote-rfpr>` | Efek SMOTE terhadap Recall\@5%FPR pada kondisi Non-IID untuk dataset BAF |
-| Tabel 4.17 | `<tab-4-rq3-corr>` | Korelasi peringkat berbobot dan tanpa bobot antar client pada pengukuran utama |
-| Tabel 4.18 | `<tab-4-rq3-kuncheva>` | Rerata indeks Kuncheva dan Jaccard\@5 lima fitur terpenting per dataset |
-| Tabel 4.19 | `<tab-4-rq3-paysim>` | Korelasi peringkat berbobot antar client pada PaySim menggunakan KernelSHAP tersampel |
-| Tabel 4.20 | `<tab-4-rq3-smote>` | Perubahan konsistensi dan fitur penting setelah SMOTE pada beberapa konfigurasi Non-IID |
-| Tabel 4.21 | `<tab-4-rq3-seeds>` | Kesepakatan pengulangan dan kesepakatan antar client pada KernelSHAP tersampel |
+| Tabel 4.17 | `<tab-4-rq3-kuncheva>` | Rata-rata indeks Kuncheva dan Jaccard\@5 lima fitur terpenting per dataset |
+| Tabel 4.18 | `<tab-4-rq3-noniid>` | Korelasi peringkat berbobot antar client pada kondisi IID dan Non-IID tanpa SMOTE |
+| Tabel 4.19 | `<tab-4-rq3-noniid-smote>` | Korelasi peringkat berbobot antar client pada kondisi IID dan Non-IID dengan SMOTE |
+| Tabel 4.20 | `<tab-4-rq3-kuncheva-noniid>` | Indeks Kuncheva antar client pada kondisi IID dan Non-IID tanpa SMOTE |
+| Tabel 4.21 | `<tab-4-rq3-kuncheva-noniid-smote>` | Indeks Kuncheva antar client pada kondisi IID dan Non-IID dengan SMOTE |
+| Tabel 4.22 | `<tab-4-rq3-smote>` | Perubahan konsistensi dan fitur penting setelah SMOTE pada beberapa konfigurasi Non-IID |
+| Tabel 4.23 | `<tab-4-rq3-seeds>` | Kesepakatan pengulangan dan kesepakatan antar client pada KernelSHAP tersampel |
 
 Figures:
 
@@ -236,7 +262,10 @@ Figures:
 | Gambar 3.2 | `<fig-3-2>` | Arsitektur Umum Sistem. |
 | Gambar 3.3 | `<fig-3-3>` | Skema pembagian data dua tingkat. |
 | Gambar 3.4 | `<fig-3-4>` | Skema pengukuran dua seed. |
-| Gambar 4.1 | `<fig-typology>` | Distribusi tipe contoh minoritas (k = 5 tetangga terdekat) per dataset. Kelas minoritas BAF hampir seluruhnya *rare* dan *outlier*, sedangkan ULB didominasi *safe*. |
+| Gambar 4.1 | `<fig-4-auprc-boxplot>` | Distribusi AUPRC test seluruh konfigurasi per dataset |
+| Gambar 4.2 | `<fig-typology>` | Distribusi tipe contoh minoritas (k = 5 tetangga terdekat) per dataset. Kelas minoritas BAF hampir seluruhnya *rare* dan *outlier*, sedangkan ULB didominasi *safe*. |
+| Gambar 4.3 | `<fig-4-rq3-spearman>` | Korelasi peringkat tanpa bobot antar client |
+| Gambar 4.4 | `<fig-4-rq3-weighted>` | Korelasi peringkat berbobot antar client |
 
 Note the label/number skew this table exists to prevent: `<tab-3-4>` renders as
 **Tabel 3.6**, `<tab-3-explainer>` as **Tabel 3.7**, `<tab-3-5>` as **Tabel 3.8**,
@@ -263,11 +292,25 @@ BAB 3/4 figures split into two kinds, and `analysis/figures/make_all.py`
 enforces that every one of them is accounted for (`--check` fails on a figure
 that is in neither set):
 
-- **Generated** (`GENERATORS`) — Gambar 4.1 only, built from the experiment
-  CSVs. Do not hand-edit that PNG: change the script, or the data, and rebuild.
+- **Generated** (`GENERATORS`) — Gambar 4.1 (`fig_4_auprc_boxplot.py`, AUPRC
+  boxplot of all 96 cells, added in §4.1.1 on the author's instruction
+  2026-11-05), Gambar 4.2 (`fig_4_1_minority_typology.py`; the script name
+  predates the renumber) and Gambar 4.3 and 4.4 (both from
+  `fig_4_rq3_korelasi_boxplot.py`: between-client Spearman tanpa bobot and
+  berbobot per model over the 66 federated main cells, no inset and each with
+  its own Y scale (lowest cell floored to 0,05 up to 1,00: 0,75 tanpa bobot,
+  0,65 berbobot) since 2026-11-12, so they are not meant to be compared by
+  eye; together they replaced Tabel `<tab-4-rq3-corr>` on
+  2026-11-05, and the script checks that the paragraph after
+  `<fig-4-rq3-weighted>` quotes the weighted medians and the FedXGBllr range
+  the data gives),
+  built from the experiment CSVs. Do not hand-edit
+  those PNGs: change the script, or the data, and rebuild.
 - **Authored by hand** (`EXTERNAL`) — the method diagrams Gambar 3.1–3.4. As of
   the 2026-10-04 revision (3.1–3.3) and 2026-10-05 (3.4) the author draws these
-  in an external tool and delivers them in `TATATA.docx`; `fig_3_1_pipeline.py`,
+  in an external tool and delivers them in `TATATA.docx` (latest: 3.3 and 3.4
+  redrawn 2026-11-05, dropped into `resources/` and renamed onto the existing
+  filenames); `fig_3_1_pipeline.py`,
   `fig_3_2_logical_layers.py`, `fig_3_3_two_level_split.py` and
   `fig_3_4_two_seeds_gap.py` are kept but no longer own anything the thesis
   renders. **Nothing rebuilds these**, and unlike the generated versions they
@@ -295,9 +338,9 @@ What is frozen is no longer "BAB 4 and 5" but the following:
 | region | status |
 |---|---|
 | BAB 1, BAB 2, BAB 3 | the author's text. Change only on his instruction. |
-| BAB 4 preamble, §4.1, §4.2 | **frozen**, with §4.1.1 and §4.2.1 re-frozen as of 2026-10-05. **No longer byte-identical since 2026-10-31**, on the author's two instructions of that date: table design moved to `template.typ`, and wording unified under «Writing consistency». Both changed no number, cell value or claim. The preamble also gained an intro paragraph and three feature tables (`<tab-4-fitur-paysim>`, `<tab-4-fitur-ulb>`, `<tab-4-fitur-baf>`) on the author's instruction (2026-10-31), which moved every other BAB 4 table number up by three. The six AUPRC and Recall\@5%FPR tables (`<tab-4-auprc-*>`, `<tab-4-rfpr-*>`) were reduced to their tanpa SMOTE columns, also on the author's instruction (2026-10-31); the removed values remain in `results/clean_summary.csv`, and prose quoting them is flagged to the author, not rewritten. §4.2.1 gained one sentence and `<tab-4-iid-noniid>` on the author's instruction; its three paragraphs are otherwise untouched. Its history: it was unfrozen for a supplementary-metrics insertion, then revised again on the author's instruction — the three `<tab-4-supp-*>` tables were replaced by the single `<tab-4-cal-slope>` (calibration slope only; F1/Precision/Recall/FPR aktual/Brier/CITL are no longer reported anywhere), and the closing two paragraphs are now the author's own text. |
-| BAB 4 §4.3 (`<sec-hasil-rq3>`) | the author's replaced text. **It cites nothing** — no `@key`, no author-year. |
-| BAB 5 (KESIMPULAN DAN SARAN) | the author's replaced text. **Cites nothing.** |
+| BAB 4 preamble, §4.1, §4.2 | **frozen**, with §4.1.1 and §4.2.1 re-frozen as of 2026-10-05. **No longer byte-identical since 2026-10-31**, on the author's two instructions of that date: table design moved to `template.typ`, and wording unified under «Writing consistency». Both changed no number, cell value or claim. The preamble also gained an intro paragraph and three feature tables (`<tab-4-fitur-paysim>`, `<tab-4-fitur-ulb>`, `<tab-4-fitur-baf>`) on the author's instruction (2026-10-31), which moved every other BAB 4 table number up by three. The six AUPRC and Recall\@5%FPR tables (`<tab-4-auprc-*>`, `<tab-4-rfpr-*>`) were reduced to their tanpa SMOTE columns, also on the author's instruction (2026-10-31); the removed values remain in `results/clean_summary.csv`, and prose quoting them is flagged to the author, not rewritten. On 2026-11-05, on the author's instruction (from `TATATA_konsisten.docx`), §4.1.1's paragraph after the three AUPRC tables was replaced by two paragraphs plus `<fig-4-auprc-boxplot>` (Gambar 4.1), which moved the typology figure to Gambar 4.2; the dropped "773/484/15 kali batas bawah" sentence still stands in §4.1.3. §4.2.1 gained one sentence and `<tab-4-iid-noniid>` on the author's instruction; its three paragraphs are otherwise untouched. Its history: it was unfrozen for a supplementary-metrics insertion, then revised again on the author's instruction — the three `<tab-4-supp-*>` tables were replaced by the single `<tab-4-cal-slope>` (calibration slope only; F1/Precision/Recall/FPR aktual/Brier/CITL are no longer reported anywhere), and the closing two paragraphs are now the author's own text. |
+| BAB 4 §4.3 (`<sec-hasil-rq3>`) | the author's replaced text. **It cites nothing** — no `@key`, no author-year. On 2026-11-05, on the author's instruction, Tabel `<tab-4-rq3-corr>` was replaced by two boxplots, `<fig-4-rq3-spearman>` (Gambar 4.3) and `<fig-4-rq3-weighted>` (Gambar 4.4); its one introducing sentence was reworded to describe distributions, and Tabel 4.18–4.21 became 4.17–4.20. Later the same day, also on the author's instruction, the IID vs Non-IID comparison in §4.3.2 was widened from the three KernelSHAP models to all six: `<tab-4-rq3-noniid>` (tanpa SMOTE, 18 rows) and `<tab-4-rq3-noniid-smote>` (dengan SMOTE, 12 rows) cover all 30 pairs, and the prose quotes 20/30 decreases, mean 0,033, Wilcoxon p = 0,0078, with the per-group split (KernelSHAP 11/15, 0,054, p = 0,0042; LR/SVM/GBM 9/15, 0,011, p = 0,21). Source of those numbers: `analysis/rq3_wilcoxon.py` (reads `shap_summary_v2.csv`, writes nothing). |
+| BAB 5 (KESIMPULAN DAN SARAN) | the author's replaced text. **Cites nothing.** Item 3 was updated 2026-11-05 on the author's instruction to the all-model IID vs Non-IID figures of §4.3.2 (`analysis/rq3_wilcoxon.py`). |
 
 `<sec-hasil-rq3>` currently has a definition and **zero references** — BAB 3's and
 BAB 5's went with their replacements. That is harmless and the label stays.

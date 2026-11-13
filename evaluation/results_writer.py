@@ -1,8 +1,10 @@
 """Shared CSV results writer for all FL and centralized baseline runs.
 
-Writes structured CSVs under ``results/logs/<dataset>/<subdir>/`` so that every
+Writes structured CSVs under ``<tree>/logs/<dataset>/<subdir>/`` so that every
 model in the comparison emits identical schema, and PaySim and creditcard runs
-never collide on disk. Two files per FL run:
+never collide on disk. ``<tree>`` is the run's seed tree
+``results/seeds/seed<N>/`` (see :mod:`evaluation.results_paths`). Two files per
+FL run:
 
 * ``<run_name>.csv``        — single-row summary
 * ``<run_name>_rounds.csv`` — per-round val metrics
@@ -24,6 +26,8 @@ import csv
 import os
 from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional, Sequence
+
+from evaluation.results_paths import assert_writable, results_root
 
 
 SUMMARY_COLUMNS: Sequence[str] = (
@@ -128,17 +132,16 @@ def build_centralized_run_name(model: str, oversampling: str, seed: int) -> str:
     return f"centralized_{model}_{oversampling}_seed{int(seed)}"
 
 
-# Repo root, so every model writes to the SAME results/logs/ regardless of the
-# cwd it runs in. FedXGBllr runs with cwd=models/fedxgbllr (Hydra needs its conf/),
-# so a cwd-relative "results/logs" would silently scatter its results into
-# models/fedxgbllr/results/logs/ where the collector and verify_hashes (which walk
-# the repo results/logs/) would never find them.
-_REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-
-
+# Absolute, so every model writes to the SAME logs/ regardless of the cwd it runs
+# in. FedXGBllr runs with cwd=models/fedxgbllr (Hydra needs its conf/), so a
+# cwd-relative "results/logs" would silently scatter its results into
+# models/fedxgbllr/results/logs/ where the collector and verify_hashes would never
+# find them. results_root() resolves to the run's seed tree (set by the runner);
+# assert_writable() refuses the frozen results/logs/ a by-hand run would land in.
 def _logs_dir(subdir: str, root: str = None) -> str:
-    root = root or os.path.join(_REPO_ROOT, "results", "logs")
+    root = root or str(results_root() / "logs")
     path = os.path.join(root, subdir)
+    assert_writable(path)
     os.makedirs(path, exist_ok=True)
     return path
 
@@ -247,7 +250,7 @@ def write_fl_results(
         ``{test_auprc, test_f1, test_precision, test_recall}`` or ``None``
         (e.g. if the run was interrupted before the final round).
     subdir
-        Subdirectory under ``results/logs/`` (defaults to ``model``).
+        Subdirectory under the tree's ``logs/`` (defaults to ``model``).
 
     Returns
     -------

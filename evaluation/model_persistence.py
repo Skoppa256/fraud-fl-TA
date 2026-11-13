@@ -30,16 +30,19 @@ from typing import Any, Dict, List, Sequence
 
 import numpy as np
 
-_REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+from evaluation.results_paths import assert_writable, results_root
 
 
 def run_artifact_dir(dataset: str, run_name: str) -> Path:
-    """Canonical per-run artifact directory: results/models/<dataset>/<run_name>/.
+    """Canonical per-run artifact directory: <tree>/models/<dataset>/<run_name>/.
 
-    Deterministic from ``(dataset, run_name)`` so the entry point (which builds the
+    Deterministic from ``(dataset, run_name)`` and the run's seed tree (see
+    :mod:`evaluation.results_paths`) so the entry point (which builds the
     run_name) and the runner (which reconstructs it) agree without passing paths.
+    Refuses the frozen results/models/ a by-hand run would otherwise land in.
     """
-    d = Path(_REPO_ROOT) / "results" / "models" / dataset / run_name
+    d = results_root() / "models" / dataset / run_name
+    assert_writable(d)
     d.mkdir(parents=True, exist_ok=True)
     return d
 

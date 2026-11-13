@@ -1,6 +1,7 @@
 """Post-sweep comparability verification (Part 3).
 
-Two assertions over every per-run summary CSV in ``results/logs/``:
+Two assertions over every per-run summary CSV in ``results/logs/`` (the seed-42
+record), or with ``--seed N`` in ``results/seeds/seed<N>/logs/``:
 
 1. **Child == cache.** Each row's child-emitted ``data_hash`` (and
    ``partition_hash`` for federated rows) must equal the hash the cache produces
@@ -13,7 +14,8 @@ Two assertions over every per-run summary CSV in ``results/logs/``:
 Rows with an empty ``data_hash`` (e.g. an entry point not yet wired to emit it —
 currently FedXGBllr) are reported as UNVERIFIED rather than silently passing.
 
-Run: ``python -m experiments.verify_hashes`` — exits non-zero on any mismatch.
+Run: ``python -m experiments.verify_hashes [--seed N]`` — exits non-zero on any
+mismatch, on a row of another seed, or when there is nothing to verify.
 """
 
 from __future__ import annotations
@@ -27,13 +29,14 @@ from typing import Dict, List
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 from experiments import data_cache  # noqa: E402
+from evaluation.results_paths import seed_root  # noqa: E402
 
 LOGS_ROOT = os.path.join(os.path.dirname(__file__), "..", "results", "logs")
 
 
-def _rows() -> List[dict]:
+def _rows(logs_root: str = LOGS_ROOT) -> List[dict]:
     out = []
-    for dp, _d, fs in os.walk(os.path.abspath(LOGS_ROOT)):
+    for dp, _d, fs in os.walk(os.path.abspath(logs_root)):
         for fn in fs:
             if fn.endswith(".csv") and not fn.endswith("_rounds.csv"):
                 try:
@@ -51,14 +54,21 @@ def _scheme_to_condition(scheme: str):
     return None, None  # centralized — no partition
 
 
-def verify() -> int:
-    rows = _rows()
+def verify(logs_root: str = LOGS_ROOT, expect_seed: int | None = None) -> int:
+    rows = _rows(logs_root)
+    if not rows:
+        print(f"=== FAILED === no per-run summary CSVs under {os.path.abspath(logs_root)}")
+        return 1
     n_ok = n_fail = n_unverified = 0
     fails: List[str] = []
     groups: Dict[tuple, List[dict]] = defaultdict(list)
 
     for r in rows:
         ds, seed = r.get("dataset", ""), r.get("random_seed", "")
+        if expect_seed is not None and str(seed) != str(expect_seed):
+            n_fail += 1
+            fails.append(f"{r.get('run_name')}: random_seed {seed!r} in the seed-{expect_seed} tree")
+            continue
         dh = (r.get("data_hash") or "").strip()
         if not dh:
             n_unverified += 1
@@ -102,5 +112,17 @@ def verify() -> int:
     return 1 if n_fail else 0
 
 
+def main(argv=None) -> int:
+    import argparse
+    ap = argparse.ArgumentParser(description="Post-sweep hash verification.")
+    ap.add_argument("--seed", type=int, default=None,
+                    help="verify results/seeds/seed<N>/logs/ instead of the seed-42 "
+                         "record in results/logs/")
+    args = ap.parse_args(argv)
+    if args.seed is None:
+        return verify()
+    return verify(str(seed_root(args.seed) / "logs"), expect_seed=args.seed)
+
+
 if __name__ == "__main__":
-    raise SystemExit(verify())
+    raise SystemExit(main())

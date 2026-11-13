@@ -1,16 +1,18 @@
 """RQ3 SHAP v2 — Phase 1.1 + Phase 2 production runner. RUN ON THE BOX (tmux TA_Deo).
 
-Supersedes experiments/shap_analysis.py for RQ3 stability outputs. READ-ONLY over
-results/models/ + the data cache. Writes ONLY under results/shap_v2/ — results/shap/
-(the v1, pre-l1_reg-fix record) is deliberately left untouched so every number that
-moves can be shown next to its old value.
+Supersedes experiments/shap_analysis.py for RQ3 stability outputs. ``--seed N``
+(required) names the training seed whose models are explained: the run reads
+results/seeds/seed<N>/models/ + the data cache READ-ONLY, explains that seed's own
+split, partition and backgrounds, and writes ONLY under results/seeds/seed<N>/shap_v2/.
+results/shap_v2/ (the seed-42 v2 record) and results/shap/ (the v1, pre-l1_reg-fix
+record) are frozen and never a target.
 
-    python experiments/shap_rq3.py --stage main                    # all 96 cells
-    python experiments/shap_rq3.py --stage main --datasets paysim  # subset
-    python experiments/shap_rq3.py --stage twobg                   # shared-background arm
-    python experiments/shap_rq3.py --stage paysim-exact            # grouped exact (510)
-    python experiments/shap_rq3.py --stage paysim-exact --include-ungrouped  # + 8190
-    python experiments/shap_rq3.py --stage budget                  # nsamples-vs-N probe
+    python experiments/shap_rq3.py --seed 123 --stage main                    # all 96 cells
+    python experiments/shap_rq3.py --seed 123 --stage main --datasets paysim  # subset
+    python experiments/shap_rq3.py --seed 123 --stage twobg                   # shared-background arm
+    python experiments/shap_rq3.py --seed 123 --stage paysim-exact            # grouped exact (510)
+    python experiments/shap_rq3.py --seed 123 --stage paysim-exact --include-ungrouped  # + 8190
+    python experiments/shap_rq3.py --seed 123 --stage budget                  # nsamples-vs-N probe
     (every stage resumes: cells with a stability.json are skipped; --no-skip-existing
      forces recomputation)
 
@@ -82,6 +84,8 @@ sys.path.insert(0, str(PROJECT_ROOT / "models" / "fedxgbllr"))
 
 from evaluation import shap_inference as SI  # noqa: E402
 from evaluation import shap_stability as ST  # noqa: E402
+from evaluation.results_paths import assert_writable, seed_root  # noqa: E402
+from experiments import shap_analysis as SA  # noqa: E402
 from experiments.shap_analysis import (  # noqa: E402
     CHEAP, EXPLAINER, KMEANS_K, KNOWN, N_BG, N_EXPLAIN, NSAMPLES, NUM_CLIENTS, SEED,
     _sv2d, client_backgrounds, discover, explanation_set, feature_names,
@@ -93,8 +97,12 @@ from experiments.shap_analysis import load_predictor  # noqa: E402
 # never the training seed; nothing is retrained).
 SHAP_SEEDS = (11, 22)
 BH_ALPHA = 0.05
-OUT = PROJECT_ROOT / "results" / "shap_v2"
-SUMMARY = OUT / "shap_summary_v2.csv"
+# Set by configure() from the required --seed, before any cell is read or written.
+# Unconfigured, every write path raises (see _out) rather than defaulting to the
+# frozen results/shap_v2/.
+MODELS = None
+OUT = None
+SUMMARY = None
 SUMMARY_COLS = [
     "dataset", "model", "condition", "arm", "bg", "explainer", "deterministic",
     "n_clients", "manifest_sha256", "data_hash", "partition_hash",
@@ -107,6 +115,35 @@ SUMMARY_COLS = [
 ]
 # PaySim's one categorical; its 5 one-hot columns become ONE Shapley player.
 GROUP_PREFIXES = {"paysim": ["type"]}
+
+
+def configure(seed):
+    """Point the run at one training seed: its models, its data, its tree.
+
+    SEED selects the seed's split, partition and backgrounds. It is set here AND in
+    shap_analysis, whose explanation_set / client_backgrounds read their own copy.
+    The explained rows and backgrounds are drawn with rng(SEED), rng(SEED + 1) and
+    rng(SEED + 2), as in the seed-42 run; SHAP_SEEDS stay (11, 22) for every seed.
+    """
+    global SEED, MODELS, OUT, SUMMARY
+    SEED = SA.SEED = int(seed)
+    root = seed_root(SEED)
+    MODELS = root / "models"
+    OUT = root / "shap_v2"
+    SUMMARY = OUT / "shap_summary_v2.csv"
+
+
+def _out():
+    if OUT is None:
+        raise RuntimeError("shap_rq3 is not configured: call configure(seed) first "
+                           "(main() does, from the required --seed)")
+    return OUT
+
+
+def _discover():
+    """This seed's artifacts only, from its own tree."""
+    _out()
+    return discover(root=MODELS, seed=SEED)
 
 
 def _f(x):  # json-safe float (nan -> None)
@@ -215,13 +252,17 @@ def client_explanation_sets(art, rng, n=N_EXPLAIN):
 # --------------------------------------------------------------------------- #
 # per-cell processing
 # --------------------------------------------------------------------------- #
-def cell_dir(art, bg_mode, root=OUT):
+def cell_dir(art, bg_mode, root=None):
+    # root=None resolves at call time: a default of OUT would be bound at import,
+    # before configure() has run.
+    root = _out() if root is None else root
     d = root / art["dataset"] / art["model"] / f"{art['condition']}_{art['arm']}"
     return d / "bg_shared" if bg_mode == "shared" else d
 
 
 def write_cell(cdir, fnames, prov, G, stats, extras):
     """Persist per-cell artifacts: importance matrix, stability.json, profile.csv."""
+    assert_writable(cdir)
     cdir.mkdir(parents=True, exist_ok=True)
     K, S, M = G.shape
     mean_imp = np.abs(G).mean(axis=(0, 1))
@@ -269,7 +310,7 @@ def legacy_metrics(G, d):
 
 
 def process_cell(art, bg_mode, X, dh, nsamples=NSAMPLES, groups=None, gnames=None,
-                 root=OUT, explainer_tag=None):
+                 root=None, explainer_tag=None):
     """Compute one cell (one bg mode). Returns a summary row dict."""
     import shap
     kind = EXPLAINER[art["model"]]
@@ -462,7 +503,9 @@ def _verdict(stats, kind, K):
 def write_summary(new_rows):
     """Idempotent merge + BH pass. The BH family is the multi-client kernel cells
     with a finite p, per bg mode (local and shared are separate families)."""
-    OUT.mkdir(parents=True, exist_ok=True)
+    out = _out()
+    assert_writable(SUMMARY)
+    out.mkdir(parents=True, exist_ok=True)
     rows = {}
     if SUMMARY.is_file():
         for r in csv.DictReader(open(SUMMARY)):
@@ -506,7 +549,7 @@ def write_summary(new_rows):
 # --------------------------------------------------------------------------- #
 # stages
 # --------------------------------------------------------------------------- #
-def run_cells(cells, bg_mode, args, nsamples=NSAMPLES, groups_for=None, root=OUT,
+def run_cells(cells, bg_mode, args, nsamples=NSAMPLES, groups_for=None, root=None,
               explainer_tag=None):
     rows, t0, done = [], time.time(), 0
     X_cache = {}
@@ -561,14 +604,14 @@ def build_groups(art):
 
 
 def stage_main(args):
-    arts = discover()
+    arts = _discover()
     cells = scope_order(arts, set(args.datasets.split(",")), set(args.models.split(",")))
     print(f"{len(cells)} cells in scope (cheap first, then expensive BAF->ULB->PaySim).")
     run_cells(cells, "local", args)
 
 
 def stage_twobg(args):
-    arts = [a for a in discover()
+    arts = [a for a in _discover()
             if EXPLAINER[a["model"]] == "kernel"
             and a["dataset"] in set(args.datasets.split(","))
             and a["condition"] in set(args.conditions.split(","))
@@ -581,7 +624,7 @@ def stage_twobg(args):
 
 
 def stage_paysim_exact(args):
-    arts = [a for a in discover()
+    arts = [a for a in _discover()
             if a["dataset"] == "paysim" and EXPLAINER[a["model"]] == "kernel"
             and a["model"] in set(args.models.split(","))]
     if not arts:
@@ -594,7 +637,7 @@ def stage_paysim_exact(args):
     print(f"PaySim exact — grouped: {m_eff} players, nsamples={ns_grouped} "
           f"(full enumeration).")
     run_cells(arts, "local", args, nsamples=ns_grouped, groups_for=build_groups,
-              root=OUT / "paysim_exact" / "grouped",
+              root=_out() / "paysim_exact" / "grouped",
               explainer_tag="kernel-exact-grouped")
     if args.include_ungrouped:
         m = len(feature_names(arts[0]))
@@ -603,7 +646,7 @@ def stage_paysim_exact(args):
               f"(~{ns_full / NSAMPLES:.1f}x the ns={NSAMPLES} per-instance cost; "
               "watch the first client's timing before letting it run).")
         run_cells(arts, "local", args, nsamples=ns_full,
-                  root=OUT / "paysim_exact" / "ungrouped",
+                  root=_out() / "paysim_exact" / "ungrouped",
                   explainer_tag="kernel-exact")
     else:
         print("(ungrouped 8190 run skipped — pass --include-ungrouped after the "
@@ -632,7 +675,7 @@ def stage_budget(args):
     systematic across instances, raising nsamples beats raising N_explain."""
     import shap
     ds, model, cond, arm = args.budget_cell.split("/")
-    art = next(a for a in discover()
+    art = next(a for a in _discover()
                if (a["dataset"], a["model"], a["condition"], a["arm"])
                == (ds, model, cond, arm))
     bgs, _ = client_backgrounds(art, np.random.default_rng(SEED + 1))
@@ -640,7 +683,9 @@ def stage_budget(args):
     obj, _ = load_predictor(art)
     budget = NSAMPLES * N_EXPLAIN
     pairs = [(125, 2000), (250, 1000), (500, 500), (1000, 250), (2000, 125)]
-    OUT.mkdir(parents=True, exist_ok=True)
+    out = _out()
+    assert_writable(out / "budget_probe.csv")
+    out.mkdir(parents=True, exist_ok=True)
     out_rows = []
     print(f"budget probe on {args.budget_cell} client 0 — fixed budget "
           f"{budget} evals, seeds {SHAP_SEEDS}")
@@ -656,17 +701,21 @@ def stage_budget(args):
               f"jac5={jac:.2f} [{time.time()-t:.0f}s]")
         out_rows.append({"nsamples": ns, "n_explain": ne, "floor_spearman": round(rho, 4),
                          "floor_jaccard_at5": round(jac, 4)})
-    with open(OUT / "budget_probe.csv", "w", newline="") as f:
+    with open(out / "budget_probe.csv", "w", newline="") as f:
         w = csv.DictWriter(f, fieldnames=list(out_rows[0]))
         w.writeheader()
         w.writerows(out_rows)
-    print(f"-> {OUT / 'budget_probe.csv'}")
+    print(f"-> {out / 'budget_probe.csv'}")
 
 
 # --------------------------------------------------------------------------- #
 def main(argv=None):
     ap = argparse.ArgumentParser(description=__doc__,
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
+    ap.add_argument("--seed", type=int, required=True,
+                    help="training seed whose models are explained; reads and writes "
+                         "only results/seeds/seed<N>/ (no default: the seed-42 record "
+                         "in results/shap_v2/ is frozen)")
     ap.add_argument("--stage", default="main",
                     choices=["main", "twobg", "paysim-exact", "budget"])
     ap.add_argument("--datasets", default=None,
@@ -683,12 +732,13 @@ def main(argv=None):
     args = ap.parse_args(argv)
     if args.datasets is None:
         args.datasets = "paysim" if args.stage == "twobg" else "baf,creditcard,paysim"
+    configure(args.seed)
 
     try:
         import shap
-        print(f"shap {shap.__version__} | stage={args.stage} l1_reg=False "
-              f"seeds={SHAP_SEEDS} nsamples={NSAMPLES} bg={N_BG}->kmeans{KMEANS_K} "
-              f"explain={N_EXPLAIN}")
+        print(f"shap {shap.__version__} | training seed={SEED} stage={args.stage} "
+              f"l1_reg=False seeds={SHAP_SEEDS} nsamples={NSAMPLES} "
+              f"bg={N_BG}->kmeans{KMEANS_K} explain={N_EXPLAIN}")
         maj, minor = (int(x) for x in shap.__version__.split(".")[:2])
         if (maj, minor) < (0, 47):
             print("WARNING: shap < 0.47 — the l1_reg default audit does not apply "
@@ -698,14 +748,16 @@ def main(argv=None):
         print(f"FATAL shap import: {e}")
         return 1
 
-    if not discover():
-        print("NO artifacts under results/models/ — run on the box. Nothing to do.")
+    if not _discover():
+        print(f"NO seed-{SEED} artifacts under {MODELS} — run the sweep for this seed "
+              "first (on the box). Nothing to do.")
         return 2
+    assert_writable(OUT)
     OUT.mkdir(parents=True, exist_ok=True)
     {"main": stage_main, "twobg": stage_twobg,
      "paysim-exact": stage_paysim_exact, "budget": stage_budget}[args.stage](args)
-    print("Done. Nothing outside results/shap_v2/ was written; results/shap/ (v1) "
-          "is untouched.")
+    print(f"Done. Nothing outside {OUT} was written; results/shap_v2/ and "
+          "results/shap/ are untouched.")
     return 0
 
 

@@ -4,13 +4,30 @@ Matrix shape, SMOTE no-op predicate, command construction, and resume-fingerprin
 semantics. Runnable via ``pytest`` or ``python tests/<file>.py``.
 """
 
+import contextlib
+import csv
 import os
 import sys
+import tempfile
+from pathlib import Path
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
+from evaluation import results_paths as P  # noqa: E402
 from experiments import run_sweep as R  # noqa: E402
 from experiments.run_sweep import RunSpec  # noqa: E402
+
+
+@contextlib.contextmanager
+def _tmp_seeds_root():
+    """Redirect results/seeds/ to a throwaway dir, so tests leave nothing in the repo."""
+    prev = P.SEEDS_ROOT
+    with tempfile.TemporaryDirectory() as d:
+        P.SEEDS_ROOT = Path(d)
+        try:
+            yield Path(d)
+        finally:
+            P.SEEDS_ROOT = prev
 
 
 def test_matrix_counts_single_alpha_single_seed():
@@ -81,9 +98,8 @@ def test_build_command_argparse_iid():
 
 
 def test_env_propagates_thread_pins_and_wandb():
-    import shutil
     s = RunSpec("baf", "bert_fraud", "smote", "noniid", seed=42, alpha=0.5)
-    try:
+    with _tmp_seeds_root():
         env = R.build_env(s, offline=True, use_wandb=True,
                           data_hash="dh" * 32, partition_hash="ph" * 32)
         assert env["OMP_NUM_THREADS"] == env["MKL_NUM_THREADS"] == str(R.resources.threads_per_actor())
@@ -105,27 +121,71 @@ def test_env_propagates_thread_pins_and_wandb():
         assert parsed["smote_inoperative"] is False
         assert parsed["data_hash"] == "dh" * 32
         assert parsed["partition_hash"] == "ph" * 32
-    finally:
-        shutil.rmtree(s.run_dir, ignore_errors=True)
 
 
 def test_build_env_carries_gpu_fraction_to_child():
     """SWEEP_GPU_FRACTION (set by main() from --gpu-fraction) must survive into
     the child env — build_env copies os.environ, so the child's for_model reads
     the requested fraction rather than the config default."""
-    import shutil
     prev = os.environ.get("SWEEP_GPU_FRACTION")
     s = RunSpec("baf", "bert_fraud", "no-smote", "noniid", seed=42, alpha=0.5)
     try:
-        os.environ["SWEEP_GPU_FRACTION"] = "0.2"
-        env = R.build_env(s, offline=True, use_wandb=False)
-        assert env["SWEEP_GPU_FRACTION"] == "0.2", env.get("SWEEP_GPU_FRACTION")
+        with _tmp_seeds_root():
+            os.environ["SWEEP_GPU_FRACTION"] = "0.2"
+            env = R.build_env(s, offline=True, use_wandb=False)
+            assert env["SWEEP_GPU_FRACTION"] == "0.2", env.get("SWEEP_GPU_FRACTION")
     finally:
         if prev is None:
             os.environ.pop("SWEEP_GPU_FRACTION", None)
         else:
             os.environ["SWEEP_GPU_FRACTION"] = prev
-        shutil.rmtree(s.run_dir, ignore_errors=True)
+
+
+def test_every_run_writes_into_its_seed_tree():
+    """Seed 42 included: the runner never targets the frozen seed-42 record."""
+    for seed in (42, 123):
+        tree = P.SEEDS_ROOT / f"seed{seed}"
+        for s in (RunSpec("paysim", "fedxgbllr", "smote", "noniid", seed=seed, alpha=0.5),
+                  RunSpec("baf", "lr", "no-smote", "centralized", seed=seed)):
+            assert s.root == tree
+            paths = (s.run_dir, R._artifact_dir(s), R._summary_csv_path(s),
+                     R._master_csv(seed), R._wandb_dir(seed))
+            for p in paths:
+                assert tree in p.parents, p
+                P.assert_writable(p)   # outside every frozen folder
+        assert R._summary_csv_path(RunSpec("baf", "lr", "no-smote", "centralized", seed=seed)) \
+            == tree / "logs" / "baf" / "centralized" / f"centralized_lr_none_seed{seed}.csv"
+
+
+def test_build_env_points_child_at_seed_tree():
+    """The child gets its tree as an ABSOLUTE path (fedxgbllr runs from another cwd)."""
+    s = RunSpec("creditcard", "fedxgbllr", "no-smote", "iid", seed=123)
+    with _tmp_seeds_root() as tmp:
+        env = R.build_env(s, offline=True, use_wandb=True)
+        assert env[P.RESULTS_ROOT_ENV] == str(tmp / "seed123")
+        assert Path(env[P.RESULTS_ROOT_ENV]).is_absolute()
+        # wandb falls back to the system temp dir when WANDB_DIR is missing.
+        assert env["WANDB_DIR"] == str(tmp / "seed123" / "sweep" / "wandb_offline")
+        assert Path(env["WANDB_DIR"]).is_dir()
+
+
+def test_build_command_fedxgbllr_smote_seed_follows_run_seed():
+    """Every other entry point seeds SMOTE from --random_seed; FedXGBllr's YAML pins 42."""
+    for seed in (42, 123):
+        s = RunSpec("baf", "fedxgbllr", "smote", "noniid", seed=seed, alpha=0.5)
+        argv, _ = R.build_command(s, gpu_available=False, use_wandb=False)
+        assert f"dataset.oversampling.base_seed={seed}" in argv
+        assert f"random_seed={seed}" in argv
+
+
+def test_append_master_writes_one_master_per_seed():
+    with _tmp_seeds_root() as tmp:
+        for seed in (123, 2024):
+            R._append_master({"run_name": f"r_s{seed}", "seed": seed, "status": "success"})
+        for seed in (123, 2024):
+            rows = list(csv.DictReader(open(tmp / f"seed{seed}" / "sweep" / "sweep_master.csv")))
+            assert [r["run_name"] for r in rows] == [f"r_s{seed}"]
+            assert list(rows[0]) == R._MASTER_COLUMNS
 
 
 def test_resume_fingerprint_changes_with_config():

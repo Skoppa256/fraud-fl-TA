@@ -37,6 +37,9 @@ CONTENT = ROOT / "buku" / "content.typ"
 # number reaches it any more.
 GENERATORS = {
     "fig-4-2-minority-typology.png": "fig_4_1_minority_typology.py",
+    "fig-4-auprc-boxplot.png": "fig_4_auprc_boxplot.py",
+    "fig-4-rq3-spearman-boxplot.png": "fig_4_rq3_korelasi_boxplot.py",
+    "fig-4-rq3-weighted-boxplot.png": "fig_4_rq3_korelasi_boxplot.py",
 }
 
 # Figures in BAB 3/4 that are NOT generated from experiment data.

@@ -33,8 +33,10 @@
   crash that took down all 96 runs (a `dict_from_config_file` `TypeError`), or the
   early-stop persistence miss that failed every federated FedXGBllr run
   (`failed_no_artifact`). A presence check alone is not enough; this exercises the
-  real parser and the real two-stage persistence. The gate leaves no byproducts
-  you must keep — re-run it freely.
+  real parser and the real two-stage persistence. Its two cells are seed 42 and
+  land in `results/seeds/seed42/`, so the gate leaves no byproducts you must keep —
+  re-run it freely. (Before 2026-11-13 it wrote into the frozen `results/logs/` and
+  `results/models/`, overwriting two seed-42 files of record.)
 - [ ] **Timing probe (THIS BOX'S JOB).** See priority below.
 
 ## Timing-probe priority — BERT-on-PaySim (NOT a footnote)
@@ -61,16 +63,21 @@ reducing global rounds, or splitting the sweep across nights.
 
 ## Launch (after the probe confirms the window)
 
-Start under a session that survives an SSH drop:
+Start under a session that survives an SSH drop. The sweep of record ran this
+with `--seeds 42`; a re-run changes only the seed, and everything it writes lands
+in `results/seeds/seed<N>/` (see `CLAUDE.md`, "Per-seed trees"):
 
 ```bash
-tmux new -s sweep 'python experiments/run_sweep.py \
+mkdir -p results/seeds/seed123     # tee opens its file before the runner creates the tree
+tmux new -s sweep123 'python experiments/run_sweep.py \
   --datasets paysim,creditcard,baf --models all \
-  --conditions centralized,iid,noniid --alpha 0.5 --seeds 42 \
-  --smote-arms both --gpu-fraction 1.0 --offline 2>&1 | tee results/sweep.out'
+  --conditions centralized,iid,noniid --alpha 0.5 --seeds 123 \
+  --smote-arms both --gpu-fraction 1.0 --offline 2>&1 | tee results/seeds/seed123/sweep.out'
 ```
 
 `--offline` keeps wandb local (a connectivity loss won't kill a run); `wandb sync`
 the offline dir afterward. Use `--resume` to restart where a crash stopped.
-Post-sweep: `python -m experiments.verify_hashes` (expect zero UNVERIFIED) and
-`python -m experiments.collect_results`.
+Post-sweep: `python -m experiments.verify_hashes --seed 123` (expect zero
+UNVERIFIED) and `python -m experiments.build_seed_summary --seed 123`, which
+writes `results/seeds/seed123/clean_summary.csv` with the frozen summary's recipe
+and refuses unless all 96 of its cells are present.
