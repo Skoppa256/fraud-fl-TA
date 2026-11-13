@@ -525,9 +525,13 @@ def serverside_eval(
             history_metrics[name] = torch.tensor(float(raw))
         # Operating point of the Recall@5%FPR reading — skip any NA (degenerate)
         # value so the tensor-only history stays clean, mirroring calibration.
-        for _name in ("test_threshold_at_fpr", "test_actual_fpr"):
-            if tm[_name] != fair_metrics.NA:
-                history_metrics[_name] = torch.tensor(float(tm[_name]))
+        # metrics_at_threshold returns these keys WITHOUT the test_ prefix (unlike
+        # calibration_for below); reading the prefixed names raised KeyError at
+        # round 0 and crashed every FedXGBllr run.
+        if tm["threshold_at_fpr"] != fair_metrics.NA:
+            history_metrics["test_threshold_at_fpr"] = torch.tensor(float(tm["threshold_at_fpr"]))
+        if tm["actual_fpr"] != fair_metrics.NA:
+            history_metrics["test_actual_fpr"] = torch.tensor(float(tm["actual_fpr"]))
         # Calibration: FedXGBllr's CNN head is a Sigmoid, so `probs` are genuine
         # probabilities (not logits) — calibration applies directly. Skip any NA
         # (degenerate) value so the tensor-only history stays clean.
