@@ -269,6 +269,11 @@ def build_env(spec: RunSpec, offline: bool, use_wandb: bool,
     # The child writes its logs/ and models/ into this run's seed tree. Absolute,
     # for the same reason as PYTHONPATH: fedxgbllr runs under a different cwd.
     env[RESULTS_ROOT_ENV] = str(spec.root)
+    # Determinism (experiments/determinism.py): cuBLAS reads its workspace setting
+    # once, when CUDA starts, so it must be in the child's environment; a fixed hash
+    # seed keeps any set/dict iteration over strings identical between runs.
+    env["CUBLAS_WORKSPACE_CONFIG"] = ":4096:8"
+    env["PYTHONHASHSEED"] = str(spec.seed)
     if use_wandb:
         env["WANDB_RUN_GROUP"] = spec.group
         env["WANDB_NAME"] = spec.run_name

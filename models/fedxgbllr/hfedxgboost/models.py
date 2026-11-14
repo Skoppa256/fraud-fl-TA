@@ -57,7 +57,7 @@ class CNN(nn.Module):
 
     This CNN does NOT consume raw tabular features. Its input is the
     tree-margin tensor of shape ``(B, 1, client_num * n_estimators_client)``
-    (for PaySim: ``(B, 1, 250)`` = 5 clients × 50 trees), built by
+    (``(B, 1, 250)`` = 5 clients × 50 trees, on every dataset), built by
     ``utils.single_tree_preds_from_each_client``: every sample is pushed
     through each client's frozen XGBoost trees with ``output_margin=True``,
     one raw pre-sigmoid vote per tree, laid out in contiguous per-client
@@ -67,7 +67,7 @@ class CNN(nn.Module):
     slides in non-overlapping windows of exactly one client's tree block, so
     each conv filter is a learned weighted combination over that client's
     tree margins — i.e. per-tree contribution weights ("learnable learning
-    rates"). Shapes (PaySim, BINARY):
+    rates"). Shapes (BINARY):
 
         input           (B, 1, 250)
         conv1d(1->64,k=50,s=50) -> (B, 64, 5)   # 5 = one window per client
@@ -76,8 +76,10 @@ class CNN(nn.Module):
         layer_direct(320->1)    -> (B, 1)
         final_layer (Sigmoid)   -> (B, 1)        # fraud probability, trained with BCELoss
 
-    The trees are fitted ONCE per client and frozen, so this margin tensor is
-    identical every FL round; only the CNN weights change. Across clients the
+    The trees are fitted ONCE per client in round 0 and frozen (Ma et al. 2023,
+    Algorithm 1), so this margin tensor is identical every FL round; only the
+    CNN weights change. Until 2026-11-13 the Flower baseline re-fitted them every
+    round, contradicting this. Across clients the
     CNN weights are aggregated by sample-count-weighted FedAvg each round
     (weighted by each client's local sample count N_k; ``strategy.FedXgbNnAvg``),
     while the frozen ensembles are concatenated (not averaged) and ride along

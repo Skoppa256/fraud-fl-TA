@@ -75,6 +75,70 @@ one-off scripts that wrote the frozen trees with their own writers —
 `notebooks/minority_census.py`, `analysis/separability/separability_analysis.py`
 — so the rule above still applies to them: do not re-run them.
 
+## Re-run code path (2026-11-13): every draw from the seed, FedXGBllr's trees fixed
+
+The seed-42 record in `results/` came from code that differs from today's in two
+ways, so today's code does not reproduce it bit for bit. A multi-seed comparison
+therefore re-runs seed 42 as well, into `results/seeds/seed42/`.
+
+- **Every random draw comes from the run seed** (`experiments/determinism.py`).
+  Strategies average client results in client-id order (`in_client_order`),
+  entry points call `seed_everything`, and torch is asked for deterministic
+  kernels in the driver and in every Ray actor. FedXGBllr's per-round,
+  per-client draws use `derive_seed`. Verified bit-identical on CPU; on a GPU box,
+  a repeat run of one cell is the check, because `torch_deterministic` warns
+  rather than raises on a kernel that has no deterministic implementation.
+- **FedXGBllr's trees are fixed after round 0** (Ma et al. 2023, §3.4,
+  Algorithm 1), as BAB 3 already describes (content.typ §3.3.4). In round 0
+  every client builds its ensemble once; the server collects all five in
+  client-id order and starts the CNN from the seed. Rounds 1..R train only the
+  CNN, on 50 batches of 32 rows per round drawn from (seed, round, client). The
+  Flower `hfedxgboost` baseline this code came from re-fit every client's trees
+  in every round, and fed round 1 one client's trees in all five blocks; the
+  seed-42 record was produced that way. Every other hyperparameter is the
+  record's (BAB 3 `<tab-3-6>`): 50 trees per client, depth 6, CNN lr 0.0005, 20
+  rounds for PaySim and 50 for ULB and BAF, early stopping with patience 10. On
+  ULB IID the mean change in test AUPRC per round was 0.0156 with the old code
+  (seed 42) and is 0.0015 / 0.0013 / 0.0012 now (seeds 42 / 123 / 2024); the
+  last round is within 0.0026 of the best-validation round. The round-1
+  difference moved the final AUPRC by at most 0.0015 (seeds 42 and 123, before
+  `base_score` was set).
+- The paper's own settings (§4.1: 100 trees per client, depth 8, E = 100 epochs
+  over all rows at batch 64, lr 0.001, R = 10) were tried on 2026-11-13 and
+  dropped by the author: on ULB IID they swung 0.0181 per round, and a PaySim
+  cell is ~70M CNN steps (~20 h on a laptop CPU).
+- **FedXGBllr's client XGBoost sets `base_score: 0.5`** (the author, 2026-11-13;
+  `tests/test_fedxgbllr_config.py`). xgboost 2.0.0 (requirements.txt) otherwise
+  estimates each booster's intercept from its data (0.12 on ULB), so every
+  single-tree margin the CNN reads is about −2.09 and varies by only ~0.02 (one
+  standard deviation) across rows and trees. The paper predates 2.0; earlier
+  versions default to 0.5, an offset of 0. With the estimate the CNN learns
+  little beyond the offset: on ULB IID at seeds 42 / 123 / 2024 it scored 0.7385
+  / 0.7217 / 0.6629 test AUPRC, below the plain sum of its own trees (0.7754 /
+  0.7703 / 0.6846). With 0.5 it scores 0.7716 / 0.7333 / 0.6656, at or above its
+  trees' sum (0.7691 / 0.7321 / 0.6597), moves 0.0012–0.0015 per round and runs
+  21–50 rounds. The seed-42 record has the offset. The centralized XGBoost
+  comparator keeps the estimated intercept: it has no CNN to mislead.
+
+**Thesis text deliberately not updated — the author's decision (2026-11-13).** The
+author decides after analysing the new runs whether they enter `buku/`. BAB 3
+already describes this FedXGBllr (trees once in round 0, then CNN-only rounds;
+content.typ §3.3.4) and lists its settings (`<tab-3-6>`), so adopting the new runs
+changes results, not methods:
+
+- Every FedXGBllr number in BAB 4, and the other federated models' numbers
+  (within run-to-run noise).
+- If more than one seed enters the thesis, the sentences that name seed 42
+  (§3.3.4, §3.4.4) name every seed used. §3.4.4's statement that the seed governs
+  partitioning, sampling and model initialisation holds for the re-run; it did not
+  fully hold for the seed-42 record (unseeded starting weights for FFD, BERT and
+  FedXGBllr; client results averaged in arrival order).
+- `<tab-3-6>` gains a FedXGBllr `base_score` 0,5 row, with a sentence on why.
+
+Separately, §3.3.4 and §3.4.4 say the final model is chosen by the best
+validation AUPRC. No federated model's code does that — all report the last
+round. That mismatch predates this change and has been flagged to the author.
+
 ## Documentation ships with the code — same change, not later
 
 Any change to the **pipeline, models, aggregation strategies, hyperparameters,

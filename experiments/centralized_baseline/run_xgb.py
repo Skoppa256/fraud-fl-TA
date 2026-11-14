@@ -11,6 +11,9 @@ Methodological note:
     50 trees per client across K=5 clients and aggregates via
     a 1D CNN. Here, a single model trains 50 trees on the full
     data. This is the centralized upper bound for tree-based FL.
+    FedXGBllr's client XGBoost also sets base_score=0.5, so the margins its
+    CNN reads carry no intercept; a standalone model needs no such setting
+    and keeps XGBoost's estimated one.
 
     Global oversampling (when enabled via --oversampling smote|adasyn)
     is applied once on the full x_train using imblearn

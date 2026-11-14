@@ -28,6 +28,14 @@ XGBoost:
   gamma: 5
   num_parallel_tree: 1
   min_child_weight: 1
+  # The trees' row subsampling (subsample 0.8) draws from the run seed, like every
+  # other random step (experiments/determinism.py).
+  random_state: ${random_seed}
+  # The default of xgboost < 2.0 (Ma et al. 2023 predates 2.0): each tree's margin
+  # then carries no intercept. xgboost 2.0 estimates one per client (about -2.09
+  # on ULB) and puts it into every one of the CNN's inputs, which vary by only
+  # ~0.02 around it, so the CNN learns little more than that constant.
+  base_score: 0.5
   # Explicit XGBoost compute method AND device (never auto-detected). `device` is
   # a safe CPU placeholder so a bare (non-runner) invocation never silently picks
   # up XGBoost's default device; the sweep runner overrides it to cuda/cpu from

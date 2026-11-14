@@ -35,6 +35,7 @@ import yaml
 
 from evaluation.results_writer import build_run_name, write_fl_results
 from experiments import resources
+from experiments.determinism import seed_everything, torch_deterministic
 from experiments import data_cache
 from evaluation.metrics import baseline_auprc
 from evaluation import model_persistence
@@ -139,6 +140,8 @@ def run(cfg: dict):
     """Run the BertFraud FL pipeline end-to-end. Returns ``(history, state)``."""
     t_start = time.time()
     seed = int(cfg["random_seed"])
+    seed_everything(seed)
+    torch_deterministic()
     dataset = str(cfg.get("dataset", "paysim")).lower()
     scheme = cfg["partition"]["scheme"]
     alpha = cfg["partition"]["alpha"]

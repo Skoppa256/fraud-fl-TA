@@ -37,6 +37,24 @@
   land in `results/seeds/seed42/`, so the gate leaves no byproducts you must keep —
   re-run it freely. (Before 2026-11-13 it wrote into the frozen `results/logs/` and
   `results/models/`, overwriting two seed-42 files of record.)
+- [ ] **Determinism gate (since 2026-11-13; MANDATORY on a GPU box).** Every random
+  draw now comes from the seed (`experiments/determinism.py`), verified bit-identical on
+  CPU. GPU kernels can still differ, and `torch_deterministic` warns instead of raising,
+  so run one cheap cell per GPU model **twice** and compare. Identical output is the
+  gate; a difference means a kernel to fix before any sweep:
+
+  ```bash
+  python experiments/run_sweep.py --datasets creditcard --models ffd,bert_fraud,fedxgbllr \
+    --conditions iid --smote-arms no-smote --seeds 42 --gpu-fraction 1.0 --offline
+  cp -r results/seeds/seed42/logs /tmp/det_a
+  python experiments/run_sweep.py --datasets creditcard --models ffd,bert_fraud,fedxgbllr \
+    --conditions iid --smote-arms no-smote --seeds 42 --gpu-fraction 1.0 --offline
+  for f in $(cd /tmp/det_a && find . -name '*.csv'); do
+    diff <(cut -d, -f1-32 /tmp/det_a/$f) <(cut -d, -f1-32 results/seeds/seed42/logs/$f) >/dev/null \
+      && echo "same  $f" || echo "DIFF  $f"; done
+  ```
+  (Columns 33–34 of a summary CSV are the timestamp and duration.) Then grep the run logs for
+  `UserWarning: .*does not have a deterministic implementation` to name any kernel.
 - [ ] **Timing probe (THIS BOX'S JOB).** See priority below.
 
 ## Timing-probe priority — BERT-on-PaySim (NOT a footnote)

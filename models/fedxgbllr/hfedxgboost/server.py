@@ -16,7 +16,14 @@ import flwr as fl
 import numpy as np
 import torch
 import wandb
-from flwr.common import EvaluateRes, FitRes, Parameters, Scalar, parameters_to_ndarrays
+from flwr.common import (
+    EvaluateRes,
+    FitRes,
+    Parameters,
+    Scalar,
+    ndarrays_to_parameters,
+    parameters_to_ndarrays,
+)
 from flwr.common.logger import log
 from flwr.common.typing import GetParametersIns
 from flwr.server.client_manager import ClientManager
@@ -29,6 +36,7 @@ from torch.utils.data import DataLoader, TensorDataset
 from xgboost import XGBClassifier, XGBRegressor
 
 from evaluation import metrics as fair_metrics
+from experiments.determinism import derive_seed
 
 from hfedxgboost.models import CNN
 from hfedxgboost.utils import (
@@ -336,24 +344,38 @@ class FlServer(fl.server.Server):
         return loss_aggregated, metrics_aggregated, (results, failures)
 
     def _get_initial_parameters(self, timeout: Optional[float]):
-        """Get initial parameters from one of the available clients.
+        """Round 0 of Ma et al. (2023), Algorithm 1 lines 1-7.
+
+        Every client builds its XGBoost tree ensemble once, on its own data; the
+        server collects all K ensembles in client-id order and initialises the
+        one-layer 1D CNN (w0) from the run seed. The aggregated ensemble is fixed
+        for rounds 1..R (§3.4) — only the CNN is trained after this.
 
         Parameters
         ----------
-            timeout (float, optional): The time limit for the request in seconds.
-            Defaults to None.
+            timeout (float, optional): The time limit for each request in seconds.
 
         Returns
         -------
-            parameters (tuple): A tuple containing the initial parameters.
+            parameters (tuple): (the CNN's w0, the list of K (trees, cid) pairs).
         """
-        log(INFO, "Requesting initial parameters from one random client")
-        random_client = self._client_manager.sample(1)[0]
-        ins = GetParametersIns(config={})
-        get_parameters_res_tree = random_client.get_parameters(ins=ins, timeout=timeout)
-        log(INFO, "Received initial parameters from one random client")
-
-        return (get_parameters_res_tree[0].parameters, get_parameters_res_tree[1])  # type: ignore # noqa: E501 # pylint: disable=line-too-long
+        n = int(self.cfg.clients.client_num)
+        self._client_manager.wait_for(n)
+        clients = self._client_manager.all()
+        log(INFO, "Round 0: requesting tree ensembles from all %s clients", n)
+        trees = []
+        for cid in sorted(clients, key=int):
+            res = clients[cid].get_parameters(
+                ins=GetParametersIns(config={"round": 0}), timeout=timeout
+            )
+            trees.append(res[1])  # type: ignore # the hfedxgboost (CNN, (trees, cid)) pair
+        got = [int(t[1]) for t in trees]
+        if got != list(range(n)):
+            raise RuntimeError(f"round 0: expected trees from clients 0..{n - 1}, got {got}")
+        torch.manual_seed(derive_seed(int(self.cfg.random_seed), 0))
+        w0 = ndarrays_to_parameters(CNN(self.cfg).get_weights())
+        log(INFO, "Round 0: %s tree ensembles collected; CNN initialised from the seed", n)
+        return (w0, trees)
 
 
 def serverside_eval(

@@ -15,6 +15,8 @@ from typing import Callable, Dict, List, Optional, Tuple
 import flwr as fl
 import numpy as np
 
+from experiments.determinism import in_client_order
+
 
 def weighted_average(
     metrics: List[Tuple[int, Dict[str, float]]],
@@ -45,6 +47,9 @@ class AccuracyWeightedFedAvg(fl.server.strategy.FedAvg):
                 f"round {server_round}: all clients failed (0 successful fit "
                 f"results) — aborting run."
             )
+        # Client-id order, not arrival order: the weighted sum below is a float
+        # sum, so its order must not depend on which client finished first.
+        results = in_client_order(results)
 
         weights_results: List[Tuple[List[np.ndarray], int, float]] = []
         for _, fit_res in results:

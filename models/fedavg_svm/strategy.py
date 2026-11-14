@@ -7,6 +7,8 @@ from typing import Callable, Dict, List, Tuple
 import flwr as fl
 import numpy as np
 
+from experiments.determinism import in_client_order
+
 
 def weighted_average(metrics: List[Tuple[int, Dict[str, float]]]) -> Dict[str, float]:
     """Aggregate client-reported metrics weighted by sample count."""
@@ -27,7 +29,8 @@ def weighted_average(metrics: List[Tuple[int, Dict[str, float]]]) -> Dict[str, f
 class _AbortOnTotalFailureFedAvg(fl.server.strategy.FedAvg):
     """FedAvg that aborts (raises) when a round has 0 successful fit results —
     all clients failed. Vanilla FedAvg would silently keep the old parameters and
-    continue producing nothing round after round."""
+    continue producing nothing round after round. Averages in client-id order, not
+    the order results arrive, so a seed reproduces the run exactly."""
 
     def aggregate_fit(self, server_round, results, failures):
         if not results:
@@ -35,7 +38,7 @@ class _AbortOnTotalFailureFedAvg(fl.server.strategy.FedAvg):
                 f"round {server_round}: all clients failed (0 successful fit "
                 f"results) — aborting run."
             )
-        return super().aggregate_fit(server_round, results, failures)
+        return super().aggregate_fit(server_round, in_client_order(results), failures)
 
 
 def get_strategy(

@@ -13,6 +13,8 @@ from flwr.server.client_proxy import ClientProxy
 from flwr.server.strategy import FedAvg
 from flwr.server.strategy.aggregate import aggregate
 
+from experiments.determinism import in_client_order
+
 
 class FedXgbNnAvg(FedAvg):
     """Configurable FedXgbNnAvg strategy implementation."""
@@ -68,6 +70,9 @@ class FedXgbNnAvg(FedAvg):
                 f"round {server_round}: all clients failed (0 successful fit "
                 f"results) — aborting run."
             )
+        # Client-id order, not arrival order: FedAvg's weighted sum is a float sum,
+        # and the trees list must keep one fixed order.
+        results = in_client_order(results)
         # Do not aggregate if there are failures and failures are not accepted
         if not self.accept_failures and failures:
             return None, {}

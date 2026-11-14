@@ -20,6 +20,7 @@ import yaml
 
 from evaluation.results_writer import build_run_name, write_fl_results
 from experiments import resources
+from experiments.determinism import seed_everything
 from experiments import data_cache
 from evaluation.metrics import baseline_auprc
 from evaluation import model_persistence
@@ -105,6 +106,7 @@ def run(cfg: dict):
     """Run the FedAvg-LR pipeline end-to-end. Returns ``(history, state)``."""
     t_start = time.time()
     seed = int(cfg["random_seed"])
+    seed_everything(seed)
     dataset = str(cfg.get("dataset", "paysim")).lower()
     scheme = cfg["partition"]["scheme"]
     alpha = cfg["partition"]["alpha"]

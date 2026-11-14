@@ -147,8 +147,9 @@ tree.fit(x_train, y_train)
 `config.XGBoost` resolves (`conf/base.yaml:17-30`) to
 `XGBClassifier(objective="binary:logistic", learning_rate=0.1, max_depth=6,
 n_estimators=50, subsample=0.8, alpha=5, gamma=5, num_parallel_tree=1,
-min_child_weight=1)`. So **each client → 50 trees**; with 5 clients the server holds
-**250 trees** total.
+min_child_weight=1, random_state=<run seed>, base_score=0.5)`. So **each client → 50 trees**; with 5
+clients the server holds **250 trees** total. They are fit **once, in round 0**, and fixed
+after that (Ma et al. 2023, §3.4, Algorithm 1).
 
 **Sub-component B — 1-D CNN aggregator** (the "learnable learning rates"). Defined in
 `models.py:55-105` (details in §5.4).
@@ -169,20 +170,30 @@ preds = torch.from_numpy(np.expand_dims(preds, axis=1))   # (N, 1, 250)
 ```
 So the vector the Conv1d consumes has **length = client_num × n_estimators_client
 = 5 × 50 = 250** and **1 channel**. Each of the 250 positions is one tree's margin output;
-trees are laid out in **contiguous per-client blocks** of 50.
+trees are laid out in **contiguous per-client blocks** of 50. `output_margin=True`
+includes the booster's `base_score`, so it is pinned to 0.5 (no intercept), the default
+of xgboost < 2.0. Left to xgboost 2.0.0 it is estimated from each client's data, and
+every position then carries the same intercept (about −2.09 on ULB) with only ~0.02 of
+variation around it (CLAUDE.md, "Re-run code path").
 
 ### 5.2 Local training (client side)
 
-Per round, each client (`FlClient`, `client.py:31-342`):
-1. In `get_parameters`, optionally applies **local SMOTE/ADASYN** to its raw partition
-   (`client.py:170-231`, invoked `:256-263`), then fits its 50-tree XGBoost (`:265-271`).
-2. In `fit`, sets the incoming CNN weights, receives the **aggregated list of all clients'
-   trees**, converts its local data to the `(N,1,250)` tree-output tensor via
-   `single_tree_preds_from_each_client`, and trains the CNN (`client.py:290-327`).
+Ma et al. (2023), Algorithm 1, as implemented in `FlClient` (`client.py`):
+1. **Round 0, once** (`get_parameters`, requested by the server for every client in
+   `server.py` `_get_initial_parameters`): optionally applies **local SMOTE/ADASYN** to
+   the raw partition, then fits the client's 50-tree XGBoost. The server collects all
+   five ensembles in client-id order and initialises the CNN from the run seed.
+2. **Rounds 1..R** (`fit`): sets the incoming CNN weights, receives the **fixed list of
+   all clients' trees**, converts its (pre-SMOTE) local rows to the `(N,1,250)`
+   tree-output tensor via `single_tree_preds_from_each_client`, trains the CNN, and
+   returns it with **its own trees unchanged** — no tree is re-trained after round 0.
 
-**CNN training loop** (`client.py:88-141`): optimizer **Adam**, `lr = clients.CNN.lr = 0.0005`,
+**CNN training loop** (`client.py` `train`): optimizer **Adam**, `lr = clients.CNN.lr = 0.0005`,
 `betas=(0.5, 0.999)`; criterion **`torch.nn.BCELoss`** (`task/Binary_Classification.yaml:9-10`);
-one loop of `num_iterations` mini-batch updates per round (batch_size 32).
+one loop of `num_iterations` mini-batch updates per round (batch_size 32): the first 50
+batches of a shuffle drawn from `derive_seed(seed, round, client)`
+(`experiments/determinism.py`), i.e. 1,600 of the client's rows per round. The paper's
+own budget (E = 100 epochs over all rows, batch 64) is not used.
 
 ### 5.3 Federated aggregation — CNN via FedAvg plus tree concatenation
 
@@ -196,6 +207,9 @@ parameters_aggregated = ndarrays_to_parameters(aggregate(weights_results))
 trees_aggregated = [fit_res.parameters[1] for _, fit_res in results]
 return [parameters_aggregated, trees_aggregated], metrics_aggregated
 ```
+Results are first put in client-id order (`experiments/determinism.in_client_order`), so
+the float sum of the FedAvg does not depend on which client finished first. The trees
+that come back each round are the clients' unchanged round-0 ensembles.
 So aggregation is **hybrid**: the CNN is FedAvg-averaged; the trees are **concatenated**
 (each client's ensemble kept whole, tagged with its cid and sorted `utils.py:311`). The
 server broadcasts `[averaged_CNN, all_trees]` back (`server.py:156-175`). Server-side eval
@@ -240,15 +254,16 @@ while AUPRC uses the raw probabilities (`utils.py:359-370`).
 |---|---|---|
 | trees per client (`n_estimators_client`) | **50** | `clients/paysim_5_clients.yaml:1` |
 | clients | 5 | same:3 |
-| FL rounds | 50 | same:2 |
+| FL rounds | 20 (ULB and BAF: 50); stops early after 10 rounds below the best val AUPRC | same:2; `dataset/paysim.yaml` |
 | CNN updates/round (`num_iterations`) | **50** | same:8 |
 | `xgb.max_depth` | 6 | same:9-10 |
 | CNN `lr` | **0.0005** (Adam) | same:11-12 |
 | XGBoost `learning_rate` | 0.1 | `base.yaml:20` |
 | subsample / alpha / gamma | 0.8 / 5 / 5 | `base.yaml:23-28` |
+| XGBoost `base_score` | 0.5 (no intercept in the CNN's inputs) | `base.yaml` |
 | Conv `out_channels` (`n_channel`) | 64 | `models.py:58` |
 | CNN batch_size | 32 | `base.yaml:56` |
-| random_seed | 42 | `base.yaml:15` |
+| random_seed | the run seed (42 by default); also XGBoost `random_state` | `base.yaml:15` |
 
 Note the comment at `paysim_5_clients.yaml:4-7`: `num_iterations` was reduced from 500→50
 because 500 over-trained the aggregator and drifted AUPRC down (0.97→0.69).

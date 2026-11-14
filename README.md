@@ -329,15 +329,19 @@ all. **FedXGBllr** is hybrid.
 
 Read `models/fedxgbllr/hfedxgboost/{models.py, utils.py:265-329, strategy.py}`.
 
-- **Trees are fitted ONCE** on each client's train partition (50 trees/client
-  → 250 total for K=5), then **FROZEN**. There is no per-round tree retraining.
+- **Trees are fitted ONCE**, in round 0, on each client's train partition (50
+  trees/client → 250 total for K=5), then **FROZEN** (Ma et al. 2023, §3.4). There is
+  no per-round tree retraining. (Until 2026-11-13 the Flower-derived code re-fit them
+  every round, contradicting this; the frozen seed-42 results were produced that way.)
 - **"Tree aggregation" = concatenation/collection** of whole ensembles (each
   tagged by cid and sorted, `utils.py:311`), **not averaging** and **not
   retraining**.
 - **The `(N, 1, 250)` CNN input** is built by pushing samples through the
   frozen trees with `output_margin=True` — one raw pre-sigmoid vote per tree —
   laid out in **contiguous per-client blocks of 50** (`utils.py:305-322`). The
-  tabular row is *not* fed to the CNN.
+  tabular row is *not* fed to the CNN. The client XGBoost sets `base_score=0.5`,
+  so the votes carry no shared intercept (xgboost 2.0 would estimate one per
+  client and add it to every vote).
 - Because the trees are frozen, **this margin tensor is identical every round**;
   only the CNN weights change round to round.
 - **CNN** = `Conv1d(1→64, kernel=stride=50)` so each non-overlapping window is

@@ -32,6 +32,7 @@ from evaluation.results_writer import (
 )
 from preprocessing.loader import DATASETS, load_dataset
 from experiments.data_cache import get_preprocessed
+from experiments.determinism import seed_everything, torch_deterministic
 from evaluation import model_persistence
 
 
@@ -136,8 +137,8 @@ def main() -> None:
     batch_size = int(args.batch_size)
     lr = float(args.lr)
 
-    torch.manual_seed(seed)
-    np.random.seed(seed)
+    seed_everything(seed)
+    torch_deterministic()
 
     dataset = str(args.dataset).lower()
     data, data_hash = get_preprocessed(dataset, seed)  # cache-consumed; fail loudly if absent

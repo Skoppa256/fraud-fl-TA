@@ -18,6 +18,8 @@ import flwr as fl
 import numpy as np
 import torch
 import torch.nn as nn
+
+from experiments.determinism import torch_deterministic
 from sklearn.metrics import average_precision_score
 from torch.utils.data import DataLoader, TensorDataset
 
@@ -79,6 +81,7 @@ class FFDClient(fl.client.NumPyClient):
         batch_size = int(self.cfg["batch_size"])
         lr = float(self.cfg["lr"])
 
+        torch_deterministic()
         torch.manual_seed(self.seed)
         dataset = TensorDataset(
             torch.from_numpy(x.astype(np.float32)),

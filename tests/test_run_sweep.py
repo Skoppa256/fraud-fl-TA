@@ -178,6 +178,15 @@ def test_build_command_fedxgbllr_smote_seed_follows_run_seed():
         assert f"random_seed={seed}" in argv
 
 
+def test_build_env_pins_determinism_settings():
+    """cuBLAS reads its workspace setting when CUDA starts, so it must arrive via env."""
+    s = RunSpec("baf", "ffd", "no-smote", "iid", seed=123)
+    with _tmp_seeds_root():
+        env = R.build_env(s, offline=True, use_wandb=False)
+    assert env["CUBLAS_WORKSPACE_CONFIG"] == ":4096:8"
+    assert env["PYTHONHASHSEED"] == "123"
+
+
 def test_append_master_writes_one_master_per_seed():
     with _tmp_seeds_root() as tmp:
         for seed in (123, 2024):

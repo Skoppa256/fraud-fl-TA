@@ -29,6 +29,7 @@ from flwr.common import (
 from flwr.server.client_manager import ClientManager
 from flwr.server.client_proxy import ClientProxy
 
+from experiments.determinism import in_client_order
 from evaluation.metrics import (
     best_f1_threshold,
     metrics_at_threshold,
@@ -143,6 +144,8 @@ class BestModelSelection(fl.server.strategy.Strategy):
                 f"round {server_round}: all clients failed (0 successful fit "
                 f"results) — aborting run."
             )
+        # Client-id order, so a tie in val AUPRC is broken the same way every run.
+        results = in_client_order(results)
 
         per_client = self._evaluate_each_client(results)
         eligible = [c for c in per_client if not c["skipped"]]

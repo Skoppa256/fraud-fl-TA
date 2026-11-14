@@ -24,6 +24,7 @@ from hydra.utils import instantiate
 from omegaconf import DictConfig
 from torch.utils.data import DataLoader
 
+from experiments.determinism import derive_seed, torch_deterministic
 from hfedxgboost.models import CNN, fit_xgboost
 from hfedxgboost.utils import single_tree_preds_from_each_client
 
@@ -231,7 +232,12 @@ class FlClient(fl.client.Client):
         return x_out, y_out
 
     def get_parameters(self, ins):
-        """Get CNN net weights and the tree.
+        """Round 0 of Ma et al. (2023), Algorithm 1: build this client's tree ensemble.
+
+        Called once, by the server, before any CNN training; the ensemble is then
+        fixed for rounds 1..R (§3.4) and ``fit`` never calls this again. The rows
+        come in partition order (main.py builds an unshuffled loader) and XGBoost's
+        ``random_state`` is the run seed, so the trees are the same in every run.
 
         Parameters
         ----------
@@ -275,49 +281,64 @@ class FlClient(fl.client.Client):
         ), (tree, int(self.cid))
 
     def fit(self, ins: FitIns) -> FitRes:
-        """Trains a model using the given fit parameters.
+        """One of rounds 1..R (Ma et al. 2023, Algorithm 1 lines 8-13).
 
-        Parameters
-        ----------
-            ins: FitIns - The fit parameters that contain the configuration
-            and parameters needed for training.
-
-        Returns
-        -------
-            FitRes - An object that contains the status, trained parameters,
-            number of examples processed, and metrics.
+        Trains the CNN on the outputs of the fixed round-0 ensemble (all K·M trees)
+        for this client's rows, and returns the CNN with this client's own trees,
+        unchanged: the ensemble is fixed after round 0 (§3.4), so nothing here
+        re-trains a tree. The CNN's budget is the seed-42 sweep's, not the paper's
+        E epochs: ``num_iterations`` batches per round, the first ones of a shuffle
+        drawn from (seed, round, client).
         """
-        num_iterations = ins.config["num_iterations"]
-        batch_size = ins.config["batch_size"]
+        torch_deterministic()
+        num_iterations = int(ins.config["num_iterations"])
+        batch_size = int(ins.config["batch_size"])
+        server_round = int(ins.config["round"])
+        client_num = int(self.config.clients.client_num)
 
-        # set parmeters
         self.net.set_weights(parameters_to_ndarrays(ins.parameters[0]))  # type: ignore # noqa: E501 # pylint: disable=line-too-long
         aggregated_trees = ins.parameters[1]  # type: ignore # noqa: E501 # pylint: disable=line-too-long
+        if not isinstance(aggregated_trees, list) or len(aggregated_trees) != client_num:
+            raise RuntimeError(
+                f"Client {self.cid}: expected the round-0 ensemble of all "
+                f"{client_num} clients' trees, got {type(aggregated_trees).__name__}"
+                + (f" of {len(aggregated_trees)}" if isinstance(aggregated_trees, list) else "")
+            )
+        own_trees = [t for t in aggregated_trees if int(t[1]) == int(self.cid)]
+        if len(own_trees) != 1:
+            raise RuntimeError(
+                f"Client {self.cid}: found {len(own_trees)} copies of its own trees "
+                "in the received ensemble, expected 1"
+            )
 
-        if isinstance(aggregated_trees, list):
-            print("Client " + self.cid + ": received", len(aggregated_trees), "trees")
-        else:
-            print("Client " + self.cid + ": only had its own tree")
-        trainloader: Any = single_tree_preds_from_each_client(
+        # S*_k: the outputs of all K·M trees on this client's (pre-SMOTE) rows.
+        tree_loader: Any = single_tree_preds_from_each_client(
             self.trainloader_original,
             batch_size,
             aggregated_trees,
             self.config.n_estimators_client,
-            self.config.clients.client_num,
+            client_num,
+        )
+        trainloader = DataLoader(
+            tree_loader.dataset,
+            batch_size=batch_size,
+            shuffle=True,
+            pin_memory=True,
+            generator=torch.Generator().manual_seed(
+                derive_seed(int(self.config.random_seed), server_round, int(self.cid))
+            ),
         )
         self.valloader = single_tree_preds_from_each_client(
             self.valloader_original,
             batch_size,
             aggregated_trees,
             self.config.n_estimators_client,
-            self.config.clients.client_num,
+            client_num,
         )
-
-        # runs for a single epoch, however many updates it may be
-        num_iterations = int(num_iterations) or len(trainloader)
-        # Train the model
+        num_iterations = num_iterations or len(trainloader)
         print(
-            "Client", self.cid, ": training for", num_iterations, "iterations/updates"
+            "Client", self.cid, ": round", server_round, "training for",
+            num_iterations, "iterations/updates",
         )
         self.net.to(self.device)
         train_loss, train_result, num_update_samples = self.train(
@@ -325,27 +346,24 @@ class FlClient(fl.client.Client):
             trainloader,
             num_iterations=num_iterations,
         )
-
-        # FedAvg weight (Ma et al. 2023, §3.1/§3.4): the CNN aggregation must be
-        # weighted by each client's local sample count N_k, NOT by the number of
-        # mini-batch updates (num_iterations * batch_size), which is identical
-        # across clients and collapses flwr's weighted average into a plain mean.
-        # Use the PRE-SMOTE partition size: trainloader_original holds the raw
-        # assigned rows; SMOTE/ADASYN is applied later inside get_parameters and
-        # must not inflate the weight, so non-IID (Dirichlet) heterogeneity is
-        # preserved.
+        # FedAvg weight N_k (Ma et al. 2023, Algorithm 1 line 13): the client's local
+        # sample count — the PRE-SMOTE partition size, so oversampling does not
+        # inflate a client's weight and Dirichlet heterogeneity is preserved.
         local_num_examples = len(self.trainloader_original.dataset)
         print(
             f"Client {self.cid}: training round complete, {num_update_samples}",
             f"update-samples over {num_iterations} updates; reporting FedAvg",
             f"weight N_k={local_num_examples} (pre-SMOTE local partition size)",
         )
-
-        # Return training information: model, local sample count (FedAvg weight)
-        # and metrics
         return FitRes(
             status=Status(Code.OK, ""),
-            parameters=self.get_parameters(ins.config),
+            parameters=(  # type: ignore # the hfedxgboost (CNN, (trees, cid)) pair
+                GetParametersRes(
+                    status=Status(Code.OK, ""),
+                    parameters=ndarrays_to_parameters(self.net.get_weights()),
+                ),
+                own_trees[0],
+            ),
             num_examples=local_num_examples,
             metrics={
                 "loss": train_loss,

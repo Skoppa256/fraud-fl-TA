@@ -27,6 +27,7 @@ from evaluation.metrics import baseline_auprc
 from evaluation import model_persistence
 from experiments import resources
 from experiments import data_cache
+from experiments.determinism import seed_everything, torch_deterministic
 from hfedxgboost.client import FlClient
 from hfedxgboost import dataset_preparation as _dp
 from hfedxgboost.dataset import (
@@ -197,6 +198,8 @@ def main(cfg: DictConfig) -> None:
         )
         scheme = "dirichlet" if non_iid_cfg.get("enabled", False) else "iid"
         random_seed = int(OmegaConf.select(cfg, "random_seed", default=42))
+        seed_everything(random_seed)
+        torch_deterministic()
 
         run_name = build_run_name(
             CANONICAL_MODEL,
@@ -267,7 +270,10 @@ def main(cfg: DictConfig) -> None:
             )
             for c in clients
         ]
-        trainloaders = [get_dataloader(ds, "train", cfg.batch_size) for ds in client_datasets]
+        # Unshuffled ("tree" partition): the client's rows in partition order, so the
+        # round-0 trees and the CNN's tree outputs depend only on the seed. (A
+        # "train" loader reshuffled them from an unseeded generator on every pass.)
+        trainloaders = [get_dataloader(ds, "tree", cfg.batch_size) for ds in client_datasets]
         valloaders = [None] * len(client_datasets)
         testloader = get_dataloader(
             TensorDataset(torch.from_numpy(x_test), torch.from_numpy(y_test)),
@@ -288,6 +294,7 @@ def main(cfg: DictConfig) -> None:
             return {
                 "num_iterations": cfg.run_experiment.fit_config.num_iterations,
                 "batch_size": cfg.run_experiment.batch_size,
+                "round": server_round,
             }
 
         # FedXgbNnAvg
