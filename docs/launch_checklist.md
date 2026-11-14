@@ -28,11 +28,14 @@
   python experiments/run_sweep.py --smoke --offline
   ```
 
-  Exit 0 = PASS (~4–5 min, dominated by the FedXGBllr cell). Catches a sweep that
+  Exit 0 = PASS (~10 min, dominated by the FedXGBllr cell, which since 2026-11-13
+  runs ~37 rounds on ULB instead of ~15). Catches a sweep that
   goes green while silently producing nothing — e.g. the flat-YAML `wandb.init()`
-  crash that took down all 96 runs (a `dict_from_config_file` `TypeError`), or the
+  crash that took down all 96 runs (a `dict_from_config_file` `TypeError`), the
   early-stop persistence miss that failed every federated FedXGBllr run
-  (`failed_no_artifact`). A presence check alone is not enough; this exercises the
+  (`failed_no_artifact`), or FedXGBllr's wandb config forcing `mode: online` past
+  `--offline` (a `CommError` in `wandb.init()`, 2026-11-14). A presence check alone
+  is not enough; this exercises the
   real parser and the real two-stage persistence. Its two cells are seed 42 and
   land in `results/seeds/seed42/`, so the gate leaves no byproducts you must keep —
   re-run it freely. (Before 2026-11-13 it wrote into the frozen `results/logs/` and

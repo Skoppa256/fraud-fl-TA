@@ -1,6 +1,9 @@
 setup:
     project: fraud-fl-TA
-    mode: online
+    # No `mode`: wandb then follows WANDB_MODE, which the sweep runner sets from
+    # --offline, as for the other five models. An explicit `mode: online` here
+    # overrode it, so every FedXGBllr run tried the W&B servers and, with
+    # wandb 0.15.12, failed in wandb.init() (CommError, found 2026-11-14).
 watch:
     log: all
     log_freq: 100

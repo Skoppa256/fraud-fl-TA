@@ -38,6 +38,11 @@ def test_settings_are_the_seed42_records():
         assert c.XGBoost.base_score == 0.5, ds
 
 
+def test_wandb_mode_is_left_to_the_runner():
+    """An explicit mode beats WANDB_MODE, so --offline would not reach FedXGBllr."""
+    assert "mode" not in _cfg("creditcard").wandb.setup
+
+
 def test_trained_trees_carry_no_intercept():
     from hfedxgboost.models import fit_xgboost
     rng = np.random.default_rng(0)
@@ -50,6 +55,7 @@ def test_trained_trees_carry_no_intercept():
 
 
 if __name__ == "__main__":
-    for fn in (test_settings_are_the_seed42_records, test_trained_trees_carry_no_intercept):
+    for fn in (test_settings_are_the_seed42_records, test_wandb_mode_is_left_to_the_runner,
+               test_trained_trees_carry_no_intercept):
         fn()
         print(f"PASS {fn.__name__}")
